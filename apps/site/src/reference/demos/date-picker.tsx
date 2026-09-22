@@ -19,7 +19,7 @@ function ValidationStates() {
       <DatePicker
         label="Departure"
         status="warning"
-        helperText="Later than the venue's closing time."
+        helperText="Later than the venue’s closing time."
       />
       <DatePicker label="Booking" error="Choose a date in the future." />
     </Box>
@@ -30,7 +30,7 @@ export const demos: DemoModule["demos"] = [
   {
     title: "A date",
     description:
-      "A native date field in the Input's frame, with label and helper text.",
+      "A native date field in the Input’s frame, with label and helper text.",
     Component: ADate,
   },
   {

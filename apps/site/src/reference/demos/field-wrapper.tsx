@@ -100,7 +100,7 @@ export const demos: DemoModule["demos"] = [
   {
     title: "Required, optional, error",
     description:
-      "required marks the label; optionalText says so instead; labelAction sits at the label's end.",
+      "required marks the label; optionalText says so instead; labelAction sits at the label’s end.",
     Component: States,
   },
 ];

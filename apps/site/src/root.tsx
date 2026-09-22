@@ -29,9 +29,12 @@ export function Layout({ children }: { children: ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        {/* No brand mark exists yet (GAPS.md, GAP-10); an empty icon keeps
-            the browser from requesting /favicon.ico and logging a 404. */}
-        <link rel="icon" href="data:," />
+        {/* The logo's K on a tile (scripts/generate-brand.mjs): the .ico for
+            anything that cannot draw an SVG icon, the SVG for the rest, and
+            a square for a phone's home screen. */}
+        <link rel="icon" href="/favicon.ico" sizes="32x32" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         {SITE_INDEXABLE ? null : <meta name="robots" content="noindex" />}
         <Meta />
         <Links />

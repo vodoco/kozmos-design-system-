@@ -10,7 +10,7 @@ function Alone() {
       <Text size="sm" color="muted" aria-live="polite">
         {pressed
           ? `Pressed ${pressed} time${pressed === 1 ? "" : "s"}`
-          : "The assistant's entry point."}
+          : "The assistant’s entry point."}
       </Text>
     </Box>
   );

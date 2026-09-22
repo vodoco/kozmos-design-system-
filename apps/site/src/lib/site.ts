@@ -26,7 +26,8 @@ export const PUBLIC_PACKAGES = [
   },
   {
     name: "@kozmos/tokens",
-    summary: "Every token as CSS variables, JavaScript, Swift and Kotlin.",
+    summary:
+      "Every token as CSS variables for both themes and as JavaScript (the light values), and the Swift and Kotlin sources the native libraries build from.",
   },
   {
     name: "@kozmos/icons",
@@ -38,13 +39,22 @@ export const PUBLIC_PACKAGES = [
   },
 ] as const;
 
-/** The name the browser tab and the header use. */
+/** The name the browser tab and the menu drawer use. */
 export const SITE_NAME = "Kozmos";
+
+/**
+ * The words the logo shows, as its text alternative. An image of text is
+ * named with that text (WCAG 1.1.1), and the header's home link, named by the
+ * logo, then carries the words a visitor sees (WCAG 2.5.3, label in name), so
+ * voice control can find it by them.
+ */
+export const LOGO_TEXT = "Kozmos UI Design Systems";
 
 /** Where the theme choice is remembered. Only this site reads or writes it. */
 export const THEME_STORAGE_KEY = "kozmos-site-theme";
 
 /** Builds a page title the way every route does. */
 export function pageTitle(title?: string) {
-  return title ? `${title} · Kozmos design system` : "Kozmos design system";
+  const site = `${SITE_NAME} design system`;
+  return title ? `${title} · ${site}` : site;
 }

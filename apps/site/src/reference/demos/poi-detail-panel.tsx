@@ -19,7 +19,7 @@ const actionLabels: Record<POIAction, string> = {
 function Inline() {
   const [saved, setSaved] = useState(false);
   const [note, setNote] = useState(
-    "The actions report to onAction with the place's id.",
+    "The actions report to onAction with the place’s id.",
   );
   return (
     <Box className="site-demo-column">

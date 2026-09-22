@@ -8,7 +8,7 @@ function Picker() {
     <Box className="site-demo-column">
       <ColorPicker
         label="Brand colour"
-        helperText="Starts on the theme's blue; the presets are the palette."
+        helperText="Starts on the theme’s blue; the presets are the palette."
         onValueChange={setValue}
       />
       <Text size="sm" color="muted" aria-live="polite" className="site-mono">

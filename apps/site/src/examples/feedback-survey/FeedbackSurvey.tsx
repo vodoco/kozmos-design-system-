@@ -21,6 +21,7 @@ import {
   Text,
   Textarea,
 } from "@kozmos/react";
+import { useFocusOnChange } from "../focus";
 
 type Stage = "quick" | "more" | "thanks";
 
@@ -41,6 +42,9 @@ const COMMENT_LIMIT = 300;
 
 export default function FeedbackSurvey() {
   const [stage, setStage] = useState<Stage>("quick");
+  // Each view replaces the last; its heading, or the thanks, takes focus
+  // (../focus.ts).
+  const viewFocus = useFocusOnChange(stage);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [recommend, setRecommend] = useState([8]);
@@ -88,7 +92,14 @@ export default function FeedbackSurvey() {
       {stage === "quick" ? (
         <Stack gap={4}>
           <Stack gap={1}>
-            <Heading level={2}>How was your visit?</Heading>
+            <Heading
+              level={2}
+              ref={viewFocus}
+              tabIndex={-1}
+              className="ex-survey-focus"
+            >
+              How was your visit?
+            </Heading>
             <Text color="muted">
               A rating takes a moment; two more questions help the next visitor.
             </Text>
@@ -108,9 +119,16 @@ export default function FeedbackSurvey() {
           </Button>
         </Stack>
       ) : stage === "more" ? (
-        <Card className="ex-survey-card">
+        <Card>
           <CardHeader>
-            <Heading level={2}>Two more questions</Heading>
+            <Heading
+              level={2}
+              ref={viewFocus}
+              tabIndex={-1}
+              className="ex-survey-focus"
+            >
+              Two more questions
+            </Heading>
             <CardDescription>
               {rating > 0
                 ? `You rated the visit ${rating} of 5.`
@@ -207,7 +225,12 @@ export default function FeedbackSurvey() {
           </CardContent>
         </Card>
       ) : (
-        <Stack gap={4}>
+        <Stack
+          gap={4}
+          ref={viewFocus}
+          tabIndex={-1}
+          className="ex-survey-focus"
+        >
           {/* Alert is always role="alert" (GAPS.md, GAP-12); thanks are a status. */}
           <Alert variant="success" role="status">
             <AlertDescription>

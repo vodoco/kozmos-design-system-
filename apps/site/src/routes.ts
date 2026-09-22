@@ -6,6 +6,7 @@ import {
 } from "@react-router/dev/routes";
 import { examples } from "./examples/manifest";
 import { foundationPages } from "./foundations/nav";
+import componentIndex from "./generated/components.json";
 
 export default [
   // One layout for every plain page, so the header stays mounted and focus
@@ -27,8 +28,14 @@ export default [
       route(`foundations/${page.slug}`, `routes/foundations/${page.slug}.tsx`),
     ),
     route("components", "routes/components/index.tsx"),
-    // One page per component, from the generated data; every slug is
-    // pre-rendered (react-router.config.ts).
-    route("components/:slug", "routes/components/component.tsx"),
+    // One route per component, from the generated data, not one route with
+    // a :slug: an address that names no component then matches the
+    // not-found route in the browser as it did when the 404 page was
+    // pre-rendered, instead of a component route with nothing to show.
+    ...componentIndex.components.map((component) =>
+      route(`components/${component.slug}`, "routes/components/component.tsx", {
+        id: `components/${component.slug}`,
+      }),
+    ),
   ]),
 ] satisfies RouteConfig;

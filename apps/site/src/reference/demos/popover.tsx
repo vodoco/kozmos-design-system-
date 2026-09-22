@@ -45,7 +45,7 @@ export const demos: DemoModule["demos"] = [
   {
     title: "A small panel",
     description:
-      "Non-modal, anchored to its trigger, owned by the nearest ThemeProvider's overlay root.",
+      "Non-modal, anchored to its trigger, owned by the nearest ThemeProvider’s overlay root.",
     Component: Settings,
   },
   { title: "With an arrow", Component: WithAnArrow },

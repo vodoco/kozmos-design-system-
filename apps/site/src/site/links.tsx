@@ -1,9 +1,11 @@
-import type { MouseEvent, ReactNode } from "react";
+import { useRef, type MouseEvent, type ReactNode } from "react";
 import {
   Link as RouterLink,
   useHref,
   useLinkClickHandler,
+  useLocation,
   useMatch,
+  useNavigate,
   useResolvedPath,
 } from "react-router";
 import {
@@ -52,8 +54,23 @@ export interface SiteNavItemProps {
   end?: boolean;
   placement?: "top" | "side";
   icon?: ReactNode;
-  /** Called after a click that navigates, so a drawer can close. */
-  onNavigate?: () => void;
+  /**
+   * Takes over a plain click, for an item inside a drawer: the drawer closes
+   * first and the page changes once it has (`useNavigateAfterClose`). A
+   * modified click still opens the page in a new tab or window.
+   */
+  onChoose?: (to: string) => void;
+}
+
+/** A click the app should handle: the main button, no modifier keys. */
+function isPlainClick(event: MouseEvent) {
+  return (
+    event.button === 0 &&
+    !event.metaKey &&
+    !event.altKey &&
+    !event.ctrlKey &&
+    !event.shiftKey
+  );
 }
 
 /** A navigation item that marks itself selected on its own pages. */
@@ -63,12 +80,17 @@ export function SiteNavItem({
   end = false,
   placement = "top",
   icon,
-  onNavigate,
+  onChoose,
 }: SiteNavItemProps) {
   const href = useHref(to);
   const resolved = useResolvedPath(to);
   const selected = useMatch({ path: resolved.pathname, end }) !== null;
-  const handleClick = useRouterClick<HTMLElement>(to, () => onNavigate?.());
+  const handleClick = useRouterClick<HTMLElement>(to, (event) => {
+    if (onChoose && isPlainClick(event)) {
+      event.preventDefault();
+      onChoose(to);
+    }
+  });
   return (
     <NavigationItem
       href={href}
@@ -106,4 +128,33 @@ export function ButtonLink({
       {children}
     </RouterLink>
   );
+}
+
+/**
+ * Navigation from inside a drawer or a dialog. Radix returns focus to the
+ * button that opened it once its closing animation ends — after the new
+ * page has already moved focus to its content, so a keyboard or screen
+ * reader user would land back on the menu button. So the page changes only
+ * when the drawer has closed: `choose` records where to go, and
+ * `onCloseAutoFocus`, given to the drawer's content, goes there instead of
+ * returning focus. The site search does the same (SiteSearch.tsx).
+ */
+export function useNavigateAfterClose() {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const pending = useRef<string>(undefined);
+  return {
+    choose(to: string) {
+      pending.current = to;
+    },
+    onCloseAutoFocus(event: Event) {
+      const to = pending.current;
+      pending.current = undefined;
+      // The page the visitor is on: nothing changes, so focus goes back to
+      // the button that opened the drawer, as it would for Escape.
+      if (!to || to === pathname) return;
+      event.preventDefault();
+      navigate(to);
+    },
+  };
 }

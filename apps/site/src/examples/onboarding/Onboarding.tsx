@@ -23,6 +23,7 @@ import {
   Switch,
   Text,
 } from "@kozmos/react";
+import { useFocusOnChange } from "../focus";
 
 const steps = ["Welcome", "Preferences", "Interests", "Location", "Ready"];
 
@@ -63,6 +64,9 @@ export default function Onboarding() {
   const [chosen, setChosen] = useState<readonly string[]>(["Shops"]);
   const [permission, setPermission] = useState<string>("while-using");
   const [done, setDone] = useState(false);
+  // Each step replaces the last, so its heading takes focus; so does the
+  // summary at the end (../focus.ts).
+  const viewFocus = useFocusOnChange(done ? "done" : step);
 
   const last = steps.length - 1;
 
@@ -96,7 +100,12 @@ export default function Onboarding() {
           <Stack gap={6}>
             {!done ? (
               <Stack gap={3}>
-                <Stepper steps={steps} currentStep={step} />
+                {/* Five labelled steps need 24rem, and Kozmos's Stepper has
+                    no narrower form (GAPS.md, GAP-46): on a phone the
+                    progress bar below carries the step on its own. */}
+                <Box className="ex-onboarding-steps">
+                  <Stepper steps={steps} currentStep={step} />
+                </Box>
                 <Progress
                   value={((step + 1) / steps.length) * 100}
                   aria-label={`Step ${step + 1} of ${steps.length}`}
@@ -105,7 +114,12 @@ export default function Onboarding() {
             ) : null}
 
             {done ? (
-              <Stack gap={4}>
+              <Stack
+                gap={4}
+                ref={viewFocus}
+                tabIndex={-1}
+                className="ex-onboarding-focus"
+              >
                 {/* Alert is always role="alert" (GAPS.md, GAP-12); a
                     confirmation is a status. */}
                 <Alert variant="success" role="status">
@@ -124,7 +138,14 @@ export default function Onboarding() {
             ) : step === 0 ? (
               <Stack gap={4}>
                 <Icon name="map-01" size="xl" />
-                <Heading level={2}>Welcome to Riverside</Heading>
+                <Heading
+                  level={2}
+                  ref={viewFocus}
+                  tabIndex={-1}
+                  className="ex-onboarding-focus"
+                >
+                  Welcome to Riverside
+                </Heading>
                 <Text color="muted">
                   Find shops, places and people across the centre, and get there
                   step by step. Four short questions make it yours.
@@ -132,7 +153,14 @@ export default function Onboarding() {
               </Stack>
             ) : step === 1 ? (
               <Stack gap={4}>
-                <Heading level={2}>How you like your directions</Heading>
+                <Heading
+                  level={2}
+                  ref={viewFocus}
+                  tabIndex={-1}
+                  className="ex-onboarding-focus"
+                >
+                  How you like your directions
+                </Heading>
                 <SegmentedControl
                   label="Distances"
                   items={[
@@ -162,7 +190,14 @@ export default function Onboarding() {
               </Stack>
             ) : step === 2 ? (
               <Stack gap={4}>
-                <Heading level={2}>What brings you here?</Heading>
+                <Heading
+                  level={2}
+                  ref={viewFocus}
+                  tabIndex={-1}
+                  className="ex-onboarding-focus"
+                >
+                  What brings you here?
+                </Heading>
                 <Text color="muted">
                   Pick any. They come first in search and on the map.
                 </Text>
@@ -186,7 +221,14 @@ export default function Onboarding() {
               </Stack>
             ) : step === 3 ? (
               <Stack gap={4}>
-                <Heading level={2}>Your location</Heading>
+                <Heading
+                  level={2}
+                  ref={viewFocus}
+                  tabIndex={-1}
+                  className="ex-onboarding-focus"
+                >
+                  Your location
+                </Heading>
                 <RadioGroup
                   label="Use my location"
                   value={permission}
@@ -209,7 +251,14 @@ export default function Onboarding() {
               </Stack>
             ) : (
               <Stack gap={4}>
-                <Heading level={2}>Ready</Heading>
+                <Heading
+                  level={2}
+                  ref={viewFocus}
+                  tabIndex={-1}
+                  className="ex-onboarding-focus"
+                >
+                  Ready
+                </Heading>
                 <List aria-label="Your choices">
                   <ListItem>
                     <Text as="span">

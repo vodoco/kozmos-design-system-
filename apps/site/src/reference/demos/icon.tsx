@@ -52,7 +52,8 @@ function ByAlias() {
 export const demos: DemoModule["demos"] = [
   {
     title: "Sizes",
-    description: "xs to xl, 12 to 32px. The stroke stays 2px.",
+    description:
+      "xs to xl, 12 to 32px. The stroke is 2 of the icon’s 24 units, so it grows with it: 1px at xs, about 2.7px at xl.",
     Component: Sizes,
   },
   {

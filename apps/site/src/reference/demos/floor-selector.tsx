@@ -57,7 +57,7 @@ export const demos: DemoModule["demos"] = [
   {
     title: "Three variants, one floor",
     description:
-      "The same floors and the same selection, as a vertical list for a map's edge, a compact stepper, and a horizontal list for a sheet.",
+      "The same floors and the same selection, as a vertical list for a map’s edge, a compact stepper, and a horizontal list for a sheet.",
     Component: Variants,
   },
   {

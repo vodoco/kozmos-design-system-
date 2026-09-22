@@ -27,6 +27,7 @@ import {
   Textarea,
   TimePicker,
 } from "@kozmos/react";
+import { useFocusOnChange } from "../focus";
 
 const steps = ["When", "Details", "Confirm"];
 
@@ -93,6 +94,9 @@ export default function Booking() {
   const [form, setForm] = useState<Form>(empty);
   const [submitted, setSubmitted] = useState(false);
   const [booked, setBooked] = useState(false);
+  // Each step is its own form and replaces the last, so its heading takes
+  // focus; so does the booking once it is made (../focus.ts).
+  const viewFocus = useFocusOnChange(booked ? "booked" : step);
 
   const update = <K extends keyof Form>(key: K, value: Form[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
@@ -143,7 +147,12 @@ export default function Booking() {
             ) : null}
 
             {booked ? (
-              <Stack gap={4}>
+              <Stack
+                gap={4}
+                ref={viewFocus}
+                tabIndex={-1}
+                className="ex-booking-focus"
+              >
                 {/* Alert is always role="alert" (GAPS.md, GAP-12); a
                     confirmation is a status. */}
                 <Alert variant="success" role="status">
@@ -170,7 +179,14 @@ export default function Booking() {
                   next();
                 }}
               >
-                <Heading level={3}>When</Heading>
+                <Heading
+                  level={3}
+                  ref={viewFocus}
+                  tabIndex={-1}
+                  className="ex-booking-focus"
+                >
+                  When
+                </Heading>
                 <DatePicker
                   label="Date"
                   value={form.date}
@@ -219,7 +235,14 @@ export default function Booking() {
                   next();
                 }}
               >
-                <Heading level={3}>Details</Heading>
+                <Heading
+                  level={3}
+                  ref={viewFocus}
+                  tabIndex={-1}
+                  className="ex-booking-focus"
+                >
+                  Details
+                </Heading>
                 <Input
                   label="Your name"
                   autoComplete="name"
@@ -272,7 +295,14 @@ export default function Booking() {
               </form>
             ) : (
               <Stack gap={4}>
-                <Heading level={3}>Confirm</Heading>
+                <Heading
+                  level={3}
+                  ref={viewFocus}
+                  tabIndex={-1}
+                  className="ex-booking-focus"
+                >
+                  Confirm
+                </Heading>
                 <MetaStrip aria-label="The booking">
                   <MetaStripItem label="Date" showLabel>
                     {longDate(form.date)}

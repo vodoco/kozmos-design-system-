@@ -213,7 +213,7 @@ export const places: readonly Place[] = [
     "2",
     { x: 70, y: 32 },
     6,
-    "Markets, classes and exhibitions. Check the board for today's events.",
+    "Markets, classes and exhibitions. Check the board for today’s events.",
   ),
   place(
     "terrace",

@@ -64,7 +64,7 @@ function Compact() {
 
 export const demos: DemoModule["demos"] = [
   {
-    title: "Today's events",
+    title: "Today’s events",
     description:
       "An ordered list with a time, a title and a description per item.",
     Component: Today,

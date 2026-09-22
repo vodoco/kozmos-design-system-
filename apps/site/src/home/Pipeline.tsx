@@ -5,7 +5,6 @@ import {
   Timeline,
   TimelineDescription,
   TimelineItem,
-  TimelineTime,
   TimelineTitle,
 } from "@kozmos/react";
 import { ciGates } from "../lib/ci-gates";
@@ -16,13 +15,14 @@ export function Pipeline() {
     <Timeline>
       {ciGates.map((gate) => (
         <TimelineItem key={gate.title}>
-          <TimelineTime>
-            <Text as="span" size="xs" className="site-mono">
-              {gate.command ?? "ci.yml"}
-            </Text>
-          </TimelineTime>
           <TimelineTitle>{gate.title}</TimelineTitle>
           <TimelineDescription>{gate.detail}</TimelineDescription>
+          {/* The command, as code: TimelineTime is a <time>, for when. */}
+          {gate.command ? (
+            <Text size="xs" color="muted">
+              <code>{gate.command}</code>
+            </Text>
+          ) : null}
         </TimelineItem>
       ))}
     </Timeline>

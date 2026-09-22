@@ -4,6 +4,7 @@ import { getExample } from "../manifest";
 import Onboarding from "./Onboarding";
 import styles from "./Onboarding.css?raw";
 import source from "./Onboarding.tsx?raw";
+import focusSource from "../focus.ts?raw";
 
 const example = getExample("onboarding");
 
@@ -21,6 +22,7 @@ export default function OnboardingExample() {
       files={[
         { name: "Onboarding.tsx", code: source },
         { name: "Onboarding.css", code: styles },
+        { name: "focus.ts", code: focusSource },
       ]}
     >
       <Onboarding />

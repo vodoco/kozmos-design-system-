@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -43,7 +43,14 @@ const categories = [
 export default function Icons() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>();
-  const [copied, setCopied] = useState<string>();
+  const [copied, setCopied] = useState<{ name: IconName; ok: boolean }>();
+
+  // The copy's result is said for a moment, then the count returns.
+  useEffect(() => {
+    if (!copied) return;
+    const timer = window.setTimeout(() => setCopied(undefined), 2000);
+    return () => window.clearTimeout(timer);
+  }, [copied]);
 
   const shown = useMemo(() => {
     const words = query.trim().toLowerCase();
@@ -60,9 +67,9 @@ export default function Icons() {
   async function copy(name: IconName) {
     try {
       await navigator.clipboard.writeText(`<Icon name="${name}" />`);
-      setCopied(name);
+      setCopied({ name, ok: true });
     } catch {
-      setCopied(undefined);
+      setCopied({ name, ok: false });
     }
   }
 
@@ -70,7 +77,7 @@ export default function Icons() {
     <DocsPage page={page}>
       <Section
         title={`${definitions.length} icons`}
-        lead="Named by stable keys. Most come from Lucide; the rest carry the Pointr icon library's own outlines, matched to the Figma component by key. Press one to copy its JSX."
+        lead="Named by stable keys. Most come from Lucide; the rest carry the Pointr icon library’s own outlines, matched to the Figma component by key. Press one to copy its JSX."
         actions={
           <Stack gap={3}>
             <SearchBar
@@ -81,7 +88,8 @@ export default function Icons() {
               onChange={setQuery}
               onClear={() => setQuery("")}
             />
-            <ChipGroup aria-label="Categories">
+            {/* GAP-32: ChipGroup is a plain div; the role makes the label count. */}
+            <ChipGroup role="group" aria-label="Categories">
               <Chip
                 size="sm"
                 selected={!category}
@@ -107,7 +115,9 @@ export default function Icons() {
       >
         <Text size="sm" color="muted" aria-live="polite">
           {copied
-            ? `Copied <Icon name="${copied}" />`
+            ? copied.ok
+              ? `Copied <Icon name="${copied.name}" />`
+              : `Could not copy <Icon name="${copied.name}" />: the browser did not allow it`
             : `${shown.length} of ${definitions.length} shown`}
         </Text>
         {shown.length === 0 ? (

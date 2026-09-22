@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Box, FeedbackCard, Text } from "@kozmos/react";
+import { GlassBackdrop } from "../GlassBackdrop";
 import type { DemoModule } from "../types";
 
 function RateTheRoute() {
@@ -34,23 +35,9 @@ function Submitting() {
 
 function OnGlass() {
   return (
-    <Box className="site-glass-stage">
-      {(["green", "turquoise"] as const).map((colour, index) => (
-        <Box
-          key={colour}
-          className="site-blob"
-          aria-hidden="true"
-          style={{
-            "--blob": `var(--semantics-category-fill-${colour})`,
-            "--x": `${30 + index * 40}%`,
-            "--y": "50%",
-          }}
-        />
-      ))}
-      <Box className="site-glass-card">
-        <FeedbackCard surface="glass" />
-      </Box>
-    </Box>
+    <GlassBackdrop colours={["green", "turquoise"]}>
+      <FeedbackCard surface="glass" />
+    </GlassBackdrop>
   );
 }
 

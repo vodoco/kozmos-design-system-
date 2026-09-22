@@ -21,16 +21,22 @@ import { hasDemos, lazyDemos } from "../../reference/registry";
 import type { ComponentSummary, Lane } from "../../reference/types";
 import { SiteLink } from "../../site/links";
 import { PageHeader, Section } from "../../site/Section";
+import { withCode } from "../../site/inline-code";
 
 export function meta() {
   return [
     { title: pageTitle("Components") },
     {
       name: "description",
-      content: `${componentIndex.components.length} Kozmos components, each shown live with its props and its React, SwiftUI and Compose code.`,
+      content: `${componentIndex.components.length} Kozmos components, each shown live with its props, and with its React, SwiftUI and Compose code where its docs carry it.`,
     },
   ];
 }
+
+/** How many components' docs carry their code on all three platforms. */
+const withAllCode = componentIndex.components.filter(
+  (component) => component.code.length === 3,
+).length;
 
 /** A component's first demo, mounted once it is near the viewport. */
 function Preview({ slug }: { slug: string }) {
@@ -78,7 +84,9 @@ function ComponentCard({ component }: { component: ComponentSummary }) {
           <Tag variant="secondary">{laneTitle(component.lane)}</Tag>
         </Stack>
         <CardDescription>
-          {component.description || "No description in its docs yet."}
+          {component.description
+            ? withCode(component.description)
+            : "No description in its docs yet."}
         </CardDescription>
         <Text size="sm">
           <SiteLink to={`/components/${component.slug}`}>
@@ -94,23 +102,29 @@ export default function Components() {
   const [query, setQuery] = useState("");
   const [lane, setLane] = useState<Lane>();
 
+  // Word by word, as the site's search matches: "date picker" finds
+  // DatePicker, and every word must appear in the name, the description or
+  // a part's name.
   const shown = useMemo(() => {
-    const words = query.trim().toLowerCase();
-    return componentIndex.components.filter(
-      (component) =>
-        (!lane || component.lane === lane) &&
-        (!words ||
-          component.name.toLowerCase().includes(words) ||
-          component.description.toLowerCase().includes(words) ||
-          component.exports.some((name) => name.toLowerCase().includes(words))),
-    );
+    const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    return componentIndex.components.filter((component) => {
+      if (lane && component.lane !== lane) return false;
+      const haystack = [
+        component.name,
+        component.description,
+        ...component.exports,
+      ]
+        .join(" ")
+        .toLowerCase();
+      return words.every((word) => haystack.includes(word));
+    });
   }, [query, lane]);
 
   return (
     <Container className="site-page">
       <PageHeader
         title="Components"
-        lead={`${componentIndex.components.length} components in four lanes, each with live examples, its props read from the source, and its code on React, SwiftUI and Compose.`}
+        lead={`${componentIndex.components.length} components in four lanes, each with live examples and its props read from the source. ${withAllCode} also show their React, SwiftUI and Compose code from their docs; the other ${componentIndex.components.length - withAllCode} docs do not carry all three yet.`}
       />
       <Section
         title="Every component"

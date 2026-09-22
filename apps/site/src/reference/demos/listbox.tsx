@@ -46,7 +46,7 @@ export const demos: DemoModule["demos"] = [
   {
     title: "One choice",
     description:
-      "The open list Combobox and Select share, on its own, keyboard-navigable.",
+      "The open list that Combobox and MultiSelect show, on its own, keyboard-navigable.",
     Component: Single,
   },
   {

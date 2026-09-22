@@ -17,6 +17,7 @@ import {
   Stack,
   Text,
 } from "@kozmos/react";
+import { useFocusOnChange } from "../focus";
 
 type Step = "credentials" | "code" | "done";
 
@@ -49,6 +50,8 @@ export default function SignIn() {
   const [codeError, setCodeError] = useState<string>();
   const [resendIn, setResendIn] = useState(RESEND_SECONDS);
   const [note, setNote] = useState<string>();
+  // Each step replaces the last, so its heading takes focus (../focus.ts).
+  const stepHeading = useFocusOnChange(step);
 
   // The resend link waits: one second at a time, until it is allowed.
   useEffect(() => {
@@ -102,7 +105,14 @@ export default function SignIn() {
         {step === "credentials" ? (
           <>
             <CardHeader>
-              <Heading level={2}>Sign in to Venue Manager</Heading>
+              <Heading
+                level={2}
+                ref={stepHeading}
+                tabIndex={-1}
+                className="ex-signin-title"
+              >
+                Sign in to Venue Manager
+              </Heading>
               <CardDescription>
                 The console for the venues you manage.
               </CardDescription>
@@ -137,7 +147,11 @@ export default function SignIn() {
                   checked={keep}
                   onCheckedChange={(value) => setKeep(value === true)}
                 />
-                <Button type="submit" isLoading={checking} className="w-full">
+                <Button
+                  type="submit"
+                  isLoading={checking}
+                  className="ex-signin-wide"
+                >
                   Continue
                 </Button>
                 <Button
@@ -151,18 +165,30 @@ export default function SignIn() {
                 >
                   Forgotten your password?
                 </Button>
-                {note ? (
-                  <Text size="sm" color="muted" role="status">
-                    {note}
-                  </Text>
-                ) : null}
+                {/* Always on the page, so a screen reader hears each note
+                    put in it; empty, it takes no room. */}
+                <Text
+                  size="sm"
+                  color="muted"
+                  role="status"
+                  className="ex-signin-live"
+                >
+                  {note}
+                </Text>
               </form>
             </CardContent>
           </>
         ) : step === "code" ? (
           <>
             <CardHeader>
-              <Heading level={2}>Check your phone</Heading>
+              <Heading
+                level={2}
+                ref={stepHeading}
+                tabIndex={-1}
+                className="ex-signin-title"
+              >
+                Check your phone
+              </Heading>
               <CardDescription>
                 We sent a six-digit code to {PHONE}. It is valid for ten
                 minutes.
@@ -188,7 +214,7 @@ export default function SignIn() {
                   error={codeError}
                   helperText={`${code.length} of 6 digits`}
                 />
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="ex-signin-wide">
                   Verify
                 </Button>
                 <Stack direction="row" align="center" justify="between" gap={2}>
@@ -222,18 +248,30 @@ export default function SignIn() {
                     </Button>
                   )}
                 </Stack>
-                {note ? (
-                  <Text size="sm" color="muted" role="status">
-                    {note}
-                  </Text>
-                ) : null}
+                {/* Always on the page, so a screen reader hears each note
+                    put in it; empty, it takes no room. */}
+                <Text
+                  size="sm"
+                  color="muted"
+                  role="status"
+                  className="ex-signin-live"
+                >
+                  {note}
+                </Text>
               </form>
             </CardContent>
           </>
         ) : (
           <>
             <CardHeader>
-              <Heading level={2}>Signed in</Heading>
+              <Heading
+                level={2}
+                ref={stepHeading}
+                tabIndex={-1}
+                className="ex-signin-title"
+              >
+                Signed in
+              </Heading>
               <CardDescription>
                 {keep
                   ? "This device stays signed in."

@@ -48,23 +48,25 @@ function Sideways() {
 function Vertical() {
   return (
     <Box className="site-demo-column">
-      <ScrollArea
-        hideScrollbar={false}
-        viewportProps={{
-          "aria-label": "Floors",
-          className: "site-demo-scroll",
-        }}
-      >
-        <List density="compact">
-          {Array.from({ length: 14 }, (_, index) => (
-            <ListItem key={index}>
-              <Text as="span" size="sm">
-                Level {14 - index}
-              </Text>
-            </ListItem>
-          ))}
-        </List>
-      </ScrollArea>
+      {/* A vertical ScrollArea fills its parent's height, so the parent
+          bounds it; a height on the viewport itself loses to the viewport's
+          own h-full. */}
+      <Box className="site-demo-scroll">
+        <ScrollArea
+          hideScrollbar={false}
+          viewportProps={{ "aria-label": "Floors" }}
+        >
+          <List density="compact">
+            {Array.from({ length: 14 }, (_, index) => (
+              <ListItem key={index}>
+                <Text as="span" size="sm">
+                  Level {14 - index}
+                </Text>
+              </ListItem>
+            ))}
+          </List>
+        </ScrollArea>
+      </Box>
     </Box>
   );
 }

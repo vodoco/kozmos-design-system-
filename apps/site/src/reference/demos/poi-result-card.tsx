@@ -19,7 +19,7 @@ function Featured() {
       <Text size="sm" color="muted" aria-live="polite">
         {chosen
           ? `Selected ${chosen}.`
-          : "Featured, selected, with a travel estimate; the result's index is the pin's number."}
+          : "Featured, selected, with a travel estimate; the result’s index is the pin’s number."}
       </Text>
     </Box>
   );

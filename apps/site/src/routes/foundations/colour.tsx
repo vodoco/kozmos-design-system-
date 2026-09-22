@@ -5,6 +5,7 @@ import {
   AccordionTrigger,
   Box,
   Stack,
+  Surface,
   Table,
   TableBody,
   TableCell,
@@ -64,7 +65,7 @@ const semanticGroups = [
   {
     prefix: "--semantics-category",
     title: "Category",
-    lead: "The taxonomy's eight quick-access colours: an accent, a fill, and the ink that reads on the fill at 4.5:1.",
+    lead: "The taxonomy’s eight quick-access colours: an accent, a fill, and the ink that reads on the fill at 4.5:1.",
   },
   {
     prefix: "--semantics-data",
@@ -79,7 +80,7 @@ const semanticGroups = [
   {
     prefix: "--semantics-overlay",
     title: "Overlay",
-    lead: "The scrim behind a modal and the dim behind a sheet.",
+    lead: "The scrim behind a dialog, a drawer and a backdrop, and a lighter dim that no component uses yet.",
   },
 ];
 
@@ -152,7 +153,7 @@ function ContrastContract() {
                 </Stack>
               </TableCell>
               <TableCell>
-                <Box
+                <Surface
                   className="site-pair-sample"
                   aria-hidden="true"
                   style={{
@@ -160,10 +161,16 @@ function ContrastContract() {
                     "--pair-fg": `var(--${pair.foreground})`,
                   }}
                 >
-                  <Text as="span" weight="semibold" className="site-pair-text">
-                    Aa
-                  </Text>
-                </Box>
+                  <Box className="site-pair-fill">
+                    <Text
+                      as="span"
+                      weight="semibold"
+                      className="site-pair-text"
+                    >
+                      Aa
+                    </Text>
+                  </Box>
+                </Surface>
               </TableCell>
               <TableCell>
                 <Text as="span" size="sm">
@@ -176,7 +183,9 @@ function ContrastContract() {
                 return (
                   <TableCell key={theme}>
                     <Tag emotion={ok ? "success" : "danger"} variant="outline">
-                      {ratio === undefined ? "unresolved" : formatRatio(ratio)}
+                      {ratio === undefined
+                        ? "unresolved"
+                        : `${formatRatio(ratio)} · ${ok ? "Pass" : "Fail"}`}
                     </Tag>
                   </TableCell>
                 );
@@ -193,17 +202,22 @@ function ComponentLayer() {
   const entries = tokensWithPrefix("--components-");
   const groups = new Map<string, typeof entries>();
   for (const entry of entries) {
-    const group = entry.name.split("-").slice(2, 4).join(" ");
+    // --components-primary-buttons-… → "Primary buttons"
+    const [kind = "", part = ""] = entry.name
+      .replace(/^--components-/, "")
+      .split("-");
+    const group = `${kind.charAt(0).toUpperCase()}${kind.slice(1)} ${part}`;
     groups.set(group, [...(groups.get(group) ?? []), entry]);
   }
   return (
     <Stack gap={3}>
       <Text color="muted">
-        {entries.length} variables, generated per component with the values of
-        the theme baked in: a button’s idle, hover, pressed and focus colours
-        for each of the six emotions, and so on. They are what the migrated
-        components read, which is why a brand override has to re-point them as
-        well as the ramp (GAP-23).
+        {entries.length} variables with the theme’s values baked in: for each
+        kind of button, each of the six emotions’ idle, hover, pressed and focus
+        colours, and thirteen for the HTML headings. Today the Button’s themed
+        and danger variants and the category field read a few of them, and no
+        component reads the rest. A brand override re-points them as well as the
+        ramp, so that what does read them follows (GAP-23).
       </Text>
       <Accordion type="multiple">
         {[...groups].map(([group, list]) => (
@@ -230,7 +244,7 @@ export default function Colour() {
     <DocsPage page={page}>
       <Section
         title="Primitive ramps"
-        lead="Eleven ramps. Background and foreground run in opposite directions so that the same step number reads the same in both themes; every other ramp is 0 to 1000. Each swatch shows its light and dark values."
+        lead={`${ramps.length} ramps. Background and foreground run in opposite directions, and each ramp turns over in the dark theme, so a step number means the same in both. The two transparent ramps are opacity steps instead, the same in either theme. Each swatch shows its light and dark values.`}
       >
         <Stack gap={8}>
           {ramps.map((entry) => (
@@ -245,7 +259,7 @@ export default function Colour() {
 
       <Section
         title="Semantic roles"
-        lead="Named for what they do, not what they look like. Components read these, so a product changes a role once and every part follows."
+        lead="Named for what they do, not what they look like. Kozmos’s web components read the border and overlay roles, the category and data colours, and the emotion roles in a few parts (Tag, Counter, the route preview). Most of their colour still comes from the primitive ramps, through the Tailwind theme, so a changed role does not yet reach every part."
       >
         <Stack gap={8}>
           {semanticGroups.map((group) => (
@@ -266,14 +280,14 @@ export default function Colour() {
 
       <Section
         title="The contrast contract"
-        lead={`${contract.description} CI fails the build when any pair drops below its minimum.`}
+        lead={`The ${contract.pairs.length} colour pairs the tokens package holds to WCAG AA: text on the page and its surfaces, the selected and tinted states, the five filled actions and the buttons, measured here from the stylesheet in both themes. CI measures the same pairs on every pull request, with every button emotion and state and the category inks besides, and fails when one drops below its minimum.`}
       >
         <ContrastContract />
       </Section>
 
       <Section
         title="The component layer"
-        lead="Below the roles sits a third layer, one variable per component state."
+        lead="Below the roles sits a third layer: one variable per state of a part, so far for the buttons and the HTML headings."
       >
         <ComponentLayer />
       </Section>

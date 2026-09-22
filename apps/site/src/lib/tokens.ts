@@ -4,12 +4,13 @@
  * generator wrote beside it. The foundations pages are drawn from this, so
  * they cannot drift from what the components use.
  */
-import light from "@kozmos/tokens/dist/css/variables-light.css?raw";
-import dark from "@kozmos/tokens/dist/css/variables-dark.css?raw";
+// The package's documented exports, the same files root.tsx loads as CSS.
+import light from "@kozmos/tokens/css/light.css?raw";
+import dark from "@kozmos/tokens/css/dark.css?raw";
 import { mergeThemes, rampOf, type TokenEntry } from "./tokens-core";
 
 export type { TokenEntry } from "./tokens-core";
-export { px, shortName, stepOf } from "./tokens-core";
+export { shortName } from "./tokens-core";
 
 export const tokens: readonly TokenEntry[] = mergeThemes(light, dark);
 

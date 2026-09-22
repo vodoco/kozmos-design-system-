@@ -74,7 +74,7 @@ export function TokensTile() {
     <Tile
       span={4}
       title="One set of tokens"
-      description="Colour, type, spacing, radius, elevation and motion, generated once as CSS, JavaScript, Swift and Kotlin. Flip this tile's theme and watch the ramps."
+      description="Colour, type, spacing, radius, elevation and motion, from one source: CSS variables for both themes and a JavaScript module on the web; the colours, spacing, radii, shadows and motion in Swift and Kotlin. Flip this tile’s theme and watch the ramps."
     >
       <Switch label="Dark" checked={dark} onCheckedChange={setDark} />
       {/* A provider paints nothing itself (display: contents), so the nested
@@ -121,7 +121,7 @@ export function EmotionsTile() {
     >
       <Box className="site-emotions">
         {emotions.map((emotion) => (
-          <Button key={emotion} emotion={emotion}>
+          <Button key={emotion} emotion={emotion} className="site-fill">
             {emotion}
           </Button>
         ))}
@@ -130,6 +130,7 @@ export function EmotionsTile() {
             key={`${emotion}-outline`}
             emotion={emotion}
             variant="outline"
+            className="site-fill"
           >
             {emotion}
           </Button>
@@ -208,7 +209,7 @@ export function PlatformsTile() {
     <Tile
       span={4}
       title="Three platforms, one part"
-      description="The same Button in React, SwiftUI and Jetpack Compose, from the component's own documentation."
+      description="The same Button in React, SwiftUI and Jetpack Compose, from the component’s own documentation."
     >
       <Tabs defaultValue="react">
         <TabsList aria-label="Platform">
@@ -260,7 +261,7 @@ export function ContrastTile() {
     <Tile
       span={4}
       title="Contrast, under contract"
-      description="Twenty-two colour pairs are measured in both themes on every pull request. Four of them, measured here from the same token values."
+      description={`The contract’s ${contract.pairs.length} colour pairs, and every button’s and category’s besides, are measured in both themes on every pull request. Four of them, measured here from the same token values.`}
     >
       <Stack gap={3}>
         {pairs.map((pair) => {
@@ -276,7 +277,7 @@ export function ContrastTile() {
           );
           return (
             <Box key={pair.name} className="site-pair">
-              <Box
+              <Surface
                 className="site-pair-sample"
                 aria-hidden="true"
                 style={{
@@ -284,10 +285,12 @@ export function ContrastTile() {
                   "--pair-fg": `var(--${pair.foreground})`,
                 }}
               >
-                <Text as="span" weight="semibold" className="site-pair-text">
-                  Aa
-                </Text>
-              </Box>
+                <Box className="site-pair-fill">
+                  <Text as="span" weight="semibold" className="site-pair-text">
+                    Aa
+                  </Text>
+                </Box>
+              </Surface>
               <Stack gap={0}>
                 <Text as="span" size="sm" weight="medium">
                   {pair.name}
@@ -309,7 +312,9 @@ export function ContrastTile() {
         })}
       </Stack>
       <Text size="sm">
-        <SiteLink to="/foundations/colour">All twenty-two pairs</SiteLink>
+        <SiteLink to="/foundations/colour">
+          All {contract.pairs.length} pairs
+        </SiteLink>
       </Text>
     </Tile>
   );

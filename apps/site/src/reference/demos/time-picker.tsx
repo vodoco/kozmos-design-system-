@@ -17,7 +17,7 @@ export const demos: DemoModule["demos"] = [
   {
     title: "A time",
     description:
-      "A native time field in the Input's frame, with the same label, helper and error props.",
+      "A native time field in the Input’s frame, with the same label, helper and error props.",
     Component: ATime,
   },
 ];

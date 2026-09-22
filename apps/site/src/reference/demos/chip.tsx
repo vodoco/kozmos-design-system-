@@ -9,7 +9,8 @@ function Filters() {
     () => new Set(["Open now"]),
   );
   return (
-    <ChipGroup aria-label="Filters">
+    // GAP-32: ChipGroup is a plain div; the role makes the label count.
+    <ChipGroup role="group" aria-label="Filters">
       {filters.map((filter) => (
         <Chip
           key={filter}
@@ -33,7 +34,8 @@ function Filters() {
 function Removable() {
   const [tags, setTags] = useState(["Books", "Café", "Author events"]);
   return (
-    <ChipGroup aria-label="Tags">
+    // GAP-32: ChipGroup is a plain div; the role makes the label count.
+    <ChipGroup role="group" aria-label="Tags">
       {tags.map((tag) => (
         <Chip
           key={tag}

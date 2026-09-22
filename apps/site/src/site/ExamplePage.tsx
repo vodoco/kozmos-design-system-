@@ -12,6 +12,7 @@ import {
   List,
   ListItem,
   ScrollArea,
+  Separator,
   Stack,
   Tabs,
   TabsContent,
@@ -63,7 +64,9 @@ export function ExamplePage({
           </BreadcrumbList>
         </Breadcrumb>
         <Stack direction="row" align="center" wrap="wrap" gap={3}>
-          <Heading level={1}>{example.title}</Heading>
+          <Heading level={1} className="site-title">
+            {example.title}
+          </Heading>
           <Tag variant="secondary">{exampleKindLabel[example.kind]}</Tag>
         </Stack>
         <Text size="lg" color="muted">
@@ -71,6 +74,10 @@ export function ExamplePage({
         </Text>
       </Container>
 
+      {/* The canvas's edges: in the dark theme its tint is 1.1:1 against the
+          page, and the provider's preflight zeroes a box's own border
+          (GAP-52). */}
+      <Separator />
       <section
         aria-label={`${example.title} example`}
         className="site-example-canvas"
@@ -78,6 +85,7 @@ export function ExamplePage({
       >
         {children}
       </section>
+      <Separator />
 
       <Container className="site-example-details">
         <Section
@@ -96,7 +104,7 @@ export function ExamplePage({
         {example.gaps.length > 0 ? (
           <Section
             title="Where Kozmos falls short"
-            lead="What a product would draw here that Kozmos cannot express yet. Each is in the site's GAPS.md."
+            lead="What a product would draw here that Kozmos cannot express yet. Each is in the site’s GAPS.md."
           >
             <List aria-label="Gaps this example found">
               {example.gaps.map((gap) => (
@@ -108,7 +116,7 @@ export function ExamplePage({
           </Section>
         ) : null}
 
-        <Section title="Source" lead="The example's own files, as they are.">
+        <Section title="Source" lead="The example’s own files, as they are.">
           <Tabs defaultValue={files[0]?.name}>
             {/* TabsList neither wraps nor scrolls (GAPS.md, GAP-16): three
                 file names overflow a phone, so the list scrolls sideways in a

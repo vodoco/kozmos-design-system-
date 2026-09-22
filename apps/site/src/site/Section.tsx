@@ -21,7 +21,14 @@ export function Section({
 }) {
   const headingId = useId();
   return (
-    <section id={id} aria-labelledby={headingId} className="site-section">
+    <section
+      id={id}
+      // A link to the section moves focus to it (SiteShell), so the next Tab
+      // continues from here, not from the top of the page.
+      tabIndex={id ? -1 : undefined}
+      aria-labelledby={headingId}
+      className="site-section"
+    >
       <header className="site-section-header">
         <Heading
           level={level}

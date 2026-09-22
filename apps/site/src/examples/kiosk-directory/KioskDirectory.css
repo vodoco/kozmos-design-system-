@@ -9,7 +9,10 @@
   /* The directory column stays wide enough for four category tiles with
      their names whole: the panel's grid is four columns at any width
      (GAPS.md, GAP-35). */
-  grid-template-columns: minmax(22rem, 24rem) minmax(0, 1fr) minmax(20rem, 24rem);
+  grid-template-columns: minmax(22rem, 24rem) minmax(0, 1fr) minmax(
+      20rem,
+      24rem
+    );
   background: var(--primitives-colors-background-50);
 }
 
@@ -19,14 +22,14 @@
   overflow: auto;
   display: grid;
   align-content: start;
-  gap: var(--site-space-300);
-  padding: var(--site-space-300);
+  gap: calc(var(--primitives-layout-spacing-300) * 1px);
+  padding: calc(var(--primitives-layout-spacing-300) * 1px);
 }
 
 .ex-kiosk-map {
   position: relative;
   min-block-size: 0;
-  padding: var(--site-space-300) 0;
+  padding: calc(var(--primitives-layout-spacing-300) * 1px) 0;
 }
 
 .ex-kiosk-layer {
@@ -55,7 +58,7 @@
   top: var(--dot-y);
   inline-size: calc(var(--primitives-layout-sizing-100) * 1px);
   block-size: calc(var(--primitives-layout-sizing-100) * 1px);
-  border-radius: var(--site-radius-pill);
+  border-radius: calc(var(--semantics-radius-pill) * 1px);
   background: var(--primitives-colors-theme-600);
   transform: translate(-50%, -50%);
 }
@@ -65,7 +68,7 @@
   inset: 0;
   display: grid;
   place-items: center;
-  padding: var(--site-space-600);
+  padding: calc(var(--primitives-layout-spacing-600) * 1px);
 }
 
 /* A kiosk is a fixed screen; on anything narrower, the columns stack. */
@@ -84,4 +87,11 @@
     min-block-size: auto;
     overflow: visible;
   }
+}
+
+/* The panel takes focus when its view changes (a place replaces the list);
+   it is where the keyboard starts from, not a control, so it shows no ring. */
+.ex-kiosk-panel:focus,
+.ex-kiosk-title:focus {
+  outline: none;
 }

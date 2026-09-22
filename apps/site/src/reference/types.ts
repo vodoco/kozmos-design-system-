@@ -22,6 +22,8 @@ export interface ComponentProp {
   required: boolean;
   defaultValue: string | null;
   description: string;
+  /** The Radix package a prop comes from, when it is a primitive's own. */
+  source: string | null;
 }
 
 export interface ComponentPart {
@@ -51,6 +53,8 @@ export interface ComponentSummary {
   lane: Lane;
   description: string;
   exports: string[];
+  /** The platforms whose code the component's docs carry. */
+  code: ("react" | "swift" | "kotlin")[];
 }
 
 export interface ComponentIndex {

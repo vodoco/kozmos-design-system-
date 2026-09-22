@@ -17,6 +17,7 @@ import {
   Text,
   type POIActionState,
 } from "@kozmos/react";
+import { useFocusOnChange } from "../focus";
 import type {
   CategoryPresentation,
   POIAction,
@@ -123,7 +124,7 @@ export default function PhoneSearch() {
     }
     setNotice(
       action === "navigate"
-        ? "Directions are the Wayfinding example's; this one stops at the place."
+        ? "Directions are the Wayfinding example’s; this one stops at the place."
         : "Sharing is not connected in this example.",
     );
   }
@@ -167,8 +168,20 @@ export default function PhoneSearch() {
     />
   );
 
+  // A place, the categories or the results replace one another in the
+  // panel; focus goes into the new one (../focus.ts).
+  const panelView = selected
+    ? `place ${selected.poi.id}`
+    : browsing
+      ? "browse"
+      : "results";
+  const panelFocus = useFocusOnChange(panelView);
+
   const panel = selected ? (
     <POIDetailPanel
+      ref={panelFocus}
+      tabIndex={-1}
+      className="ex-phone-panel-focus"
       presentation="sheet"
       poi={selected.poi}
       details={selected.details}
@@ -183,6 +196,9 @@ export default function PhoneSearch() {
     />
   ) : browsing ? (
     <BrowseCategoriesPanel
+      ref={panelFocus}
+      tabIndex={-1}
+      className="ex-phone-panel-focus"
       label="Browse by category"
       categories={categoryPresentations}
       renderIcon={(entry) => {
@@ -200,26 +216,31 @@ export default function PhoneSearch() {
       }}
     />
   ) : (
-    <POIResultList
-      label={category ? category.label : `Results for “${query.trim()}”`}
-      resultCountLabel={
-        results.length === 1 ? "1 place" : `${results.length} places`
-      }
-      items={results.map((place, index) => ({
-        poi: place.poi,
-        result: {
-          poiId: place.poi.id,
-          resultIndex: index + 1,
-          selected: false,
-          featured: false,
-          floorId: place.poi.floorId,
-          travelEstimate: place.details.travelEstimate,
-        },
-      }))}
-      currentFloorId={floorId}
-      onSelect={select}
-      emptyState="No places match. Try another word, or browse by category."
-    />
+    <Box className="ex-phone-list">
+      <POIResultList
+        ref={panelFocus}
+        tabIndex={-1}
+        className="ex-phone-panel-focus"
+        label={category ? category.label : `Results for “${query.trim()}”`}
+        resultCountLabel={
+          results.length === 1 ? "1 place" : `${results.length} places`
+        }
+        items={results.map((place, index) => ({
+          poi: place.poi,
+          result: {
+            poiId: place.poi.id,
+            resultIndex: index + 1,
+            selected: false,
+            featured: false,
+            floorId: place.poi.floorId,
+            travelEstimate: place.details.travelEstimate,
+          },
+        }))}
+        currentFloorId={floorId}
+        onSelect={select}
+        emptyState="No places match. Try another word, or browse by category."
+      />
+    </Box>
   );
 
   const pins = selected

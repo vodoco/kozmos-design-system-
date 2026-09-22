@@ -61,11 +61,6 @@ export function rampOf(
     .sort((a, b) => stepOf(a.name) - stepOf(b.name));
 }
 
-/** A unitless token written as a CSS length, the way the components do. */
-export function px(name: string): string {
-  return `calc(var(${name}) * 1px)`;
-}
-
 /** `--semantics-radius-control` → `radius control`, for a label. */
 export function shortName(name: string, prefix: string): string {
   return name.slice(prefix.length).replace(/^-/, "").replace(/-/g, " ");

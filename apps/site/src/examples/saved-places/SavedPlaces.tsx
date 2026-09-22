@@ -1,5 +1,5 @@
 import "./SavedPlaces.css";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Alert,
   AlertDescription,
@@ -25,6 +25,7 @@ import {
   Tree,
   type TreeItem,
 } from "@kozmos/react";
+import { useFocusOnChange } from "../focus";
 
 interface Saved {
   id: string;
@@ -70,7 +71,7 @@ const initial: readonly Saved[] = [
   {
     id: "pharmacy",
     name: "Pharmacy",
-    venue: "King's Hospital",
+    venue: "King’s Hospital",
     floor: "Ground floor",
   },
 ];
@@ -102,11 +103,19 @@ export default function SavedPlaces() {
       .map((place) => ({ id: place.id, name: place.name })),
   }));
 
+  // A removal takes away the row whose button opened the dialog, so when the
+  // dialog closes focus goes to the Undo instead; after Undo, to the list's
+  // heading (../focus.ts). Cancelling returns focus to the row's button.
+  const removed = useRef(false);
+  const undoButton = useRef<HTMLButtonElement>(null);
+  const listHeading = useFocusOnChange(undo, !undo);
+
   function remove(place: Saved) {
     setSaved((list) => list.filter((entry) => entry.id !== place.id));
     setUndo(place);
     setRemoving(undefined);
     setStatus(undefined);
+    removed.current = true;
   }
 
   function restore() {
@@ -121,7 +130,14 @@ export default function SavedPlaces() {
     <Box className="ex-saved">
       <Stack gap={6}>
         <Stack gap={1}>
-          <Heading level={2}>Saved places</Heading>
+          <Heading
+            level={2}
+            ref={listHeading}
+            tabIndex={-1}
+            className="ex-saved-title"
+          >
+            Saved places
+          </Heading>
           <Text color="muted">
             {saved.length === 1 ? "1 place" : `${saved.length} places`} across{" "}
             {new Set(saved.map((place) => place.venue)).size} venues, and where
@@ -136,14 +152,14 @@ export default function SavedPlaces() {
           onSaveToggle={() => {
             if (car) {
               setCar(undefined);
-              setStatus("The car's spot is forgotten.");
+              setStatus("The car’s spot is forgotten.");
             } else {
               setCar({ note: "Level P2, bay 42" });
-              setStatus("The car's spot is saved.");
+              setStatus("The car’s spot is saved.");
             }
           }}
           onRouteToLocation={() =>
-            setStatus("Routing to the car is the Wayfinding example's job.")
+            setStatus("Routing to the car is the Wayfinding example’s job.")
           }
           onEditNote={() => {
             setCarDraft(car?.note ?? "");
@@ -151,34 +167,42 @@ export default function SavedPlaces() {
           }}
         />
 
-        {status ? (
-          <Text size="sm" color="muted" role="status">
-            {status}
-          </Text>
-        ) : null}
+        {/* Always on the page, so a screen reader hears each status put in
+            it; empty, it takes no room. */}
+        <Text size="sm" color="muted" role="status" className="ex-saved-live">
+          {status}
+        </Text>
 
-        {undo ? (
-          // A toast would leave the page (GAPS.md, GAP-36); the undo stays
-          // inline, as a status (Alert is always role="alert", GAP-12).
-          <Alert variant="success" role="status">
-            <AlertDescription>
-              <Stack
-                direction="row"
-                align="center"
-                justify="between"
-                wrap="wrap"
-                gap={2}
-              >
-                <Text as="span" size="sm">
-                  {undo.name} is no longer saved.
-                </Text>
-                <Button variant="link" size="sm" onClick={restore}>
-                  Undo
-                </Button>
-              </Stack>
-            </AlertDescription>
-          </Alert>
-        ) : null}
+        {/* A toast would leave the page (GAPS.md, GAP-36), so the undo stays
+            inline, in a status region that is always there; the Alert inside
+            is only its look (Alert is always role="alert", GAP-12). */}
+        <Box role="status" className="ex-saved-live">
+          {undo ? (
+            <Alert variant="success" role="none">
+              <AlertDescription>
+                <Stack
+                  direction="row"
+                  align="center"
+                  justify="between"
+                  wrap="wrap"
+                  gap={2}
+                >
+                  <Text as="span" size="sm">
+                    {undo.name} is no longer saved.
+                  </Text>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={restore}
+                    ref={undoButton}
+                  >
+                    Undo
+                  </Button>
+                </Stack>
+              </AlertDescription>
+            </Alert>
+          ) : null}
+        </Box>
 
         <SearchBar
           variant="inline"
@@ -232,8 +256,16 @@ export default function SavedPlaces() {
               return place ? (
                 <Stack direction="row" align="center" gap={2}>
                   <Tag variant="outline">{place.floor}</Tag>
+                  {/* A Tree row's meta never shrinks (GAPS.md, GAP-48): on a
+                      phone the note would squeeze the place's name to
+                      nothing, so there it goes and the floor stays. */}
                   {place.note ? (
-                    <Text as="span" size="xs" color="muted">
+                    <Text
+                      as="span"
+                      size="xs"
+                      color="muted"
+                      className="ex-saved-note"
+                    >
                       {place.note}
                     </Text>
                   ) : null}
@@ -263,7 +295,14 @@ export default function SavedPlaces() {
           if (!open) setRemoving(undefined);
         }}
       >
-        <DialogContent>
+        <DialogContent
+          onCloseAutoFocus={(event) => {
+            if (!removed.current) return;
+            removed.current = false;
+            event.preventDefault();
+            undoButton.current?.focus();
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Remove {removing?.name}?</DialogTitle>
             <DialogDescription>

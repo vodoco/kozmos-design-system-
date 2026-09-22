@@ -37,7 +37,7 @@ export const demos: DemoModule["demos"] = [
   },
   {
     title: "Vertical",
-    description: 'orientation="vertical" fills the row\'s height.',
+    description: 'orientation="vertical" fills the row’s height.',
     Component: Vertical,
   },
 ];

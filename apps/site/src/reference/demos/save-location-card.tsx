@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Box, SaveLocationCard, Text } from "@kozmos/react";
+import { GlassBackdrop } from "../GlassBackdrop";
 import type { DemoModule } from "../types";
 
 function MarkMyCar() {
@@ -25,30 +26,16 @@ function MarkMyCar() {
 
 function OnGlass() {
   return (
-    <Box className="site-glass-stage">
-      {(["orange", "green"] as const).map((colour, index) => (
-        <Box
-          key={colour}
-          className="site-blob"
-          aria-hidden="true"
-          style={{
-            "--blob": `var(--semantics-category-fill-${colour})`,
-            "--x": `${30 + index * 40}%`,
-            "--y": "50%",
-          }}
-        />
-      ))}
-      <Box className="site-glass-card">
-        <SaveLocationCard
-          surface="glass"
-          title="Remember this spot"
-          description="Find your way back to the terrace."
-          isSaved
-          onSaveToggle={() => {}}
-          onRouteToLocation={() => {}}
-        />
-      </Box>
-    </Box>
+    <GlassBackdrop colours={["orange", "green"]}>
+      <SaveLocationCard
+        surface="glass"
+        title="Remember this spot"
+        description="Find your way back to the terrace."
+        isSaved
+        onSaveToggle={() => {}}
+        onRouteToLocation={() => {}}
+      />
+    </GlassBackdrop>
   );
 }
 

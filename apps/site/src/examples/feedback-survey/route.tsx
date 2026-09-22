@@ -4,6 +4,7 @@ import { getExample } from "../manifest";
 import FeedbackSurvey from "./FeedbackSurvey";
 import styles from "./FeedbackSurvey.css?raw";
 import source from "./FeedbackSurvey.tsx?raw";
+import focusSource from "../focus.ts?raw";
 
 const example = getExample("feedback-survey");
 
@@ -21,6 +22,7 @@ export default function FeedbackSurveyExample() {
       files={[
         { name: "FeedbackSurvey.tsx", code: source },
         { name: "FeedbackSurvey.css", code: styles },
+        { name: "focus.ts", code: focusSource },
       ]}
     >
       <FeedbackSurvey />

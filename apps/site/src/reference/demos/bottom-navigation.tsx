@@ -18,7 +18,8 @@ const tabs = [
 
 function Summon() {
   const [shown, setShown] = useState(false);
-  const [compact, setCompact] = useState(false);
+  // Kozmos's default is compact; switching it off asks for the taller items.
+  const [compact, setCompact] = useState(true);
   const [active, setActive] = useState("explore");
   return (
     <Box className="site-demo-column">
@@ -48,7 +49,7 @@ function Summon() {
       {shown ? (
         <BottomNavigation
           aria-label="App sections"
-          density={compact ? "compact" : undefined}
+          density={compact ? "compact" : "default"}
           items={tabs.map((tab) => ({
             label: tab.label,
             icon: <Icon name={tab.icon} />,
@@ -66,7 +67,7 @@ export const demos: DemoModule["demos"] = [
   {
     title: "Summon the bar",
     description:
-      'A phone app’s bottom bar: four tabs, active marks the current one, badge counts what is waiting, density="compact" shortens it.',
+      'A phone app’s bottom bar: four tabs, active marks the current one, badge counts what is waiting. It is compact unless density="default" asks for taller items.',
     Component: Summon,
   },
 ];

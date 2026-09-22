@@ -17,7 +17,7 @@ export default function Motion() {
     <DocsPage page={page}>
       <Section
         title="Durations and easings"
-        lead="Three durations and two curves cover the system. Quick for state changes, standard for most movement, deliberate for entrances. Emphasised overshoots; standard settles."
+        lead="Three durations and two curves: quick for state changes, standard for most movement, deliberate for entrances; emphasised overshoots, standard settles. Kozmos’s own stylesheet times its sheet, pop, reveal and cross-fade with them; many components still use Tailwind’s own durations."
       >
         <MotionRace />
       </Section>
@@ -36,16 +36,16 @@ export default function Motion() {
       <Section title="Reduced motion">
         <Alert variant="info" role="note">
           <AlertDescription>
-            The components respect the system’s reduced-motion preference: the
-            location marker’s pulse stops, reveals become cuts, and the design
-            config’s{" "}
+            Under the system’s reduced-motion preference the location marker’s
+            pulse stops, and the sheet, pops, reveals and cross-fades become
+            cuts. The spinner, the skeleton’s pulse and the button’s loader keep
+            moving. The design config’s{" "}
             <Text as="span" className="site-mono">
               motion: reduced
             </Text>{" "}
-            does the same for a whole module. The duration scale token lets a
-            product shorten or lengthen everything at once. This page’s race
-            still runs under reduced motion, because it is the thing being
-            demonstrated.
+            and the duration scale token shorten the Tailwind transitions most
+            components use, not those animations. This page’s race still runs
+            under reduced motion, because it is the thing being demonstrated.
           </AlertDescription>
         </Alert>
       </Section>

@@ -6,6 +6,7 @@ import {
   RouteSummary,
   Text,
 } from "@kozmos/react";
+import { GlassBackdrop } from "../GlassBackdrop";
 import type { DemoModule } from "../types";
 
 function Estimate() {
@@ -52,30 +53,16 @@ function Navigating() {
 
 function OnGlass() {
   return (
-    <Box className="site-glass-stage">
-      {(["blue", "green"] as const).map((colour, index) => (
-        <Box
-          key={colour}
-          className="site-blob"
-          aria-hidden="true"
-          style={{
-            "--blob": `var(--semantics-category-fill-${colour})`,
-            "--x": `${30 + index * 40}%`,
-            "--y": "50%",
-          }}
-        />
-      ))}
-      <Box className="site-glass-card">
-        <RouteSummary
-          surface="glass"
-          destination="Gate B12"
-          durationText="9 min"
-          distanceText="620 m"
-          arrivalText="14:41"
-          onEndRoute={() => {}}
-        />
-      </Box>
-    </Box>
+    <GlassBackdrop colours={["blue", "green"]}>
+      <RouteSummary
+        surface="glass"
+        destination="Gate B12"
+        durationText="9 min"
+        distanceText="620 m"
+        arrivalText="14:41"
+        onEndRoute={() => {}}
+      />
+    </GlassBackdrop>
   );
 }
 

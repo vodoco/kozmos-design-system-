@@ -11,7 +11,7 @@ import {
   Text,
 } from "@kozmos/react";
 import { examples, exampleKindLabel } from "../examples/manifest";
-import { exampleComponents, miniatureSize } from "../examples/registry";
+import { exampleComponents } from "../examples/registry";
 import { HeroScene } from "../home/HeroScene";
 import { MakeItYours } from "../home/MakeItYours";
 import { Checklist } from "../home/Pipeline";
@@ -23,6 +23,7 @@ import {
   TokensTile,
 } from "../home/tiles";
 import { PACKAGES_PUBLISHED, pageTitle } from "../lib/site";
+import { Band } from "../site/Band";
 import { ExampleMiniature } from "../site/ExampleMiniature";
 import { ButtonLink, SiteLink } from "../site/links";
 import { Reveal } from "../site/Reveal";
@@ -42,11 +43,11 @@ export function meta() {
 const platforms = [
   {
     title: "Web",
-    technology: "React 18 and 19",
+    technology: "React 18.2 and later, and 19",
     status: PACKAGES_PUBLISHED ? "On npm" : "npm soon",
     description: PACKAGES_PUBLISHED
       ? "@kozmos/react, with its tokens, icons and contracts."
-      : "@kozmos/react is ready for npm and not yet published. Apps inside the repository use it today.",
+      : "@kozmos/react is packaged for npm and not yet published: release waits on an approved browser support matrix. Apps inside the repository use it today.",
   },
   {
     title: "iOS",
@@ -67,7 +68,7 @@ const platforms = [
     technology: "The Core Library",
     status: "Code Connect",
     description:
-      "Painted from the same tokens by an importer plugin; every variant is checked against the code's contract, and Dev Mode shows each part's React, SwiftUI and Compose.",
+      "Painted from the same tokens by an importer plugin, whose painters CI measures. Code Connect links most component sets to their React, SwiftUI and Compose code, which Dev Mode shows beside the design.",
   },
 ];
 
@@ -112,7 +113,7 @@ export default function Home() {
         </section>
       </Container>
 
-      <Box className="site-band site-band-muted">
+      <Band muted>
         <Container>
           <Reveal>
             <Section
@@ -129,14 +130,11 @@ export default function Home() {
               <Box className="site-grid site-grid-3">
                 {featured.map((example) => {
                   const Example = exampleComponents[example.slug];
-                  const size = miniatureSize[example.kind];
                   return (
                     <Card key={example.slug} className="site-example-card">
                       {Example ? (
                         <ExampleMiniature
                           label={`${example.title} example, shown small`}
-                          width={size.width}
-                          height={size.height}
                         >
                           <Example />
                         </ExampleMiniature>
@@ -169,9 +167,9 @@ export default function Home() {
             </Section>
           </Reveal>
         </Container>
-      </Box>
+      </Band>
 
-      <Box className="site-band">
+      <Band>
         <Container>
           <Reveal>
             <Section
@@ -198,9 +196,9 @@ export default function Home() {
             </Section>
           </Reveal>
         </Container>
-      </Box>
+      </Band>
 
-      <Box className="site-band site-band-muted">
+      <Band muted>
         <Container>
           <Reveal>
             <Section
@@ -211,9 +209,9 @@ export default function Home() {
             </Section>
           </Reveal>
         </Container>
-      </Box>
+      </Band>
 
-      <Box className="site-band">
+      <Band>
         <Container>
           <Reveal>
             <Section
@@ -244,14 +242,14 @@ export default function Home() {
             </Section>
           </Reveal>
         </Container>
-      </Box>
+      </Band>
 
-      <Box className="site-band site-band-muted">
+      <Band muted last>
         <Container>
           <Reveal>
             <Section
               title="Checked on every pull request"
-              lead="What the workflow runs before anything merges."
+              lead="The main checks the workflow runs on every pull request."
               actions={
                 <Text size="sm">
                   <SiteLink to="/get-started#checks">
@@ -264,7 +262,7 @@ export default function Home() {
             </Section>
           </Reveal>
         </Container>
-      </Box>
+      </Band>
     </>
   );
 }

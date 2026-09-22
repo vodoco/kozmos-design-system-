@@ -33,7 +33,7 @@ function WithCounterAndIcon() {
 export const demos: DemoModule["demos"] = [
   {
     title: "Variants",
-    description: "Six variants on the button's shape and sizes.",
+    description: "Six variants on the button’s shape and sizes.",
     Component: Variants,
   },
   {

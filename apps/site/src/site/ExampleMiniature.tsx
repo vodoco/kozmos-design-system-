@@ -2,6 +2,13 @@ import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { Box, Skeleton } from "@kozmos/react";
 
 /**
+ * The canvas an example is drawn on when shown small: wide enough for a
+ * page's desktop layout. Pages and apps share it, so miniatures side by side
+ * have one shape and the cards under them line up.
+ */
+const CANVAS = { width: 1200, height: 760 };
+
+/**
  * An example rendered small: the real component on a canvas of its real
  * size, scaled to the frame's width. It is a picture of the example, not
  * the example — inert, hidden from assistive technology, named by its label.
@@ -10,13 +17,9 @@ import { Box, Skeleton } from "@kozmos/react";
  */
 export function ExampleMiniature({
   label,
-  width = 1200,
-  height = 760,
   children,
 }: {
   label: string;
-  width?: number;
-  height?: number;
   children: ReactNode;
 }) {
   const frame = useRef<HTMLDivElement>(null);
@@ -27,7 +30,7 @@ export function ExampleMiniature({
     const element = frame.current;
     if (!element) return;
     const resize = new ResizeObserver(([entry]) => {
-      if (entry) setScale(entry.contentRect.width / width);
+      if (entry) setScale(entry.contentRect.width / CANVAS.width);
     });
     resize.observe(element);
     const intersection = new IntersectionObserver(
@@ -44,7 +47,7 @@ export function ExampleMiniature({
       resize.disconnect();
       intersection.disconnect();
     };
-  }, [width]);
+  }, []);
 
   return (
     <Box
@@ -52,7 +55,7 @@ export function ExampleMiniature({
       role="img"
       aria-label={label}
       className="site-miniature"
-      style={{ "--w": width, "--h": height, "--scale": scale }}
+      style={{ "--w": CANVAS.width, "--h": CANVAS.height, "--scale": scale }}
     >
       <Box className="site-miniature-canvas" aria-hidden="true" inert>
         {near ? (

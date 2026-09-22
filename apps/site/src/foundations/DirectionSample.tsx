@@ -18,7 +18,7 @@ import {
 } from "@kozmos/react";
 
 /** The same parts under a left-to-right and a right-to-left provider. */
-export function DirectionSample({ compact = false }: { compact?: boolean }) {
+export function DirectionSample() {
   const [rtl, setRtl] = useState(false);
   return (
     <Stack gap={3}>
@@ -40,24 +40,23 @@ export function DirectionSample({ compact = false }: { compact?: boolean }) {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          {compact ? null : (
-            <Stepper
-              steps={["Search", "Choose", "Route", "Arrive"]}
-              currentStep={2}
-            />
-          )}
-          <ChipGroup aria-label="Filters">
+          <Stepper
+            steps={["Search", "Choose", "Route", "Arrive"]}
+            currentStep={2}
+          />
+          {/* GAP-32: ChipGroup is a plain div; the role makes the label count. */}
+          <ChipGroup role="group" aria-label="Filters">
             <Chip size="sm" selected icon={<Icon name="check" />}>
               Open now
             </Chip>
             <Chip size="sm">Step-free</Chip>
           </ChipGroup>
           <Stack direction="row" gap={2}>
-            <Button size={compact ? "sm" : "default"}>
+            <Button>
               <Icon name="arrow-left" size="sm" />
               Back
             </Button>
-            <Button size={compact ? "sm" : "default"} variant="outline">
+            <Button variant="outline">
               Next
               <Icon name="arrow-right" size="sm" />
             </Button>

@@ -3,6 +3,7 @@ import {
   Box,
   Heading,
   Stack,
+  Surface,
   Table,
   TableBody,
   TableCell,
@@ -26,10 +27,12 @@ export function Swatch({
 }) {
   return (
     <Box className={large ? "site-swatch site-swatch-large" : "site-swatch"}>
-      <Box
+      <Surface
         className="site-swatch-colour"
         style={{ "--swatch": `var(${entry.name})` }}
-      />
+      >
+        <Box className="site-swatch-fill" />
+      </Surface>
       <Stack gap={0}>
         <Text as="span" size="sm" weight="medium">
           {label ?? entry.name}
@@ -124,11 +127,7 @@ export function TokenTable({
           <TableHead>{themed ? "Light" : "Value"}</TableHead>
           {themed ? <TableHead>Dark</TableHead> : null}
           {described ? <TableHead>Description</TableHead> : null}
-          <TableHead>
-            <Text as="span" className="site-visually-hidden-label">
-              Copy
-            </Text>
-          </TableHead>
+          <TableHead>Copy</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

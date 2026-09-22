@@ -84,18 +84,20 @@ function useVenue(variant: string) {
     </Box>
   );
   const panel = (
-    <POIResultList
-      label={`Places, ${variant}`}
-      resultCountLabel="3 places"
-      items={results}
-      currentFloorId={floorId}
-      selectedPoiId={selectedId}
-      onSelect={(id) => {
-        setSelectedId(id);
-        const place = results.find(({ poi }) => poi.id === id);
-        if (place) setFloorId(place.poi.floorId);
-      }}
-    />
+    <Box className="site-demo-panel">
+      <POIResultList
+        label={`Places, ${variant}`}
+        resultCountLabel="3 places"
+        items={results}
+        currentFloorId={floorId}
+        selectedPoiId={selectedId}
+        onSelect={(id) => {
+          setSelectedId(id);
+          const place = results.find(({ poi }) => poi.id === id);
+          if (place) setFloorId(place.poi.floorId);
+        }}
+      />
+    </Box>
   );
   return {
     map,

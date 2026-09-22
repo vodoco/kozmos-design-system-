@@ -101,7 +101,7 @@ function Collapsible() {
 export const demos: DemoModule["demos"] = [
   {
     title: "Header, navigation, tools, footer",
-    description: "An aside that fills its parent's height, with four slots.",
+    description: "An aside that fills its parent’s height, with four slots.",
     Component: Expanded,
     tall: true,
   },

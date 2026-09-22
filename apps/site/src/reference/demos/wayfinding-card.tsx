@@ -26,7 +26,7 @@ function Directions() {
           }}
         />
         <Button
-          className="w-full"
+          className="site-fill"
           onClick={() =>
             setNote(`Finding a route from ${origin} to ${destination}.`)
           }

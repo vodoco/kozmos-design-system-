@@ -39,7 +39,7 @@
   top: var(--dot-y);
   inline-size: calc(var(--primitives-layout-sizing-100) * 1px);
   block-size: calc(var(--primitives-layout-sizing-100) * 1px);
-  border-radius: var(--site-radius-pill);
+  border-radius: calc(var(--semantics-radius-pill) * 1px);
   background: var(--primitives-colors-theme-600);
   transform: translate(-50%, -50%);
 }
@@ -48,13 +48,37 @@
   display: flex;
   flex-direction: column;
   align-items: end;
-  gap: var(--site-space-150);
+  gap: calc(var(--primitives-layout-spacing-150) * 1px);
 }
 
 /* The navigation and arrival panels: the summary or the feedback card, then
    the example's own controls, with the panel's padding. */
 .ex-way-stack {
   display: grid;
-  gap: var(--site-space-300);
-  padding: var(--site-space-300);
+  gap: calc(var(--primitives-layout-spacing-300) * 1px);
+  padding: calc(var(--primitives-layout-spacing-300) * 1px);
+}
+
+/* The panel's view takes focus when the stage changes (../focus.ts); it is
+   where the keyboard starts from, not a control, so it shows no ring. */
+.ex-way-panel-focus:focus {
+  outline: none;
+}
+
+/* The list of places brings no padding of its own; Kozmos's own panels pad
+   their content by 16px, so it sits in a box that does. */
+.ex-way-list {
+  padding: calc(var(--primitives-layout-spacing-200) * 1px);
+}
+
+/* Focus moves to the list when the view changes, and Chromium and WebKit
+   scroll a tall view's top edge to the panel's, even in a sheet that does not
+   scroll at its height. The margin keeps the padding above the list. */
+.ex-way-list > .ex-way-panel-focus {
+  scroll-margin-block-start: calc(var(--primitives-layout-spacing-200) * 1px);
+}
+
+/* A live region stays on the page; empty, it leaves the flow. */
+.ex-way-live:empty {
+  position: absolute;
 }

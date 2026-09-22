@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
+import { contrastRatio, formatRatio, parseColour } from "../src/lib/contrast";
 
 /** The generated index: the walk over every component page needs no list of its own. */
 const componentIndex = JSON.parse(
@@ -12,6 +13,14 @@ const componentIndex = JSON.parse(
   lanes: Record<string, string>;
   components: { slug: string; name: string; lane: string }[];
 };
+
+/** The contrast contract the colour page measures, as the generator copied it. */
+const contrastContract = JSON.parse(
+  readFileSync(
+    new URL("../src/generated/contrast-contract.json", import.meta.url),
+    "utf8",
+  ),
+) as { pairs: unknown[] };
 
 const pages = [
   { path: "/", title: "The design system for the Pointr SDK" },
@@ -97,47 +106,70 @@ async function scrolled(page: Page) {
 /**
  * Violations that come from inside a Kozmos component and are recorded in
  * GAPS.md. The tests expect exactly these: a new violation fails, and so does
- * one that has gone away, so the gap gets closed when Kozmos fixes it.
+ * one that has gone away, so the gap gets closed when Kozmos fixes it. An
+ * entry may cover only some nodes (`only`) or only one theme (`theme`).
  */
-type KnownViolation = string | { id: string; only: RegExp };
+type KnownEntry = { id: string; only?: RegExp; theme?: "light" | "dark" };
+type KnownViolation = string | KnownEntry;
+
+/** GAP-17: AdaptiveMapShell's panel, an <aside> nested in the page's main. */
+const SHELL_PANEL: KnownEntry = {
+  id: "landmark-complementary-is-top-level",
+  only: /<aside[^>]*class="[^"]*kozmos-surface-/,
+};
+
+/** Not a gap: a Sidebar is an aside by nature, shown inside a page's main. */
+const SIDEBAR: KnownEntry = {
+  id: "landmark-complementary-is-top-level",
+  only: /data-slot="sidebar"/,
+};
 
 const knownViolations: Record<string, readonly KnownViolation[]> = {
-  // GAP-17: AdaptiveMapShell's panel is an <aside>, nested in the page's main.
-  "/examples/venue-explorer": ["landmark-complementary-is-top-level"],
-  "/examples/wayfinding": ["landmark-complementary-is-top-level"],
-  "/examples/phone-search": ["landmark-complementary-is-top-level"],
-  // Not a gap: the dashboard's Sidebar is an aside by nature, shown inside
-  // the page's main like every example.
-  "/examples/dashboard": ["landmark-complementary-is-top-level"],
-  "/": ["landmark-complementary-is-top-level"],
+  "/examples/venue-explorer": [SHELL_PANEL],
+  "/examples/wayfinding": [SHELL_PANEL],
+  "/examples/phone-search": [SHELL_PANEL],
+  "/examples/dashboard": [SIDEBAR],
+  // The adaptive tile's shell.
+  "/": [SHELL_PANEL],
   "/components/adaptive-map-shell": [
-    "landmark-complementary-is-top-level",
+    SHELL_PANEL,
     // GAP-28: SearchBar's search landmark cannot be named; three shells, three.
     { id: "landmark-unique", only: /role="search"/ },
   ],
   "/components/search-bar": [{ id: "landmark-unique", only: /role="search"/ }],
   "/components/sidebar": [
-    // Not a gap: a Sidebar is a complementary landmark by nature, and a page
-    // that shows one inside its own content cannot make it top-level.
-    "landmark-complementary-is-top-level",
+    SIDEBAR,
     // GAP-30: Sidebar's navigation cannot be named; the page's own has one too.
     { id: "landmark-unique", only: /sidebar-navigation/ },
   ],
   "/components/alert": [
-    // GAP-31: the warning text reads 4.29:1 on the card.
-    { id: "color-contrast", only: /border-warning/ },
+    // GAP-31: the warning text reads 4.29:1 on the card, in the light theme.
+    { id: "color-contrast", only: /border-warning/, theme: "light" },
     // GAP-12: AlertTitle is always an h5, under the demo card's h3.
     { id: "heading-order", only: /<h5/ },
   ],
-  "/components/input": [{ id: "color-contrast", only: /kozmos-field-warning/ }],
+  "/components/input": [
+    { id: "color-contrast", only: /kozmos-field-warning/, theme: "light" },
+  ],
   // GAP-31 again: the alert emotion as an outlined Tag's text.
-  "/components/tag": [{ id: "color-contrast", only: /kz-emotion-text/ }],
+  "/components/tag": [
+    { id: "color-contrast", only: /kz-emotion-text/, theme: "light" },
+  ],
   "/components/date-picker": [
-    { id: "color-contrast", only: /kozmos-field-warning/ },
+    { id: "color-contrast", only: /kozmos-field-warning/, theme: "light" },
+  ],
+  // GAP-45: the first brand variant's 600 reads 4.21:1 on the dark page, and
+  // the token-override example re-points the theme's 600 to it.
+  "/components/theme-provider": [
+    { id: "color-contrast", only: /kozmos-text-primary/, theme: "dark" },
   ],
 };
 
 async function axeViolations(page: Page) {
+  // From the top of the page: scrolled, whatever passes under the sticky
+  // header counts as covered, and axe's target-size rule then fails the
+  // links there, which a visitor simply scrolls back to.
+  await page.evaluate(() => window.scrollTo(0, 0));
   const results = await new AxeBuilder({ page })
     .withTags([
       "wcag2a",
@@ -148,17 +180,23 @@ async function axeViolations(page: Page) {
       "best-practice",
     ])
     .analyze();
-  const known = (knownViolations[new URL(page.url()).pathname] ?? []).map(
-    (entry) => (typeof entry === "string" ? { id: entry } : entry),
+  const theme = await page.evaluate(
+    () => document.documentElement.dataset.theme,
   );
+  const known = (knownViolations[new URL(page.url()).pathname] ?? [])
+    .map(
+      (entry): KnownEntry =>
+        typeof entry === "string" ? { id: entry } : entry,
+    )
+    .filter((entry) => !entry.theme || entry.theme === theme);
   // A known violation covers a rule on the page, or only the nodes it names.
   const isKnown = (violation: (typeof results.violations)[number]) =>
     known.some(
-      (entry) =>
-        entry.id === violation.id &&
-        (!("only" in entry) ||
+      ({ id, only }) =>
+        id === violation.id &&
+        (!only ||
           violation.nodes.every((node) =>
-            entry.only.test(`${node.target.join(" ")} ${node.html}`),
+            only.test(`${node.target.join(" ")} ${node.html}`),
           )),
     );
   const missing = known.filter(
@@ -191,6 +229,298 @@ async function axeViolations(page: Page) {
   ];
 }
 
+/**
+ * The site's and the examples' CSS that does not apply: a declaration a
+ * Kozmos rule outranks does nothing, and nothing says so. Kozmos's utilities
+ * are scoped (GAP-04), and so is its preflight, which zeroes the border of
+ * every box inside the provider (GAP-52). Every site rule is added again with
+ * one ID's more specificity, which puts it above any Kozmos rule and keeps
+ * the site's rules in their own order among themselves; a longhand that
+ * changes on an element the rule matches was losing. Declarations are read
+ * as written, so a shorthand holding var() — `border: var(--w) solid
+ * var(--c)` — is measured through its longhands, which the CSSOM leaves empty
+ * in the rule. Rules for states (:hover, :focus…) are left out. A loss can
+ * move the layout, and then a percentage size elsewhere reads differently
+ * too: the first line of a failure is the cause.
+ */
+async function overriddenSiteCss(page: Page) {
+  return page.evaluate(() => {
+    const BOOST = ":not(#site-css-check)";
+    const STATE =
+      /:(hover|focus|focus-visible|focus-within|active|empty|checked)/;
+    // Splits at a character outside brackets and strings.
+    const split = (text: string, separator: string) => {
+      const parts: string[] = [];
+      let depth = 0;
+      let quote = "";
+      let start = 0;
+      for (let index = 0; index < text.length; index += 1) {
+        const char = text[index];
+        if (quote) {
+          if (char === quote) quote = "";
+        } else if (char === '"' || char === "'") quote = char;
+        else if (char === "(" || char === "[") depth += 1;
+        else if (char === ")" || char === "]") depth -= 1;
+        else if (char === separator && depth === 0) {
+          parts.push(text.slice(start, index));
+          start = index + 1;
+        }
+      }
+      parts.push(text.slice(start));
+      return parts.map((part) => part.trim()).filter(Boolean);
+    };
+    // Where a selector's pseudo-element starts, outside brackets.
+    const pseudoAt = (selector: string) => {
+      let depth = 0;
+      for (let index = 0; index < selector.length - 1; index += 1) {
+        const char = selector[index];
+        if (char === "(" || char === "[") depth += 1;
+        else if (char === ")" || char === "]") depth -= 1;
+        else if (depth === 0 && char === ":" && selector[index + 1] === ":")
+          return index;
+      }
+      return -1;
+    };
+    const longhands = (property: string, value: string) => {
+      const probe = document.createElement("div").style;
+      probe.setProperty(property, value);
+      return Array.from(probe);
+    };
+    type Declared = { property: string; value: string; longhands: string[] };
+    const targets: {
+      selector: string;
+      match: string;
+      pseudo: string | null;
+      declared: Declared[];
+    }[] = [];
+    const boosted = (list: CSSRuleList): string[] => {
+      const out: string[] = [];
+      for (const rule of Array.from(list)) {
+        if (rule instanceof CSSStyleRule) {
+          const selector = rule.selectorText;
+          if (!/\.(site|ex)-/.test(selector) || STATE.test(selector)) continue;
+          const declared = split(rule.style.cssText, ";")
+            .map((declaration) => {
+              const colon = declaration.indexOf(":");
+              return {
+                property: declaration.slice(0, colon).trim(),
+                value: declaration
+                  .slice(colon + 1)
+                  .replace(/!\s*important\s*$/i, "")
+                  .trim(),
+              };
+            })
+            .filter(({ property }) => property && !property.startsWith("--"))
+            .map((entry) => ({
+              ...entry,
+              longhands: longhands(entry.property, entry.value),
+            }));
+          if (declared.length === 0) continue;
+          const complexes = split(selector, ",");
+          const raised = complexes.map((complex) => {
+            const at = pseudoAt(complex);
+            return at === -1
+              ? `${complex}${BOOST}`
+              : `${complex.slice(0, at)}${BOOST}${complex.slice(at)}`;
+          });
+          out.push(`${raised.join(", ")} { ${rule.style.cssText} }`);
+          for (const complex of complexes) {
+            const at = pseudoAt(complex);
+            targets.push({
+              selector,
+              match: at === -1 ? complex : complex.slice(0, at),
+              pseudo: at === -1 ? null : complex.slice(at),
+              declared,
+            });
+          }
+        } else if (rule instanceof CSSKeyframesRule) {
+          continue;
+        } else if ("cssRules" in rule) {
+          // @media, @supports, @container: kept, with their conditions.
+          const inner = boosted((rule as CSSGroupingRule).cssRules);
+          const header = rule.cssText.slice(0, rule.cssText.indexOf("{"));
+          if (inner.length > 0) out.push(`${header} { ${inner.join("\n")} }`);
+        }
+      }
+      return out;
+    };
+    const text: string[] = [];
+    for (const sheet of Array.from(document.styleSheets)) {
+      try {
+        text.push(...boosted(sheet.cssRules));
+      } catch {
+        // A sheet from another origin cannot be read; the site has none.
+      }
+    }
+    const measured = targets.flatMap((target) =>
+      Array.from(document.querySelectorAll(target.match)).map((element) => ({
+        element,
+        ...target,
+      })),
+    );
+    const read = () =>
+      measured.map(({ element, pseudo, declared }) => {
+        const style = getComputedStyle(element, pseudo);
+        return declared.map((entry) =>
+          entry.longhands.map((name) => style.getPropertyValue(name)),
+        );
+      });
+    // A change that starts a transition reads as its first frame; finished,
+    // it reads as the value the rule sets.
+    const settle = () => {
+      for (const animation of document.getAnimations()) {
+        if (animation instanceof CSSTransition) animation.finish();
+      }
+    };
+    const before = read();
+    const raised = document.createElement("style");
+    raised.textContent = text.join("\n");
+    document.head.append(raised);
+    settle();
+    const after = read();
+    raised.remove();
+    settle();
+    const lost = new Map<string, string>();
+    measured.forEach(({ selector, declared }, index) => {
+      declared.forEach(({ property, value, longhands: names }, at) => {
+        names.forEach((name, position) => {
+          const was = before[index]?.[at]?.[position];
+          const meant = after[index]?.[at]?.[position];
+          const key = `${selector} { ${property}: ${value} }`;
+          if (was !== meant && !lost.has(key))
+            lost.set(key, `${key} — ${name} is ${was}, not ${meant}`);
+        });
+      });
+    });
+    return [...lost.values()];
+  });
+}
+
+/**
+ * Edges a rounded box cuts short: a bordered element in the corner of a box
+ * that clips, drawn with a smaller radius than the box clips at. The clip
+ * takes its border off along the curve and leaves the corner unedged —
+ * hidden by a shadow in the light theme, plain on a dark page. Content in an
+ * inert miniature is a picture of a page that is checked itself.
+ */
+async function clippedEdges(page: Page) {
+  const found = await page.evaluate(() => {
+    const corners = [
+      ["TopLeft", "Top", "Left", "top-left"],
+      ["TopRight", "Top", "Right", "top-right"],
+      ["BottomLeft", "Bottom", "Left", "bottom-left"],
+      ["BottomRight", "Bottom", "Right", "bottom-right"],
+    ] as const;
+    type Side = "Top" | "Right" | "Bottom" | "Left";
+    const width = (style: CSSStyleDeclaration, side: Side) =>
+      parseFloat(style.getPropertyValue(`border-${side.toLowerCase()}-width`));
+    const edged = (style: CSSStyleDeclaration, side: Side) => {
+      const name = side.toLowerCase();
+      const colour = style.getPropertyValue(`border-${name}-color`);
+      return (
+        width(style, side) > 0 &&
+        !["none", "hidden"].includes(
+          style.getPropertyValue(`border-${name}-style`),
+        ) &&
+        colour !== "transparent" &&
+        !/,\s*0\)$/.test(colour)
+      );
+    };
+    const radius = (style: CSSStyleDeclaration, corner: string) =>
+      parseFloat(
+        style.getPropertyValue(
+          `border-${corner.replace(/([A-Z])/g, (letter) => `-${letter.toLowerCase()}`).slice(1)}-radius`,
+        ),
+      );
+    const describe = (element: Element) => {
+      const classes = Array.from(element.classList).filter((name) =>
+        /^(site|ex)-/.test(name),
+      );
+      const role = element.getAttribute("role");
+      return `${element.localName}${classes.map((name) => `.${name}`).join("")}${role ? `[role=${role}]` : ""}`;
+    };
+    const lines = new Set<string>();
+    for (const box of Array.from(document.querySelectorAll("body *"))) {
+      if (box.closest("[inert]")) continue;
+      const style = getComputedStyle(box);
+      if (style.overflowX === "visible" && style.overflowY === "visible")
+        continue;
+      const rect = box.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) continue;
+      const inner = {
+        Top: rect.top + width(style, "Top"),
+        Right: rect.right - width(style, "Right"),
+        Bottom: rect.bottom - width(style, "Bottom"),
+        Left: rect.left + width(style, "Left"),
+      };
+      for (const [corner, vertical, horizontal, name] of corners) {
+        const clip =
+          radius(style, corner) -
+          Math.max(width(style, vertical), width(style, horizontal));
+        if (clip < 2) continue;
+        for (const child of Array.from(box.querySelectorAll("*"))) {
+          const at = child.getBoundingClientRect();
+          if (at.width === 0 || at.height === 0) continue;
+          const key = {
+            Top: at.top,
+            Right: at.right,
+            Bottom: at.bottom,
+            Left: at.left,
+          };
+          if (
+            Math.abs(key[vertical] - inner[vertical]) > 1.5 ||
+            Math.abs(key[horizontal] - inner[horizontal]) > 1.5
+          )
+            continue;
+          const own = getComputedStyle(child);
+          if (own.visibility === "hidden") continue;
+          if (!edged(own, vertical) && !edged(own, horizontal)) continue;
+          if (radius(own, corner) + 1 < clip)
+            lines.add(`${describe(box)} cuts ${describe(child)} at ${name}`);
+        }
+      }
+    }
+    return [...lines];
+  });
+  const known = knownClippedEdges[new URL(page.url()).pathname] ?? [];
+  return [
+    ...found.filter((line) => !known.some((entry) => entry.test(line))),
+    ...known
+      .filter((entry) => !found.some((line) => entry.test(line)))
+      .map((entry) => `${entry} no longer occurs: close its gap in GAPS.md`),
+  ];
+}
+
+/**
+ * How far the first place in a map shell's list sits inside the panel's
+ * edge. POIResultList brings no padding; Kozmos's own panels pad by 16px.
+ */
+async function listInset(page: Page) {
+  const card = page.locator("aside article").first();
+  await expect(card).toBeVisible();
+  return card.evaluate((article) => {
+    const panel = article.closest("aside")?.getBoundingClientRect();
+    const own = article.getBoundingClientRect();
+    if (!panel) return 0;
+    return Math.round(
+      Math.min(
+        own.left - panel.left,
+        own.top - panel.top,
+        panel.right - own.right,
+      ),
+    );
+  });
+}
+
+/** Clipped edges that come from inside Kozmos, recorded in GAPS.md. */
+const knownClippedEdges: Record<string, readonly RegExp[]> = {
+  // GAP-53: the sheet keeps square, bordered bottom corners on a phone's
+  // rounded screen.
+  "/examples/phone-search": [
+    /^div\.ex-phone cuts aside at bottom-(left|right)$/,
+  ],
+};
+
 for (const colorScheme of ["light", "dark"] as const) {
   test.describe(`${colorScheme} theme`, () => {
     test.use({ colorScheme });
@@ -216,6 +546,10 @@ for (const colorScheme of ["light", "dark"] as const) {
         );
         await scrolled(page);
         expect(await axeViolations(page)).toEqual([]);
+        // The site's own CSS all applies: none of it is outranked by Kozmos.
+        expect(await overriddenSiteCss(page)).toEqual([]);
+        // No rounded box cuts the edge of what sits in its corner.
+        expect(await clippedEdges(page)).toEqual([]);
         expect(errors).toEqual([]);
       });
     }
@@ -227,9 +561,13 @@ test.describe("on a narrow phone", () => {
   test.use({ viewport: { width: 320, height: 700 } });
 
   for (const { path } of pages) {
-    test(`${path} has no sideways scroll`, async ({ page }) => {
+    test(`${path} has no sideways scroll and no clipped edges`, async ({
+      page,
+    }) => {
       await page.goto(path);
       await scrolled(page);
+      // Narrow, a map shell turns its panel into a bottom sheet.
+      expect(await clippedEdges(page)).toEqual([]);
       const overflow = await page.evaluate(
         () => document.documentElement.scrollWidth - window.innerWidth,
       );
@@ -249,6 +587,7 @@ test.describe("on a narrow phone", () => {
     await expect(page).toHaveURL(/\/foundations\/motion$/);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Motion");
     await expect(drawer).toBeHidden();
+    await focusStaysOnContent(page);
   });
 
   test("a component page offers the reference in a drawer, grouped by lane", async ({
@@ -268,23 +607,31 @@ test.describe("on a narrow phone", () => {
       "Checkbox",
     );
     await expect(drawer).toBeHidden();
+    await focusStaysOnContent(page);
   });
 });
 
-test("an unknown address answers 404 with the not-found page", async ({
-  page,
-}) => {
-  const errors = collectErrors(page);
-  const response = await page.goto("/no-such-page");
-  expect(response?.status()).toBe(404);
-  await hydrated(page);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Page not found",
-  );
-  expect(await axeViolations(page)).toEqual([]);
-  // The browser logs the 404 response itself; nothing else may fail.
-  expect(errors.filter((error) => !error.includes("404"))).toEqual([]);
-});
+// An address that names no page, and one that names no component: the
+// component pages are one route each, so the second matches the not-found
+// route in the browser as it did when the 404 page was pre-rendered.
+for (const address of ["/no-such-page", "/components/no-such-component"]) {
+  test(`${address} answers 404 with the not-found page`, async ({ page }) => {
+    const errors = collectErrors(page);
+    const response = await page.goto(address);
+    expect(response?.status()).toBe(404);
+    await hydrated(page);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Page not found",
+    );
+    expect(await axeViolations(page)).toEqual([]);
+    // The browser logs the page's own 404 response; nothing else may fail.
+    expect(
+      errors.filter(
+        (error) => !(error.includes("404") && error.includes(address)),
+      ),
+    ).toEqual([]);
+  });
+}
 
 test("the theme choice is kept across a reload", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
@@ -301,6 +648,12 @@ test("the theme choice is kept across a reload", async ({ page }) => {
   expect(
     await page.evaluate(() => window.localStorage.getItem("kozmos-site-theme")),
   ).toBe("dark");
+  // System follows the device again.
+  await page.getByRole("button", { name: "Theme: Dark" }).click();
+  await page.getByRole("menuitemradio", { name: "System" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 });
 
 test("site navigation stays in the page and moves focus to the content", async ({
@@ -385,10 +738,52 @@ test("the skip link is the first stop and moves focus to the content", async ({
   await page.keyboard.press("Tab");
   const skip = page.getByRole("link", { name: "Skip to content" });
   await expect(skip).toBeFocused();
-  await expect(skip).toBeInViewport();
+  // Painted on top, not only placed on screen: the sticky header once drew
+  // over it at the same layer.
+  expect(await drawnOnTop(skip)).toBe(true);
   await page.keyboard.press("Enter");
   await expect(page.locator("main#main")).toBeFocused();
 });
+
+test("the skip link shows over the header on a phone too", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(
+    browserName === "webkit",
+    "Tab does not reach links in WebKit by default",
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/components/button");
+  await hydrated(page);
+  await page.keyboard.press("Tab");
+  const skip = page.getByRole("link", { name: "Skip to content" });
+  await expect(skip).toBeFocused();
+  expect(await drawnOnTop(skip)).toBe(true);
+});
+
+/** Whether an element is what the page paints at its own centre. */
+async function drawnOnTop(element: Locator) {
+  return element.evaluate((node) => {
+    const box = node.getBoundingClientRect();
+    const hit = document.elementFromPoint(
+      box.left + box.width / 2,
+      box.top + box.height / 2,
+    );
+    return hit !== null && (hit === node || node.contains(hit));
+  });
+}
+
+/**
+ * Focus on the new page's content, and still there once a closing drawer
+ * or dialog has finished animating, which is when Radix gives focus back to
+ * the button that opened it.
+ */
+async function focusStaysOnContent(page: Page) {
+  await expect(page.locator("main#main")).toBeFocused();
+  await page.waitForTimeout(600);
+  await expect(page.locator("main#main")).toBeFocused();
+}
 
 test.describe("home", () => {
   test("the hero scene themes and mirrors only itself, and its controls work", async ({
@@ -422,6 +817,38 @@ test.describe("home", () => {
     );
     await expect(map.getByText("Turn left at the pharmacy")).toBeVisible();
     await expect(map.getByText("Gate B12")).toBeVisible();
+  });
+
+  test("the scene's frame keeps the map's corners, and its bar is edged round them", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await hydrated(page);
+    const edges = await page
+      .getByRole("group", { name: "Scene settings" })
+      .evaluate((bar) => {
+        const frame = bar.parentElement!;
+        const map = frame.querySelector('[role="region"]')!;
+        const own = getComputedStyle(bar);
+        return {
+          last: frame.lastElementChild === bar,
+          frame: getComputedStyle(frame).borderStartStartRadius,
+          map: getComputedStyle(map).borderStartStartRadius,
+          border: own.borderBlockEndWidth,
+          start: own.borderEndStartRadius,
+          end: own.borderEndEndRadius,
+        };
+      });
+    // The frame clips its corners round. A wider curve than the map's own
+    // takes the map's edge off at the top; a square-cornered bar's border
+    // stops where the curve starts at the bottom. Both leave a corner
+    // unedged, plain on a dark page, where the frame's shadow does not show.
+    expect(edges.frame).not.toBe("0px");
+    expect(edges.frame).toBe(edges.map);
+    expect(edges.last).toBe(true);
+    expect(edges.border).not.toBe("0px");
+    expect(edges.start).toBe(edges.frame);
+    expect(edges.end).toBe(edges.frame);
   });
 
   test("the live tiles respond", async ({ page }) => {
@@ -547,12 +974,147 @@ async function paintedOverHeader(page: Page) {
   });
 }
 
+/** What the logo shows, and so its name and the home link's (src/lib/site.ts). */
+const LOGO = "Kozmos UI Design Systems";
+
+/**
+ * The artwork a logo Box is painted through, decoded as the browser would
+ * decode it: an SVG that is not well-formed decodes to nothing, and a mask
+ * made of it paints nothing, without an error anywhere. The build inlines a
+ * small SVG into the stylesheet, so the artwork is known by its proportions,
+ * not by its file's name.
+ */
+async function drawnShape(logo: Locator) {
+  return logo.evaluate(async (element) => {
+    const style = getComputedStyle(element);
+    const mask =
+      style.maskImage || style.getPropertyValue("-webkit-mask-image");
+    const url = mask.match(/url\("?([^")]+)"?\)/)?.[1];
+    if (!url) return { decoded: false, artwork: 0, height: 0, ratio: 0 };
+    const image = new Image();
+    image.src = url;
+    const decoded = await image.decode().then(
+      () => true,
+      () => false,
+    );
+    const box = element.getBoundingClientRect();
+    return {
+      decoded,
+      artwork: image.naturalWidth / image.naturalHeight,
+      height: Math.round(box.height),
+      ratio: box.width / box.height,
+    };
+  });
+}
+
 test.describe("the header", () => {
+  test("shows the logo, named by the words it shows, and it takes you home", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/components");
+    await hydrated(page);
+    const home = page.getByRole("banner").getByRole("link", { name: LOGO });
+    const logo = home.getByRole("img", { name: LOGO });
+    await expect(logo).toBeVisible();
+    // The full logo, at its own proportions (src/brand/kozmos-logo.svg).
+    const shape = await drawnShape(logo);
+    expect(shape.decoded).toBe(true);
+    expect(shape.artwork).toBeCloseTo(1605.6736 / 442.27, 1);
+    expect(shape.height).toBe(40);
+    expect(shape.ratio).toBeCloseTo(1605.6736 / 442.27, 1);
+    await home.click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "The design system for the Pointr SDK",
+    );
+  });
+
+  test("shows the logo's K alone on a phone", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    await hydrated(page);
+    const logo = page
+      .getByRole("banner")
+      .getByRole("link", { name: LOGO })
+      .getByRole("img", { name: LOGO });
+    const shape = await drawnShape(logo);
+    expect(shape.decoded).toBe(true);
+    expect(shape.artwork).toBeCloseTo(272.5726 / 293.54, 1);
+    expect(shape.height).toBe(32);
+    expect(shape.ratio).toBeCloseTo(272.5726 / 293.54, 1);
+  });
+
+  test("keeps the logo visible in a high-contrast mode", async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== "chromium",
+      "Chromium is the browser that emulates forced colours",
+    );
+    await page.emulateMedia({ forcedColors: "active" });
+    await page.goto("/");
+    await hydrated(page);
+    // Forced colours repaint every background with the page's own colour;
+    // the logo, a painted background, must take the text colour instead.
+    const colours = await page
+      .getByRole("banner")
+      .getByRole("img", { name: LOGO })
+      .evaluate((logo) => ({
+        logo: getComputedStyle(logo).backgroundColor,
+        header: getComputedStyle(logo.closest("header") ?? document.body)
+          .backgroundColor,
+      }));
+    expect(colours.logo).not.toBe(colours.header);
+  });
+
+  test("gives the browser tab the logo's K", async ({ page }) => {
+    await page.goto("/");
+    const icons = await page
+      .locator('link[rel="icon"], link[rel="apple-touch-icon"]')
+      .evaluateAll((links) =>
+        links.map(
+          (link) => `${link.getAttribute("rel")} ${link.getAttribute("href")}`,
+        ),
+      );
+    expect(icons).toEqual([
+      "icon /favicon.ico",
+      "icon /favicon.svg",
+      "apple-touch-icon /apple-touch-icon.png",
+    ]);
+    for (const [href, type] of [
+      ["/favicon.ico", "image/x-icon"],
+      ["/favicon.svg", "image/svg+xml"],
+      ["/apple-touch-icon.png", "image/png"],
+    ]) {
+      const response = await page.request.get(href);
+      expect(response.status(), href).toBe(200);
+      expect(response.headers()["content-type"], href).toBe(type);
+    }
+    // Each one draws: decoded by the browser, not only served.
+    const decoded = await page.evaluate(
+      (hrefs) =>
+        Promise.all(
+          hrefs.map(async (href) => {
+            const image = new Image();
+            image.src = href;
+            return image.decode().then(
+              () => image.naturalWidth > 0,
+              () => false,
+            );
+          }),
+        ),
+      ["/favicon.ico", "/favicon.svg", "/apple-touch-icon.png"],
+    );
+    expect(decoded).toEqual([true, true, true]);
+  });
+
   for (const viewport of [
     { width: 1280, height: 800 },
     { width: 1024, height: 768 },
     { width: 768, height: 1024 },
     { width: 390, height: 844 },
+    { width: 360, height: 780 },
   ]) {
     test(`is one row at ${viewport.width}px`, async ({ page }) => {
       await page.setViewportSize(viewport);
@@ -585,17 +1147,23 @@ test("on a phone, the site's pages are in the header's drawer", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  // A page with no known axe findings: behind an open drawer the page is
+  // hidden, and so would be the findings the home page is known for.
+  await page.goto("/get-started");
   await hydrated(page);
   const banner = page.getByRole("banner");
   await expect(banner.getByRole("link", { name: "Examples" })).toBeHidden();
   await banner.getByRole("button", { name: "Site menu" }).click();
   const drawer = page.getByRole("dialog", { name: "Kozmos" });
   await expect(drawer).toBeVisible();
+  // Open, the drawer is the page: its navigation is the only one exposed.
+  await hydrated(page);
+  expect(await axeViolations(page)).toEqual([]);
   await drawer.getByRole("link", { name: "Examples" }).click();
   await expect(page).toHaveURL(/\/examples$/);
   await expect(drawer).toBeHidden();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Examples");
+  await focusStaysOnContent(page);
 });
 
 test.describe("home layout", () => {
@@ -610,6 +1178,111 @@ test.describe("home layout", () => {
     await expect(
       page.locator("main .site-section-header h2").first(),
     ).toHaveText("Built from it");
+  });
+
+  test("the featured examples carry their short taglines, not their summaries", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await scrolled(page);
+    const cards = page.locator(".site-example-card");
+    await expect(cards).toHaveCount(3);
+    for (const [title, tagline] of [
+      ["Wayfinding", /^Choose a place, compare the quickest/],
+      ["Phone search sheet", /^A phone’s map screen: search or browse/],
+      ["Operations dashboard", /^The venues console: facts across/],
+    ] as const) {
+      const card = cards.filter({ hasText: title });
+      await expect(card.locator("p").filter({ hasText: tagline })).toHaveCount(
+        1,
+      );
+      await expect(
+        card.getByRole("link", { name: `Open ${title}` }),
+      ).toHaveAttribute("href", /\/examples\//);
+    }
+  });
+
+  for (const width of [1280, 1024]) {
+    test(`the featured examples' pictures share one shape, so their titles line up at ${width}px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto("/");
+      await scrolled(page);
+      const cards = await page
+        .locator(".site-example-card")
+        .evaluateAll((elements) =>
+          elements.map((card) => ({
+            top: card.getBoundingClientRect().top,
+            picture:
+              card.querySelector('[role="img"]')?.getBoundingClientRect()
+                .height ?? 0,
+            title: card.querySelector("h3")?.getBoundingClientRect().top ?? 0,
+          })),
+        );
+      expect(cards).toHaveLength(3);
+      // One row: a picture taller than its neighbours pushes its title down.
+      const row = cards.filter(
+        (card) => Math.abs(card.top - cards[0]!.top) < 1,
+      );
+      expect(row).toHaveLength(3);
+      for (const card of row) {
+        expect(card.picture).toBeGreaterThan(0);
+        expect(Math.abs(card.picture - row[0]!.picture)).toBeLessThan(1);
+        expect(Math.abs(card.title - row[0]!.title)).toBeLessThan(1);
+      }
+    });
+  }
+
+  test("every muted band has a hairline at each edge, the footer's rule under the last", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await hydrated(page);
+    const edges = await page.evaluate(() => {
+      const hairline = (element: Element | null) =>
+        element?.getAttribute("data-orientation") === "horizontal" &&
+        Math.round(element.getBoundingClientRect().height) === 1;
+      const bands = Array.from(document.querySelectorAll(".site-band-muted"));
+      return bands.map((band, index) => ({
+        above: hairline(band.previousElementSibling),
+        below:
+          index === bands.length - 1
+            ? band.nextElementSibling === null
+            : hairline(band.nextElementSibling),
+      }));
+    });
+    // In the dark theme a muted band's tint is 1.04:1 against the page. The
+    // last band ends the page's content, and the footer's rule is its edge.
+    expect(edges.length).toBeGreaterThan(0);
+    expect(edges).toEqual(edges.map(() => ({ above: true, below: true })));
+    await expect(
+      page.getByRole("contentinfo").locator('[data-orientation="horizontal"]'),
+    ).toHaveCount(1);
+  });
+
+  test("the checklist's link lands on the checks, in view", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/");
+    await scrolled(page);
+    await page.getByRole("link", { name: "What each check does" }).click();
+    await expect(page).toHaveURL(/\/get-started#checks$/);
+    const section = page.getByRole("region", {
+      name: "What every pull request runs",
+    });
+    await expect(section).toBeInViewport();
+    // Below the sticky header, not under it.
+    const [top, header] = await Promise.all([
+      section.evaluate((element) => element.getBoundingClientRect().top),
+      page
+        .getByRole("banner")
+        .evaluate((element) => element.getBoundingClientRect().bottom),
+    ]);
+    expect(top).toBeGreaterThanOrEqual(header - 1);
+    // Focus follows the link to the section, so Tab continues from there.
+    await expect(section).toBeFocused();
   });
 
   for (const width of [1280, 1024]) {
@@ -718,6 +1391,59 @@ test.describe("design-system gaps, measured", () => {
     expect(size).toEqual({ height: 4, gripWidth: 0 });
   });
 
+  test("GAP-52: the provider's preflight zeroes a caller's border on its own box", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await hydrated(page);
+    const widths = await page.evaluate(() => {
+      const rule = document.createElement("style");
+      rule.textContent = ".site-gap-probe { border: 1px solid; }";
+      document.head.append(rule);
+      const inside = document.createElement("div");
+      inside.className = "site-gap-probe";
+      document.querySelector("main")?.append(inside);
+      const outside = document.createElement("div");
+      outside.className = "site-gap-probe";
+      document.body.append(outside);
+      const result = {
+        inside: getComputedStyle(inside).borderTopWidth,
+        outside: getComputedStyle(outside).borderTopWidth,
+      };
+      inside.remove();
+      outside.remove();
+      rule.remove();
+      return result;
+    });
+    // The same rule, the same box: inside the provider its scoped preflight
+    // wins at equal specificity; outside it, the rule applies.
+    expect(widths).toEqual({ inside: "0px", outside: "1px" });
+  });
+
+  test("GAP-53: on a phone's rounded screen the sheet keeps square, bordered bottom corners", async ({
+    page,
+  }) => {
+    await page.goto("/examples/phone-search");
+    await hydrated(page);
+    const sheet = await page.locator(".ex-phone aside").evaluate((aside) => {
+      const own = getComputedStyle(aside);
+      const screen = aside.closest(".ex-phone");
+      return {
+        screen: screen ? getComputedStyle(screen).borderEndStartRadius : "",
+        corner: own.borderEndStartRadius,
+        bottom: own.borderBlockEndWidth,
+        side: own.borderInlineStartWidth,
+      };
+    });
+    expect(sheet.screen).not.toBe("0px");
+    expect({ ...sheet, screen: undefined }).toEqual({
+      screen: undefined,
+      corner: "0px",
+      bottom: "1px",
+      side: "1px",
+    });
+  });
+
   test("GAP-09: a link drawn as a button keeps its underline", async ({
     page,
   }) => {
@@ -754,18 +1480,28 @@ test.describe("design-system gaps, measured", () => {
     expect(ratio).toBe(1);
   });
 
-  test("GAP-43: the Slider's thumb is 20px square", async ({ page }) => {
+  test("GAP-43: the Slider's thumb takes a touch only on its own 20px", async ({
+    page,
+  }) => {
     await page.goto("/");
     await scrolled(page);
-    const box = await page
-      .getByRole("slider", { name: "Host width" })
-      .boundingBox();
-    expect(box && [Math.round(box.width), Math.round(box.height)]).toEqual([
-      20, 20,
-    ]);
+    const thumb = page.getByRole("slider", { name: "Host width" });
+    await thumb.scrollIntoViewIfNeeded();
+    // 20px from its centre is inside a 44px target; today it is the track.
+    const hit = await thumb.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      const target = document.elementFromPoint(
+        box.left + box.width / 2 + 20,
+        box.top + box.height / 2,
+      );
+      return (
+        target !== null && (target === element || element.contains(target))
+      );
+    });
+    expect(hit).toBe(false);
   });
 
-  test("GAP-03: a dark-mode visitor's page is light until the scripts run", async ({
+  test("GAP-03: a dark-mode visitor's page is drawn light until the scripts run", async ({
     page,
   }) => {
     await page.emulateMedia({ colorScheme: "dark" });
@@ -774,9 +1510,52 @@ test.describe("design-system gaps, measured", () => {
     await page.route("**/*.js", (route) => route.abort());
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    expect(
-      await page.evaluate(() => document.documentElement.dataset.theme ?? null),
-    ).toBeNull();
+    // What the visitor sees is Kozmos's own surfaces, drawn light: a fix has
+    // to reach the components, not only <html>.
+    const background = await page
+      .getByRole("banner")
+      .evaluate((header) => getComputedStyle(header).backgroundColor);
+    expect(background).toBe("rgb(255, 255, 255)");
+  });
+
+  test("GAP-41: at 320px the Navbar drops the header's tools to a second row", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 320, height: 700 });
+    await page.goto("/");
+    await hydrated(page);
+    // The navigation slot keeps a 16rem basis beside the logo, which leaves
+    // a 320px screen no room for both on one row, whatever the logo.
+    const height = await page
+      .getByRole("banner")
+      .evaluate((element) => element.getBoundingClientRect().height);
+    expect(height).toBeGreaterThan(90);
+  });
+
+  test("GAP-45: the first brand variant's 600 reads 4.20:1 on the dark page", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.goto("/");
+    await hydrated(page);
+    const [variant, background] = await page.evaluate(() =>
+      [
+        "--primitives-colors-theme-variant-1-600",
+        "--primitives-colors-background-0",
+      ].map((name) =>
+        getComputedStyle(document.documentElement)
+          .getPropertyValue(name)
+          .trim(),
+      ),
+    );
+    const [foreground, ground] = [
+      parseColour(variant),
+      parseColour(background),
+    ];
+    expect(foreground && ground).toBeTruthy();
+    if (!foreground || !ground) return;
+    // Text needs 4.5:1. The default ramp's 600 reads 6.17:1 here.
+    expect(formatRatio(contrastRatio(foreground, ground))).toBe("4.20:1");
   });
 
   test("GAP-37: SearchBar keeps the browser's own clear button", async ({
@@ -791,11 +1570,12 @@ test.describe("design-system gaps, measured", () => {
     await hydrated(page);
     const field = page.locator(".site-demos").getByRole("searchbox").first();
     await field.fill("bookshop");
-    const display = await field.evaluate(
-      (input) =>
-        getComputedStyle(input, "::-webkit-search-cancel-button").display,
-    );
-    expect(display).toBe("block");
+    // Hidden either way a stylesheet can hide it: display or appearance.
+    const drawn = await field.evaluate((input) => {
+      const style = getComputedStyle(input, "::-webkit-search-cancel-button");
+      return style.display !== "none" && style.appearance !== "none";
+    });
+    expect(drawn).toBe(true);
   });
 });
 
@@ -808,12 +1588,35 @@ test.describe("foundations", () => {
     await expect(
       page.getByRole("heading", { level: 3, name: "Theme variant 2" }),
     ).toBeVisible();
+    const pairs = contrastContract.pairs.length;
     await expect(
-      page.getByText("All 22 pairs pass in both themes"),
+      page.getByText(`All ${pairs} pairs pass in both themes`),
     ).toBeVisible();
     const table = page.getByRole("table", { name: "Contrast contract" });
-    await expect(table.getByRole("row")).toHaveCount(23);
-    await expect(table.getByText("Fail")).toHaveCount(0);
+    await expect(table.getByRole("row")).toHaveCount(pairs + 1);
+    // Each result says pass or fail in words, not only in colour.
+    await expect(table.getByText(/· Pass$/)).toHaveCount(pairs * 2);
+    await expect(table.getByText(/· Fail$/)).toHaveCount(0);
+  });
+
+  test("swatches, samples and shapes are edged, so white on white shows", async ({
+    page,
+  }) => {
+    for (const [address, selector] of [
+      ["/foundations/colour", ".site-swatch-colour"],
+      ["/foundations/colour", ".site-pair-sample"],
+      ["/foundations/layout", ".site-shape"],
+    ] as const) {
+      await page.goto(address);
+      await hydrated(page);
+      const widths = await page
+        .locator(selector)
+        .evaluateAll((elements) =>
+          elements.map((element) => getComputedStyle(element).borderTopWidth),
+        );
+      expect(widths.length).toBeGreaterThan(0);
+      expect(new Set(widths)).toEqual(new Set(["1px"]));
+    }
   });
 
   test("icons search, filter and copy", async ({
@@ -934,6 +1737,19 @@ test.describe("account settings example", () => {
 });
 
 test.describe("venue explorer example", () => {
+  test("the list of places sits inside the panel's padding", async ({
+    page,
+  }) => {
+    await page.goto("/examples/venue-explorer");
+    await hydrated(page);
+    await page
+      .getByRole("region", { name: "Venue explorer example" })
+      .getByRole("searchbox", { name: "Search Riverside Centre" })
+      .fill("o");
+    expect(await listInset(page)).toBeGreaterThanOrEqual(16);
+    expect(await clippedEdges(page)).toEqual([]);
+  });
+
   function explorer(page: Page) {
     return page.getByRole("region", { name: "Venue explorer example" });
   }
@@ -1071,6 +1887,27 @@ test.describe("venue explorer example", () => {
 });
 
 test.describe("wayfinding example", () => {
+  test("the list of places sits inside the panel's padding", async ({
+    page,
+  }) => {
+    await page.goto("/examples/wayfinding");
+    await hydrated(page);
+    expect(await listInset(page)).toBeGreaterThanOrEqual(16);
+    expect(await clippedEdges(page)).toEqual([]);
+    // Back from the route options, focus returns to the list; focusing it
+    // must not scroll its padding away.
+    const example = page.getByRole("region", { name: "Wayfinding example" });
+    await example
+      .getByRole("button", { name: /Bookshop/ })
+      .first()
+      .click();
+    await example.getByRole("button", { name: "Back" }).click();
+    await expect(
+      example.getByRole("region", { name: "Where to?" }),
+    ).toBeFocused();
+    expect(await listInset(page)).toBeGreaterThanOrEqual(16);
+  });
+
   function app(page: Page) {
     return page.getByRole("region", { name: "Wayfinding example" });
   }
@@ -1134,6 +1971,19 @@ test.describe("wayfinding example", () => {
 });
 
 test.describe("phone search example", () => {
+  test("the list of places sits inside the sheet's padding", async ({
+    page,
+  }) => {
+    await page.goto("/examples/phone-search");
+    await hydrated(page);
+    await page
+      .getByRole("region", { name: "Phone search sheet example" })
+      .getByRole("searchbox", { name: "Search Riverside Centre" })
+      .fill("o");
+    expect(await listInset(page)).toBeGreaterThanOrEqual(16);
+    expect(await clippedEdges(page)).toEqual([]);
+  });
+
   test("browse a category, open a place in the sheet, turn its photos, and set the sheet's height", async ({
     page,
   }) => {
@@ -1209,7 +2059,19 @@ test.describe("kiosk directory example", () => {
     expect(await axeViolations(page)).toEqual([]);
 
     await example.getByRole("button", { name: "Start over" }).click();
-    await example.getByRole("button", { name: "Touch to start" }).click();
+    // Focus is on the attract screen, and the directory under it is inert:
+    // nothing in it takes focus. (Playwright's role queries do not count
+    // inert content as hidden, so this asks the field to take focus.)
+    const touch = example.getByRole("button", { name: "Touch to start" });
+    await expect(touch).toBeFocused();
+    const field = example.getByRole("searchbox", { name: "Search the centre" });
+    await field.evaluate((input) => input.focus());
+    await expect(field).not.toBeFocused();
+    await expect(touch).toBeFocused();
+    await touch.click();
+    await expect(
+      example.getByRole("heading", { level: 2, name: "Riverside Centre" }),
+    ).toBeFocused();
     await expect(
       example.getByRole("button", { name: "Shops 3 places" }),
     ).toBeVisible();
@@ -1238,6 +2100,10 @@ test.describe("sign-in example", () => {
     await password.fill("correct horse battery");
     await example.getByRole("button", { name: "Continue" }).click();
     await expect(example.getByText("Check your phone")).toBeVisible();
+    // The step replaced the button that was pressed; its heading has focus.
+    await expect(
+      example.getByRole("heading", { name: "Check your phone" }),
+    ).toBeFocused();
 
     const enterCode = async (code: string) => {
       for (const [index, digit] of [...code].entries()) {
@@ -1369,6 +2235,7 @@ test.describe("notifications example", () => {
     await expect(
       example.getByText("1 notification marked as read."),
     ).toBeVisible();
+    await expect(example.getByRole("button", { name: "Undo" })).toBeFocused();
     await expect(example.getByLabel("3 unread")).toBeVisible();
 
     await example.getByRole("switch", { name: "Only unread" }).click();
@@ -1453,6 +2320,8 @@ test.describe("states example", () => {
     await state.getByRole("radio", { name: "Offline" }).click();
     await expect(example.getByText(/You are offline/)).toBeVisible();
     await expect(example.getByText("Saved copy")).toBeVisible();
+    await hydrated(page);
+    expect(await axeViolations(page)).toEqual([]);
   });
 });
 
@@ -1517,11 +2386,16 @@ test.describe("saved places example", () => {
     await expect(
       example.getByText("Bookshop is no longer saved."),
     ).toBeVisible();
+    // The row that opened the dialog is gone; focus is on the undo.
+    await expect(example.getByRole("button", { name: "Undo" })).toBeFocused();
     await expect(example.getByText(/5 places across 3 venues/)).toBeVisible();
     await hydrated(page);
     expect(await axeViolations(page)).toEqual([]);
     await example.getByRole("button", { name: "Undo" }).click();
     await expect(example.getByText(/6 places across 3 venues/)).toBeVisible();
+    await expect(
+      example.getByRole("heading", { name: "Saved places" }),
+    ).toBeFocused();
     await example
       .getByRole("searchbox", { name: "Search saved places" })
       .fill("gate");
@@ -1557,9 +2431,22 @@ test("the search opens from the keyboard or the header and takes you there", asy
   await expect(page).toHaveURL(/\/examples\/wayfinding$/);
   await expect(page.locator("main#main")).toBeFocused();
 
-  // Nothing found says so.
+  // The down arrow moves into the results; a result opens from there.
   await page.keyboard.press("Control+k");
-  await dialog.getByRole("searchbox", { name: "Search the site" }).fill("zzzz");
+  const field = dialog.getByRole("searchbox", { name: "Search the site" });
+  await field.fill("button");
+  await expect(dialog.getByText(/results?$/)).toBeVisible();
+  await page.keyboard.press("ArrowDown");
+  await expect(dialog.getByRole("listbox", { name: "Results" })).toBeFocused();
+
+  // However it closes, the next search starts from an empty field.
+  await page.keyboard.press("Control+k");
+  await expect(dialog).toBeHidden();
+  await page.keyboard.press("Control+k");
+  await expect(field).toHaveValue("");
+
+  // Nothing found says so.
+  await field.fill("zzzz");
   await expect(dialog.getByText(/Nothing has “zzzz”/)).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
@@ -1673,6 +2560,16 @@ test.describe("component reference", () => {
     await expect(
       page.getByRole("table", { name: "AdaptiveMapShell props" }),
     ).toHaveCount(0);
+
+    // A Radix primitive's own props are marked, with where they come from.
+    await page.goto("/components/dialog");
+    await hydrated(page);
+    const modal = page
+      .getByRole("table", { name: "Dialog props" })
+      .getByRole("row")
+      .filter({ has: page.getByRole("cell", { name: /^modal/ }) });
+    await expect(modal).toContainText("Radix");
+    await expect(modal).toContainText("@radix-ui/react-dialog");
   });
 
   test("the demos respond: the tree selects, the gallery turns, the island appears on request", async ({
@@ -1706,37 +2603,66 @@ test.describe("component reference", () => {
   });
 });
 
-// Every component page, once, in one browser: the sampled pages above run in
-// all three. Each page must answer, name itself, show a live example, pass
-// axe and log nothing.
+// Every component page, in both themes, in one browser: the sampled pages
+// above run in all three. Each page must answer, name itself, show a live
+// example, pass axe and log nothing. The dark theme is walked too: a token
+// can pass on white and fail on black (GAP-45).
 test.describe("every component page", () => {
   test.skip(
     ({ browserName }) => browserName !== "chromium",
     "one browser walks all the pages",
   );
 
-  for (const { slug, name } of componentIndex.components) {
-    test(`/components/${slug} shows ${name} live and passes axe`, async ({
-      page,
-    }) => {
-      const errors = collectErrors(page);
-      const response = await page.goto(`/components/${slug}`);
-      expect(response?.status()).toBe(200);
-      await hydrated(page);
-      await expect(page.getByRole("heading", { level: 1 })).toHaveText(name);
-      const stage = page.locator(".site-demo-stage").first();
-      await expect(stage).toBeVisible();
-      expect(
-        await stage.evaluate((element) => element.childElementCount),
-      ).toBeGreaterThan(0);
-      await expect(page.getByRole("tab", { name: "SwiftUI" })).toBeVisible();
-      await scrolled(page);
-      expect(await axeViolations(page)).toEqual([]);
-      // The gallery's second example asks for an image that does not exist,
-      // on purpose; the browser logs that request and nothing else may fail.
-      expect(
-        errors.filter((error) => !error.includes("does-not-exist.svg")),
-      ).toEqual([]);
+  for (const colorScheme of ["light", "dark"] as const) {
+    test.describe(`${colorScheme} theme`, () => {
+      test.use({ colorScheme });
+
+      for (const { slug, name } of componentIndex.components) {
+        componentPageTest(slug, name, colorScheme);
+      }
     });
   }
 });
+
+/** One component page's walk: it answers, names itself, shows its demo, passes axe. */
+function componentPageTest(
+  slug: string,
+  name: string,
+  colorScheme: "light" | "dark",
+) {
+  test(`/components/${slug} shows ${name} live and passes axe`, async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    const response = await page.goto(`/components/${slug}`);
+    expect(response?.status()).toBe(200);
+    await hydrated(page);
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-theme",
+      colorScheme,
+    );
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(name);
+    const stage = page.locator(".site-demo-stage").first();
+    await expect(stage).toBeVisible();
+    expect(
+      await stage.evaluate((element) => element.childElementCount),
+    ).toBeGreaterThan(0);
+    await expect(page.getByRole("tab", { name: "SwiftUI" })).toBeVisible();
+    await scrolled(page);
+    expect(await axeViolations(page)).toEqual([]);
+    expect(await overriddenSiteCss(page)).toEqual([]);
+    expect(await clippedEdges(page)).toEqual([]);
+    // WCAG 1.4.10: no sideways scroll at 320px, on every page.
+    await page.setViewportSize({ width: 320, height: 700 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth - window.innerWidth,
+      ),
+    ).toBeLessThanOrEqual(0);
+    // The gallery's second example asks for an image that does not exist,
+    // on purpose; the browser logs that request and nothing else may fail.
+    expect(
+      errors.filter((error) => !error.includes("does-not-exist.svg")),
+    ).toEqual([]);
+  });
+}

@@ -21,6 +21,7 @@ import {
   Tag,
   Text,
 } from "@kozmos/react";
+import { useFocusOnChange } from "../focus";
 import { places } from "../venue-explorer/data";
 
 type State = "loading" | "ready" | "empty" | "error" | "offline";
@@ -58,6 +59,10 @@ export default function States() {
   const [retrying, setRetrying] = useState(false);
   const [syncing, setSyncing] = useState(0);
   const [chosen, setChosen] = useState<string>();
+  // "Show every shop" and a finished retry replace the view their button is
+  // in; the card's heading then takes focus (../focus.ts).
+  const [replaced, setReplaced] = useState(0);
+  const shopsHeading = useFocusOnChange(replaced);
 
   // Loading resolves on its own after a moment, as a fetch would.
   useEffect(() => {
@@ -77,12 +82,20 @@ export default function States() {
     return () => window.clearTimeout(timer);
   }, [state, syncing]);
 
-  function retry() {
-    setRetrying(true);
-    window.setTimeout(() => {
+  // A retry takes a moment before it loads again; choosing another state in
+  // that moment cancels it.
+  useEffect(() => {
+    if (!retrying) return;
+    const timer = window.setTimeout(() => {
       setRetrying(false);
       setState("loading");
+      setReplaced((count) => count + 1);
     }, 800);
+    return () => window.clearTimeout(timer);
+  }, [retrying]);
+
+  function retry() {
+    setRetrying(true);
   }
 
   return (
@@ -103,14 +116,22 @@ export default function States() {
               if (isState(next)) {
                 setState(next);
                 setChosen(undefined);
+                setRetrying(false);
               }
             }}
           />
         </Stack>
 
-        <Card className="ex-states-card">
+        <Card>
           <CardHeader>
-            <Heading level={3}>Shops</Heading>
+            <Heading
+              level={3}
+              ref={shopsHeading}
+              tabIndex={-1}
+              className="ex-states-title"
+            >
+              Shops
+            </Heading>
             <CardDescription>
               {state === "loading"
                 ? "Finding shops near you…"
@@ -135,7 +156,11 @@ export default function States() {
                 {/* One skeleton per expected row: the shape of a result card. */}
                 {[0, 1, 2].map((row) => (
                   <Box key={row} className="ex-states-row">
-                    <Skeleton className="ex-states-disc" />
+                    {/* Skeleton keeps its own corners (GAPS.md, GAP-04): a
+                        round Box clips it into a disc. */}
+                    <Box className="ex-states-disc">
+                      <Skeleton className="ex-states-fill" />
+                    </Box>
                     <Stack gap={2}>
                       <Skeleton className="ex-states-line" />
                       <Skeleton className="ex-states-line ex-states-line-short" />
@@ -165,7 +190,13 @@ export default function States() {
                 title="No shops match"
                 description="Try another word, or browse by category."
                 action={
-                  <Button variant="outline" onClick={() => setState("ready")}>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setState("ready");
+                      setReplaced((count) => count + 1);
+                    }}
+                  >
                     Show every shop
                   </Button>
                 }
@@ -183,7 +214,13 @@ export default function States() {
                   <Button onClick={retry} isLoading={retrying}>
                     Try again
                   </Button>
-                  <Button variant="ghost" onClick={() => setState("ready")}>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setState("ready");
+                      setReplaced((count) => count + 1);
+                    }}
+                  >
                     Skip
                   </Button>
                 </Stack>

@@ -44,7 +44,7 @@ export const demos: DemoModule["demos"] = [
   {
     title: "Initials",
     description:
-      "The fallback: two letters in the muted surface. The name is the avatar's accessible name.",
+      "The fallback: two letters in the muted surface. The name is the avatar’s accessible name.",
     Component: Initials,
   },
   {

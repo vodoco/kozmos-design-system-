@@ -102,7 +102,7 @@ export const demos: DemoModule["demos"] = [
   {
     title: "Loading, disabled, with an icon",
     description:
-      "isLoading shows a spinner and keeps the width; disabled is the native attribute.",
+      "isLoading disables the button and puts a spinner before the label, so the button grows by the spinner’s width; disabled is the native attribute.",
     Component: States,
   },
 ];

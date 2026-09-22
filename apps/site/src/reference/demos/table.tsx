@@ -72,7 +72,7 @@ export const demos: DemoModule["demos"] = [
   {
     title: "Venues",
     description:
-      "Caption, header, body and footer; the parts are the table elements with the system's spacing and lines.",
+      "Caption, header, body and footer; the parts are the table elements with the system’s spacing and lines.",
     Component: Venues,
   },
 ];

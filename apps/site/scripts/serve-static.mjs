@@ -28,6 +28,7 @@ const TYPES = {
   ".css": "text/css; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".svg": "image/svg+xml",
+  ".ico": "image/x-icon",
   ".png": "image/png",
   ".jpg": "image/jpeg",
   ".webp": "image/webp",
@@ -37,7 +38,14 @@ const TYPES = {
 };
 
 async function fileFor(urlPath) {
-  const decoded = decodeURIComponent(urlPath.split("?")[0]);
+  let decoded;
+  try {
+    decoded = decodeURIComponent(urlPath.split("?")[0]);
+  } catch {
+    // A malformed escape (/%E0) is an address that names nothing: a 404,
+    // not an exception that would stop the server.
+    return null;
+  }
   const candidate = path.normalize(path.join(ROOT, decoded));
   if (candidate !== ROOT && !candidate.startsWith(ROOT + path.sep)) {
     return null;
@@ -59,8 +67,7 @@ const server = http.createServer(async (request, response) => {
   const found = await fileFor(request.url ?? "/");
   const file = found ?? path.join(ROOT, "404.html");
   response.writeHead(found ? 200 : 404, {
-    "content-type":
-      TYPES[path.extname(file)] ?? "application/octet-stream",
+    "content-type": TYPES[path.extname(file)] ?? "application/octet-stream",
     "cache-control": "no-store",
   });
   if (request.method === "HEAD") {
@@ -71,5 +78,7 @@ const server = http.createServer(async (request, response) => {
 });
 
 server.listen(PORT, "127.0.0.1", () => {
-  console.log(`Serving ${path.relative(process.cwd(), ROOT)} at http://127.0.0.1:${PORT}`);
+  console.log(
+    `Serving ${path.relative(process.cwd(), ROOT)} at http://127.0.0.1:${PORT}`,
+  );
 });

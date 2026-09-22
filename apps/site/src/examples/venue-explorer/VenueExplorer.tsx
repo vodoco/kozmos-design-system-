@@ -16,6 +16,7 @@ import {
   UserLocationMarker,
   type POIActionState,
 } from "@kozmos/react";
+import { useFocusOnChange } from "../focus";
 import type {
   CategoryPresentation,
   POIAction,
@@ -179,10 +180,22 @@ export default function VenueExplorer() {
     />
   );
 
+  // A place, the categories or the results replace one another in the
+  // panel; focus goes into the new one (../focus.ts).
+  const panelView = selected
+    ? `place ${selected.poi.id}`
+    : browsing
+      ? "browse"
+      : "results";
+  const panelFocus = useFocusOnChange(panelView);
+
   const panel = selected ? (
     // "sheet" paints no surface of its own: it sits on the shell's panel, as
     // the browse panel does (POIDetailPanel.mdx).
     <POIDetailPanel
+      ref={panelFocus}
+      tabIndex={-1}
+      className="ex-venue-panel-focus"
       presentation="sheet"
       poi={selected.poi}
       details={selected.details}
@@ -197,6 +210,9 @@ export default function VenueExplorer() {
     />
   ) : browsing ? (
     <BrowseCategoriesPanel
+      ref={panelFocus}
+      tabIndex={-1}
+      className="ex-venue-panel-focus"
       label="Browse by category"
       categories={categoryPresentations}
       renderIcon={(entry) => {
@@ -213,26 +229,31 @@ export default function VenueExplorer() {
       }}
     />
   ) : (
-    <POIResultList
-      label={category ? category.label : `Results for “${query.trim()}”`}
-      resultCountLabel={
-        results.length === 1 ? "1 place" : `${results.length} places`
-      }
-      items={results.map((place, index) => ({
-        poi: place.poi,
-        result: {
-          poiId: place.poi.id,
-          resultIndex: index + 1,
-          selected: false,
-          featured: false,
-          floorId: place.poi.floorId,
-          travelEstimate: place.details.travelEstimate,
-        },
-      }))}
-      currentFloorId={floorId}
-      onSelect={select}
-      emptyState="No places match. Try another word, or browse by category."
-    />
+    <Box className="ex-venue-list">
+      <POIResultList
+        ref={panelFocus}
+        tabIndex={-1}
+        className="ex-venue-panel-focus"
+        label={category ? category.label : `Results for “${query.trim()}”`}
+        resultCountLabel={
+          results.length === 1 ? "1 place" : `${results.length} places`
+        }
+        items={results.map((place, index) => ({
+          poi: place.poi,
+          result: {
+            poiId: place.poi.id,
+            resultIndex: index + 1,
+            selected: false,
+            featured: false,
+            floorId: place.poi.floorId,
+            travelEstimate: place.details.travelEstimate,
+          },
+        }))}
+        currentFloorId={floorId}
+        onSelect={select}
+        emptyState="No places match. Try another word, or browse by category."
+      />
+    </Box>
   );
 
   const map = (

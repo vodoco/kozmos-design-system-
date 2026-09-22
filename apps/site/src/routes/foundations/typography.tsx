@@ -75,13 +75,7 @@ function TextScale() {
   return (
     <Box className="site-type-scale">
       {textSizes.map((size) => (
-        <Stack
-          key={size}
-          direction="row"
-          align="baseline"
-          gap={4}
-          className="site-type-scale-row"
-        >
+        <Stack key={size} direction="row" align="baseline" gap={4}>
           <Text as="span" size="sm" color="muted" className="site-mono">
             {size}
             {measured[size] ? ` · ${measured[size]}` : ""}
@@ -138,14 +132,14 @@ export default function Typography() {
 
       <Section
         title="The scale the components use"
-        lead="Text takes a size from xs to 4xl and a weight; Heading maps its levels onto the top six. The values are measured here in your browser, from the package's stylesheet."
+        lead="Text takes a size from xs to 4xl and a weight; Heading maps its levels onto the top six. The values are measured here in your browser, from the package’s stylesheet."
       >
         <TextScale />
       </Section>
 
       <Section
         title="The heading tokens"
-        lead="The tokens carry a heading scale of their own, from 60px down to 20px, as Figma draws it. Heading's largest size is 36px: the two scales are not the same (GAP-21). This site sets its page and section titles from the tokens directly."
+        lead="The tokens carry a heading scale of their own, from 60px down to 20px, as Figma draws it. Heading’s largest size is 36px: the two scales are not the same (GAP-21). This site sets its page and section titles from the tokens directly."
       >
         <Stack gap={6}>
           {headingScale.map((entry) => (
@@ -192,7 +186,7 @@ export default function Typography() {
 
       <Section
         title="Weights"
-        lead="Text takes four weights. The weight tokens carry Figma's style names rather than numeric weights, so CSS cannot use them (GAP-22)."
+        lead="Text takes four weights. The weight tokens carry Figma’s style names rather than numeric weights, so CSS cannot use them (GAP-22)."
       >
         <Stack gap={4}>
           <Stack direction="row" wrap="wrap" gap={6}>
@@ -217,7 +211,7 @@ export default function Typography() {
 
       <Section
         title="Line heights, letter spacing and paragraph spacing"
-        lead="Unitless pixels, shared with iOS and Android."
+        lead="Unitless pixels. Letter and paragraph spacing reach iOS and Android too; line heights are the web’s, where the native libraries use the platform’s own text styles."
       >
         <Stack gap={6}>
           <Stack gap={2}>

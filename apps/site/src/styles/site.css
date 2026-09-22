@@ -2,12 +2,15 @@
  * The site's own stylesheet: layout, and type sizes the components cannot
  * reach.
  *
- * Every colour, radius, shadow, size and spacing value here is a Kozmos
- * token. Components carry their own styles; this file arranges them on the
- * page. Typography appears only where a heading needs a size the token
- * scale has and the Heading component does not (GAPS.md, GAP-21), and then
- * only through the typography tokens. `pnpm --filter @kozmos/site lint`
- * enforces all of it (scripts/check-ds-only.mjs).
+ * Every colour, radius, shadow and spacing value here is a Kozmos token, and
+ * so are the controls' and markers' sizes. The widths and heights of frames
+ * and columns (a 27rem scene, a 52rem line length) are rem values: the
+ * sizing scale stops at 80px. Components carry their own styles; this file
+ * arranges them on the page. Typography appears only where a heading needs a
+ * size the token scale has and the Heading component does not (GAPS.md,
+ * GAP-21), and then only through the typography tokens.
+ * `pnpm --filter @kozmos/site lint` enforces the rest
+ * (scripts/check-ds-only.mjs).
  */
 
 /* Spacing aliases: the layout spacing tokens are unitless, like the semantic
@@ -26,7 +29,10 @@
   --site-radius-container: calc(var(--semantics-radius-container) * 1px);
   --site-radius-panel: calc(var(--semantics-radius-panel) * 1px);
   --site-radius-pill: calc(var(--semantics-radius-pill) * 1px);
-  --site-header-height: calc(var(--primitives-layout-sizing-800) * 1px);
+  /* The Navbar's own minimum is 4rem; the token is 64, pixels at the
+     default 16px root, so it is taken in rem and follows the visitor's
+     font size as the Navbar does. */
+  --site-header-height: calc(var(--primitives-layout-sizing-800) / 16 * 1rem);
 }
 
 /* The document sits outside every ThemeProvider. root.tsx mirrors the
@@ -35,6 +41,12 @@
 html {
   color-scheme: light;
   background: var(--primitives-colors-background-0);
+  /* A link to a part of a page (/get-started#checks) lands below the sticky
+     header, not under it. The header is one 4rem row from 360px up; at
+     320px the Navbar wraps it to two (GAP-41) and covers a little more. */
+  scroll-padding-block-start: calc(
+    var(--site-header-height) + var(--site-space-200)
+  );
 }
 
 html[data-theme="dark"] {
@@ -118,22 +130,76 @@ body {
   min-inline-size: 0;
 }
 
-.site-main:focus {
+/* Focus moves to the content after a navigation (SiteShell): to main, or to
+   the section a link names. It is a starting point for the keyboard, not a
+   control, so it shows no ring. */
+.site-main:focus,
+.site-section:focus {
   outline: none;
 }
 
 /* GAP-06: Kozmos has no skip link or visually-hidden primitive. The link is
-   a Kozmos Link; this only keeps it off-screen until it has focus. */
+   a Kozmos Link in the header's first slot (SiteHeader); this keeps it above
+   the header, out of sight, until it has focus, then shows it over the logo
+   on the header's own surface. Inside the header it is drawn on the
+   header's layer; before it, on the same layer, it was painted under it. */
 .site-skip-link {
   position: absolute;
   inset-inline-start: var(--site-space-200);
-  inset-block-start: var(--site-space-200);
-  z-index: var(--primitives-layer-50);
+  inset-block-start: var(--site-space-150);
+  z-index: var(--primitives-layer-10);
+  padding: var(--site-space-100) var(--site-space-200);
+  background: var(--primitives-colors-background-0);
+  box-shadow: var(--semantics-elevation-overlay);
   transform: translateY(-200%);
 }
 
 .site-skip-link:focus {
   transform: none;
+}
+
+/* The logo. Kozmos has no image or brand-mark primitive (GAP-10), so the
+   logo is a Box painted in the text colour through the logo's own shape:
+   it follows the theme like the words around it. The link becomes a block
+   of the logo's size: its focus ring then goes round the whole logo, not
+   round a line of text, and no line box adds a descender's space below it,
+   which would lift the logo off the header's centre line.
+
+   Below 48rem the header shows the logo's K alone. The full logo's second
+   line would be five pixels tall there, and the Navbar keeps 16rem for its
+   navigation slot, which leaves a phone's header too little room for it
+   beside the tools on one row (GAP-41). */
+.site-logo-link {
+  display: flex;
+}
+
+.site-logo {
+  block-size: calc(var(--primitives-layout-sizing-400) * 1px);
+  /* Each shape's own proportions: the viewBox of kozmos-mark.svg, then of
+     kozmos-logo.svg (src/brand). */
+  aspect-ratio: 272.5726 / 293.54;
+  background-color: var(--primitives-colors-foreground-0);
+  mask: url("../brand/kozmos-mark.svg") center / contain no-repeat;
+  /* Printing drops backgrounds by default; the logo is one. */
+  print-color-adjust: exact;
+}
+
+@media (min-width: 48rem) {
+  .site-logo {
+    block-size: calc(var(--primitives-layout-sizing-500) * 1px);
+    aspect-ratio: 1605.6736 / 442.27;
+    mask-image: url("../brand/kozmos-logo.svg");
+  }
+}
+
+/* High-contrast modes replace every background with the page's own colour,
+   which would paint the logo invisible; it takes the system's text colour
+   instead. */
+@media (forced-colors: active) {
+  .site-logo {
+    forced-color-adjust: none;
+    background-color: CanvasText;
+  }
 }
 
 /* The header's one row: the page links, then the tools at the far end.
@@ -172,12 +238,8 @@ body {
   }
 }
 
-/* The search dialog: the field, then the results in their own scroll. */
-.site-search {
-  display: grid;
-  gap: var(--site-space-300);
-}
-
+/* The search dialog's results, in their own scroll; the dialog spaces its
+   parts itself. */
 .site-search-results {
   max-block-size: 24rem;
   overflow: auto;
@@ -265,20 +327,6 @@ body {
   max-inline-size: 52rem;
 }
 
-.site-prose {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--site-space-200);
-  max-inline-size: 48rem;
-}
-
-.site-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--site-space-150);
-}
-
 /* GAP-04: Grid takes a fixed column count, with no responsive or auto-fit
    axis, and a caller's class cannot replace its template: its utilities are
    scoped as `:scope .grid-cols-none`, which outranks any single class. So the
@@ -325,8 +373,8 @@ body {
   block-size: 100%;
 }
 
-/* The CI checks, short: two to a row, each a check mark, a name and its
-   command. */
+/* The CI checks, short: two to a row, each a check mark and its name. The
+   commands and what each check does are on Get started (#checks). */
 .site-checklist {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -353,10 +401,10 @@ body {
   padding-block: var(--site-space-700);
 }
 
+/* Its hairlines are Separators (Band.tsx): in the dark theme the tint alone
+   is 1.04:1 against the page. */
 .site-band-muted {
   background: var(--primitives-colors-background-25);
-  border-block: var(--primitives-border-width-sm) solid
-    var(--semantics-border-subtle);
 }
 
 /* Content revealed as it scrolls into view. Only once the page has hydrated
@@ -413,13 +461,15 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
    stacking: the map's overlays are z-index 50, as the sticky Navbar is, and
    would otherwise draw over the header as the page scrolls (GAPS.md,
    GAP-40). */
+/* The frame's corners are the map's own (MapView is rounded-container), so
+   its clip follows the map's edge instead of cutting through it. */
 .site-scene-frame {
   position: relative;
   isolation: isolate;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   inline-size: 100%;
-  border-radius: var(--site-radius-panel);
+  border-radius: var(--site-radius-container);
   overflow: hidden;
   box-shadow: var(--semantics-elevation-overlay);
 }
@@ -432,12 +482,17 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
   block-size: 27rem;
 }
 
+/* A Surface's shape is the caller's. The frame clips its corners round; the
+   bar's corners follow them, or its edge stops where the curve starts —
+   plain on a dark page, where the frame's shadow does not show. */
 .site-scene-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--site-space-150) var(--site-space-300);
   padding: var(--site-space-150) var(--site-space-300);
+  border-end-start-radius: var(--site-radius-container);
+  border-end-end-radius: var(--site-radius-container);
 }
 
 .site-scene-toggle {
@@ -575,18 +630,19 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
   gap: var(--site-space-100);
 }
 
-.site-emotions > * {
+/* A part that fills the width it is given: a button in a grid cell or a
+   card. Kozmos's own w-full is an internal class, not an interface. */
+.site-fill {
   inline-size: 100%;
 }
 
-/* The adaptive shell inside a container the visitor sizes. */
+/* The adaptive shell inside a container the visitor sizes. It draws nothing
+   of its own: the map's and the panel's edges show its extent, and a
+   rounded clip would cut the bottom sheet's square corners (GAP-53). */
 .site-adaptive-host {
   inline-size: min(100%, calc(var(--host-width) * 1px));
   block-size: 20rem;
   margin-inline: auto;
-  border-radius: var(--site-radius-container);
-  overflow: hidden;
-  border: var(--primitives-border-width-sm) solid var(--semantics-border-subtle);
   transition: inline-size var(--semantics-motion-duration-standard)
     var(--semantics-motion-easing-standard);
 }
@@ -641,14 +697,21 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
   gap: var(--site-space-200);
 }
 
+/* A sample is a Surface, whose edge keeps a sample the page's own colour
+   visible; the provider's preflight zeroes a plain box's border (GAP-52).
+   The pair's colours fill it from inside. */
 .site-pair-sample {
   inline-size: calc(var(--primitives-layout-sizing-800) * 1px);
   block-size: calc(var(--primitives-layout-sizing-600) * 1px);
   display: grid;
-  place-items: center;
   border-radius: var(--site-radius-control);
+  overflow: hidden;
+}
+
+.site-pair-fill {
+  display: grid;
+  place-items: center;
   background: var(--pair-bg);
-  border: var(--primitives-border-width-sm) solid var(--semantics-border-subtle);
 }
 
 /* Text sets its own colour class; the sample's letters take the pair's. */
@@ -754,9 +817,12 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
   block-size: 100%;
 }
 
+/* Cards in a row are stretched to the tallest; the rows start at the top so
+   a shorter card keeps its spare height below its text, not above its title. */
 .site-example-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  align-content: start;
   overflow: hidden;
 }
 
@@ -801,11 +867,18 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
   min-inline-size: 0;
 }
 
+/* A swatch is a Surface, whose edge keeps white on white and black on black
+   visible; the provider's preflight zeroes a plain box's border (GAP-52).
+   The colour fills it from inside. */
 .site-swatch-colour {
+  display: grid;
   aspect-ratio: 4 / 3;
   border-radius: var(--site-radius-control);
+  overflow: hidden;
+}
+
+.site-swatch-fill {
   background: var(--swatch);
-  border: var(--primitives-border-width-sm) solid var(--semantics-border-subtle);
 }
 
 .site-swatch-large {
@@ -826,20 +899,28 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
   background: var(--primitives-colors-theme-600);
 }
 
+/* A scale's row inside a ListItem: the name, the bar, the value. */
 .site-scale-row {
+  flex: 1;
+  min-inline-size: 0;
   display: grid;
   grid-template-columns: minmax(6rem, auto) minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--site-space-200);
 }
 
+/* A shape is a Surface, so its edge draws the corner (GAP-52, as for the
+   swatches); the tint fills it from inside. */
 .site-shape {
+  display: grid;
   inline-size: calc(var(--primitives-layout-sizing-1000) * 1px);
   block-size: calc(var(--primitives-layout-sizing-1000) * 1px);
   border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.site-shape-fill {
   background: var(--primitives-colors-theme-0);
-  border: var(--primitives-border-width-md) solid
-    var(--primitives-colors-theme-600);
 }
 
 .site-shape-row {
@@ -913,8 +994,6 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
   block-size: min(56rem, calc(100dvh - var(--site-space-900)));
   min-block-size: 32rem;
   overflow: auto;
-  border-block: var(--primitives-border-width-sm) solid
-    var(--semantics-border-subtle);
 }
 
 .site-example-canvas[data-kind="app"] {
@@ -972,8 +1051,6 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
   isolation: isolate;
   padding: var(--site-space-300);
   background: var(--primitives-colors-background-25);
-  border-block-start: var(--primitives-border-width-sm) solid
-    var(--semantics-border-subtle);
   min-inline-size: 0;
   overflow-x: auto;
 }
@@ -1028,16 +1105,6 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
   gap: var(--site-space-200);
 }
 
-.site-demo-phone {
-  inline-size: min(100%, 24rem);
-  block-size: 30rem;
-  margin-inline: auto;
-  border-radius: var(--site-radius-panel);
-  overflow: hidden;
-  border: var(--primitives-border-width-sm) solid var(--semantics-border-subtle);
-  background: var(--primitives-colors-background-0);
-}
-
 .site-demo-map {
   position: relative;
   block-size: 100%;
@@ -1055,12 +1122,20 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
   block-size: 12rem;
 }
 
-/* Shapes for the skeleton demo, and a row tall enough for a vertical rule. */
+/* Shapes for the skeleton demo, and a row tall enough for a vertical rule.
+   Skeleton's corners are its own (a scoped utility, GAP-04): a disc is a
+   round box that clips it, and the lines and the block keep Kozmos's
+   rounding. */
 .site-skeleton-disc {
   inline-size: calc(var(--primitives-layout-sizing-600) * 1px);
   block-size: calc(var(--primitives-layout-sizing-600) * 1px);
   border-radius: var(--site-radius-pill);
+  overflow: hidden;
   flex-shrink: 0;
+}
+
+.site-skeleton-fill {
+  block-size: 100%;
 }
 
 .site-skeleton-lines {
@@ -1070,7 +1145,6 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
 .site-skeleton-line {
   block-size: calc(var(--primitives-layout-sizing-200) * 1px);
   inline-size: 100%;
-  border-radius: calc(var(--semantics-radius-marker) * 1px);
 }
 
 .site-skeleton-line-short {
@@ -1080,7 +1154,6 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
 .site-skeleton-block {
   block-size: calc(var(--primitives-layout-sizing-800) * 2px);
   inline-size: 100%;
-  border-radius: var(--site-radius-control);
 }
 
 .site-demo-scroll-row {
@@ -1104,6 +1177,11 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
 .site-demo-shell {
   position: relative;
   block-size: 34rem;
+}
+
+/* A POIResultList brings no padding; Kozmos's own panels pad by 16px. */
+.site-demo-panel {
+  padding: var(--site-space-200);
 }
 
 .site-demo-layer {

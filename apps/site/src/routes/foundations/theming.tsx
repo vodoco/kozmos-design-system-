@@ -72,7 +72,7 @@ export default function Theming() {
 
       <Section
         title="Following the system, and remembering a choice"
-        lead="By default a provider follows the system's preference and its live changes. Persistence is opt-in: give it a storage key your product owns. The site's own switcher in the header does exactly this."
+        lead="By default a provider follows the system’s preference and its live changes. Persistence is opt-in: give it a storage key your product owns. The site’s own switcher in the header does exactly this."
       >
         {themeProvider.snippets.react ? (
           <CodeBlock

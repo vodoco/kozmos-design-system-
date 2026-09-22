@@ -4,6 +4,7 @@ import { getExample } from "../manifest";
 import States from "./States";
 import styles from "./States.css?raw";
 import source from "./States.tsx?raw";
+import focusSource from "../focus.ts?raw";
 
 const example = getExample("states");
 
@@ -21,6 +22,7 @@ export default function StatesExample() {
       files={[
         { name: "States.tsx", code: source },
         { name: "States.css", code: styles },
+        { name: "focus.ts", code: focusSource },
       ]}
     >
       <States />

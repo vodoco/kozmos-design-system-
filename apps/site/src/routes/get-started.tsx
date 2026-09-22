@@ -60,16 +60,17 @@ export default function GetStarted() {
       >
         {PACKAGES_PUBLISHED ? null : (
           <Note variant="info">
-            The packages are ready for npm and not yet published, so the install
-            command below does not work yet. Until it does, use them from inside
-            the repository, as its apps do.
+            The packages are built for npm and not yet published, so the install
+            command below does not work yet: release waits on an approved
+            browser support matrix (below). Until then, use them from inside the
+            repository, as its apps do.
           </Note>
         )}
       </PageHeader>
 
       <Section
         title="Install"
-        lead="React 18 and 19 are both supported. The tokens, icons and product contracts come with it."
+        lead="React 18.2 and later, and React 19, are supported. The tokens, icons and product contracts come with it."
       >
         <CodeBlock
           label="Install command"
@@ -126,21 +127,21 @@ export default function GetStarted() {
 
       <Section
         title="Links that look like buttons"
-        lead="Button always renders a button. For navigation, use Link, or give your router's link the button's classes."
+        lead="Button always renders a button. For navigation, use Link, or give your router’s link the button’s classes."
       >
         <CodeBlock label="BrowseLocations.tsx" code={buttonLinkSnippet} />
       </Section>
 
       <Section
         title="Tokens in your own CSS"
-        lead="Every token is a CSS variable inside a ThemeProvider, and changes with its theme. The JavaScript exports carry the light theme's values only."
+        lead="Every token is a CSS variable inside a ThemeProvider, and changes with its theme. The JavaScript exports carry the light theme’s values only."
       >
         <CodeBlock label="panel.css" code={tokensSnippet} />
       </Section>
 
       <Section
         title="Analytics"
-        lead="Components report interactions, such as a switch being toggled. Without a provider the events are dropped and a warning is logged once."
+        lead="Components report interactions, such as a switch being toggled. Without a provider the events are dropped, with one warning in a development build."
       >
         <CodeBlock label="Analytics.tsx" code={analyticsSnippet} />
       </Section>
@@ -185,7 +186,9 @@ export default function GetStarted() {
       <Section
         title="Inside the repository"
         lead={
-          'Until the packages are published, an app in the repository depends on them as "workspace:*" and uses what the build leaves in each package\'s dist folder. Build them first:'
+          PACKAGES_PUBLISHED
+            ? 'An app in the repository depends on the packages as "workspace:*" and uses what the build leaves in each package’s dist folder. Build them first:'
+            : 'Until the packages are published, an app in the repository depends on them as "workspace:*" and uses what the build leaves in each package’s dist folder. Build them first:'
         }
       >
         <CodeBlock label="Build commands" code={repositorySteps} />
@@ -194,7 +197,7 @@ export default function GetStarted() {
       <Section
         id="checks"
         title="What every pull request runs"
-        lead="The checks the workflow runs before anything merges, in the order it runs them, and what each one holds the design system to."
+        lead="The main checks the workflow runs on every pull request, grouped as its steps are, and what each one holds the design system to. The iOS and Android jobs run beside the web one."
       >
         <Pipeline />
       </Section>

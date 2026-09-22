@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   Box,
@@ -17,6 +17,7 @@ import {
 import { examples } from "../examples/manifest";
 import { foundationPages } from "../foundations/nav";
 import { componentIndex, laneTitle } from "../reference/nav";
+import { withoutCode } from "./inline-code";
 
 interface Entry {
   to: string;
@@ -64,7 +65,8 @@ const entries: readonly Entry[] = [
     (component): Entry => ({
       to: `/components/${component.slug}`,
       label: component.name,
-      description: component.description || laneTitle(component.lane),
+      description:
+        withoutCode(component.description) || laneTitle(component.lane),
       group: "Components",
     }),
   ),
@@ -88,22 +90,34 @@ function rank(entry: Entry, query: string) {
   return 3;
 }
 
-function search(query: string): Entry[] {
+/** What matches, best first: up to LIMIT of them, and how many there were. */
+function search(query: string): { shown: Entry[]; total: number } {
   const trimmed = query.trim().toLowerCase();
   const words = trimmed.split(/\s+/).filter(Boolean);
   if (words.length === 0) {
     // Nothing typed yet: the pages and the foundations, as a table of contents.
-    return entries.filter(
+    const contents = entries.filter(
       (entry) => entry.group === "Pages" || entry.group === "Foundations",
     );
+    return { shown: contents, total: contents.length };
   }
-  return entries
+  const found = entries
     .filter((entry) => {
       const haystack = `${entry.label} ${entry.description}`.toLowerCase();
       return words.every((word) => haystack.includes(word));
     })
-    .sort((a, b) => rank(a, trimmed) - rank(b, trimmed))
-    .slice(0, LIMIT);
+    .sort((a, b) => rank(a, trimmed) - rank(b, trimmed));
+  return { shown: found.slice(0, LIMIT), total: found.length };
+}
+
+/** The line a screen reader hears as the results change. */
+function summary(query: string, shown: number, total: number) {
+  if (!query.trim()) return `${total} places to start`;
+  if (total === 0)
+    return `Nothing has “${query.trim()}” in its name or its summary.`;
+  if (shown < total)
+    return `The best ${shown} of ${total} results; type more to narrow them.`;
+  return total === 1 ? "1 result" : `${total} results`;
 }
 
 /**
@@ -121,6 +135,13 @@ export function SiteSearch() {
   // last word, not the dialog's return to the header button. Deferring is
   // what makes it hold in WebKit as well.
   const pending = useRef<string>(undefined);
+  const hintId = useId();
+
+  // However the dialog closes — Escape, the ✕, ⌘K again, or a result — the
+  // next visit starts from an empty field.
+  useEffect(() => {
+    if (!open) setQuery("");
+  }, [open]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -133,7 +154,7 @@ export function SiteSearch() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  const shown = useMemo(() => search(query), [query]);
+  const { shown, total } = useMemo(() => search(query), [query]);
   const options: ComboboxOption[] = shown.map((entry) => ({
     value: entry.to,
     label: entry.label,
@@ -143,7 +164,6 @@ export function SiteSearch() {
   function go(to: string) {
     pending.current = to;
     setOpen(false);
-    setQuery("");
   }
 
   return (
@@ -155,15 +175,8 @@ export function SiteSearch() {
       >
         <Icon name="search-md" size="sm" />
       </IconButton>
-      <Dialog
-        open={open}
-        onOpenChange={(next) => {
-          setOpen(next);
-          if (!next) setQuery("");
-        }}
-      >
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
-          className="site-search"
           onCloseAutoFocus={(event) => {
             const to = pending.current;
             if (!to) return;
@@ -186,6 +199,7 @@ export function SiteSearch() {
             value={query}
             onChange={setQuery}
             onClear={() => setQuery("")}
+            aria-describedby={hintId}
             autoFocus
             onKeyDown={(event) => {
               if (event.key === "Enter" && shown[0]) {
@@ -199,6 +213,10 @@ export function SiteSearch() {
               }
             }}
           />
+          {/* Always there, so a screen reader hears each change to it. */}
+          <Text size="sm" color="muted" aria-live="polite">
+            {summary(query, shown.length, total)}
+          </Text>
           <Box ref={results} className="site-search-results">
             {options.length > 0 ? (
               <Listbox
@@ -208,14 +226,10 @@ export function SiteSearch() {
                   if (typeof value === "string") go(value);
                 }}
               />
-            ) : (
-              <Text size="sm" color="muted">
-                Nothing has “{query.trim()}” in its name or its summary.
-              </Text>
-            )}
+            ) : null}
           </Box>
-          <Text size="xs" color="muted">
-            Enter opens the first result; the arrow keys walk the list.
+          <Text id={hintId} size="xs" color="muted">
+            Enter opens the first result; the down arrow moves into the list.
           </Text>
         </DialogContent>
       </Dialog>

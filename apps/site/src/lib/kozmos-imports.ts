@@ -16,5 +16,8 @@ export function kozmosImports(source: string): string[] {
       if (name) names.add(name);
     }
   }
-  return [...names].sort((a, b) => a.localeCompare(b));
+  // One fixed locale: the list is pre-rendered in Node and rendered again in
+  // the browser, and a visitor's collation (Czech sorts "Ch" after "H") would
+  // otherwise reorder it and fail hydration.
+  return [...names].sort((a, b) => a.localeCompare(b, "en"));
 }

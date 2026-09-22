@@ -42,7 +42,7 @@ function isBrand(value: string | undefined): value is Brand {
 function overrideSnippet(entries: [string, string][]) {
   if (entries.length === 0) {
     return [
-      "// Kozmos's own ramp: nothing to re-point.",
+      "// Kozmos’s own ramp: nothing to re-point.",
       "<ThemeProvider>",
       "  {app}",
       "</ThemeProvider>",
@@ -103,15 +103,22 @@ export function MakeItYours() {
         {brand === "theme" ? (
           <Text size="sm" color="muted">
             Kozmos’s own blue: nothing to override. Choose a variant to see what
-            one `tokens` prop changes.
+            one{" "}
+            <Text as="span" size="sm" className="site-mono">
+              tokens
+            </Text>{" "}
+            prop changes.
           </Text>
         ) : (
           <Text size="sm" color="muted">
             {entries.length} variables re-pointed: the theme ramp’s{" "}
             {entries.length - overrides.repointed.length} steps and{" "}
             {overrides.repointed.length} of the {themedCount} themed component
-            tokens. The other {overrides.unmatched.length} are baked values that
-            match no single ramp step, so they keep the blue — that is GAP-23.
+            tokens. The other {overrides.unmatched.length}, the ink on filled
+            buttons and the disabled greys, are not on the theme ramp, so they
+            keep their values. The component tokens hold copied values, not
+            references to the ramp, which is why each one is matched by value
+            (GAP-23).
           </Text>
         )}
         <CodeBlock label="The override" code={overrideSnippet(entries)} />
@@ -148,7 +155,8 @@ export function MakeItYours() {
             selectedFloor={floor}
             onFloorSelect={setFloor}
           />
-          <ChipGroup aria-label="Filters">
+          {/* GAP-32: ChipGroup is a plain div; the role makes the label count. */}
+          <ChipGroup role="group" aria-label="Filters">
             <Chip size="sm" selected>
               Open now
             </Chip>

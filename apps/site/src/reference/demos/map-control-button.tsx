@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Box, Icon, MapControlButton } from "@kozmos/react";
+import { GlassBackdrop } from "../GlassBackdrop";
 import type { DemoModule } from "../types";
 
 function Presentations() {
@@ -43,38 +44,24 @@ function Presentations() {
 
 function OnGlass() {
   return (
-    <Box className="site-glass-stage">
-      {(["blue", "orange"] as const).map((colour, index) => (
-        <Box
-          key={colour}
-          className="site-blob"
-          aria-hidden="true"
-          style={{
-            "--blob": `var(--semantics-category-fill-${colour})`,
-            "--x": `${30 + index * 40}%`,
-            "--y": "50%",
-          }}
-        />
-      ))}
-      <Box className="site-glass-card site-demo-row">
-        <MapControlButton
-          variant="glass"
-          icon={<Icon name="plus" size="sm" />}
-          label="Zoom in"
-        />
-        <MapControlButton
-          variant="glass"
-          icon={<Icon name="minus" size="sm" />}
-          label="Zoom out"
-        />
-        <MapControlButton
-          variant="glass"
-          icon={<Icon name="navigation-pointer-01" size="sm" />}
-          label="My location"
-          presentation="labelled"
-        />
-      </Box>
-    </Box>
+    <GlassBackdrop colours={["blue", "orange"]} row>
+      <MapControlButton
+        variant="glass"
+        icon={<Icon name="plus" size="sm" />}
+        label="Zoom in"
+      />
+      <MapControlButton
+        variant="glass"
+        icon={<Icon name="minus" size="sm" />}
+        label="Zoom out"
+      />
+      <MapControlButton
+        variant="glass"
+        icon={<Icon name="navigation-pointer-01" size="sm" />}
+        label="My location"
+        presentation="labelled"
+      />
+    </GlassBackdrop>
   );
 }
 

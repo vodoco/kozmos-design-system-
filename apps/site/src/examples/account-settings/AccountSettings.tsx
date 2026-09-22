@@ -187,11 +187,15 @@ function ProfileSettings() {
                 {profile.bio.length} of {BIO_LIMIT} characters
               </Text>
             </Box>
-            {saved ? (
-              <Alert variant="success" role="status">
-                <AlertDescription>Your profile is saved.</AlertDescription>
-              </Alert>
-            ) : null}
+            {/* Always on the page, so a screen reader hears the message put in
+                it; the Alert inside is only its look (Alert is role="alert", GAP-12). */}
+            <Box role="status" className="ex-settings-live">
+              {saved ? (
+                <Alert variant="success" role="none">
+                  <AlertDescription>Your profile is saved.</AlertDescription>
+                </Alert>
+              ) : null}
+            </Box>
           </Box>
         </CardContent>
         <CardFooter>
@@ -269,13 +273,17 @@ function NotificationSettings() {
               checked={news}
               onCheckedChange={(checked) => changed(setNews)(checked === true)}
             />
-            {saved ? (
-              <Alert variant="success" role="status">
-                <AlertDescription>
-                  Your notification choices are saved.
-                </AlertDescription>
-              </Alert>
-            ) : null}
+            {/* Always on the page, so a screen reader hears the message put in
+                it; the Alert inside is only its look (Alert is role="alert", GAP-12). */}
+            <Box role="status" className="ex-settings-live">
+              {saved ? (
+                <Alert variant="success" role="none">
+                  <AlertDescription>
+                    Your notification choices are saved.
+                  </AlertDescription>
+                </Alert>
+              ) : null}
+            </Box>
           </Box>
         </CardContent>
         <CardFooter>
@@ -356,11 +364,17 @@ function SecuritySettings() {
                 error={errors.confirm}
                 onChange={(event) => setConfirm(event.target.value)}
               />
-              {changed ? (
-                <Alert variant="success" role="status">
-                  <AlertDescription>Your password is changed.</AlertDescription>
-                </Alert>
-              ) : null}
+              {/* Always on the page, so a screen reader hears the message put in
+                  it; the Alert inside is only its look (Alert is role="alert", GAP-12). */}
+              <Box role="status" className="ex-settings-live">
+                {changed ? (
+                  <Alert variant="success" role="none">
+                    <AlertDescription>
+                      Your password is changed.
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+              </Box>
             </Box>
           </CardContent>
           <CardFooter>

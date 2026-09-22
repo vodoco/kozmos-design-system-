@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, MapView, SearchBar, Text } from "@kozmos/react";
+import { Box, MapOverlay, MapView, SearchBar, Text } from "@kozmos/react";
 import type { DemoModule } from "../types";
 
 function Inline() {
@@ -28,7 +28,7 @@ function FloatingOverAMap() {
   return (
     <Box className="site-demo-map">
       <MapView mapLabel="Illustrative map">
-        <Box className="site-demo-column">
+        <MapOverlay position="top-left" width="md">
           <SearchBar
             variant="floating"
             aria-label="Search the terminal"
@@ -37,7 +37,7 @@ function FloatingOverAMap() {
             onChange={setQuery}
             onClear={() => setQuery("")}
           />
-        </Box>
+        </MapOverlay>
       </MapView>
     </Box>
   );
@@ -47,7 +47,7 @@ export const demos: DemoModule["demos"] = [
   {
     title: "Inline",
     description:
-      "The map product's search field: a search glyph, a clear button in a 44px target once there is text. In WebKit the field is unstyled (GAP-20).",
+      "The map product’s search field: a search glyph, a clear button in a 44px target once there is text. In WebKit the field is unstyled (GAP-20).",
     Component: Inline,
   },
   {

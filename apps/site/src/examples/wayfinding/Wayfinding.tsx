@@ -22,6 +22,7 @@ import {
   UserLocationMarker,
   type RoutePoint,
 } from "@kozmos/react";
+import { useFocusOnChange } from "../focus";
 import { categoryFor, tint, venueName } from "../venue-explorer/data";
 import {
   arrivalTime,
@@ -165,35 +166,47 @@ export default function Wayfinding() {
       />
     );
 
+  // Each stage replaces the panel's view; focus goes into the new one
+  // (../focus.ts), where the control that was pressed has gone.
+  const panelFocus = useFocusOnChange(stage);
+
   const panel =
     stage === "plan" ? (
-      <POIResultList
-        label="Where to?"
-        resultCountLabel={(() => {
-          const count = places.filter((place) =>
-            matches(place.poi.name, query),
-          ).length;
-          return count === 1 ? "1 place" : `${count} places`;
-        })()}
-        items={places
-          .filter((place) => matches(place.poi.name, query))
-          .map((place, index) => ({
-            poi: place.poi,
-            result: {
-              poiId: place.poi.id,
-              resultIndex: index + 1,
-              selected: false,
-              featured: false,
-              floorId: place.poi.floorId,
-              travelEstimate: place.details.travelEstimate,
-            },
-          }))}
-        currentFloorId={floorId}
-        onSelect={choose}
-        emptyState="No place has that name. Try another word."
-      />
+      <Box className="ex-way-list">
+        <POIResultList
+          ref={panelFocus}
+          tabIndex={-1}
+          className="ex-way-panel-focus"
+          label="Where to?"
+          resultCountLabel={(() => {
+            const count = places.filter((place) =>
+              matches(place.poi.name, query),
+            ).length;
+            return count === 1 ? "1 place" : `${count} places`;
+          })()}
+          items={places
+            .filter((place) => matches(place.poi.name, query))
+            .map((place, index) => ({
+              poi: place.poi,
+              result: {
+                poiId: place.poi.id,
+                resultIndex: index + 1,
+                selected: false,
+                featured: false,
+                floorId: place.poi.floorId,
+                travelEstimate: place.details.travelEstimate,
+              },
+            }))}
+          currentFloorId={floorId}
+          onSelect={choose}
+          emptyState="No place has that name. Try another word."
+        />
+      </Box>
     ) : stage === "preview" && destination ? (
       <RoutePreviewPanel
+        ref={panelFocus}
+        tabIndex={-1}
+        className="ex-way-panel-focus"
         status="ready"
         destinationName={destination.poi.name}
         options={routes.map((entry) => ({
@@ -209,7 +222,11 @@ export default function Wayfinding() {
         onContinue={start}
       />
     ) : navigating && destination && current ? (
-      <Box className="ex-way-stack">
+      <Box
+        className="ex-way-stack ex-way-panel-focus"
+        ref={panelFocus}
+        tabIndex={-1}
+      >
         <RouteSummary
           destination={destination.poi.name}
           durationText={`${Math.max(1, Math.round(remainingSeconds / 60))} min`}
@@ -236,7 +253,11 @@ export default function Wayfinding() {
         </Stack>
       </Box>
     ) : arrived && destination ? (
-      <Box className="ex-way-stack">
+      <Box
+        className="ex-way-stack ex-way-panel-focus"
+        ref={panelFocus}
+        tabIndex={-1}
+      >
         <FeedbackCard
           title="You have arrived"
           description={`How was the route to ${destination.poi.name}?`}
@@ -245,11 +266,11 @@ export default function Wayfinding() {
           }
           successMessage="Thank you. Every rating tunes the routes."
         />
-        {note ? (
-          <Text size="sm" color="muted" role="status">
-            {note}
-          </Text>
-        ) : null}
+        {/* Always there, so a screen reader hears the thanks put in it;
+            empty, it takes no room. */}
+        <Text size="sm" color="muted" role="status" className="ex-way-live">
+          {note}
+        </Text>
         <Button variant="outline" onClick={reset}>
           Plan another route
         </Button>

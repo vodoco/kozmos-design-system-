@@ -1,4 +1,4 @@
-import { Box, Stack, Text } from "@kozmos/react";
+import { Box, List, ListItem, Stack, Surface, Text } from "@kozmos/react";
 import { DocsPage, foundationMeta } from "../../foundations/DocsPage";
 import { TokenTable } from "../../foundations/parts";
 import { foundationPage } from "../../foundations/nav";
@@ -15,23 +15,27 @@ export function meta() {
 function Scale({ prefix, caption }: { prefix: string; caption: string }) {
   const entries = tokensWithPrefix(`${prefix}-`);
   return (
-    <Stack gap={2} role="list" aria-label={caption}>
+    <List density="compact" aria-label={caption}>
       {entries.map((entry) => (
-        <Box key={entry.name} className="site-scale-row" role="listitem">
-          <Text as="span" size="sm" className="site-mono">
-            {shortName(entry.name, prefix)}
-          </Text>
-          <Box
-            className="site-bar"
-            style={{ "--len": `var(${entry.name})` }}
-            aria-hidden="true"
-          />
-          <Text as="span" size="sm" color="muted" className="site-mono">
-            {entry.light}
-          </Text>
-        </Box>
+        <ListItem key={entry.name}>
+          {/* ListItem lays out as a flex row of its own (GAP-04); the
+              scale's three columns are a Box inside it. */}
+          <Box className="site-scale-row">
+            <Text as="span" size="sm" className="site-mono">
+              {shortName(entry.name, prefix)}
+            </Text>
+            <Box
+              className="site-bar"
+              style={{ "--len": `var(${entry.name})` }}
+              aria-hidden="true"
+            />
+            <Text as="span" size="sm" color="muted" className="site-mono">
+              {entry.light}
+            </Text>
+          </Box>
+        </ListItem>
       ))}
-    </Stack>
+    </List>
   );
 }
 
@@ -48,7 +52,7 @@ function Shapes({
     <Box className="site-shape-row">
       {entries.map((entry) => (
         <Box key={entry.name} className="site-shape-cell">
-          <Box
+          <Surface
             className="site-shape"
             aria-hidden="true"
             style={{
@@ -56,7 +60,9 @@ function Shapes({
                 ? `calc(var(${entry.name}) * 1px)`
                 : `var(${entry.name})`,
             }}
-          />
+          >
+            <Box className="site-shape-fill" />
+          </Surface>
           <Text as="span" size="sm" className="site-mono">
             {shortName(entry.name, prefix)}
           </Text>
@@ -92,7 +98,7 @@ export default function Layout() {
 
       <Section
         title="Radius roles"
-        lead="Five roles, unitless like the spacing. Re-point one alias and every control, container or panel follows."
+        lead="Six roles, unitless like the spacing, each an alias of the layout radius scale. Re-point one and the components that read it follow; a few still name a primitive radius or a pixel value of their own."
       >
         <Stack gap={6}>
           <Shapes
@@ -110,7 +116,7 @@ export default function Layout() {
 
       <Section
         title="Radius primitives"
-        lead="The rem-based scale the roles were drawn from, and the legacy per-part aliases (card, input, button, default) that older code still reads."
+        lead="The older rem-based scale and its per-part aliases (card, input, button, default), which some components still read. The roles above do not come from it: they alias the unitless layout radius scale."
       >
         <Shapes
           entries={primitiveRadius}
@@ -129,39 +135,43 @@ export default function Layout() {
 
       <Section
         title="Breakpoints"
-        lead="Named for the device class, used by the components' responsive utilities. CSS variables cannot appear in a media query, so these are documentation on the web and values in the native token files."
+        lead="Named for the device class and part of the Tailwind theme Kozmos builds with, though no component uses them yet: the few that change with the viewport use Tailwind’s own steps, and the map shell measures its container. CSS variables cannot appear in a media query, so on the web these are documentation, and values in the native token files."
       >
-        <Stack gap={2} role="list" aria-label="Breakpoints">
+        <List density="compact" aria-label="Breakpoints">
           {screens.map((entry) => (
-            <Box key={entry.name} className="site-scale-row" role="listitem">
-              <Text as="span" size="sm" className="site-mono">
-                {shortName(entry.name, "--primitives-screen")}
-              </Text>
-              <Box
-                className="site-bar"
-                aria-hidden="true"
-                style={{ "--len": `calc(${parseInt(entry.light, 10)} / 4)` }}
-              />
-              <Text as="span" size="sm" color="muted" className="site-mono">
-                {entry.light}
-              </Text>
-            </Box>
+            <ListItem key={entry.name}>
+              <Box className="site-scale-row">
+                <Text as="span" size="sm" className="site-mono">
+                  {shortName(entry.name, "--primitives-screen")}
+                </Text>
+                <Box
+                  className="site-bar"
+                  aria-hidden="true"
+                  style={{ "--len": `calc(${parseInt(entry.light, 10)} / 4)` }}
+                />
+                <Text as="span" size="sm" color="muted" className="site-mono">
+                  {entry.light}
+                </Text>
+              </Box>
+            </ListItem>
           ))}
-        </Stack>
+        </List>
       </Section>
 
       <Section
         title="Touch targets"
-        lead="The smallest target a control may present, and the comfortable one. Every Kozmos control meets the minimum; the search bar's and category field's clear buttons are 44 around a 32 circle."
+        lead="The smallest target a control may present, and the comfortable one. Not every Kozmos control meets the minimum yet: chips, toggle buttons, tab triggers, the slider’s thumb and the rating’s stars are smaller today. The clear buttons show how: a 44 target around a 24 circle in the search bar, a 32 one in the category field."
       >
         <Box className="site-shape-row">
           {touch.map((entry) => (
             <Box key={entry.name} className="site-shape-cell">
-              <Box
+              <Surface
                 className="site-shape"
                 aria-hidden="true"
                 style={{ "--radius": "var(--site-radius-control)" }}
-              />
+              >
+                <Box className="site-shape-fill" />
+              </Surface>
               <Text as="span" size="sm" className="site-mono">
                 {shortName(entry.name, "--primitives-touch")} · {entry.light}
               </Text>

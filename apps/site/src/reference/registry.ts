@@ -33,11 +33,6 @@ export function loadDemoSource(slug: string): Promise<string> | undefined {
   return demoSources[key(slug)]?.();
 }
 
-/** Every slug that has a demo file, for the tests and the index. */
-export const demoSlugs: readonly string[] = Object.keys(demoModules)
-  .map((path) => path.slice("./demos/".length, -".tsx".length))
-  .sort();
-
 type DemosRender = { children: (demos: readonly Demo[]) => ReactNode };
 type SourceRender = { children: (source: string) => ReactNode };
 

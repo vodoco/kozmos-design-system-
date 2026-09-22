@@ -24,6 +24,7 @@ import {
   Tag,
   Text,
 } from "@kozmos/react";
+import { useFocusOnChange } from "../focus";
 import {
   kindLabel,
   notifications as initial,
@@ -56,6 +57,11 @@ export default function Notifications() {
   const [items, setItems] = useState<readonly Notification[]>(initial);
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [undo, setUndo] = useState<readonly string[]>();
+  // Marking read removes the button that was pressed (an item's, or "Mark all"
+  // disables itself), so focus goes to the Undo that appears; after Undo, to
+  // "Mark all as read" (../focus.ts).
+  const undoFocus = useFocusOnChange(undo, Boolean(undo));
+  const markAllFocus = useFocusOnChange(undo, !undo);
   const [prefs, setPrefs] = useState({
     email: true,
     push: true,
@@ -117,6 +123,7 @@ export default function Notifications() {
             <Button
               variant="outline"
               size="sm"
+              ref={markAllFocus}
               disabled={unread.length === 0}
               onClick={() => markRead(unread.map((item) => item.id))}
             >
@@ -159,31 +166,39 @@ export default function Notifications() {
           </Stack>
         </Stack>
 
-        {undo ? (
-          // A toast would sit at the browser's corner, outside the page
-          // (GAPS.md, GAP-36); Alert is always role="alert" (GAP-12), so the
-          // confirmation passes role="status".
-          <Alert variant="success" role="status">
-            <AlertDescription>
-              <Stack
-                direction="row"
-                align="center"
-                justify="between"
-                wrap="wrap"
-                gap={2}
-              >
-                <Text as="span" size="sm">
-                  {undo.length === 1
-                    ? "1 notification marked as read."
-                    : `${undo.length} notifications marked as read.`}
-                </Text>
-                <Button variant="link" size="sm" onClick={undoRead}>
-                  Undo
-                </Button>
-              </Stack>
-            </AlertDescription>
-          </Alert>
-        ) : null}
+        {/* A toast would sit at the browser's corner, outside the page
+            (GAPS.md, GAP-36), so the confirmation stays inline, in a status
+            region that is always there; the Alert inside is only its look
+            (Alert is always role="alert", GAP-12). */}
+        <Box role="status" className="ex-inbox-live">
+          {undo ? (
+            <Alert variant="success" role="none">
+              <AlertDescription>
+                <Stack
+                  direction="row"
+                  align="center"
+                  justify="between"
+                  wrap="wrap"
+                  gap={2}
+                >
+                  <Text as="span" size="sm">
+                    {undo.length === 1
+                      ? "1 notification marked as read."
+                      : `${undo.length} notifications marked as read.`}
+                  </Text>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={undoRead}
+                    ref={undoFocus}
+                  >
+                    Undo
+                  </Button>
+                </Stack>
+              </AlertDescription>
+            </Alert>
+          ) : null}
+        </Box>
 
         <Tabs defaultValue="all">
           <TabsList aria-label="Kind">
@@ -211,10 +226,7 @@ export default function Notifications() {
                   <List aria-label={`${filter.label} notifications`}>
                     {shown.map((item) => (
                       <ListItem key={item.id}>
-                        <Box
-                          className="ex-inbox-item"
-                          data-unread={!item.read || undefined}
-                        >
+                        <Box className="ex-inbox-item">
                           <Icon name={kindIcon[item.kind]} size="lg" />
                           <Stack gap={1}>
                             <Text weight={item.read ? "normal" : "semibold"}>

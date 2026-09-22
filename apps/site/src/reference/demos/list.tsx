@@ -58,7 +58,7 @@ export const demos: DemoModule["demos"] = [
   {
     title: "Rows with content",
     description:
-      "A ul with rows of at least 48px; what goes in a row is the caller's.",
+      "A ul with rows of at least 48px; what goes in a row is the caller’s.",
     Component: Places,
   },
   {

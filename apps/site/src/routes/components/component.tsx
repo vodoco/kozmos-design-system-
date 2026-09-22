@@ -11,6 +11,7 @@ import {
   Container,
   Heading,
   ScrollArea,
+  Separator,
   Skeleton,
   Stack,
   Table,
@@ -35,9 +36,19 @@ import type { ComponentPart, Demo } from "../../reference/types";
 import { CodeBlock } from "../../site/CodeBlock";
 import { SiteLink } from "../../site/links";
 import { PageHeader, Section } from "../../site/Section";
+import { withCode, withoutCode } from "../../site/inline-code";
 
-export async function loader({ params }: Route.LoaderArgs) {
-  const component = await loadComponentData(params.slug);
+/**
+ * The component a page is for: the last part of its address. The request for
+ * the page's data, React Router's `<address>.data`, names the same one.
+ */
+function slugOf(url: string) {
+  const last = new URL(url).pathname.split("/").filter(Boolean).pop() ?? "";
+  return last.replace(/\.data$/, "");
+}
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const component = await loadComponentData(slugOf(request.url));
   if (!component) throw data(null, { status: 404 });
   return component;
 }
@@ -48,7 +59,8 @@ export function meta({ data: component }: Route.MetaArgs) {
     {
       name: "description",
       content:
-        component.description || `${component.name}, a Kozmos component.`,
+        withoutCode(component.description) ||
+        `${component.name}, a Kozmos component.`,
     },
   ];
 }
@@ -81,6 +93,7 @@ function DemoCard({ demo }: { demo: Demo }) {
           <CardDescription>{demo.description}</CardDescription>
         ) : null}
       </CardHeader>
+      <Separator />
       <Box
         className={
           demo.tall ? "site-demo-stage site-demo-stage-tall" : "site-demo-stage"
@@ -135,6 +148,8 @@ function PropsTable({ part }: { part: ComponentPart }) {
                     required
                   </Tag>
                 ) : null}
+                {/* A Radix primitive's own prop, which Kozmos passes through. */}
+                {prop.source ? <Tag variant="secondary">Radix</Tag> : null}
               </Stack>
             </TableCell>
             <TableCell>
@@ -149,7 +164,11 @@ function PropsTable({ part }: { part: ComponentPart }) {
             </TableCell>
             <TableCell>
               <Text as="span" size="sm" color="muted">
-                {prop.description}
+                {prop.description
+                  ? withCode(prop.description)
+                  : prop.source
+                    ? `From ${prop.source}.`
+                    : ""}
               </Text>
             </TableCell>
           </TableRow>
@@ -173,7 +192,7 @@ export default function ComponentPage({
 
   return (
     <Container className="site-page">
-      <PageHeader title={component.name} lead={component.description}>
+      <PageHeader title={component.name} lead={withCode(component.description)}>
         <Stack direction="row" wrap="wrap" align="center" gap={2}>
           <Tag variant="secondary">{laneTitle(component.lane)}</Tag>
           {component.parts.map((part) => (
@@ -251,7 +270,7 @@ export default function ComponentPage({
                 <Heading level={3}>{part.name}</Heading>
                 {part.description ? (
                   <Text size="sm" color="muted">
-                    {part.description}
+                    {withCode(part.description)}
                   </Text>
                 ) : null}
               </Stack>

@@ -4,6 +4,7 @@ import { getExample } from "../manifest";
 import KioskDirectory from "./KioskDirectory";
 import styles from "./KioskDirectory.css?raw";
 import source from "./KioskDirectory.tsx?raw";
+import focusSource from "../focus.ts?raw";
 
 const example = getExample("kiosk-directory");
 
@@ -21,6 +22,7 @@ export default function KioskDirectoryExample() {
       files={[
         { name: "KioskDirectory.tsx", code: source },
         { name: "KioskDirectory.css", code: styles },
+        { name: "focus.ts", code: focusSource },
       ]}
     >
       <KioskDirectory />

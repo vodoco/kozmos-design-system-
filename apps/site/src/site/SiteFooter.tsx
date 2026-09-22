@@ -1,4 +1,5 @@
 import { Container, Separator, Stack, Text } from "@kozmos/react";
+import { PACKAGES_PUBLISHED } from "../lib/site";
 import { SiteLink } from "./links";
 import { primaryNavigation } from "./SiteHeader";
 
@@ -17,7 +18,8 @@ export function SiteFooter() {
             gap={4}
           >
             <Text size="sm" color="muted">
-              Kozmos design system. MIT licence. Pre-release.
+              Kozmos design system. MIT licence.
+              {PACKAGES_PUBLISHED ? null : " Pre-release."}
             </Text>
             <nav aria-label="Footer" className="site-footer-nav">
               {primaryNavigation.map((item) => (

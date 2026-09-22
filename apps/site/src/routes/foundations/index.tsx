@@ -158,11 +158,11 @@ export default function Foundations() {
     <Container className="site-page">
       <PageHeader
         title="Foundations"
-        lead={`${tokens.length} tokens, generated once for the web, iOS and Android, and read live by these pages: what you see here is what the components use.`}
+        lead={`${tokens.length} tokens from one source: all of them on the web, and the colours, spacing, radii, shadows and motion in Swift and Kotlin. These pages read them live, so what you see here is what the components use.`}
       />
       {/* CardTitle is always an h3 (GAPS.md, GAP-14), so the cards sit under an h2. */}
       <Section
-        title="Seven pages"
+        title={`${foundationPages.length} pages`}
         lead="Each one is drawn from the tokens it describes."
       >
         <Box className="site-grid site-grid-wide">

@@ -3,7 +3,9 @@
 
 .ex-states {
   min-block-size: 100%;
-  padding: var(--site-space-600) var(--site-space-300) var(--site-space-900);
+  padding: calc(var(--primitives-layout-spacing-600) * 1px)
+    calc(var(--primitives-layout-spacing-300) * 1px)
+    calc(var(--primitives-layout-spacing-900) * 1px);
   max-inline-size: 44rem;
   margin-inline: auto;
 }
@@ -12,13 +14,20 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: var(--site-space-200);
+  gap: calc(var(--primitives-layout-spacing-200) * 1px);
 }
 
+/* A disc: Skeleton's own corners cannot be changed from here (GAP-04), so
+   this round box clips it. */
 .ex-states-disc {
   inline-size: calc(var(--primitives-layout-sizing-600) * 1px);
   block-size: calc(var(--primitives-layout-sizing-600) * 1px);
-  border-radius: var(--site-radius-pill);
+  border-radius: calc(var(--semantics-radius-pill) * 1px);
+  overflow: hidden;
+}
+
+.ex-states-fill {
+  block-size: 100%;
 }
 
 .ex-states-line {
@@ -28,4 +37,10 @@
 
 .ex-states-line-short {
   inline-size: 55%;
+}
+
+/* The heading a replaced view hands focus to (../focus.ts): where the
+   keyboard starts from, not a control, so it shows no ring. */
+.ex-states-title:focus {
+  outline: none;
 }

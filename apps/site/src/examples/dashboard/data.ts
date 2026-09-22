@@ -60,7 +60,7 @@ export const venues: readonly Venue[] = [
   },
   {
     id: "kings-hospital",
-    name: "King's Hospital",
+    name: "King’s Hospital",
     city: "London",
     floors: 8,
     places: 640,

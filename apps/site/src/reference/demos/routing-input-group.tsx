@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Box, RoutingInputGroup, type RoutePoint } from "@kozmos/react";
+import { GlassBackdrop } from "../GlassBackdrop";
 import type { DemoModule } from "../types";
 
 const initial: RoutePoint[] = [
@@ -15,13 +16,11 @@ function usePoints() {
     );
   const swap = () =>
     setPoints((list) =>
-      [...list]
-        .reverse()
-        .map((point, index) => ({
-          ...point,
-          placeholder:
-            index === 0 ? "From" : index === list.length - 1 ? "To" : "Via",
-        })),
+      [...list].reverse().map((point, index) => ({
+        ...point,
+        placeholder:
+          index === 0 ? "From" : index === list.length - 1 ? "To" : "Via",
+      })),
     );
   const add = () =>
     setPoints((list) => [
@@ -52,28 +51,14 @@ function FromTo() {
 function OnGlass() {
   const { points, change, swap } = usePoints();
   return (
-    <Box className="site-glass-stage">
-      {(["turquoise", "blue"] as const).map((colour, index) => (
-        <Box
-          key={colour}
-          className="site-blob"
-          aria-hidden="true"
-          style={{
-            "--blob": `var(--semantics-category-fill-${colour})`,
-            "--x": `${30 + index * 40}%`,
-            "--y": "50%",
-          }}
-        />
-      ))}
-      <Box className="site-glass-card">
-        <RoutingInputGroup
-          surface="glass"
-          points={points}
-          onPointChange={change}
-          onSwap={swap}
-        />
-      </Box>
-    </Box>
+    <GlassBackdrop colours={["turquoise", "blue"]}>
+      <RoutingInputGroup
+        surface="glass"
+        points={points}
+        onPointChange={change}
+        onSwap={swap}
+      />
+    </GlassBackdrop>
   );
 }
 

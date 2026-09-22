@@ -36,7 +36,7 @@ const pins = [
   },
   {
     id: "gate",
-    label: "Gate B12, selected",
+    label: "Gate B12",
     x: "58%",
     y: "30%",
     colour: "blue",

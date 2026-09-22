@@ -9,12 +9,11 @@ import {
   DrawerTitle,
   DrawerTrigger,
   Icon,
-  Link,
   Sidebar,
   Stack,
   Text,
 } from "@kozmos/react";
-import { SiteNavItem } from "./links";
+import { SiteNavItem, useNavigateAfterClose } from "./links";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 import { useFocusMainOnNavigate } from "./SiteShell";
@@ -50,24 +49,28 @@ export function DocsShell({
 }) {
   const main = useRef<HTMLElement>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerNavigation = useNavigateAfterClose();
   useFocusMainOnNavigate(main);
 
-  const items = (pages: readonly DocsPageLink[], onNavigate?: () => void) =>
+  const items = (
+    pages: readonly DocsPageLink[],
+    onChoose?: (to: string) => void,
+  ) =>
     pages.map((page) => (
       <SiteNavItem
         key={page.to}
         to={page.to}
         end={page.end ?? true}
         placement="side"
-        onNavigate={onNavigate}
+        onChoose={onChoose}
       >
         {page.title}
       </SiteNavItem>
     ));
 
-  const navigation = (onNavigate?: () => void) => (
+  const navigation = (onChoose?: (to: string) => void) => (
     <Stack gap={4}>
-      <Stack gap={1}>{items(section.pages, onNavigate)}</Stack>
+      <Stack gap={1}>{items(section.pages, onChoose)}</Stack>
       {section.groups?.map((group) => (
         <Stack key={group.title} gap={1}>
           <Text
@@ -79,7 +82,7 @@ export function DocsShell({
           >
             {group.title}
           </Text>
-          {items(group.pages, onNavigate)}
+          {items(group.pages, onChoose)}
         </Stack>
       ))}
     </Stack>
@@ -87,15 +90,11 @@ export function DocsShell({
 
   return (
     <Box className="site-shell">
-      <Link href="#main" className="site-skip-link">
-        Skip to content
-      </Link>
       <SiteHeader />
       <Box className="site-docs">
         <Box className="site-docs-aside">
           <Sidebar
             aria-label={section.title}
-            className="site-docs-sidebar"
             header={
               <Stack gap={1}>
                 <Text as="span" weight="semibold">
@@ -114,18 +113,27 @@ export function DocsShell({
             <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
               <DrawerTrigger asChild>
                 <Button variant="outline" size="sm">
-                  <Icon name="menu" size="sm" />
+                  <Icon name="menu-01" size="sm" />
                   {section.title}
                 </Button>
               </DrawerTrigger>
-              <DrawerContent side="left">
+              <DrawerContent
+                side="left"
+                onCloseAutoFocus={drawerNavigation.onCloseAutoFocus}
+              >
                 <DrawerHeader>
                   <DrawerTitle>{section.title}</DrawerTitle>
                   <DrawerDescription>{section.summary}</DrawerDescription>
                 </DrawerHeader>
-                <Box className="site-docs-drawer-nav">
-                  {navigation(() => setDrawerOpen(false))}
-                </Box>
+                <nav
+                  aria-label={section.title}
+                  className="site-docs-drawer-nav"
+                >
+                  {navigation((to) => {
+                    drawerNavigation.choose(to);
+                    setDrawerOpen(false);
+                  })}
+                </nav>
               </DrawerContent>
             </Drawer>
           </Box>

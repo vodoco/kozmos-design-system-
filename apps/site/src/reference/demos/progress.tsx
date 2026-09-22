@@ -30,21 +30,41 @@ function Determinate() {
   );
 }
 
+/**
+ * Runs when asked and stops at the end: a bar that moved on its own for
+ * more than five seconds would need a way to pause it (WCAG 2.2.2).
+ */
 function Loading() {
   const [value, setValue] = useState(0);
+  const [running, setRunning] = useState(false);
   useEffect(() => {
-    const timer = window.setInterval(
-      () => setValue((v) => (v >= 100 ? 0 : v + 5)),
-      300,
-    );
-    return () => window.clearInterval(timer);
-  }, []);
+    if (!running) return;
+    if (value >= 100) {
+      setRunning(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setValue((v) => v + 10), 250);
+    return () => window.clearTimeout(timer);
+  }, [running, value]);
   return (
     <Box className="site-demo-column">
       <Progress value={value} max={100} aria-label="Loading the map" />
-      <Text size="sm" color="muted">
-        Loading the map…
-      </Text>
+      <Stack direction="row" align="center" gap={2}>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={running}
+          onClick={() => {
+            setValue(0);
+            setRunning(true);
+          }}
+        >
+          {value >= 100 ? "Load again" : "Load the map"}
+        </Button>
+        <Text size="sm" color="muted" aria-live="polite">
+          {running ? "Loading the map…" : value >= 100 ? "Loaded." : ""}
+        </Text>
+      </Stack>
     </Box>
   );
 }

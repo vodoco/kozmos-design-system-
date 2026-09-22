@@ -15,6 +15,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
   EmptyState,
   FieldWrapper,
   Heading,
@@ -55,6 +61,7 @@ import {
   Tag,
   Text,
 } from "@kozmos/react";
+import { useFocusOnChange } from "../focus";
 import {
   cities,
   formatDate,
@@ -86,6 +93,12 @@ const statusEmotion: Record<
 
 export default function Dashboard() {
   const [section, setSection] = useState<string>("venues");
+  const [menuOpen, setMenuOpen] = useState(false);
+  // "Back to venues" leaves with the empty section it sits in; the venues'
+  // heading then takes focus (../focus.ts). A section chosen in the sidebar
+  // keeps focus where it was pressed.
+  const [backToVenues, setBackToVenues] = useState(0);
+  const venuesHeading = useFocusOnChange(backToVenues);
   const [venues, setVenues] = useState<readonly Venue[]>(initialVenues);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<VenueStatus | "all">("all");
@@ -160,6 +173,25 @@ export default function Dashboard() {
     setPage(1);
   }
 
+  /** The console's sections: in the sidebar, or in the drawer below 64rem. */
+  const navigation = (onChoose?: () => void) => (
+    <Stack gap={1}>
+      {sections.map((entry) => (
+        <NavigationItem
+          key={entry.id}
+          icon={<Icon name={entry.icon} />}
+          selected={section === entry.id}
+          onClick={() => {
+            setSection(entry.id);
+            onChoose?.();
+          }}
+        >
+          {entry.label}
+        </NavigationItem>
+      ))}
+    </Stack>
+  );
+
   const go = (next: number) => (event: React.MouseEvent) => {
     event.preventDefault();
     setPage(Math.min(Math.max(next, 1), pages));
@@ -182,12 +214,36 @@ export default function Dashboard() {
           </Button>
         }
         utilities={
-          <IconButton
-            aria-label="Notifications"
-            onClick={() => setNotice("No new notifications.")}
-          >
-            <Icon name="bell-01" size="sm" />
-          </IconButton>
+          <>
+            <IconButton
+              aria-label="Notifications"
+              onClick={() => setNotice("No new notifications.")}
+            >
+              <Icon name="bell-01" size="sm" />
+            </IconButton>
+            {/* Below 64rem the sidebar goes and its sections open from here:
+                Kozmos's Sidebar has no narrow mode of its own (GAP-47). */}
+            <Box className="ex-dash-menu">
+              <Drawer open={menuOpen} onOpenChange={setMenuOpen}>
+                <DrawerTrigger asChild>
+                  <IconButton aria-label="Console menu">
+                    <Icon name="menu-01" size="sm" />
+                  </IconButton>
+                </DrawerTrigger>
+                <DrawerContent side="right">
+                  <DrawerHeader>
+                    <DrawerTitle>Pointr operations</DrawerTitle>
+                    <DrawerDescription>
+                      The console’s sections.
+                    </DrawerDescription>
+                  </DrawerHeader>
+                  <nav aria-label="Console" className="ex-dash-drawer-nav">
+                    {navigation(() => setMenuOpen(false))}
+                  </nav>
+                </DrawerContent>
+              </Drawer>
+            </Box>
+          </>
         }
         account={
           <Avatar role="img" aria-label="Sam Rivera">
@@ -196,40 +252,37 @@ export default function Dashboard() {
         }
       />
       <Box className="ex-dash-body">
-        <Sidebar
-          aria-label="Console"
-          header={
-            <Text as="span" size="sm" color="muted">
-              Pointr operations
-            </Text>
-          }
-          navigation={
-            <Stack gap={1}>
-              {sections.map((entry) => (
-                <NavigationItem
-                  key={entry.id}
-                  icon={<Icon name={entry.icon} />}
-                  selected={section === entry.id}
-                  onClick={() => setSection(entry.id)}
-                >
-                  {entry.label}
-                </NavigationItem>
-              ))}
-            </Stack>
-          }
-          footer={
-            <Text as="span" size="xs" color="muted">
-              Signed in as Sam Rivera
-            </Text>
-          }
-        />
+        {/* The wrapper is what hides: the Sidebar's own display is one of
+            Kozmos's scoped utilities, which a class cannot outrank (GAP-04). */}
+        <Box className="ex-dash-aside">
+          <Sidebar
+            aria-label="Console"
+            header={
+              <Text as="span" size="sm" color="muted">
+                Pointr operations
+              </Text>
+            }
+            navigation={navigation()}
+            footer={
+              <Text as="span" size="xs" color="muted">
+                Signed in as Sam Rivera
+              </Text>
+            }
+          />
+        </Box>
         <Surface className="ex-dash-main">
           {section !== "venues" ? (
             <EmptyState
               title={`${sections.find((entry) => entry.id === section)?.label} is not part of this example`}
               description="The venues section is; the rest of the console would be built the same way."
               action={
-                <Button variant="outline" onClick={() => setSection("venues")}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSection("venues");
+                    setBackToVenues((count) => count + 1);
+                  }}
+                >
                   Back to venues
                 </Button>
               }
@@ -237,7 +290,14 @@ export default function Dashboard() {
           ) : (
             <Stack gap={6}>
               <Stack gap={2}>
-                <Heading level={2}>Venues</Heading>
+                <Heading
+                  level={2}
+                  ref={venuesHeading}
+                  tabIndex={-1}
+                  className="ex-dash-title"
+                >
+                  Venues
+                </Heading>
                 <MetaStrip aria-label="Across every venue">
                   <MetaStripItem label="Venues" showLabel>
                     {venues.length}
@@ -325,12 +385,16 @@ export default function Dashboard() {
                 </Button>
               </Box>
 
-              {notice ? (
-                // Alert is always role="alert" (GAP-12); a confirmation is a status.
-                <Alert variant="success" role="status">
-                  <AlertDescription>{notice}</AlertDescription>
-                </Alert>
-              ) : null}
+              {/* Always on the page, so a screen reader hears each notice put
+                  in it; the Alert inside is only its look (Alert is always
+                  role="alert", GAP-12, and a confirmation is a status). */}
+              <Box role="status" className="ex-dash-live">
+                {notice ? (
+                  <Alert variant="success" role="none">
+                    <AlertDescription>{notice}</AlertDescription>
+                  </Alert>
+                ) : null}
+              </Box>
 
               {shown.length === 0 ? (
                 <EmptyState

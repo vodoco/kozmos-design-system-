@@ -1,12 +1,5 @@
 import { useState } from "react";
-import {
-  Box,
-  Button,
-  CategoryField,
-  Icon,
-  SearchBar,
-  Stack,
-} from "@kozmos/react";
+import { Box, Button, CategoryField, Icon, SearchBar } from "@kozmos/react";
 import { tint } from "../sample-data";
 import type { DemoModule } from "../types";
 
@@ -37,7 +30,7 @@ function InTheSearchRow() {
   const [category, setCategory] = useState<string | undefined>("Information");
   const [query, setQuery] = useState("");
   return (
-    <Stack gap={3} className="site-demo-column">
+    <Box className="site-demo-column">
       {category ? (
         <CategoryField
           label={category}
@@ -66,7 +59,7 @@ function InTheSearchRow() {
           Choose Information again
         </Button>
       )}
-    </Stack>
+    </Box>
   );
 }
 
@@ -74,13 +67,13 @@ export const demos: DemoModule["demos"] = [
   {
     title: "A chosen category",
     description:
-      "The search field's form once a quick-access category is chosen: its icon and name in the category's colour, a count pill, a clear button in a 44px target.",
+      "The search field’s form once a quick-access category is chosen: its icon and name in the category’s colour, a count pill, a clear button in a 44px target.",
     Component: Chosen,
   },
   {
     title: "In the search row",
     description:
-      "It takes the search field's place; clearing it brings the field back.",
+      "It takes the search field’s place; clearing it brings the field back.",
     Component: InTheSearchRow,
   },
 ];

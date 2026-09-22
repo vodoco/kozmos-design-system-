@@ -10,7 +10,7 @@ export interface ExampleEntry {
   slug: string;
   title: string;
   kind: ExampleKind;
-  /** One sentence for the index card and the page's meta description. */
+  /** One or two sentences for the index card and the page's meta description. */
   summary: string;
   /**
    * Where the example differs from what a product would draw, because Kozmos
@@ -34,8 +34,8 @@ export const examples: readonly ExampleEntry[] = [
     summary:
       "Directions through the shopping centre, as the SDK presents them: choose a place, compare the quickest and the step-free route, then walk it step by step with the manoeuvre card, the summary, the progress rail and the announcer, and rate it on arrival. The route is drawn by hand: Kozmos lays out around a map engine and does not draw one.",
     gaps: [
-      "GAP-17 · The map shell's panel is an aside, a landmark that should not sit inside the page's main.",
-      "GAP-33 · Kozmos has no token for the route line a map engine draws; the dots that stand in for it take the theme's colour.",
+      "GAP-17 · The map shell’s panel is an aside, a landmark that should not sit inside the page’s main.",
+      "GAP-33 · Kozmos has no token for the route line a map engine draws; the dots that stand in for it take the theme’s colour.",
     ],
   },
   {
@@ -46,12 +46,13 @@ export const examples: readonly ExampleEntry[] = [
     title: "Phone search sheet",
     kind: "app",
     summary:
-      "A phone's map screen: search or browse the centre by category, pick a place from the list or the map, and read about it in a bottom sheet that rests at a peek, half or full height. The sheet is the SDK's adaptive shell in a phone-sized frame.",
+      "A phone’s map screen: search or browse the centre by category, pick a place from the list or the map, and read about it in a bottom sheet that rests at a peek, half or full height. The sheet is the SDK’s adaptive shell in a phone-sized frame.",
     gaps: [
-      "GAP-17 · The map shell's panel is an aside, a landmark that should not sit inside the page's main.",
-      "GAP-20 · In Safari and other WebKit browsers, the search field is drawn as a small native field: Kozmos's styles do not reach it there.",
-      "GAP-29 · A phone app's tab bar is missing: BottomNavigation pins itself to the browser's viewport and cannot sit in the frame.",
+      "GAP-17 · The map shell’s panel is an aside, a landmark that should not sit inside the page’s main.",
+      "GAP-20 · In Safari and other WebKit browsers, the search field is drawn as a small native field: Kozmos’s styles do not reach it there.",
+      "GAP-29 · A phone app’s tab bar is missing: BottomNavigation pins itself to the browser’s viewport and cannot sit in the frame.",
       "GAP-15 · Food and drink, toilets, accessible facilities, parking and first aid are left out: Kozmos has no icon for them.",
+      "GAP-53 · The phone’s rounded corners cut the sheet’s: the sheet keeps square, bordered bottom corners, and the shell has no edge-to-edge form.",
     ],
   },
   {
@@ -59,11 +60,11 @@ export const examples: readonly ExampleEntry[] = [
     title: "Kiosk directory",
     kind: "app",
     summary:
-      "A touch-screen directory at the centre's entrance: browse by category or search, see the places on the map, read about one, get the route from the kiosk and send it to a phone with a code. After a while alone it shows its attract screen.",
+      "A touch-screen directory at the centre’s entrance: browse by category or search, see the places on the map, read about one, get the route from the kiosk and send it to a phone with a code. After a while alone it shows its attract screen.",
     gaps: [
       "GAP-15 · Food and drink, toilets, accessible facilities, parking and first aid are left out: Kozmos has no icon for them.",
-      "GAP-33 · Kozmos has no token for the route line a map engine draws; the dots that stand in for it take the theme's colour.",
-      "GAP-34 · The attract screen is a glass Surface: Backdrop pins itself to the browser's viewport and would cover the site.",
+      "GAP-33 · Kozmos has no token for the route line a map engine draws; the dots that stand in for it take the theme’s colour.",
+      "GAP-34 · The attract screen is a glass Surface: Backdrop pins itself to the browser’s viewport and would cover the site.",
       "GAP-35 · The category grid is four columns at any width, so the directory column is kept wide enough for the names to fit.",
     ],
   },
@@ -75,9 +76,9 @@ export const examples: readonly ExampleEntry[] = [
       "Search a shopping centre, browse it by category, pick a place from the results or the map, and read its details, across three floors. The map is a stand-in: Kozmos lays out around a map engine and does not draw one.",
     gaps: [
       "GAP-15 · Food and drink, toilets, accessible facilities, parking and first aid are left out: Kozmos has no icon for them.",
-      "GAP-17 · The map shell's panel is an aside, a landmark that should not sit inside the page's main.",
-      "GAP-18 · The place details use the sheet presentation; on the shell's panel, the action message's block loses its background.",
-      "GAP-20 · In Safari and other WebKit browsers, the search field is drawn as a small native field: Kozmos's styles do not reach it there.",
+      "GAP-17 · The map shell’s panel is an aside, a landmark that should not sit inside the page’s main.",
+      "GAP-18 · The place details use the sheet presentation; on the shell’s panel, the action message’s block loses its background.",
+      "GAP-20 · In Safari and other WebKit browsers, the search field is drawn as a small native field: Kozmos’s styles do not reach it there.",
     ],
   },
   {
@@ -102,7 +103,7 @@ export const examples: readonly ExampleEntry[] = [
     gaps: [
       "GAP-13 · SelectTrigger takes no label, so each select is labelled by a FieldWrapper around it.",
       'GAP-32 · ChipGroup carries no role, so the status filter passes role="group" for its label to count.',
-      "GAP-36 · Toasts pin themselves to the browser's corner, outside the page, so confirmations are an inline Alert instead.",
+      "GAP-36 · Toasts pin themselves to the browser’s corner, outside the page, so confirmations are an inline Alert instead.",
       'GAP-12 · Alert is always role="alert"; the confirmations pass role="status".',
     ],
   },
@@ -124,7 +125,7 @@ export const examples: readonly ExampleEntry[] = [
     summary:
       "An inbox by kind: alerts, mentions and system messages, unread first if you like, marked read one at a time or all at once with an undo, and preferences in a popover.",
     gaps: [
-      "GAP-36 · Toasts pin themselves to the browser's corner, outside the page, so the undo sits in an inline Alert instead.",
+      "GAP-36 · Toasts pin themselves to the browser’s corner, outside the page, so the undo sits in an inline Alert instead.",
       'GAP-12 · Alert is always role="alert"; the confirmation passes role="status".',
     ],
   },
@@ -133,7 +134,7 @@ export const examples: readonly ExampleEntry[] = [
     title: "First-run onboarding",
     kind: "page",
     summary:
-      "The visitor app's first run in five short steps: units and search radius, interests, location permission, and a summary before the map opens.",
+      "The visitor app’s first run in five short steps: units and search radius, interests, location permission, and a summary before the map opens.",
     gaps: [
       'GAP-32 · ChipGroup carries no role, so the interests pass role="group" for their label to count.',
       'GAP-12 · Alert is always role="alert"; the final confirmation passes role="status".',
@@ -146,8 +147,7 @@ export const examples: readonly ExampleEntry[] = [
     summary:
       "One panel in every state a product meets: loading with a spinner and skeleton rows, ready, empty with a way out, failed with a retry, and offline with the saved copy while a sync keeps trying.",
     gaps: [
-      "GAP-31 · The offline notice is a warning Alert, whose text measures 4.29:1 on the card; it is left as Kozmos draws it.",
-      "GAP-11 · EmptyState's title is not a heading, so the empty state reads as text under the card's heading.",
+      "GAP-11 · EmptyState’s title is not a heading, so the empty state reads as text under the card’s heading.",
     ],
   },
   {
@@ -155,7 +155,7 @@ export const examples: readonly ExampleEntry[] = [
     title: "Feedback survey",
     kind: "page",
     summary:
-      "The SDK's rating card first, then two more questions: a likelihood slider, how the visitor found the way, what would have helped, a comment, and an email if they want to hear back.",
+      "The SDK’s rating card first, then two more questions: a likelihood slider, how the visitor found the way, what would have helped, a comment, and an email if they want to hear back.",
     gaps: [
       "GAP-13 · Textarea has no helper text, so the character count is a Text beside it.",
       'GAP-12 · Alert is always role="alert"; the thanks pass role="status".',
@@ -166,9 +166,9 @@ export const examples: readonly ExampleEntry[] = [
     title: "Saved places",
     kind: "page",
     summary:
-      "A visitor's saved places by venue in a tree with a remove action per row, confirmed in a dialog and undone inline; and the car's spot, saved, routed to, or given a note.",
+      "A visitor’s saved places by venue in a tree with a remove action per row, confirmed in a dialog and undone inline; and the car’s spot, saved, routed to, or given a note.",
     gaps: [
-      "GAP-36 · Toasts pin themselves to the browser's corner, outside the page, so the undo sits in an inline Alert instead.",
+      "GAP-36 · Toasts pin themselves to the browser’s corner, outside the page, so the undo sits in an inline Alert instead.",
       'GAP-12 · Alert is always role="alert"; the undo passes role="status".',
     ],
   },

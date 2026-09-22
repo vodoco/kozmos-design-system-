@@ -1,7 +1,9 @@
 /**
- * What runs on every pull request, from `.github/workflows/ci.yml` on the
- * branch the site is built on. Grouped as the workflow's steps are; the
- * wording follows the steps' names and comments.
+ * The main checks that run on every pull request, from
+ * `.github/workflows/ci.yml` on the branch the site is built on, and the
+ * scripts they call. Grouped as the workflow's steps are. The workflow also
+ * checks the documentation's code samples, an installed product's build,
+ * the internal Vue harness and its own governance; those are left out here.
  */
 export interface Gate {
   title: string;
@@ -12,45 +14,45 @@ export interface Gate {
 
 export const ciGates: readonly Gate[] = [
   {
-    title: "Lint, build, unit and accessibility tests",
+    title: "Lint, build and unit tests",
     detail:
-      "The design system gates on its own lint. Every package builds, and the React tests run with axe on each component.",
+      "The workspace lints (the example app’s lint reports without blocking), every package builds, and the unit tests run, with axe on Button, IconButton, Card, Input and Tooltip.",
     command: "pnpm lint && pnpm build && pnpm test",
   },
   {
     title: "Contracts between platforms",
     detail:
-      "Each platform's component sources are read and compared against the shared contract, the POI fixtures and the taxonomy projection, so React, SwiftUI and Compose describe the same shape.",
+      "Each platform’s component sources are compared against the shared contract, the web’s Pact contracts are verified, and the POI examples and taxonomy the iOS playground apps carry must still match the web’s.",
     command: "pnpm components:contract:check",
   },
   {
-    title: "Token contracts: contrast, radius, border, elevation, typography",
+    title: "Token contracts: contrast, radius, border, elevation, type family",
     detail:
-      "The 22 contrast pairs are checked in both themes from the generated CSS, and every platform is held to the same radius, border, elevation and typography values.",
+      "The contract’s contrast pairs, every button emotion and state, and the category inks are measured in both themes from the generated CSS. Radius, border and elevation are held to the same values on every platform, nested radii are checked, and every platform reads the one type family.",
     command: "pnpm tokens:contrast:check",
   },
   {
     title: "No new raw values",
     detail:
-      "A ratchet over a known backlog: every component is scanned for raw colours, shadows and sizes, and the count may not go up.",
+      "A ratchet over a known backlog: every React component and its CSS recipe is scanned for raw Tailwind colours and radii. The count may not rise, and a fall must lower the recorded baseline.",
     command: "pnpm tokens:raw:check",
   },
   {
     title: "No classes that compile to nothing",
     detail:
-      "A Tailwind class the build cannot generate is dropped without a word; this reads the built stylesheet and refuses any new one.",
+      "A Tailwind class with an opacity or fraction modifier the build cannot generate is dropped without a word; each one is looked up in the built stylesheet, against a ratchet.",
     command: "pnpm components:classes:check",
   },
   {
     title: "Packages install from their tarballs",
     detail:
-      "Every public package is packed, installed into an empty project with npm, and every export, README import and sample is resolved, rendered and type-checked.",
+      "Every public package is packed and installed into an empty project with npm, once for React 18 and once for 19: every export and README import resolves, the README samples type-check, and a Button with an Icon renders on the server.",
     command: "pnpm packages:install:check",
   },
   {
     title: "Figma plugin stamp and painters",
     detail:
-      "The importer's painters run against a stand-in for the Plugin API and what they draw is asserted against the component contract; the build stamp must match the source.",
+      "The importer plugin’s build must match its source, and its painters run against a stand-in for Figma’s Plugin API, where what they draw is measured.",
     command: "pnpm figma:painters:check",
   },
   {
@@ -66,9 +68,21 @@ export const ciGates: readonly Gate[] = [
     command: "pnpm test:adaptive",
   },
   {
-    title: "Storybook end to end, audited",
+    title: "Storybook, audited",
     detail:
-      "Every React story is opened, checked with axe, and its keyboard and scroll interactions exercised in three engines; the SDK's POI reference screens are compared as well.",
+      "Every React story is opened and checked with axe in Chromium; a set of stories' keyboard and scroll interactions run in three engines, and the documentation pages and the SDK’s POI reference screens are checked too.",
     command: "pnpm test:storybook-audit",
+  },
+  {
+    title: "iOS: build, test and render",
+    detail:
+      "The Swift package builds and its tests pass, the POI views render on an iOS simulator, and the SwiftUI Code Connect parses.",
+    command: "swift build && swift test",
+  },
+  {
+    title: "Android: build and screenshot tests",
+    detail:
+      "The Compose library builds, its Paparazzi screenshots are compared, and the Compose Code Connect parses.",
+    command: "./gradlew verifyPaparazziDebug",
   },
 ];

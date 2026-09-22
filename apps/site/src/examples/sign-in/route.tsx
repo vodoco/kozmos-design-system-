@@ -4,6 +4,7 @@ import { getExample } from "../manifest";
 import SignIn from "./SignIn";
 import styles from "./SignIn.css?raw";
 import source from "./SignIn.tsx?raw";
+import focusSource from "../focus.ts?raw";
 
 const example = getExample("sign-in");
 
@@ -21,6 +22,7 @@ export default function SignInExample() {
       files={[
         { name: "SignIn.tsx", code: source },
         { name: "SignIn.css", code: styles },
+        { name: "focus.ts", code: focusSource },
       ]}
     >
       <SignIn />

@@ -22,10 +22,6 @@ export function componentsInLane(lane: Lane): ComponentSummary[] {
   );
 }
 
-export function componentSummary(slug: string): ComponentSummary | undefined {
-  return componentIndex.components.find((component) => component.slug === slug);
-}
-
 /** The neighbours in reading order — lane by lane, alphabetical within one. */
 export function neighbours(slug: string): {
   previous?: ComponentSummary;
@@ -38,7 +34,7 @@ export function neighbours(slug: string): {
 
 export const componentsSection: DocsSection = {
   title: "Components",
-  summary: `${componentIndex.components.length} components on three platforms.`,
+  summary: `${componentIndex.components.length} components, live, with their props and code.`,
   pages: [{ to: "/components", title: "Overview" }],
   groups: laneOrder.map((lane) => ({
     title: laneTitle(lane),

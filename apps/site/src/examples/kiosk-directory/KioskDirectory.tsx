@@ -27,6 +27,7 @@ import {
   Text,
   UserLocationMarker,
 } from "@kozmos/react";
+import { useFocusOnChange } from "../focus";
 import type {
   CategoryPresentation,
   POIAction,
@@ -74,6 +75,11 @@ export default function KioskDirectory() {
   const [routing, setRouting] = useState(false);
   const [sending, setSending] = useState(false);
   const [lastTouch, setLastTouch] = useState(() => Date.now());
+  // Focus follows the screen (../focus.ts): to "Touch to start" when the
+  // attract screen comes up, back to the directory when it lifts, and into
+  // the panel when a place or its route replaces the list.
+  const attractFocus = useFocusOnChange(resting, resting);
+  const directoryFocus = useFocusOnChange(resting, !resting);
 
   // The attract screen after a while alone; any touch or key resets the clock.
   useEffect(() => {
@@ -144,6 +150,9 @@ export default function KioskDirectory() {
     }
   }
 
+  const panelView = selected ? (route ? "route" : "place") : "list";
+  const panelFocus = useFocusOnChange(panelView);
+
   const pins = selected
     ? [selected]
     : results.filter((place) => place.poi.floorId === floorId);
@@ -155,9 +164,18 @@ export default function KioskDirectory() {
       onPointerDown={() => setLastTouch(Date.now())}
       onKeyDown={() => setLastTouch(Date.now())}
     >
-      <Box className="ex-kiosk-side">
+      {/* Under the attract screen the directory is inert: not reachable by
+          the keyboard, not read by a screen reader. */}
+      <Box className="ex-kiosk-side" inert={resting}>
         <Stack gap={1}>
-          <Heading level={2}>{venueName}</Heading>
+          <Heading
+            level={2}
+            ref={directoryFocus}
+            tabIndex={-1}
+            className="ex-kiosk-title"
+          >
+            {venueName}
+          </Heading>
           <Text color="muted">Directory · you are at the main entrance</Text>
         </Stack>
         <SearchBar
@@ -194,7 +212,7 @@ export default function KioskDirectory() {
         </Button>
       </Box>
 
-      <Box className="ex-kiosk-map">
+      <Box className="ex-kiosk-map" inert={resting}>
         <MapView
           mapLabel={`${venueName}, ${floorLabel(floorId)}. Illustrative map`}
         >
@@ -257,7 +275,12 @@ export default function KioskDirectory() {
         </MapView>
       </Box>
 
-      <Box className="ex-kiosk-panel">
+      <Box
+        className="ex-kiosk-panel"
+        inert={resting}
+        ref={panelFocus}
+        tabIndex={-1}
+      >
         {selected && route ? (
           <Stack gap={4}>
             <RouteSummary
@@ -357,7 +380,7 @@ export default function KioskDirectory() {
             <Text size="lg" color="muted" align="center">
               Shops, information, transport and events, on three floors.
             </Text>
-            <Button size="lg" onClick={wake}>
+            <Button size="lg" onClick={wake} ref={attractFocus}>
               Touch to start
             </Button>
           </Stack>

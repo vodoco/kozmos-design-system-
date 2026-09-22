@@ -5,6 +5,7 @@ import VenueExplorer from "./VenueExplorer";
 import styles from "./VenueExplorer.css?raw";
 import source from "./VenueExplorer.tsx?raw";
 import data from "./data.ts?raw";
+import focusSource from "../focus.ts?raw";
 
 const example = getExample("venue-explorer");
 
@@ -23,6 +24,7 @@ export default function VenueExplorerExample() {
         { name: "VenueExplorer.tsx", code: source },
         { name: "data.ts", code: data },
         { name: "VenueExplorer.css", code: styles },
+        { name: "focus.ts", code: focusSource },
       ]}
     >
       <VenueExplorer />

@@ -17,15 +17,14 @@ const easings = [
 type Easing = (typeof easings)[number]["value"];
 
 /** Three markers, one per duration token, racing on the chosen easing. */
-export function MotionRace({ compact = false }: { compact?: boolean }) {
+export function MotionRace() {
   const [end, setEnd] = useState(false);
   const [easing, setEasing] = useState<Easing>("standard");
   return (
-    <Stack gap={compact ? 3 : 4}>
+    <Stack gap={4}>
       <Stack direction="row" wrap="wrap" align="end" gap={4}>
         <SegmentedControl
           label="Easing"
-          size={compact ? "sm" : "default"}
           items={easings.map((entry) => ({
             value: entry.value,
             label: entry.label,
@@ -35,14 +34,11 @@ export function MotionRace({ compact = false }: { compact?: boolean }) {
             if (next === "standard" || next === "emphasised") setEasing(next);
           }}
         />
-        <Button
-          size={compact ? "sm" : "default"}
-          onClick={() => setEnd((value) => !value)}
-        >
+        <Button onClick={() => setEnd((value) => !value)}>
           {end ? "Back" : "Run"}
         </Button>
       </Stack>
-      <Stack gap={compact ? 2 : 3}>
+      <Stack gap={3}>
         {durations.map((duration) => (
           <Box key={duration} className="site-track-lane">
             <Text as="span" size="xs" color="muted" className="site-mono">

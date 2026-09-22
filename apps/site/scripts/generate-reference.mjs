@@ -27,13 +27,25 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import ts from "typescript";
 
-const SITE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const SITE_ROOT = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+);
 const REPO_ROOT = path.resolve(SITE_ROOT, "..", "..");
 const COMPONENTS_DIR = path.join(REPO_ROOT, "packages/react/src/components");
-const STATUS_SCRIPT = path.join(REPO_ROOT, "scripts/skills/check-completion.ts");
+const STATUS_SCRIPT = path.join(
+  REPO_ROOT,
+  "scripts/skills/check-completion.ts",
+);
 const REACT_TSCONFIG = path.join(REPO_ROOT, "packages/react/tsconfig.json");
-const REACT_PACKAGE = path.join(REPO_ROOT, "packages/react/dist/kozmos-react.mjs");
-const CONTRAST_CONTRACT = path.join(REPO_ROOT, "packages/tokens/src/contrast-contract.json");
+const REACT_PACKAGE = path.join(
+  REPO_ROOT,
+  "packages/react/dist/kozmos-react.mjs",
+);
+const CONTRAST_CONTRACT = path.join(
+  REPO_ROOT,
+  "packages/tokens/src/contrast-contract.json",
+);
 const OUT_DIR = path.join(SITE_ROOT, "src/generated");
 
 export const LANES = {
@@ -58,7 +70,9 @@ export function readLaneSets(source) {
       new RegExp(`const ${constant} = new Set\\(\\[([\\s\\S]*?)\\]\\)`),
     );
     if (!match) throw new Error(`${constant} not found in check-completion.ts`);
-    return new Set([...match[1].matchAll(/"([A-Za-z0-9]+)"/g)].map((m) => m[1]));
+    return new Set(
+      [...match[1].matchAll(/"([A-Za-z0-9]+)"/g)].map((m) => m[1]),
+    );
   };
   return {
     internal: setOf("INTERNAL_COMPONENT_NAMES"),
@@ -104,17 +118,42 @@ export function readDescription(mdx) {
 function dedent(code) {
   const lines = code.replace(/^\n+|\s+$/g, "").split("\n");
   const indent = Math.min(
-    ...lines.filter((line) => line.trim()).map((line) => line.match(/^\s*/)[0].length),
+    ...lines
+      .filter((line) => line.trim())
+      .map((line) => line.match(/^\s*/)[0].length),
   );
-  return lines.map((line) => line.slice(Number.isFinite(indent) ? indent : 0)).join("\n");
+  return lines
+    .map((line) => line.slice(Number.isFinite(indent) ? indent : 0))
+    .join("\n");
 }
 
 /** The PlatformSnippets block's code, per platform, from an mdx source. */
+/** A fenced block's language, as the platform whose code it is. */
+const FENCED_PLATFORM = {
+  tsx: "react",
+  jsx: "react",
+  swift: "swift",
+  kotlin: "kotlin",
+  kt: "kotlin",
+};
+
+/**
+ * A component's code on each platform, from its docs: the PlatformSnippets
+ * block, and failing that, the first fenced block in each platform's language
+ * (some docs show their code under headings instead: "## iOS SwiftUI").
+ */
 export function readSnippets(mdx) {
   const snippets = {};
-  for (const match of mdx.matchAll(/\b(react|vue|swift|kotlin)=\{`([\s\S]*?)`\}/g)) {
+  for (const match of mdx.matchAll(
+    /\b(react|vue|swift|kotlin)=\{`([\s\S]*?)`\}/g,
+  )) {
     const [, platform, code] = match;
     if (!(platform in snippets)) snippets[platform] = dedent(code);
+  }
+  for (const match of mdx.matchAll(/^```(\w+)[^\n]*\n([\s\S]*?)^```/gm)) {
+    const platform = FENCED_PLATFORM[match[1]];
+    if (platform && !(platform in snippets))
+      snippets[platform] = match[2].trimEnd();
   }
   return snippets;
 }
@@ -123,7 +162,10 @@ export function readSnippets(mdx) {
 function sourceFilesOf(directory) {
   return fs
     .readdirSync(directory)
-    .filter((name) => /\.tsx$/.test(name) && !/\.(stories|test|spec|figma)\.tsx$/.test(name))
+    .filter(
+      (name) =>
+        /\.tsx$/.test(name) && !/\.(stories|test|spec|figma)\.tsx$/.test(name),
+    )
     .map((name) => path.join(directory, name));
 }
 
@@ -148,7 +190,11 @@ function jsDocOf(node) {
   const docs = ts.getJSDocCommentsAndTags(node);
   const texts = docs
     .filter((doc) => ts.isJSDoc(doc))
-    .map((doc) => (typeof doc.comment === "string" ? doc.comment : ts.getTextOfJSDocComment(doc.comment)))
+    .map((doc) =>
+      typeof doc.comment === "string"
+        ? doc.comment
+        : ts.getTextOfJSDocComment(doc.comment),
+    )
     .filter(Boolean);
   return texts.join("\n").trim();
 }
@@ -162,7 +208,8 @@ function originOf(symbol) {
   const declaration = symbol.valueDeclaration ?? symbol.declarations?.[0];
   if (!declaration) return { keep: false };
   const file = declaration.getSourceFile().fileName;
-  if (!file.includes("/node_modules/")) return { keep: true, declaration, source: null };
+  if (!file.includes("/node_modules/"))
+    return { keep: true, declaration, source: null };
   const radix = file.match(/node_modules\/(@radix-ui\/[^/]+)/);
   if (radix) return { keep: true, declaration, source: radix[1] };
   return { keep: false };
@@ -177,16 +224,24 @@ function originOf(symbol) {
 export function typeTextOf(checker, type, declaration) {
   if (type.flags & ts.TypeFlags.Boolean) return "boolean";
   if (type.isUnion()) {
-    const parts = type.types.filter((part) => !(part.flags & ts.TypeFlags.Undefined));
-    const booleans = parts.filter((part) => part.flags & ts.TypeFlags.BooleanLiteral);
+    const parts = type.types.filter(
+      (part) => !(part.flags & ts.TypeFlags.Undefined),
+    );
+    const booleans = parts.filter(
+      (part) => part.flags & ts.TypeFlags.BooleanLiteral,
+    );
     const nulls = parts.filter((part) => part.flags & ts.TypeFlags.Null);
     const literals = parts.filter((part) => part.isLiteral());
-    if (parts.length && booleans.length + literals.length + nulls.length === parts.length) {
+    if (
+      parts.length &&
+      booleans.length + literals.length + nulls.length === parts.length
+    ) {
       const names = literals.map((part) =>
         typeof part.value === "string" ? `"${part.value}"` : String(part.value),
       );
       if (booleans.length === 2) names.push("boolean");
-      else if (booleans.length === 1) names.push(checker.typeToString(booleans[0]));
+      else if (booleans.length === 1)
+        names.push(checker.typeToString(booleans[0]));
       if (nulls.length) names.push("null");
       return names.join(" | ");
     }
@@ -194,14 +249,29 @@ export function typeTextOf(checker, type, declaration) {
   if (declaration && ts.isPropertySignature(declaration) && declaration.type) {
     return declaration.type.getText().replace(/\s+/g, " ");
   }
-  const nonUndefined =
-    type.isUnion() ? type.types.filter((part) => !(part.flags & ts.TypeFlags.Undefined)) : null;
+  const nonUndefined = type.isUnion()
+    ? type.types.filter((part) => !(part.flags & ts.TypeFlags.Undefined))
+    : null;
   if (nonUndefined && nonUndefined.length === 1) {
-    return checker.typeToString(nonUndefined[0], undefined, ts.TypeFormatFlags.NoTruncation);
+    return checker.typeToString(
+      nonUndefined[0],
+      undefined,
+      ts.TypeFormatFlags.NoTruncation,
+    );
   }
   return checker
     .typeToString(type, undefined, ts.TypeFormatFlags.NoTruncation)
     .replace(/ \| undefined$/, "");
+}
+
+/**
+ * A default as the props table shows it: a string in double quotes, as the
+ * type column writes a string's type, and anything else as it is written.
+ */
+function defaultText(node, sourceFile) {
+  return ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)
+    ? JSON.stringify(node.text)
+    : node.getText(sourceFile).replace(/\s+/g, " ");
 }
 
 /** `const xVariants = cva(base, { defaultVariants: {...} })`: the defaults, by variant name. */
@@ -224,7 +294,10 @@ function cvaDefaultsOf(sourceFile) {
         ) {
           for (const entry of property.initializer.properties) {
             if (ts.isPropertyAssignment(entry)) {
-              defaults.set(unquote(entry.name.getText(sourceFile)), unquote(entry.initializer.getText(sourceFile)));
+              defaults.set(
+                unquote(entry.name.getText(sourceFile)),
+                defaultText(entry.initializer, sourceFile),
+              );
             }
           }
         }
@@ -240,10 +313,16 @@ function cvaDefaultsOf(sourceFile) {
 function destructuringDefaultsOf(sourceFile) {
   const defaults = new Map();
   const visit = (node) => {
-    if (ts.isBindingElement(node) && node.initializer && ts.isIdentifier(node.name)) {
-      const key = node.propertyName ? node.propertyName.getText(sourceFile) : node.name.text;
+    if (
+      ts.isBindingElement(node) &&
+      node.initializer &&
+      ts.isIdentifier(node.name)
+    ) {
+      const key = node.propertyName
+        ? node.propertyName.getText(sourceFile)
+        : node.name.text;
       if (!defaults.has(key)) {
-        defaults.set(key, node.initializer.getText(sourceFile).replace(/\s+/g, " "));
+        defaults.set(key, defaultText(node.initializer, sourceFile));
       }
     }
     ts.forEachChild(node, visit);
@@ -258,22 +337,37 @@ function declarationsOf(sourceFile, checker) {
   for (const statement of sourceFile.statements) {
     if (ts.isVariableStatement(statement) && hasExportModifier(statement)) {
       for (const declaration of statement.declarationList.declarations) {
-        if (ts.isIdentifier(declaration.name)) found.set(declaration.name.text, { statement, declaration });
+        if (ts.isIdentifier(declaration.name))
+          found.set(declaration.name.text, { statement, declaration });
       }
-    } else if (ts.isFunctionDeclaration(statement) && statement.name && hasExportModifier(statement)) {
+    } else if (
+      ts.isFunctionDeclaration(statement) &&
+      statement.name &&
+      hasExportModifier(statement)
+    ) {
       found.set(statement.name.text, { statement, declaration: statement });
-    } else if (ts.isExportDeclaration(statement) && statement.exportClause && ts.isNamedExports(statement.exportClause)) {
+    } else if (
+      ts.isExportDeclaration(statement) &&
+      statement.exportClause &&
+      ts.isNamedExports(statement.exportClause)
+    ) {
       for (const element of statement.exportClause.elements) {
         if (statement.moduleSpecifier) {
           // `export { X } from "../Other/Other"`: a folder that re-exports a
           // part declared elsewhere (DateRangePicker lives in DatePicker.tsx).
           const target = checker.getExportSpecifierLocalTargetSymbol(element);
-          const resolved = target && target.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(target) : target;
+          const resolved =
+            target && target.flags & ts.SymbolFlags.Alias
+              ? checker.getAliasedSymbol(target)
+              : target;
           const declaration = resolved?.declarations?.find(
-            (node) => ts.isVariableDeclaration(node) || ts.isFunctionDeclaration(node),
+            (node) =>
+              ts.isVariableDeclaration(node) || ts.isFunctionDeclaration(node),
           );
           if (declaration) {
-            const owner = ts.isVariableDeclaration(declaration) ? declaration.parent.parent : declaration;
+            const owner = ts.isVariableDeclaration(declaration)
+              ? declaration.parent.parent
+              : declaration;
             found.set(element.name.text, { statement: owner, declaration });
           }
           continue;
@@ -283,12 +377,21 @@ function declarationsOf(sourceFile, checker) {
         for (const other of sourceFile.statements) {
           if (ts.isVariableStatement(other)) {
             for (const declaration of other.declarationList.declarations) {
-              if (ts.isIdentifier(declaration.name) && declaration.name.text === local) {
+              if (
+                ts.isIdentifier(declaration.name) &&
+                declaration.name.text === local
+              ) {
                 found.set(element.name.text, { statement: other, declaration });
               }
             }
-          } else if (ts.isFunctionDeclaration(other) && other.name?.text === local) {
-            found.set(element.name.text, { statement: other, declaration: other });
+          } else if (
+            ts.isFunctionDeclaration(other) &&
+            other.name?.text === local
+          ) {
+            found.set(element.name.text, {
+              statement: other,
+              declaration: other,
+            });
           }
         }
       }
@@ -303,32 +406,52 @@ function declarationsOf(sourceFile, checker) {
  * parameter's type of a function or arrow function.
  */
 function propsTypeOf(checker, declaration) {
-  const fromNode = (node) => (node ? checker.getTypeFromTypeNode(node) : undefined);
+  const fromNode = (node) =>
+    node ? checker.getTypeFromTypeNode(node) : undefined;
   if (ts.isFunctionDeclaration(declaration)) {
     return fromNode(declaration.parameters[0]?.type);
   }
-  if (declaration.type && ts.isTypeReferenceNode(declaration.type) && declaration.type.typeArguments?.[0]) {
+  if (
+    declaration.type &&
+    ts.isTypeReferenceNode(declaration.type) &&
+    declaration.type.typeArguments?.[0]
+  ) {
     return fromNode(declaration.type.typeArguments[0]);
   }
   let initializer = declaration.initializer;
-  while (initializer && (ts.isAsExpression(initializer) || ts.isParenthesizedExpression(initializer))) {
+  while (
+    initializer &&
+    (ts.isAsExpression(initializer) ||
+      ts.isParenthesizedExpression(initializer))
+  ) {
     initializer = initializer.expression;
   }
   if (!initializer) return undefined;
   // `export const DateRangePicker = SomeOtherComponent`: follow the alias.
-  if (ts.isIdentifier(initializer) || ts.isPropertyAccessExpression(initializer)) {
+  if (
+    ts.isIdentifier(initializer) ||
+    ts.isPropertyAccessExpression(initializer)
+  ) {
     const symbol = checker.getSymbolAtLocation(initializer);
-    const target = symbol && symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+    const target =
+      symbol && symbol.flags & ts.SymbolFlags.Alias
+        ? checker.getAliasedSymbol(symbol)
+        : symbol;
     const aliased = target?.declarations?.find(
-      (node) => ts.isVariableDeclaration(node) || ts.isFunctionDeclaration(node),
+      (node) =>
+        ts.isVariableDeclaration(node) || ts.isFunctionDeclaration(node),
     );
     return aliased ? propsTypeOf(checker, aliased) : undefined;
   }
   if (ts.isCallExpression(initializer)) {
-    if (initializer.typeArguments?.[1]) return fromNode(initializer.typeArguments[1]);
+    if (initializer.typeArguments?.[1])
+      return fromNode(initializer.typeArguments[1]);
     // forwardRef((props: P, ref) => …) or memo((props: P) => …) without type arguments.
     const inner = initializer.arguments[0];
-    if (inner && (ts.isArrowFunction(inner) || ts.isFunctionExpression(inner))) {
+    if (
+      inner &&
+      (ts.isArrowFunction(inner) || ts.isFunctionExpression(inner))
+    ) {
       return fromNode(inner.parameters[0]?.type);
     }
     return undefined;
@@ -341,8 +464,15 @@ function propsTypeOf(checker, declaration) {
 
 function compilerOptions() {
   const config = ts.readConfigFile(REACT_TSCONFIG, ts.sys.readFile);
-  if (config.error) throw new Error(ts.flattenDiagnosticMessageText(config.error.messageText, "\n"));
-  return ts.parseJsonConfigFileContent(config.config, ts.sys, path.dirname(REACT_TSCONFIG)).options;
+  if (config.error)
+    throw new Error(
+      ts.flattenDiagnosticMessageText(config.error.messageText, "\n"),
+    );
+  return ts.parseJsonConfigFileContent(
+    config.config,
+    ts.sys,
+    path.dirname(REACT_TSCONFIG),
+  ).options;
 }
 
 /**
@@ -360,7 +490,10 @@ export function readParts(files, packageExports) {
     const defaults = destructuringDefaultsOf(sourceFile);
     const cvaDefaults = cvaDefaultsOf(sourceFile);
     const parts = [];
-    for (const [name, { statement, declaration }] of declarationsOf(sourceFile, checker)) {
+    for (const [name, { statement, declaration }] of declarationsOf(
+      sourceFile,
+      checker,
+    )) {
       if (!isComponentName(name) || !packageExports.has(name)) continue;
       const type = propsTypeOf(checker, declaration);
       const props = [];
@@ -375,13 +508,21 @@ export function readParts(files, packageExports) {
             if (!origin.keep) continue;
             const name = symbol.getName();
             const required = !(symbol.flags & ts.SymbolFlags.Optional);
-            const propType = checker.getTypeOfSymbolAtLocation(symbol, origin.declaration);
+            const propType = checker.getTypeOfSymbolAtLocation(
+              symbol,
+              origin.declaration,
+            );
             const existing = byName.get(name);
             if (existing) {
               existing.required = existing.required && required;
               existing.seen += 1;
               // A discriminator declared `undefined` in one form: show the other's type.
-              if (existing.type === "undefined") existing.type = typeTextOf(checker, propType, origin.declaration);
+              if (existing.type === "undefined")
+                existing.type = typeTextOf(
+                  checker,
+                  propType,
+                  origin.declaration,
+                );
               continue;
             }
             byName.set(name, {
@@ -390,7 +531,9 @@ export function readParts(files, packageExports) {
               required,
               seen: 1,
               defaultValue: defaults.get(name) ?? cvaDefaults.get(name) ?? null,
-              description: ts.displayPartsToString(symbol.getDocumentationComment(checker)).trim(),
+              description: ts
+                .displayPartsToString(symbol.getDocumentationComment(checker))
+                .trim(),
               source: origin.source,
             });
           }
@@ -418,9 +561,12 @@ export async function generate() {
     .readdirSync(COMPONENTS_DIR, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && !sets.internal.has(entry.name))
     .map((entry) => entry.name)
-    .sort((a, b) => a.localeCompare(b));
+    // One fixed locale, so every machine writes the same order.
+    .sort((a, b) => a.localeCompare(b, "en"));
 
-  const allFiles = names.flatMap((name) => sourceFilesOf(path.join(COMPONENTS_DIR, name)));
+  const allFiles = names.flatMap((name) =>
+    sourceFilesOf(path.join(COMPONENTS_DIR, name)),
+  );
   const partsByFile = readParts(allFiles, packageExports);
 
   const components = names.map((name) => {
@@ -431,7 +577,13 @@ export async function generate() {
     const parts = sourceFilesOf(directory)
       .flatMap((file) => partsByFile.get(file) ?? [])
       .filter((part) => (seen.has(part.name) ? false : seen.add(part.name)))
-      .sort((a, b) => (a.name === name ? -1 : b.name === name ? 1 : a.name.localeCompare(b.name)));
+      .sort((a, b) =>
+        a.name === name
+          ? -1
+          : b.name === name
+            ? 1
+            : a.name.localeCompare(b.name, "en"),
+      );
     return {
       name,
       slug: slugOf(name),
@@ -439,7 +591,9 @@ export async function generate() {
       // The docs' first paragraph; failing that, the component's own doc comment.
       description:
         readDescription(mdx) ||
-        parts.find((part) => part.name === name)?.description.split("\n\n")[0] ||
+        parts
+          .find((part) => part.name === name)
+          ?.description.split("\n\n")[0] ||
         "",
       snippets: readSnippets(mdx),
       parts,
@@ -449,13 +603,19 @@ export async function generate() {
   return {
     index: {
       lanes: LANES,
-      components: components.map(({ name, slug, lane, description, parts }) => ({
-        name,
-        slug,
-        lane,
-        description,
-        exports: parts.map((part) => part.name),
-      })),
+      components: components.map(
+        ({ name, slug, lane, description, parts, snippets }) => ({
+          name,
+          slug,
+          lane,
+          description,
+          exports: parts.map((part) => part.name),
+          // Which platforms' code the docs carry, so the index can count them.
+          code: ["react", "swift", "kotlin"].filter(
+            (platform) => platform in snippets,
+          ),
+        }),
+      ),
     },
     components,
   };
@@ -475,17 +635,26 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const { index, components } = await generate();
   const changed = [];
   const json = (value) => `${JSON.stringify(value, null, 2)}\n`;
-  if (writeIfChanged(path.join(OUT_DIR, "components.json"), json(index), check)) {
+  if (
+    writeIfChanged(path.join(OUT_DIR, "components.json"), json(index), check)
+  ) {
     changed.push("components.json");
   }
   // The contrast contract, as CI checks it, for the colour page to measure.
   const contract = JSON.parse(fs.readFileSync(CONTRAST_CONTRACT, "utf8"));
-  if (writeIfChanged(path.join(OUT_DIR, "contrast-contract.json"), json(contract), check)) {
+  if (
+    writeIfChanged(
+      path.join(OUT_DIR, "contrast-contract.json"),
+      json(contract),
+      check,
+    )
+  ) {
     changed.push("contrast-contract.json");
   }
   for (const component of components) {
     const file = path.join(OUT_DIR, "components", `${component.slug}.json`);
-    if (writeIfChanged(file, json(component), check)) changed.push(path.basename(file));
+    if (writeIfChanged(file, json(component), check))
+      changed.push(path.basename(file));
   }
   // Drop files for components that no longer exist.
   const componentsDir = path.join(OUT_DIR, "components");
@@ -499,7 +668,9 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     }
   }
   if (check && changed.length) {
-    console.error(`generate-reference: ${changed.length} file(s) out of date: ${changed.join(", ")}`);
+    console.error(
+      `generate-reference: ${changed.length} file(s) out of date: ${changed.join(", ")}`,
+    );
     process.exit(1);
   }
   console.log(

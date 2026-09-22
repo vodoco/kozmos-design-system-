@@ -5,6 +5,7 @@ import Dashboard from "./Dashboard";
 import styles from "./Dashboard.css?raw";
 import source from "./Dashboard.tsx?raw";
 import data from "./data.ts?raw";
+import focusSource from "../focus.ts?raw";
 
 const example = getExample("dashboard");
 
@@ -23,6 +24,7 @@ export default function DashboardExample() {
         { name: "Dashboard.tsx", code: source },
         { name: "data.ts", code: data },
         { name: "Dashboard.css", code: styles },
+        { name: "focus.ts", code: focusSource },
       ]}
     >
       <Dashboard />

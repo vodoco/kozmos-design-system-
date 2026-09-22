@@ -65,7 +65,7 @@ export const demos: DemoModule["demos"] = [
   {
     title: "As a navigation menu",
     description:
-      "How this site's reference pages offer their sidebar on a phone.",
+      "How this site’s reference pages offer their sidebar on a phone.",
     Component: AsNavigation,
   },
 ];

@@ -81,7 +81,7 @@ function Compact() {
 
 export const demos: DemoModule["demos"] = [
   {
-    title: "A venue's floors and places",
+    title: "A venue’s floors and places",
     description:
       "data is nested items; expansion and selection can be controlled or left to the tree. renderIcon, renderMeta and renderActions decorate rows.",
     Component: Floors,
