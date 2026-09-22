@@ -6,7 +6,11 @@ these files honest are listed in its §7.
 
 ## Start here
 
-Latest handoff: [Claude Code handoff — every edge in its role, the five open, the five decisions,
+Latest handoff: [Claude Code handoff — the evening of 2026-09-22: npm as `@kozmos-ds`, one file per
+module, GAP-56, and the Figma pass under way](claude-code-handoff-2026-09-22-evening.md): the three
+branches in merge order, the road to npm 0.1.0, the Figma re-tint pass and the checks after it, the
+design-system roadmap from the website's gap findings, and the to-do. Before it, the day's
+[Claude Code handoff — every edge in its role, the five open, the five decisions,
 PR #56's CI, and the icon tints the live file lost (2026-09-22)](claude-code-handoff-2026-09-22.md):
 the exact working state on `claude/pointr-browse-repairs`, what Olcay asked for on the 22nd and
 what was done, the CI and the live Figma file as measured, the revised Figma run, the decisions
