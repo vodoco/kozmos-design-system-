@@ -64,3 +64,14 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation("app.cash.paparazzi:paparazzi:1.3.5")
 }
+
+// A failing test says why in the log: a snapshot that differs names by how
+// much and where its delta went, where Gradle's default prints only the
+// exception's class — all CI showed when the search sheet's snapshot failed
+// on Linux.
+tasks.withType<Test>().configureEach {
+    testLogging {
+        events("failed")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+}
