@@ -646,3 +646,22 @@ _Added on the 21st, from Update All Core at 22:32:_
 - Do not press a bulk button twice: a second press used to start a second run alongside the
   first. The panel disables them while busy now, and the plugin refuses a second run.
 - A new build restarts Update All Core from Link; update what is left one set at a time.
+
+_Added on the 22nd, from the audit of 06:58 and its REST read-back:_
+
+- Figma decides how a text's sizing, truncation and line limit combine, and no document says
+  so. Truncate first, then HUG vertically, then set `maxLines`, and read the three back: set
+  the other way round, CategoryTile's label became a fixed one-line box, and the try around it
+  said nothing. `clampTextLines` does it that way.
+- An Update draws a set's layers anew under new ids, and an override made inside a nested
+  instance of that set reads its default again. Update a set after the sets it writes inside
+  (`SETS_THAT_OVERRIDE_INSIDE`); a single Update names what to update next.
+- Compare two REST snapshots by layer path: ids change on every Update. A text's bound font size
+  and line height come back as arrays of aliases.
+- `pnpm figma:painters:check` runs `code.js` in Node's `vm`, which accepts spread syntax;
+  Figma's sandbox does not. Run `pnpm figma:plugin:check` too.
+- Every auto-layout frame the plugin draws lays its stroke out (`strokesIncludedInLayout` is the
+  runtime's default). Leave the stroke room when fitting content to a fixed size.
+- A build stamp older than the plugin marks a gap, not a difference. Replay both builds'
+  painters in the harness before asking for an Update: the Tree block's drawing from the 14th
+  is today's.

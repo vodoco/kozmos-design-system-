@@ -347,6 +347,9 @@ platforms (below).
 
 ### The run, with build `1001317b6546`
 
+_Done on the 22nd, audited at 06:58, but for step 3: the replay in the last section shows the
+Tree block draws as this build would, so it needed no Update. The next run is in that section._
+
 `1001317b6546` (`b1d7702`) paints exactly as `314962f54832` (`aa876ce`); since then only what the
 audit reads, what Apply Text Styles does, and how a run reports and guards itself have changed
 (below). The repair of 21:36 is done and read back: every text is bound and sized as at 20:55
@@ -419,7 +422,11 @@ at 18:51 with Figma brought to the front (in the background it had answered noth
 and a half), 23 of the 95 nodes answered, 504 snippets, every one with `import Kozmos`, before
 Figma's daily limit for the Dev Mode server refused the rest: "Rate limit exceeded, please try
 again tomorrow", after some 500 calls in the day. The other 72, and the 22, wait for the limit
-to reset: `pnpm figma:connect:readback -- --label SwiftUI` with Figma in front, 95 calls.
+to reset: `pnpm figma:connect:readback -- --label SwiftUI` with Figma in front, 95 calls. On
+the 22nd, the limit reset, both read back whole: React and SwiftUI each 95 of 95 nodes and 1,792
+variant or instance nodes with a snippet, every import one a consumer can use. The 32 over the
+21st's 1,760 are the panel's new tiles and their Counters, on both; the 1,738 was the pass that
+hung, not a gap in SwiftUI's mappings.
 
 **Mind:**
 
@@ -618,3 +625,94 @@ panel disables both bulk buttons while busy; the plugin refuses a second run wit
 painter check is 267; on `01f3be6891dc` the five new assertions fail, and nothing else does. The
 next TreeItem run says where its time goes; if it is the definitions read or the property pass,
 that is the next change.
+
+### The audit of 06:58 on the 22nd, and what REST found
+
+The audit (`1001317b6546`, 06:58:05 UTC): **no warning**, 54 advisories, Surface QA 64 of 64 —
+the forecast above to the hundredth, the tile's seven decorative symbols and the field's four
+among the advisories. Against 20:38 eight sets changed and no other: DirectionStep, LocationPin,
+CategoryTile and CategoryField lost their warnings; Button and IconButton audit their Glass
+variants (63 text and 42 non-text pairs, and 63 non-text, from 60, 38 and 60; the minimum still
+6.95); FileUpload's 32 browse labels carry a style; BrowseCategoriesPanel grew (below).
+
+Over REST at 07:03 (`lastModified` 06:56:38):
+
+- **Stamps.** The 26 Product / SDK sets on `1001317b6546`; the 66 Core sets Update All Core
+  finished at 22:32 on `01f3be6891dc`; TreeItem, TreeChildItem, TreeParentItem, Tree and
+  Timeline on `dd9f78a05cc0` (`604730c`, the 14th) — the Tree block was not updated. **Neither
+  gap changes a drawing.** `b1d7702`, all that lies between `01f3be6891dc` and `1001317b6546`,
+  adds progress, yields, a guard and timing and writes no node. The Tree block's 438 variants,
+  painted in the harness by `604730c` and by this build with their 14 component variables
+  bound, are identical, and a one-token change to the selected label's colour shows in exactly
+  the 108 Selected variants, so the comparison sees a change when there is one.
+- **Typography, by layer path** (an Update gives a set's layers new ids, so a comparison by id
+  says nothing; and REST gives a text's bound size and line height as arrays): of 7,091 texts at
+  20:55, 7,023 are identical in size, line height, font, text style, and the variables bound to
+  size, line height and fill. The other 68 are the intended ones: FileUpload's 32 browse labels
+  gained their style and bindings, and LocationPin's 27 off-floor numbers and CategoryField's 9
+  names took `Colors/foreground/0`, as ruled. Texts with a bound size: 5,593 at 20:55, 943
+  after Apply Text Styles, 5,625 now.
+- **Washes**, each a bound paint at full strength on a layer at its opacity: CategoryField 0.12
+  (9), CategoryTile's 0.05 and its ring's 0.2 (9 each), DirectionStep 0.1 (14), ScrollArea's
+  scrollbars 0.32 (4), BottomSheet's handle 0.36 (3).
+- **Renders.** DirectionStep's disc and arrow as the React draws them. BrowseCategoriesPanel,
+  its grid of live tiles in the file for the first time, showed three faults: the long names cut
+  at one line, every count 12, every icon a bus.
+- **`pnpm figma:verify` failed its enforced truncation check, 5 times**, all in the panel:
+  "Entrances & Exits", "Check-in & Baggage", "Security & Immigration", "Customer Service",
+  "Parking & Ground Transport", 91 to 146 wide in 73. The six reported findings of §5 item 6
+  survived the run: DynamicIsland's three slots at 26 in a 24 box, Dialog's and Drawer's primary
+  labels 94 in 90, and DynamicIsland's "•".
+
+**Found and fixed** (`fc1adcc`, build `7241e855b611`):
+
+1. **The tile's label was one line.** React, SwiftUI and Compose clamp it at two
+   (`line-clamp-2`, `.lineLimit(2)`, `maxLines = 2`), and the painter asked for two, but every
+   label in the file was a fixed box one line high with no limit (REST: `TRUNCATE`, 14 high, no
+   `maxLines`). Set to auto height, then to truncate, then to two lines inside a try, Figma fixed
+   the box and dropped the limit, and the try kept quiet. The Tree and navigation labels — set to
+   truncate, then to HUG vertically — hold auto height with a limit of 1. So the label now
+   truncates, hugs, then takes its limit, after its append, and is read back: a runtime that
+   orders these otherwise says so in the log. The harness holds the same order; on
+   `1001317b6546` it reads the label exactly as the file does.
+2. **Every tile in the panel read 12.** Update All Product / SDK ran BrowseCategoriesPanel before
+   CategoryTile. An Update draws a set's layers anew, under new ids, and Figma keeps an override
+   against the id of the layer it changes: each tile's count was an override on a Counter layer
+   CategoryTile then replaced (REST: `I1960:9243;1923:14151`, a layer no longer in the file). The
+   labels held, being a property of the tile. CategoryTile now runs first.
+   `SETS_THAT_OVERRIDE_INSIDE` records who writes inside whom — BrowseCategoriesPanel inside
+   CategoryTile (the counts), CategoryTile inside Counter (the digits' ink for the tint); a check
+   finds every such writer in `code.js` and holds both run orders to the map; and an Update that
+   leaves a dependent behind names it ("Next, update BrowseCategoriesPanel: …"), as Update All
+   Core does for the two it leaves to the Product / SDK run. The same mechanism should reset
+   overrides that a file using the library made inside a nested instance, when it accepts an
+   update of that set; component properties are kept. Not tested in a consuming file.
+3. **"ratio 3 < 3".** A ratio below its threshold was rounded to the nearest, so the turquoise
+   symbol's 2.996 printed as 3. It rounds down now: 2.99.
+4. **Dialog's and Drawer's primary labels, 94 in a 90 box.** The width came from 7.5 a
+   character. It is now what the instance's content draws, the guess its floor: 158 and 126;
+   every other footer button keeps its width.
+5. **DynamicIsland's slots, 26 in a 24 box.** The label fit left the stroke a pixel at each side
+   but none at the top and bottom, and every one of the file's 136 slots lays its stroke out
+   (`strokesIncludedInLayout`, which no painter sets — the runtime's default). The fit now leaves
+   both. Why a fixed 24 frame reads 26 is not established — 13 slots of 44 whose content also
+   fills them read 44 — so the next verify confirms it. The same fit gives those 13 a pixel less
+   padding on their next Update (BrowseCategoriesPanel, POIDetailPanel, RoutingInputGroup,
+   MapOverlay, FeedbackCard).
+
+The painter check is 290; on `1001317b6546` its 17 new and strengthened assertions fail and
+nothing else does. Left for Olcay (handoff §7): the panel's icons, DynamicIsland's "•", and the
+panel's visible title.
+
+### The run, with build `7241e855b611`
+
+1. Run the plugin; the header must read **Build 7241e855b611**.
+2. **Update All Product / SDK** — CategoryTile now runs before BrowseCategoriesPanel.
+3. **Update** Dialog, then Drawer, one at a time, never Rebuild. Not Update All Core: no other
+   Core set draws differently, and a new build restarts it from Link.
+4. **Audit Library**, and paste it. Expected: no warning, 54 advisories, the turquoise symbol at
+   2.99, `pluginBuild` `7241e855b611`.
+5. From the terminal: `pnpm figma:verify` — every enforced check ok, no overflow, one typed
+   glyph (the "•") — and over REST the panel's counts (6, 14, 5, 88, 9, 22, 37, 41), its long
+   names on two lines, DynamicIsland's slots at 24, and the footers at 158 and 126.
+6. Then the library can be published.

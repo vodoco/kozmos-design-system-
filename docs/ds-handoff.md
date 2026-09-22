@@ -1654,3 +1654,15 @@ plugin. A long set now reports each variant and phase and yields, the bulk butto
 while busy, the plugin refuses a second run, and a run's result names its slowest sets
 (`b1d7702`, build `1001317b6546`, painters unchanged; the painter check is 267). Left: Update All
 Product / SDK, then the Tree block one set at a time (drift §9).
+
+On the 22nd the audit of 06:58 read no warning and 54 advisories, as forecast, and REST
+confirmed the typography and the washes; but `pnpm figma:verify` failed on five cut names in
+BrowseCategoriesPanel, whose grid of live tiles reached the file that morning. The tile's label
+was a fixed one-line box in the live runtime though the painter asked for two lines; the
+Product / SDK run had updated the panel before CategoryTile, whose Update reset the panel's
+counts to 12; and every tile shows a bus, the aviation quick access's icons not being on the
+Icons page. Fixed in `fc1adcc` (build `7241e855b611`): the label's order with a read-back, the
+run order with `SETS_THAT_OVERRIDE_INSIDE` and a note after an Update, ratios below a threshold
+rounded down, Dialog's and Drawer's footer widths measured, and a slot's stroke given room; the
+painter check is 290. The Tree block needs no Update: replayed, it draws as the build. Left: the
+run in drift §9, the panel's icons and two smaller decisions (handoff §7).
