@@ -345,7 +345,7 @@ ADAPTIVE_BROWSER=<chromium|firefox|webkit> pnpm test:search-sheet` (and `test:ma
    70.31 against 70.00; Lighthouse — the Vue Storybook page `vue-poicard--default` fails to load
    (`ERRORED_DOCUMENT_REQUEST`); and Chromatic's 276 changes wait for Olcay's acceptance. Since:
    the site session's `3bedd72` fixed `test:adaptive` and `d83feb4` points Lighthouse at the
-   public POI card (`9274fa3` stopped the public build emitting the Vue harness); `7ca8dfd` gives
+   public POI card (`9274fa3` stopped the public build emitting the Vue harness); `4df611b` gives
    the three Paparazzi classes that meet the renderers' rounding a calibrated tolerance — CI's delta
    images showed 2 to 20 pixels more than two levels off, 0.000002 % to 0.000028 %, against 0.087 %
    for the smallest real change measured; and **the bundle is Olcay's decision**: 320.8 KB raw
