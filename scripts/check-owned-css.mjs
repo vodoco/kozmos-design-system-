@@ -370,6 +370,40 @@ try {
       assert.equal(loader.width, "16px");
       assert.match(loader.animationName, /^kozmos-/);
       assert.notEqual(loader.animationDuration, "0s");
+      // GAP-56: a Button keeps 8px between its icon and its label, as Figma's Button
+      // (itemSpacing 8, bound) and iOS's (HStack spacing 100) do: a caller's icon, and the
+      // loading spinner, without a margin of either's own. Measured on the spinner's layout box
+      // (mid-turn a rotating square's bounding box is up to 41% wider), and in both directions:
+      // the fixture is right-to-left, and a physical margin spaced only one of them.
+      for (const testId of [`${id}-icon-label`, `${id}-loading`]) {
+        const gaps = await page.getByTestId(testId).evaluate((node) => {
+          const measure = () => {
+            const svg = node.querySelector("svg");
+            svg.style.animation = "none";
+            const icon = svg.getBoundingClientRect();
+            svg.style.animation = "";
+            const label = [...node.childNodes].find(
+              (child) => child.nodeType === Node.TEXT_NODE && child.textContent.trim(),
+            );
+            const range = document.createRange();
+            range.selectNodeContents(label);
+            const text = range.getBoundingClientRect();
+            return Math.round(Math.max(text.left - icon.right, icon.left - text.right));
+          };
+          const own = node.getAttribute("dir");
+          const rendered = measure();
+          node.setAttribute("dir", getComputedStyle(node).direction === "rtl" ? "ltr" : "rtl");
+          const flipped = measure();
+          if (own === null) node.removeAttribute("dir");
+          else node.setAttribute("dir", own);
+          return [rendered, flipped];
+        });
+        assert.deepEqual(
+          gaps,
+          [8, 8],
+          `${testId}: 8px between the icon and the label in both directions (GAP-56)`,
+        );
+      }
       const button = page.getByTestId(`${id}-button`);
       await button.hover();
       await page.mouse.down();
