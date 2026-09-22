@@ -133,6 +133,88 @@ function countPageSearch(name) {
   searchStats.pageSearches[name] = (searchStats.pageSearches[name] || 0) + 1;
 }
 
+// Figma couples a text's sizing, its truncation and its line limit, and no
+// document says how. The file does, read over REST on 2026-09-22:
+// - CategoryTile's label was set to auto height, then to truncate, then to two
+//   lines, and read TRUNCATE (a fixed box that truncates), 14 high, with no line
+//   limit: every long category name cut at one line. So truncation on a text
+//   that sizes itself, with no line limit yet, fixes the box; and a fixed box
+//   takes no line limit.
+// - The Tree and navigation labels were set to TRUNCATE, then to HUG
+//   vertically, and read auto height, truncation and a limit of 1. So HUG gives
+//   a truncating box auto height and keeps the one line it showed.
+// The state lives in one plain object, so clone() copies it whole rather than
+// replaying it through these setters in some other order.
+const TEXT_SIZING_FIELDS = {
+  textAutoResize: "autoResize",
+  textTruncation: "truncation",
+  maxLines: "maxLines",
+};
+const TEXT_SIZING_SETTERS = {
+  textAutoResize(value) {
+    const sizing = this._textSizing;
+    sizing.autoResize = value;
+    if (value === "TRUNCATE") {
+      sizing.truncation = "ENDING";
+      sizing.maxLines = null;
+    }
+  },
+  textTruncation(value) {
+    const sizing = this._textSizing;
+    sizing.truncation = value;
+    if (
+      value === "ENDING" &&
+      sizing.maxLines === null &&
+      (sizing.autoResize === "HEIGHT" ||
+        sizing.autoResize === "WIDTH_AND_HEIGHT")
+    ) {
+      sizing.autoResize = "TRUNCATE";
+    }
+  },
+  maxLines(value) {
+    const sizing = this._textSizing;
+    if (value !== null && value !== undefined) {
+      if (sizing.truncation !== "ENDING") {
+        throw new Error(
+          "in set_maxLines: maxLines applies only when textTruncation is ENDING",
+        );
+      }
+      if (
+        sizing.autoResize !== "HEIGHT" &&
+        sizing.autoResize !== "WIDTH_AND_HEIGHT"
+      ) {
+        throw new Error(
+          "in set_maxLines: a fixed text box takes no line limit",
+        );
+      }
+      if (!(value >= 1)) {
+        throw new Error("in set_maxLines: the value must be >= 1");
+      }
+    }
+    sizing.maxLines = value === undefined ? null : value;
+  },
+};
+function defineTextSizing(node) {
+  node._textSizing = {
+    autoResize: "WIDTH_AND_HEIGHT",
+    truncation: "DISABLED",
+    maxLines: null,
+  };
+  for (const [key, field] of Object.entries(TEXT_SIZING_FIELDS)) {
+    Object.defineProperty(node, key, {
+      configurable: true,
+      enumerable: false,
+      get() {
+        return this._textSizing[field];
+      },
+      set(value) {
+        TEXT_SIZING_SETTERS[key].call(this, value);
+        this.remeasure();
+      },
+    });
+  }
+}
+
 export class MockNode {
   constructor(type, name) {
     this.id = `${nextId++}:${nextId}`;
@@ -179,6 +261,7 @@ export class MockNode {
       this.fontSize = 12;
       this.lineHeight = { unit: "PIXELS", value: 16 };
       this.letterSpacing = { unit: "PERCENT", value: 0 };
+      defineTextSizing(this);
       this.textAutoResize = "WIDTH_AND_HEIGHT";
       this.textAlignHorizontal = "LEFT";
       this.textAlignVertical = "TOP";
@@ -489,6 +572,23 @@ for (const axis of ["layoutSizingHorizontal", "layoutSizingVertical"]) {
       }
       if (!this[layoutSizingValues]) this[layoutSizingValues] = {};
       this[layoutSizingValues][axis] = value;
+      // HUG sizes a text's height to its lines; a box that truncated keeps its
+      // one line as a limit (see TEXT_SIZING_FIELDS).
+      if (
+        axis === "layoutSizingVertical" &&
+        value === "HUG" &&
+        this.type === "TEXT" &&
+        this._textSizing
+      ) {
+        const sizing = this._textSizing;
+        if (sizing.autoResize === "TRUNCATE") {
+          sizing.autoResize = "HEIGHT";
+          if (sizing.maxLines === null) sizing.maxLines = 1;
+        } else if (sizing.autoResize === "NONE") {
+          sizing.autoResize = "HEIGHT";
+        }
+        this.remeasure();
+      }
     },
   });
 }

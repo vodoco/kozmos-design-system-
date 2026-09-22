@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "1001317b6546";
+const PLUGIN_BUILD = "7241e855b611";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -9786,6 +9786,62 @@ figma.ui.onmessage = async (message) => {
 let sequenceProgress = null;
 let lastSetProgressAt = 0;
 
+/**
+ * The sets that set overrides inside another set's instances, by that set.
+ * An Update draws a set's layers anew, under new ids, and Figma keeps an
+ * override against the id of the layer it changes, so every override that
+ * reached inside the updated set reads its default again. On 2026-09-22
+ * Update All Product / SDK ran BrowseCategoriesPanel, then CategoryTile, and
+ * all eight of the panel's tiles read the Counter's default 12: each tile's
+ * count was an override on the Counter layer CategoryTile had just replaced.
+ * CategoryTile in turn inks its Counter's digits for its tint, inside Counter.
+ * A bulk run lists a set after the sets it reaches into, and an Update that
+ * leaves one of these behind says which to update next.
+ */
+const SETS_THAT_OVERRIDE_INSIDE = {
+  Counter: ["CategoryTile"],
+  CategoryTile: ["BrowseCategoriesPanel"],
+};
+
+/** The sets an Update of `names` leaves behind, in the order to run them. */
+function setsToUpdateAfter(names) {
+  const reached = new Set();
+  const visit = (name) => {
+    for (const dependent of SETS_THAT_OVERRIDE_INSIDE[name] || []) {
+      if (reached.has(dependent)) continue;
+      reached.add(dependent);
+      visit(dependent);
+    }
+  };
+  names.forEach(visit);
+  return CORE_UPDATE_SEQUENCE.concat(PRODUCT_SDK_UPDATE_SEQUENCE)
+    .map(([name]) => name)
+    .filter((name) => reached.has(name) && !names.includes(name));
+}
+
+function updateNextWarning(updated, covered) {
+  const next = setsToUpdateAfter(updated).filter(
+    (name) => !covered.includes(name),
+  );
+  if (next.length === 0) return null;
+  const productOnly = next.every((name) =>
+    PRODUCT_SDK_UPDATE_SEQUENCE.some(([entry]) => entry === name),
+  );
+  return (
+    `Next, update ${next.join(", then ")}: ${next.length === 1 ? "it sets" : "each sets"} overrides inside a set this drew anew, under new layer ids, and those read their defaults until ${next.length === 1 ? "it is" : "each is"} updated.` +
+    (productOnly ? " Update All Product / SDK runs them in this order." : "")
+  );
+}
+
+/** After a single Update: a bulk run orders these and says so at its end. */
+function noteSetsToUpdateNext(name, stats) {
+  if (sequenceProgress || !stats || !stats.updated) return;
+  const warning = updateNextWarning([name], []);
+  if (!warning) return;
+  if (!Array.isArray(stats.warnings)) stats.warnings = [];
+  stats.warnings.push(warning);
+}
+
 // A long set paints for minutes, and until the plugin yields Figma neither
 // redraws the panel nor saves the file: on 2026-09-21 the panel sat on
 // "Updating NavigationItem" while the file had reached SearchBar, and TreeItem
@@ -9898,16 +9954,18 @@ const CORE_UPDATE_SEQUENCE = [
   ["Timeline", updateTimelineComponent],
 ];
 
-// Every Product / SDK and platform set, in picker order. These share the
-// productSdkSlot / productSdkControlButton / productSdkText helpers, so a change
-// to any of them makes all of these stale at once — which is exactly the
-// situation that makes updating them one at a time tedious.
+// Every Product / SDK and platform set, in picker order, except that a set
+// runs after any set it sets overrides inside (SETS_THAT_OVERRIDE_INSIDE):
+// CategoryTile before BrowseCategoriesPanel. These share the productSdkSlot /
+// productSdkControlButton / productSdkText helpers, so a change to any of them
+// makes all of these stale at once — which is exactly the situation that makes
+// updating them one at a time tedious.
 const PRODUCT_SDK_UPDATE_SEQUENCE = [
   ["AISearchButton", updateAISearchButtonComponent],
   ["AdaptiveMapShell", updateAdaptiveMapShellComponent],
+  ["CategoryTile", updateCategoryTileComponent],
   ["BrowseCategoriesPanel", updateBrowseCategoriesPanelComponent],
   ["CategoryField", updateCategoryFieldComponent],
-  ["CategoryTile", updateCategoryTileComponent],
   ["DirectionStep", updateDirectionStepComponent],
   ["FloorSelector", updateFloorSelectorComponent],
   ["LocationPin", updateLocationPinComponent],
@@ -9992,6 +10050,7 @@ async function runUpdateSequence(sequence, kindLabel) {
   };
 
   suppressAutoReorganize = true;
+  const updatedNames = [];
 
   // Read the completion stamps once, before anything is touched. A run that
   // died partway used to start again from the first set, redo everything it had
@@ -10048,8 +10107,10 @@ async function runUpdateSequence(sequence, kindLabel) {
           variants: result.variants || 0,
           seconds: Math.round((Date.now() - startedAt) / 1000),
         };
-        if (result.updated) stats.updatedComponents += 1;
-        else stats.skipped.push(name);
+        if (result.updated) {
+          stats.updatedComponents += 1;
+          updatedNames.push(name);
+        } else stats.skipped.push(name);
         if (Array.isArray(result.warnings) && result.warnings.length > 0) {
           record.warnings = result.warnings;
           for (const warning of result.warnings) {
@@ -10076,6 +10137,11 @@ async function runUpdateSequence(sequence, kindLabel) {
   }
 
   stats.layout = await reorganizeComponentsPage();
+  const leftBehind = updateNextWarning(
+    updatedNames,
+    sequence.map(([name]) => name),
+  );
+  if (leftBehind) stats.warnings.push(leftBehind);
   stats.message =
     `Updated ${stats.updatedComponents} of ${sequence.length} ${kindLabel} in place, then reorganized once.` +
     (stats.alreadyCurrent.length > 0
@@ -19806,6 +19872,14 @@ function formatCompositionIssueDetails(issues) {
   return visible.join("; ");
 }
 
+/**
+ * A ratio below its threshold, to two decimals, rounded down: rounded to the
+ * nearest, CategoryTile's turquoise symbol at 2.996 printed "ratio 3 < 3".
+ */
+function ratioBelowThreshold(ratio) {
+  return Math.floor(ratio * 100) / 100;
+}
+
 function formatContrastFailureDetails(failures, kind) {
   if (!Array.isArray(failures) || failures.length === 0) return "";
 
@@ -21502,7 +21576,7 @@ function auditDecorativeIconPaints(
               ? `${ownerName} / ${current.name || current.type}`
               : current.name || current.type,
             kind: "decorative",
-            ratio: Math.round(ratio * 100) / 100,
+            ratio: ratioBelowThreshold(ratio),
             required: 3,
           });
         }
@@ -21618,7 +21692,7 @@ function addContrastFailure(
       ? `${ownerName} / ${node.name || node.type}`
       : node.name || node.type,
     kind,
-    ratio: Math.round(ratio * 100) / 100,
+    ratio: ratioBelowThreshold(ratio),
     required,
   });
 }
@@ -31685,6 +31759,7 @@ async function updateCounterComponent() {
     "2",
     stats,
   );
+  noteSetsToUpdateNext("Counter", stats);
   return stats;
 }
 
@@ -43817,6 +43892,42 @@ async function productSdkText({
   return text;
 }
 
+/**
+ * At most `lines` lines, then an ellipsis — the `line-clamp-2`,
+ * `.lineLimit(2)` and `maxLines = 2` of the three platforms — for a text
+ * already in its auto-layout parent.
+ *
+ * Figma decides the order, and no document says it. Read over REST on
+ * 2026-09-22, CategoryTile's label — set to auto height, then to truncate, then
+ * to two lines, inside a try — was a fixed box one line high with no line
+ * limit: somewhere in that order Figma fixed the box and dropped the limit, the
+ * try kept quiet, and every long category name in BrowseCategoriesPanel was cut
+ * at one line. The Tree and navigation labels — set to truncate, then to HUG
+ * vertically — hold auto height with a limit of 1. So: truncation, then HUG,
+ * then the limit; and the result is read back, so a runtime that orders these
+ * some other way says so in the log instead of in the render.
+ */
+function clampTextLines(text, lines, context, stats) {
+  let failure = "";
+  try {
+    text.textTruncation = "ENDING";
+    setLayoutSizingVertical(text, "HUG");
+    if (text.textAutoResize !== "HEIGHT") text.textAutoResize = "HEIGHT";
+    text.maxLines = lines;
+  } catch (error) {
+    failure = `; ${messageFor(error)}`;
+  }
+  if (
+    text.textAutoResize !== "HEIGHT" ||
+    text.textTruncation !== "ENDING" ||
+    text.maxLines !== lines
+  ) {
+    stats.warnings.push(
+      `${context}: ${text.name} did not take ${lines} lines (textAutoResize ${text.textAutoResize}, textTruncation ${text.textTruncation}, maxLines ${text.maxLines}${failure}); a long one is cut at one line.`,
+    );
+  }
+}
+
 // --- DirectionStep ---------------------------------------------------------
 
 // Typed fallbacks for a file without the curated icons.
@@ -45480,10 +45591,14 @@ async function fitProductSdkSlotLabel(slot, text, width, height, stats) {
     );
   }
 
-  // A 24px-tall slot has no room for 12px above and below either.
+  // A 24px-tall slot has no room for 12px above and below either, and its
+  // stroke costs a pixel at the top and the bottom as it does at each side:
+  // every slot in the live file lays its stroke out (strokesIncludedInLayout,
+  // which no painter sets — the runtime's default), and DynamicIsland's three
+  // 24 slots, their label and padding filling all 24, read 26 (figma:verify).
   const vertical = Math.max(
     0,
-    Math.min(padding, Math.floor((height - size.height) / 2)),
+    Math.min(padding, Math.floor((height - 2 - size.height) / 2)),
   );
   slot.paddingLeft = padding;
   slot.paddingRight = padding;
@@ -47738,14 +47853,6 @@ async function updateCategoryTileVariant(
     wrap: true,
   });
   label.textAlignHorizontal = "CENTER";
-  if ("maxLines" in label) {
-    try {
-      label.textTruncation = "ENDING";
-      label.maxLines = 2;
-    } catch (_error) {
-      // A runtime without line limits shows every line.
-    }
-  }
   bindFloatVariable(
     label,
     "fontSize",
@@ -47761,6 +47868,7 @@ async function updateCategoryTileVariant(
     stats,
   );
   appendWithSizing(component, label, "FILL", null);
+  clampTextLines(label, 2, `CategoryTile ${component.name}`, stats);
 }
 
 async function configureCategoryTileProperties(componentSet, stats) {
@@ -47846,7 +47954,11 @@ async function buildCategoryTileComponent() {
 }
 
 async function updateCategoryTileComponent() {
-  return updatePlannedMatrixComponent(categoryTileComponentConfig());
+  const stats = await updatePlannedMatrixComponent(
+    categoryTileComponentConfig(),
+  );
+  noteSetsToUpdateNext("CategoryTile", stats);
+  return stats;
 }
 
 async function rebuildCategoryTileComponent() {
@@ -61578,7 +61690,15 @@ function setDialogFooterActionSizing(action, label, size) {
   if (!action) return;
 
   const metrics = buttonMetrics(size);
-  const width = expectedDialogFooterActionWidth(label, size);
+  // Measured beats guessed. At 7.5 a character "Save changes" was given 90,
+  // where Inter Medium draws 94, and Dialog's and Drawer's primary actions ran
+  // 4 past their buttons' padding (figma:verify, 2026-09-17 to 22). The label
+  // layer sizes itself, so the instance's own content is the width to fit; the
+  // guess stays as the floor the audit holds these buttons to.
+  const width = Math.max(
+    expectedDialogFooterActionWidth(label, size),
+    footerActionContentWidth(action) + metrics.paddingX * 2,
+  );
   const height = metrics.height;
 
   setLayoutSizingHorizontal(action, "FIXED");
@@ -61596,6 +61716,22 @@ function setDialogFooterActionSizing(action, label, size) {
   } catch (_error) {
     // layoutGrow is unavailable on older plugin runtimes.
   }
+}
+
+/** The width of a Button instance's shown content in flow, gaps included. */
+function footerActionContentWidth(action) {
+  if (!action || action.type !== "INSTANCE" || !Array.isArray(action.children))
+    return 0;
+  const shown = action.children.filter(
+    (child) =>
+      child.visible !== false && child.layoutPositioning !== "ABSOLUTE",
+  );
+  if (shown.length === 0) return 0;
+  const widths = shown.reduce(
+    (sum, child) => sum + (typeof child.width === "number" ? child.width : 0),
+    0,
+  );
+  return Math.ceil(widths + (action.itemSpacing || 0) * (shown.length - 1));
 }
 
 function expectedDialogFooterActionWidth(label, size) {

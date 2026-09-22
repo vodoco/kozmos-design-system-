@@ -358,7 +358,28 @@ section("CategoryTile");
           label.lineHeight.value === tile.labelLineHeight,
         `the label is ${tile.labelFontSize}/${tile.labelLineHeight} (got ${label.fontSize}/${label.lineHeight && label.lineHeight.value})`,
       );
-      ok(label.maxLines === 2, "the label is two lines at most");
+      // line-clamp-2: the height follows the lines, and an ellipsis ends the
+      // second. The harness holds Figma's order for these (TEXT_SIZING_FIELDS):
+      // the order this painter used until 2026-09-22 left the fixed one-line
+      // box the live file read, and fails here.
+      ok(
+        label.textAutoResize === "HEIGHT" &&
+          label.textTruncation === "ENDING" &&
+          label.maxLines === 2,
+        `the label sizes to two lines at most, then an ellipsis (got ${label.textAutoResize}, ${label.textTruncation}, maxLines ${label.maxLines})`,
+      );
+      const heightFor = (characters) => {
+        label.characters = characters;
+        return label.height;
+      };
+      const one = tile.labelLineHeight;
+      ok(
+        heightFor("Gates") === one &&
+          heightFor("Parking & Ground Transport") === 2 * one &&
+          heightFor("Security, Immigration & Passport Control") === 2 * one,
+        "a short name takes one line, a long one two, and a longer one stops at two",
+      );
+      label.characters = "Transport";
       ok(
         boundVariableName(label.fills[0]) === "Colors/foreground/0",
         "the label keeps the foreground colour under a tint",
@@ -829,14 +850,14 @@ section("CategoryField");
 section("BrowseCategoriesPanel");
 {
   const taxonomy = [
-    ["Entrances & Exits", "Green"],
-    ["Check-in & Baggage", "Turquoise"],
-    ["Security & Immigration", "Red"],
-    ["Gates", "Yellow"],
-    ["Customer Service", "Blue"],
-    ["Parking & Ground Transport", "Navy"],
-    ["Dining", "Orange"],
-    ["Shopping", "Pink"],
+    ["Entrances & Exits", "Green", "6"],
+    ["Check-in & Baggage", "Turquoise", "14"],
+    ["Security & Immigration", "Red", "5"],
+    ["Gates", "Yellow", "88"],
+    ["Customer Service", "Blue", "9"],
+    ["Parking & Ground Transport", "Navy", "22"],
+    ["Dining", "Orange", "37"],
+    ["Shopping", "Pink", "41"],
   ];
   // A CategoryTile set for the panel to instance, painted by the plugin itself.
   const tiles = [];
@@ -896,7 +917,7 @@ section("BrowseCategoriesPanel");
       instances.every((tile) => tile.type === "INSTANCE"),
     "eight live CategoryTile instances",
   );
-  taxonomy.forEach(([label, tint], index) => {
+  taxonomy.forEach(([label, tint, count], index) => {
     const tile = instances[index];
     const labelNode =
       tile && tile.findOne((node) => node.name === "Label Text");
@@ -908,10 +929,18 @@ section("BrowseCategoriesPanel");
         labelNode &&
         labelNode.characters === label &&
         digits &&
-        /^\d+$/.test(digits.characters),
-      `tile ${index + 1} is ${label} in ${tint} with a count`,
+        digits.characters === count,
+      `tile ${index + 1} is ${label} in ${tint} with its count ${count} (got ${digits && digits.characters})`,
     );
   });
+  const parking =
+    instances[5] && instances[5].findOne((node) => node.name === "Label Text");
+  ok(
+    parking &&
+      parking.maxLines === 2 &&
+      parking.height === 2 * contract.categoryTile.content.labelLineHeight,
+    `a long name takes the tile's two lines (got ${parking && parking.height} high, maxLines ${parking && parking.maxLines})`,
+  );
   ok(
     instances.every((tile) => tile.isExposedInstance === true),
     "each tile is exposed",
@@ -921,6 +950,208 @@ section("BrowseCategoriesPanel");
     `no warnings (${stats.warnings.join(" | ")})`,
   );
   tileSet.remove();
+}
+
+// --- A set runs after the sets it reaches into --------------------------------------
+
+// An Update draws a set's layers anew, under new ids, and Figma keeps an
+// override against the id of the layer it changes. On 2026-09-22 the Product /
+// SDK run updated BrowseCategoriesPanel, then CategoryTile, and every tile in
+// the panel read the Counter's default 12. The map of who writes inside whom
+// must cover what the painters do; each bulk run must honour it; and an Update
+// that leaves a dependent behind must name it.
+section("A set runs after the sets it reaches into");
+{
+  const map = plugin.SETS_THAT_OVERRIDE_INSIDE;
+  ok(map && typeof map === "object", "SETS_THAT_OVERRIDE_INSIDE is declared");
+  const core = (plugin.CORE_UPDATE_SEQUENCE || []).map(([name]) => name);
+  const product = (plugin.PRODUCT_SDK_UPDATE_SEQUENCE || []).map(
+    ([name]) => name,
+  );
+
+  // Every painter that finds a layer inside a nested instance and writes to it,
+  // read from code.js, so a new one fails here until it is named below and in
+  // the map.
+  const lines = fs.readFileSync(PLUGIN, "utf8").split("\n");
+  const enclosing = (index) => {
+    for (let i = index; i >= 0; i -= 1) {
+      const fn = lines[i].match(/^(?:async )?function ([A-Za-z0-9_]+)\(/);
+      if (fn) return fn[1];
+    }
+    return null;
+  };
+  const writersFound = new Set();
+  lines.forEach((line, index) => {
+    const found = line.match(
+      /const ([A-Za-z0-9_]+) =\s*([A-Za-z0-9_.]+)\.findOne\(/,
+    );
+    if (!found) return;
+    const next = lines.slice(index, index + 30).join("\n");
+    const write = new RegExp(
+      `\\b${found[1]}\\.(characters|setProperties|fills|strokes|visible|fontSize)\\s*[=(]`,
+    );
+    if (write.test(next)) writersFound.add(enclosing(index));
+  });
+  // painter: [the set whose layer it writes, the set it paints]
+  const reaches = {
+    browseCategoriesPanelTile: ["CategoryTile", "BrowseCategoriesPanel"],
+    updateCategoryTileVariant: ["Counter", "CategoryTile"],
+  };
+  ok(
+    [...writersFound].sort().join(",") ===
+      Object.keys(reaches).sort().join(","),
+    `the painters that write inside a nested instance are the ones named here (found: ${[...writersFound].join(", ")})`,
+  );
+  for (const [painter, [inside, writer]] of Object.entries(reaches)) {
+    ok(
+      Boolean(map) && (map[inside] || []).includes(writer),
+      `${writer} is listed as writing inside ${inside} (${painter})`,
+    );
+  }
+  for (const [inside, writers] of Object.entries(map || {})) {
+    for (const writer of writers) {
+      const run =
+        core.includes(inside) && core.includes(writer)
+          ? core
+          : product.includes(inside) && product.includes(writer)
+            ? product
+            : null;
+      if (run) {
+        ok(
+          run.indexOf(inside) < run.indexOf(writer),
+          `${writer} runs after ${inside} in their bulk update`,
+        );
+      } else {
+        ok(
+          core.includes(inside) && product.includes(writer),
+          `${inside} is Core and ${writer} Product / SDK, so Core first holds the order`,
+        );
+      }
+    }
+  }
+
+  if (typeof plugin.setsToUpdateAfter === "function") {
+    ok(
+      plugin.setsToUpdateAfter(["Counter"]).join(",") ===
+        "CategoryTile,BrowseCategoriesPanel",
+      "after Counter: CategoryTile, then BrowseCategoriesPanel",
+    );
+    ok(
+      plugin.setsToUpdateAfter(["CategoryTile"]).join(",") ===
+        "BrowseCategoriesPanel",
+      "after CategoryTile: BrowseCategoriesPanel",
+    );
+  } else ok(false, "setsToUpdateAfter is reachable");
+  if (typeof plugin.noteSetsToUpdateNext === "function") {
+    const tile = { updated: true, warnings: [] };
+    plugin.noteSetsToUpdateNext("CategoryTile", tile);
+    ok(
+      tile.warnings.length === 1 &&
+        tile.warnings[0].startsWith("Next, update BrowseCategoriesPanel:") &&
+        tile.warnings[0].endsWith(
+          "Update All Product / SDK runs them in this order.",
+        ),
+      `CategoryTile's Update names the panel next (${tile.warnings.join(" | ")})`,
+    );
+    const counter = { updated: true, warnings: [] };
+    plugin.noteSetsToUpdateNext("Counter", counter);
+    ok(
+      counter.warnings.length === 1 &&
+        counter.warnings[0].startsWith(
+          "Next, update CategoryTile, then BrowseCategoriesPanel:",
+        ),
+      `Counter's Update names CategoryTile, then the panel (${counter.warnings.join(" | ")})`,
+    );
+    const missing = { updated: false, warnings: [] };
+    plugin.noteSetsToUpdateNext("CategoryTile", missing);
+    ok(
+      missing.warnings.length === 0,
+      "a set that was not updated names nothing",
+    );
+  } else ok(false, "noteSetsToUpdateNext is reachable");
+  for (const [fn, name] of [
+    ["updateCategoryTileComponent", "CategoryTile"],
+    ["updateCounterComponent", "Counter"],
+  ]) {
+    ok(
+      typeof plugin[fn] === "function" &&
+        plugin[fn].toString().includes(`noteSetsToUpdateNext("${name}"`),
+      `${fn} names what to update next`,
+    );
+  }
+  ok(
+    typeof plugin.runUpdateSequence === "function" &&
+      plugin.runUpdateSequence.toString().includes("updateNextWarning(") &&
+      plugin.runUpdateSequence.toString().includes("updatedNames"),
+    "a bulk run names the sets it leaves to the other run",
+  );
+}
+
+// --- Content fits the box it is drawn in -------------------------------------------------
+
+// Two reported findings of figma:verify, from before 2026-09-20: Dialog's and
+// Drawer's primary action labels, 94 wide in a 90 box, because the width came
+// from 7.5 a character; and DynamicIsland's 24 slots at 26, because the label
+// fit left no room for the stroke at the top and bottom.
+section("Content fits the box it is drawn in");
+{
+  if (typeof plugin.setDialogFooterActionSizing === "function") {
+    // A Button instance as the footer holds it: auto layout, its padding, and
+    // a label layer that sizes itself to "Save changes" at 14.
+    const footer = figma.createFrame();
+    footer.layoutMode = "HORIZONTAL";
+    for (const [size, paddingX] of [
+      ["Large", 32],
+      ["Default", 16],
+    ]) {
+      const action = new MockNode("INSTANCE", "Primary Action");
+      action.layoutMode = "HORIZONTAL";
+      action.itemSpacing = 8;
+      action.paddingLeft = paddingX;
+      action.paddingRight = paddingX;
+      const label = figma.createText();
+      label.name = "Label Text";
+      label.fontSize = 14;
+      label.characters = "Save changes";
+      const icon = new MockNode("INSTANCE", "Icon");
+      icon.visible = false;
+      action.appendChild(icon);
+      action.appendChild(label);
+      footer.appendChild(action);
+      plugin.setDialogFooterActionSizing(action, "Save changes", size);
+      ok(
+        action.width - 2 * paddingX >= label.width,
+        `${size}: "Save changes" (${label.width}) fits its button's content box (${action.width - 2 * paddingX})`,
+      );
+    }
+    footer.remove();
+  } else ok(false, "setDialogFooterActionSizing is reachable");
+
+  if (typeof plugin.updateDynamicIslandVariant === "function") {
+    for (const value of ["Compact", "Minimal"]) {
+      const component = figma.createComponent();
+      await plugin.updateDynamicIslandVariant(component, {
+        value,
+        variableByName,
+        fonts: FONTS,
+        stats: freshStats(),
+      });
+      for (const slot of component.children.filter((child) =>
+        child.name.endsWith("Slot"),
+      )) {
+        const text = slot.children.find((child) => child.type === "TEXT");
+        const needs =
+          (text ? text.height : 0) +
+          slot.paddingTop +
+          slot.paddingBottom +
+          2 * slot.strokeWeight;
+        ok(
+          needs <= slot.height,
+          `${value} ${slot.name}: label, padding and stroke take ${needs} of ${slot.height}`,
+        );
+      }
+    }
+  } else ok(false, "updateDynamicIslandVariant is reachable");
 }
 
 // --- DirectionStep ---------------------------------------------------------------
@@ -2151,6 +2382,15 @@ section("The product sets audit clean");
               (shortfall) => shortfall.kind === "decorative",
             ),
           `${name}: the category symbols below 3:1 are measured as decorative (${contrast.decorativeBelowThree})`,
+        );
+        // Rounded to the nearest, the turquoise symbol's 2.996 read "3 < 3".
+        ok(
+          contrast.decorativeShortfalls.every(
+            (shortfall) => shortfall.ratio < shortfall.required,
+          ),
+          `${name}: every shortfall prints below 3 (${contrast.decorativeShortfalls
+            .map((shortfall) => shortfall.ratio)
+            .join(", ")})`,
         );
       }
     }
