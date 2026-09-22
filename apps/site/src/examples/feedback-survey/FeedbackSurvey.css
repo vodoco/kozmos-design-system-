@@ -1,0 +1,13 @@
+/* Feedback survey: a column of one card at a time. Layout only. */
+
+.ex-survey {
+  min-block-size: 100%;
+  padding: var(--site-space-600) var(--site-space-300) var(--site-space-900);
+  max-inline-size: 36rem;
+  margin-inline: auto;
+}
+
+.ex-survey-form {
+  display: grid;
+  gap: var(--site-space-400);
+}

@@ -142,6 +142,27 @@ body {
   gap: var(--site-space-100);
 }
 
+/* The theme switcher and the search button; on a phone the button wraps
+   under the switcher rather than widen the page. */
+.site-header-utilities {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: end;
+  gap: var(--site-space-100);
+}
+
+/* The search dialog: the field, then the results in their own scroll. */
+.site-search {
+  display: grid;
+  gap: var(--site-space-300);
+}
+
+.site-search-results {
+  max-block-size: 24rem;
+  overflow: auto;
+}
+
 /* ---- Reference pages: sidebar beside content -------------------------- */
 
 .site-docs {

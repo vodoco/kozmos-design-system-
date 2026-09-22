@@ -27,6 +27,9 @@ const pages = [
   { path: "/examples/booking", title: "Room booking" },
   { path: "/examples/notifications", title: "Notifications inbox" },
   { path: "/examples/onboarding", title: "First-run onboarding" },
+  { path: "/examples/states", title: "Loading, empty, error, offline" },
+  { path: "/examples/feedback-survey", title: "Feedback survey" },
+  { path: "/examples/saved-places", title: "Saved places" },
   { path: "/foundations", title: "Foundations" },
   { path: "/foundations/colour", title: "Colour" },
   { path: "/foundations/typography", title: "Typography" },
@@ -348,6 +351,8 @@ test("site navigation stays in the page and moves focus to the content", async (
     .getByRole("link", { name: "Foundations" })
     .click();
   await expect(page).toHaveURL(/\/foundations$/);
+  // Across the site's two frames, the new page's content still takes focus.
+  await expect(page.locator("main#main")).toBeFocused();
   await page
     .getByRole("complementary", { name: "Foundations" })
     .getByRole("link", { name: "Icons" })
@@ -1123,6 +1128,149 @@ test.describe("onboarding example", () => {
     await example.getByRole("button", { name: "Start exploring" }).click();
     await expect(example.getByText("You are set")).toBeVisible();
   });
+});
+
+test.describe("states example", () => {
+  test("loads on its own, empties, fails and retries, and works offline", async ({
+    page,
+  }) => {
+    await page.goto("/examples/states");
+    await hydrated(page);
+    const example = page.getByRole("region", {
+      name: "Loading, empty, error, offline example",
+    });
+    await expect(example.getByText("Loading shops")).toBeVisible();
+    await expect(example.getByText("3 shops, nearest first")).toBeVisible({
+      timeout: 8000,
+    });
+    const state = example.getByRole("group", { name: "State" });
+    await state.getByRole("radio", { name: "Empty" }).click();
+    await expect(example.getByText("No shops match")).toBeVisible();
+    await example.getByRole("button", { name: "Show every shop" }).click();
+    await expect(example.getByText("3 shops, nearest first")).toBeVisible();
+    await state.getByRole("radio", { name: "Error" }).click();
+    await expect(
+      example.getByText(/The shops could not be loaded/),
+    ).toBeVisible();
+    await hydrated(page);
+    expect(await axeViolations(page)).toEqual([]);
+    await example.getByRole("button", { name: "Try again" }).click();
+    await expect(example.getByText("3 shops, nearest first")).toBeVisible({
+      timeout: 8000,
+    });
+    await state.getByRole("radio", { name: "Offline" }).click();
+    await expect(example.getByText(/You are offline/)).toBeVisible();
+    await expect(example.getByText("Saved copy")).toBeVisible();
+  });
+});
+
+test.describe("feedback survey example", () => {
+  test("asks two more questions after the rating and thanks the visitor", async ({
+    page,
+  }) => {
+    await page.goto("/examples/feedback-survey");
+    await hydrated(page);
+    const example = page.getByRole("region", {
+      name: "Feedback survey example",
+    });
+    await example.getByRole("radio", { name: "Rate 4 out of 5 stars" }).click();
+    await example.getByRole("button", { name: "Submit Feedback" }).click();
+    await expect(example.getByText("Two more questions")).toBeVisible();
+    await expect(
+      example.getByText("You rated the visit 4 of 5."),
+    ).toBeVisible();
+    await example.getByRole("radio", { name: "Signs in the centre" }).click();
+    await example
+      .getByRole("checkbox", { name: "Opening hours on the map" })
+      .click();
+    await example
+      .getByRole("switch", { name: "Someone may contact me about this" })
+      .click();
+    await example.getByRole("button", { name: "Send" }).click();
+    await expect(
+      example.getByText("Enter an email address, like name@example.com."),
+    ).toBeVisible();
+    await hydrated(page);
+    expect(await axeViolations(page)).toEqual([]);
+    await example.getByLabel("Email").fill("sam@example.com");
+    await example.getByRole("button", { name: "Send" }).click();
+    await expect(
+      example.getByText("Thank you.", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      example.getByText(
+        /found the way by signs in the centre; one thing would help/,
+      ),
+    ).toBeVisible();
+  });
+});
+
+test.describe("saved places example", () => {
+  test("removes a place after confirming, undoes it, and searches", async ({
+    page,
+  }) => {
+    await page.goto("/examples/saved-places");
+    await hydrated(page);
+    const example = page.getByRole("region", { name: "Saved places example" });
+    await expect(example.getByText(/6 places across 3 venues/)).toBeVisible();
+    const bookshop = example.getByRole("treeitem", { name: /Bookshop/ });
+    await expect(bookshop).toBeVisible();
+    await bookshop.hover();
+    await example
+      .getByRole("button", { name: "Remove Bookshop from saved places" })
+      .click();
+    const dialog = page.getByRole("dialog", { name: "Remove Bookshop?" });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole("button", { name: "Remove" }).click();
+    await expect(
+      example.getByText("Bookshop is no longer saved."),
+    ).toBeVisible();
+    await expect(example.getByText(/5 places across 3 venues/)).toBeVisible();
+    await hydrated(page);
+    expect(await axeViolations(page)).toEqual([]);
+    await example.getByRole("button", { name: "Undo" }).click();
+    await expect(example.getByText(/6 places across 3 venues/)).toBeVisible();
+    await example
+      .getByRole("searchbox", { name: "Search saved places" })
+      .fill("gate");
+    await expect(
+      example.getByRole("treeitem", { name: /Gate B12/ }),
+    ).toBeVisible();
+    await expect(example.getByRole("treeitem")).toHaveCount(2);
+  });
+});
+
+test("the search opens from the keyboard or the header and takes you there", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await hydrated(page);
+  await page.keyboard.press("Control+k");
+  const dialog = page.getByRole("dialog", { name: "Search the site" });
+  await expect(dialog).toBeVisible();
+  // Before a word: the pages and the foundations, as a contents list.
+  await expect(dialog.getByRole("option", { name: /^Colour/ })).toBeVisible();
+  await dialog.getByRole("searchbox", { name: "Search the site" }).fill("tree");
+  await dialog.getByRole("option", { name: /^Tree/ }).click();
+  await expect(page).toHaveURL(/\/components\/tree$/);
+  await expect(dialog).toBeHidden();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Tree");
+
+  // From the header, Enter opens the first result.
+  await page.getByRole("button", { name: "Search the site" }).click();
+  await dialog
+    .getByRole("searchbox", { name: "Search the site" })
+    .fill("wayfinding");
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/examples\/wayfinding$/);
+  await expect(page.locator("main#main")).toBeFocused();
+
+  // Nothing found says so.
+  await page.keyboard.press("Control+k");
+  await dialog.getByRole("searchbox", { name: "Search the site" }).fill("zzzz");
+  await expect(dialog.getByText(/Nothing has “zzzz”/)).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
 });
 
 test.describe("component reference", () => {

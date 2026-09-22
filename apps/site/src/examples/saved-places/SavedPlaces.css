@@ -1,0 +1,13 @@
+/* Saved places: a column. Layout only. */
+
+.ex-saved {
+  min-block-size: 100%;
+  padding: var(--site-space-600) var(--site-space-300) var(--site-space-900);
+  max-inline-size: 44rem;
+  margin-inline: auto;
+}
+
+.ex-saved-form {
+  display: grid;
+  gap: var(--site-space-300);
+}

@@ -17,6 +17,9 @@ export const exampleComponents: Record<string, ComponentType> = {
   booking: lazy(() => import("./booking/Booking")),
   notifications: lazy(() => import("./notifications/Notifications")),
   onboarding: lazy(() => import("./onboarding/Onboarding")),
+  states: lazy(() => import("./states/States")),
+  "feedback-survey": lazy(() => import("./feedback-survey/FeedbackSurvey")),
+  "saved-places": lazy(() => import("./saved-places/SavedPlaces")),
 };
 
 /** The canvas an example is drawn on when shown small. */

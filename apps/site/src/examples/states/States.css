@@ -1,0 +1,31 @@
+/* States: one card and the switch above it; the loading rows are shapes.
+   Layout only. */
+
+.ex-states {
+  min-block-size: 100%;
+  padding: var(--site-space-600) var(--site-space-300) var(--site-space-900);
+  max-inline-size: 44rem;
+  margin-inline: auto;
+}
+
+.ex-states-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--site-space-200);
+}
+
+.ex-states-disc {
+  inline-size: calc(var(--primitives-layout-sizing-600) * 1px);
+  block-size: calc(var(--primitives-layout-sizing-600) * 1px);
+  border-radius: var(--site-radius-pill);
+}
+
+.ex-states-line {
+  block-size: calc(var(--primitives-layout-sizing-200) * 1px);
+  inline-size: 100%;
+}
+
+.ex-states-line-short {
+  inline-size: 55%;
+}

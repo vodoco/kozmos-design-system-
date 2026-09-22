@@ -53,6 +53,7 @@ purpose, because hiding it would hide the evidence).
 | GAP-34 | `Backdrop` pins itself to the viewport                        | Core                   | composed     |
 | GAP-35 | `BrowseCategoriesPanel` is four columns at any width          | Product / SDK          | composed     |
 | GAP-36 | `ToastViewport` pins itself to the viewport                   | Core                   | composed     |
+| GAP-37 | `SearchBar` shows the browser's clear button beside its own   | Product / SDK          | left visible |
 
 ---
 
@@ -514,3 +515,18 @@ purpose, because hiding it would hide the evidence).
 - **Fix in Kozmos:** a `placement` prop (`viewport` | `container`), as for
   `Backdrop` (GAP-34), `BottomNavigation` (GAP-29) and `DynamicIsland`
   (GAP-24) — the same family.
+
+## GAP-37 · `SearchBar` shows the browser's clear button beside its own
+
+- **What:** `SearchBar`'s field is `type="search"`, and it leaves the
+  browser's own cancel button in place: in Chromium the
+  `::-webkit-search-cancel-button` pseudo-element computes to
+  `display: block`, so once there is text the field shows two ways to clear
+  it — the browser's small cross inside the field, in the accent colour, and
+  Kozmos's own 44px clear button after it. Measured on the site's search
+  and the components index on 2026-09-22.
+- **Now:** left as Kozmos draws it, on every search field on the site.
+- **Lane:** Product / SDK.
+- **Fix in Kozmos:** `::-webkit-search-cancel-button { appearance: none }` in
+  the field's own CSS (not a scoped utility, so it reaches WebKit too,
+  GAP-20), since the component draws its own clear.

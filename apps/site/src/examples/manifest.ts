@@ -133,6 +133,39 @@ export const examples: readonly ExampleEntry[] = [
     ],
   },
   {
+    slug: "states",
+    title: "Loading, empty, error, offline",
+    kind: "page",
+    summary:
+      "One panel in every state a product meets: loading with a spinner and skeleton rows, ready, empty with a way out, failed with a retry, and offline with the saved copy while a sync keeps trying.",
+    gaps: [
+      "GAP-31 · The offline notice is a warning Alert, whose text measures 4.29:1 on the card; it is left as Kozmos draws it.",
+      "GAP-11 · EmptyState's title is not a heading, so the empty state reads as text under the card's heading.",
+    ],
+  },
+  {
+    slug: "feedback-survey",
+    title: "Feedback survey",
+    kind: "page",
+    summary:
+      "The SDK's rating card first, then two more questions: a likelihood slider, how the visitor found the way, what would have helped, a comment, and an email if they want to hear back.",
+    gaps: [
+      "GAP-13 · Textarea has no helper text, so the character count is a Text beside it.",
+      'GAP-12 · Alert is always role="alert"; the thanks pass role="status".',
+    ],
+  },
+  {
+    slug: "saved-places",
+    title: "Saved places",
+    kind: "page",
+    summary:
+      "A visitor's saved places by venue in a tree with a remove action per row, confirmed in a dialog and undone inline; and the car's spot, saved, routed to, or given a note.",
+    gaps: [
+      "GAP-36 · Toasts pin themselves to the browser's corner, outside the page, so the undo sits in an inline Alert instead.",
+      'GAP-12 · Alert is always role="alert"; the undo passes role="status".',
+    ],
+  },
+  {
     slug: "account-settings",
     title: "Account settings",
     kind: "page",

@@ -87,11 +87,14 @@ function TokenOverride() {
 }
 
 export const demos: DemoModule["demos"] = [
+  // The override first: the index shows a component's first demo small and
+  // clipped, and Firefox's axe reads a clipped dark surface as the background
+  // of the card text below it, which a light surface does not confuse.
+  { title: "Token overrides", Component: TokenOverride },
   {
     title: "A nested provider",
     description:
-      "A module boundary: its own theme and direction, never the document's. The provider is display: contents, so the Surface inside paints.",
+      "A module boundary: its own theme and direction, never the document’s. The provider is display: contents, so the Surface inside paints.",
     Component: Nested,
   },
-  { title: "Token overrides", Component: TokenOverride },
 ];

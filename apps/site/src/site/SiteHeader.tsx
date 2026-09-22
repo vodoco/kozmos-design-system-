@@ -1,6 +1,7 @@
 import { Box, Navbar, Text } from "@kozmos/react";
 import { SITE_NAME } from "../lib/site";
 import { SiteLink, SiteNavItem } from "./links";
+import { SiteSearch } from "./SiteSearch";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 
 export const primaryNavigation = [
@@ -30,7 +31,12 @@ export function SiteHeader() {
           ))}
         </Box>
       }
-      utilities={<ThemeSwitcher />}
+      utilities={
+        <Box className="site-header-utilities">
+          <ThemeSwitcher />
+          <SiteSearch />
+        </Box>
+      }
     />
   );
 }
