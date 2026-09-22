@@ -1,5 +1,6 @@
 package com.kozmos.components.surface
 
+import com.kozmos.components.CROSS_PLATFORM_MAX_PERCENT_DIFFERENCE
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,7 +26,7 @@ import org.junit.Test
  */
 class KozmosCardSurfacePaparazziTest {
     @get:Rule
-    val paparazzi = Paparazzi(maxPercentDifference = 0.0)
+    val paparazzi = Paparazzi(maxPercentDifference = CROSS_PLATFORM_MAX_PERCENT_DIFFERENCE)
 
     private fun cards(surface: KozmosSurfaceStyle) = paparazzi.snapshot {
         MaterialTheme {

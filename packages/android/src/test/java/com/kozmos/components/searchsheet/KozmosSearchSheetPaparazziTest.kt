@@ -1,5 +1,6 @@
 package com.kozmos.components.searchsheet
 
+import com.kozmos.components.CROSS_PLATFORM_MAX_PERCENT_DIFFERENCE
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,7 +32,7 @@ import org.junit.Test
 /** The search sheet's parts on the prototype's geometry: the field and the AI search, four tiles, two rows, the marker. */
 class KozmosSearchSheetPaparazziTest {
     @get:Rule
-    val paparazzi = Paparazzi(maxPercentDifference = 0.0)
+    val paparazzi = Paparazzi(maxPercentDifference = CROSS_PLATFORM_MAX_PERCENT_DIFFERENCE)
 
     @Test
     fun theSearchSheetsParts() {

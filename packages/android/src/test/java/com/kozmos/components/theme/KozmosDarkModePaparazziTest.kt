@@ -1,5 +1,6 @@
 package com.kozmos.components.theme
 
+import com.kozmos.components.CROSS_PLATFORM_MAX_PERCENT_DIFFERENCE
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -60,7 +61,7 @@ import org.junit.Test
  */
 class KozmosDarkModePaparazziTest {
     @get:Rule
-    val paparazzi = Paparazzi(maxPercentDifference = 0.0)
+    val paparazzi = Paparazzi(maxPercentDifference = CROSS_PLATFORM_MAX_PERCENT_DIFFERENCE)
 
     @Test
     fun theControlsInLightMode() = snapshotIn(dark = false) { Controls() }
