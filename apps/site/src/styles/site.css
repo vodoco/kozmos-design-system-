@@ -1,0 +1,1213 @@
+/*
+ * The site's own stylesheet: layout, and type sizes the components cannot
+ * reach.
+ *
+ * Every colour, radius, shadow and spacing value here is a Kozmos token, and
+ * so are the controls' and markers' sizes. The widths and heights of frames
+ * and columns (a 27rem scene, a 52rem line length) are rem values: the
+ * sizing scale stops at 80px. Components carry their own styles; this file
+ * arranges them on the page. Typography appears only where a heading needs a
+ * size the token scale has and the Heading component does not (GAPS.md,
+ * GAP-21), and then only through the typography tokens.
+ * `pnpm --filter @kozmos/site lint` enforces the rest
+ * (scripts/check-ds-only.mjs).
+ */
+
+/* Spacing aliases: the layout spacing tokens are unitless, like the semantic
+   radii, so they are converted once here. */
+:root {
+  --site-space-50: calc(var(--primitives-layout-spacing-50) * 1px);
+  --site-space-100: calc(var(--primitives-layout-spacing-100) * 1px);
+  --site-space-150: calc(var(--primitives-layout-spacing-150) * 1px);
+  --site-space-200: calc(var(--primitives-layout-spacing-200) * 1px);
+  --site-space-300: calc(var(--primitives-layout-spacing-300) * 1px);
+  --site-space-400: calc(var(--primitives-layout-spacing-400) * 1px);
+  --site-space-600: calc(var(--primitives-layout-spacing-600) * 1px);
+  --site-space-700: calc(var(--primitives-layout-spacing-700) * 1px);
+  --site-space-900: calc(var(--primitives-layout-spacing-900) * 1px);
+  --site-radius-control: calc(var(--semantics-radius-control) * 1px);
+  --site-radius-container: calc(var(--semantics-radius-container) * 1px);
+  --site-radius-panel: calc(var(--semantics-radius-panel) * 1px);
+  --site-radius-pill: calc(var(--semantics-radius-pill) * 1px);
+  /* The Navbar's own minimum is 4rem; the token is 64, pixels at the
+     default 16px root, so it is taken in rem and follows the visitor's
+     font size as the Navbar does. */
+  --site-header-height: calc(var(--primitives-layout-sizing-800) / 16 * 1rem);
+}
+
+/* The document sits outside every ThemeProvider. root.tsx mirrors the
+   resolved theme onto <html data-theme>, which the tokens' dark stylesheet
+   keys on. */
+html {
+  color-scheme: light;
+  background: var(--primitives-colors-background-0);
+  /* A link to a part of a page (/get-started#checks) lands below the sticky
+     header, not under it. The header is one 4rem row from 360px up; at
+     320px the Navbar wraps it to two (GAP-41) and covers a little more. */
+  scroll-padding-block-start: calc(
+    var(--site-header-height) + var(--site-space-200)
+  );
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+}
+
+/* ---- Type from tokens (GAP-21) ---------------------------------------- */
+
+/* The tokens carry a 60px h1 and a 48px h2; Heading stops at 36px. These
+   classes put the token sizes on a Heading; the weight stays the Heading's. */
+.site-display {
+  font-size: calc(var(--primitives-typography-font-size-headings-h1) * 1px);
+  line-height: calc(var(--primitives-typography-line-height-700) * 1px);
+  letter-spacing: calc(
+    var(--primitives-typography-letter-spacing-compact) * 1px
+  );
+  text-wrap: balance;
+}
+
+.site-title {
+  font-size: calc(var(--primitives-typography-font-size-headings-h2) * 1px);
+  line-height: calc(var(--primitives-typography-line-height-600) * 1px);
+  letter-spacing: calc(
+    var(--primitives-typography-letter-spacing-compact) * 1px
+  );
+  text-wrap: balance;
+}
+
+.site-headline {
+  font-size: calc(var(--primitives-typography-font-size-headings-h3) * 1px);
+  line-height: calc(var(--primitives-typography-line-height-500) * 1px);
+  letter-spacing: calc(
+    var(--primitives-typography-letter-spacing-default) * 1px
+  );
+  text-wrap: balance;
+}
+
+@media (max-width: 48rem) {
+  .site-display {
+    font-size: calc(var(--primitives-typography-font-size-headings-h2) * 1px);
+    line-height: calc(var(--primitives-typography-line-height-600) * 1px);
+  }
+
+  .site-title {
+    font-size: calc(var(--primitives-typography-font-size-headings-h3) * 1px);
+    line-height: calc(var(--primitives-typography-line-height-500) * 1px);
+  }
+
+  .site-headline {
+    font-size: calc(var(--primitives-typography-font-size-headings-h4) * 1px);
+    line-height: calc(var(--primitives-typography-line-height-400) * 1px);
+  }
+}
+
+/* A specimen at a token size: the page sets --size and --lh from tokens. */
+.site-specimen {
+  font-size: calc(var(--size) * 1px);
+  line-height: calc(var(--lh) * 1px);
+  text-wrap: balance;
+}
+
+.site-mono {
+  font-family: var(--semantics-typography-family-mono);
+}
+
+/* ---- Shell ------------------------------------------------------------ */
+
+.site-shell {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 100dvh;
+  background: var(--primitives-colors-background-0);
+}
+
+.site-main {
+  flex: 1 0 auto;
+  min-inline-size: 0;
+}
+
+/* Focus moves to the content after a navigation (SiteShell): to main, or to
+   the section a link names. It is a starting point for the keyboard, not a
+   control, so it shows no ring. */
+.site-main:focus,
+.site-section:focus {
+  outline: none;
+}
+
+/* GAP-06: Kozmos has no skip link or visually-hidden primitive. The link is
+   a Kozmos Link in the header's first slot (SiteHeader); this keeps it above
+   the header, out of sight, until it has focus, then shows it over the logo
+   on the header's own surface. Inside the header it is drawn on the
+   header's layer; before it, on the same layer, it was painted under it. */
+.site-skip-link {
+  position: absolute;
+  inset-inline-start: var(--site-space-200);
+  inset-block-start: var(--site-space-150);
+  z-index: var(--primitives-layer-10);
+  padding: var(--site-space-100) var(--site-space-200);
+  background: var(--primitives-colors-background-0);
+  box-shadow: var(--semantics-elevation-overlay);
+  transform: translateY(-200%);
+}
+
+.site-skip-link:focus {
+  transform: none;
+}
+
+/* The logo. Kozmos has no image or brand-mark primitive (GAP-10), so the
+   logo is a Box painted in the text colour through the logo's own shape:
+   it follows the theme like the words around it. The link becomes a block
+   of the logo's size: its focus ring then goes round the whole logo, not
+   round a line of text, and no line box adds a descender's space below it,
+   which would lift the logo off the header's centre line.
+
+   Below 48rem the header shows the logo's K alone. The full logo's second
+   line would be five pixels tall there, and the Navbar keeps 16rem for its
+   navigation slot, which leaves a phone's header too little room for it
+   beside the tools on one row (GAP-41). */
+.site-logo-link {
+  display: flex;
+}
+
+.site-logo {
+  block-size: calc(var(--primitives-layout-sizing-400) * 1px);
+  /* Each shape's own proportions: the viewBox of kozmos-mark.svg, then of
+     kozmos-logo.svg (src/brand). */
+  aspect-ratio: 272.5726 / 293.54;
+  background-color: var(--primitives-colors-foreground-0);
+  mask: url("../brand/kozmos-mark.svg") center / contain no-repeat;
+  /* Printing drops backgrounds by default; the logo is one. */
+  print-color-adjust: exact;
+}
+
+@media (min-width: 48rem) {
+  .site-logo {
+    block-size: calc(var(--primitives-layout-sizing-500) * 1px);
+    aspect-ratio: 1605.6736 / 442.27;
+    mask-image: url("../brand/kozmos-logo.svg");
+  }
+}
+
+/* High-contrast modes replace every background with the page's own colour,
+   which would paint the logo invisible; it takes the system's text colour
+   instead. */
+@media (forced-colors: active) {
+  .site-logo {
+    forced-color-adjust: none;
+    background-color: CanvasText;
+  }
+}
+
+/* The header's one row: the page links, then the tools at the far end.
+   Below 48rem the links move into the drawer and only the tools remain. */
+.site-header-bar {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--site-space-200);
+}
+
+.site-header-links {
+  display: none;
+  gap: var(--site-space-100);
+}
+
+.site-header-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--site-space-50);
+  margin-inline-start: auto;
+}
+
+.site-header-drawer-nav {
+  padding: var(--site-space-200);
+}
+
+@media (min-width: 48rem) {
+  .site-header-links {
+    display: flex;
+  }
+
+  .site-header-menu {
+    display: none;
+  }
+}
+
+/* The search dialog's results, in their own scroll; the dialog spaces its
+   parts itself. */
+.site-search-results {
+  max-block-size: 24rem;
+  overflow: auto;
+}
+
+/* ---- Reference pages: sidebar beside content -------------------------- */
+
+.site-docs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  flex: 1 0 auto;
+}
+
+/* The sidebar's own display comes from its scoped utilities (GAP-04), so
+   the wrapper is what hides and shows it. */
+.site-docs-aside {
+  display: none;
+}
+
+.site-docs-toolbar {
+  padding: var(--site-space-200) var(--site-space-200) 0;
+}
+
+.site-docs-body {
+  min-inline-size: 0;
+}
+
+@media (min-width: 64rem) {
+  .site-docs {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .site-docs-aside {
+    display: block;
+    position: sticky;
+    top: var(--site-header-height);
+    align-self: start;
+    max-block-size: calc(100dvh - var(--site-header-height));
+    overflow-y: auto;
+  }
+
+  .site-docs-toolbar {
+    display: none;
+  }
+}
+
+/* ---- Page structure --------------------------------------------------- */
+
+/* Every single-column grid below says minmax(0, 1fr): an implicit column
+   grows to its widest child's minimum width (a row of tabs, a line of code),
+   pushing the whole page sideways on a phone. With it, wide children scroll
+   inside their own ScrollArea instead. */
+.site-page {
+  padding-block: var(--site-space-600) var(--site-space-900);
+}
+
+.site-page-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-200);
+  max-inline-size: 52rem;
+  margin-block-end: var(--site-space-600);
+}
+
+/* A component's name is one word ("AdaptiveMapShell"); at 320px it is wider
+   than the column, so it may break rather than widen the page. */
+.site-page-header .site-title {
+  overflow-wrap: anywhere;
+}
+
+.site-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-300);
+}
+
+.site-section + .site-section {
+  margin-block-start: var(--site-space-700);
+}
+
+.site-section-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-100);
+  max-inline-size: 52rem;
+}
+
+/* GAP-04: Grid takes a fixed column count, with no responsive or auto-fit
+   axis, and a caller's class cannot replace its template: its utilities are
+   scoped as `:scope .grid-cols-none`, which outranks any single class. So the
+   site's card grids are a Box laid out here. */
+.site-grid {
+  display: grid;
+  gap: var(--site-space-200);
+}
+
+.site-grid-auto {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+}
+
+/* Lists that grow one card at a time keep their card width: auto-fill leaves
+   the empty tracks in place instead of stretching a lone card. */
+.site-grid-wide {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+}
+
+/* Three cards: one row from a small tablet up, auto-fit so they always
+   fill it, one column on a phone. */
+.site-grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+}
+
+/* Four cards: two by two, or four in a row where there is room for them. */
+.site-grid-4 {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 40rem) {
+  .site-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 72rem) {
+  .site-grid-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.site-card-fill {
+  block-size: 100%;
+}
+
+/* The CI checks, short: two to a row, each a check mark and its name. The
+   commands and what each check does are on Get started (#checks). */
+.site-checklist {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-200) var(--site-space-600);
+}
+
+@media (min-width: 48rem) {
+  .site-checklist {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.site-check {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--site-space-150);
+}
+
+/* A full-bleed band. The home page alternates plain and muted bands, all
+   with the same padding, so every section starts the same distance from the
+   one before it. */
+.site-band {
+  padding-block: var(--site-space-700);
+}
+
+/* Its hairlines are Separators (Band.tsx): in the dark theme the tint alone
+   is 1.04:1 against the page. */
+.site-band-muted {
+  background: var(--primitives-colors-background-25);
+}
+
+/* Content revealed as it scrolls into view. Only once the page has hydrated
+   (root.tsx sets data-theme on <html>); the pre-rendered page shows all. */
+html[data-theme] .site-reveal:not([data-shown="true"]) {
+  opacity: var(--primitives-opacity-0);
+  transform: translateY(calc(var(--semantics-motion-slide-md) * 2px));
+}
+
+.site-reveal {
+  transition:
+    opacity var(--semantics-motion-duration-deliberate)
+      var(--semantics-motion-easing-standard),
+    transform var(--semantics-motion-duration-deliberate)
+      var(--semantics-motion-easing-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .site-reveal:not([data-shown="true"]) {
+    opacity: var(--primitives-opacity-100);
+    transform: none;
+  }
+
+  .site-reveal {
+    transition: none;
+  }
+}
+
+/* ---- Home: hero ------------------------------------------------------- */
+
+.site-hero {
+  display: grid;
+  gap: var(--site-space-600);
+  align-items: start;
+  padding-block: var(--site-space-600);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+}
+
+.site-hero-copy {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-300);
+  justify-items: start;
+}
+
+.site-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--site-space-150);
+}
+
+/* The scene: a map drawn from Kozmos parts, in its own theme, and the strip
+   with its two switches, in one rounded frame. The frame isolates its
+   stacking: the map's overlays are z-index 50, as the sticky Navbar is, and
+   would otherwise draw over the header as the page scrolls (GAPS.md,
+   GAP-40). */
+/* The frame's corners are the map's own (MapView is rounded-container), so
+   its clip follows the map's edge instead of cutting through it. */
+.site-scene-frame {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  inline-size: 100%;
+  border-radius: var(--site-radius-container);
+  overflow: hidden;
+  box-shadow: var(--semantics-elevation-overlay);
+}
+
+/* A fixed height, not an aspect ratio: with a minimum height, an aspect
+   ratio makes the width follow the height and the frame overflows a narrow
+   column. MapView asks for 400px of height; this gives it that and more. */
+.site-scene-map {
+  position: relative;
+  block-size: 27rem;
+}
+
+/* A Surface's shape is the caller's. The frame clips its corners round; the
+   bar's corners follow them, or its edge stops where the curve starts —
+   plain on a dark page, where the frame's shadow does not show. */
+.site-scene-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--site-space-150) var(--site-space-300);
+  padding: var(--site-space-150) var(--site-space-300);
+  border-end-start-radius: var(--site-radius-container);
+  border-end-end-radius: var(--site-radius-container);
+}
+
+.site-scene-toggle {
+  flex: none;
+}
+
+.site-scene-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.site-scene-pin {
+  position: absolute;
+  left: calc(50% + (var(--pin-x) - 50%) * var(--zoom, 1));
+  top: calc(50% + (var(--pin-y) - 50%) * var(--zoom, 1));
+  transform: translate(-50%, -100%);
+  animation: site-pin-in var(--semantics-motion-duration-deliberate)
+    var(--semantics-motion-easing-emphasised) both;
+  animation-delay: calc(var(--i) * var(--semantics-motion-duration-quick));
+  transition:
+    left var(--semantics-motion-duration-standard)
+      var(--semantics-motion-easing-standard),
+    top var(--semantics-motion-duration-standard)
+      var(--semantics-motion-easing-standard);
+}
+
+.site-scene-user {
+  transform: translate(-50%, -50%);
+  animation-name: site-marker-in;
+}
+
+@keyframes site-pin-in {
+  from {
+    opacity: var(--primitives-opacity-0);
+    transform: translate(
+      -50%,
+      calc(-100% - var(--semantics-motion-slide-md) * 2px)
+    );
+  }
+}
+
+@keyframes site-marker-in {
+  from {
+    opacity: var(--primitives-opacity-0);
+    transform: translate(-50%, -50%) scale(var(--semantics-motion-enter));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-scene-pin {
+    animation: none;
+    transition: none;
+  }
+}
+
+.site-scene-step {
+  padding: var(--site-space-150) var(--site-space-200);
+  border-radius: var(--site-radius-container);
+}
+
+/* ---- Home: the live tiles --------------------------------------------- */
+
+.site-bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--site-space-200);
+}
+
+.site-tile {
+  grid-column: span 12;
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+@media (min-width: 48rem) {
+  .site-tile-4,
+  .site-tile-6 {
+    grid-column: span 6;
+  }
+}
+
+@media (min-width: 64rem) {
+  .site-tile-4 {
+    grid-column: span 4;
+  }
+
+  .site-tile-6 {
+    grid-column: span 6;
+  }
+
+  .site-tile-8 {
+    grid-column: span 8;
+  }
+}
+
+.site-tile-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--site-space-200);
+  padding: 0 var(--site-space-300) var(--site-space-300);
+}
+
+/* Swatches: a Box whose colour is a token passed as --swatch. */
+.site-swatch-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: var(--site-space-50);
+}
+
+.site-swatch-cell {
+  aspect-ratio: 1;
+  border-radius: calc(var(--semantics-radius-marker) * 1px);
+  background: var(--swatch);
+  transition: background-color var(--semantics-motion-duration-standard)
+    var(--semantics-motion-easing-standard);
+}
+
+.site-swatch-cell-wide {
+  aspect-ratio: 2 / 1;
+}
+
+.site-type-scale {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--site-space-100);
+}
+
+.site-emotions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--site-space-100);
+}
+
+/* A part that fills the width it is given: a button in a grid cell or a
+   card. Kozmos's own w-full is an internal class, not an interface. */
+.site-fill {
+  inline-size: 100%;
+}
+
+/* The adaptive shell inside a container the visitor sizes. It draws nothing
+   of its own: the map's and the panel's edges show its extent, and a
+   rounded clip would cut the bottom sheet's square corners (GAP-53). */
+.site-adaptive-host {
+  inline-size: min(100%, calc(var(--host-width) * 1px));
+  block-size: 20rem;
+  margin-inline: auto;
+  transition: inline-size var(--semantics-motion-duration-standard)
+    var(--semantics-motion-easing-standard);
+}
+
+.site-adaptive-panel {
+  padding: var(--site-space-300);
+  display: grid;
+  gap: var(--site-space-100);
+}
+
+.site-adaptive-map {
+  display: grid;
+  place-items: center;
+  block-size: 100%;
+}
+
+/* The motion track: a marker travels it at the chosen duration and easing. */
+.site-track {
+  position: relative;
+  block-size: calc(var(--primitives-layout-sizing-700) * 1px);
+  border-radius: var(--site-radius-pill);
+  background: var(--primitives-colors-background-100);
+}
+
+.site-runner {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: var(--site-space-100);
+  transform: translateY(-50%);
+  transition: inset-inline-start
+    var(--dur, var(--semantics-motion-duration-standard))
+    var(--ease, var(--semantics-motion-easing-standard));
+}
+
+.site-track[data-end="true"] .site-runner {
+  inset-inline-start: calc(
+    100% - var(--primitives-layout-sizing-700) * 1px + var(--site-space-100)
+  );
+}
+
+.site-track-lane {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-50);
+}
+
+/* Contrast samples: the pair's own colours, as text on its surface. */
+.site-pair {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--site-space-200);
+}
+
+/* A sample is a Surface, whose edge keeps a sample the page's own colour
+   visible; the provider's preflight zeroes a plain box's border (GAP-52).
+   The pair's colours fill it from inside. */
+.site-pair-sample {
+  inline-size: calc(var(--primitives-layout-sizing-800) * 1px);
+  block-size: calc(var(--primitives-layout-sizing-600) * 1px);
+  display: grid;
+  border-radius: var(--site-radius-control);
+  overflow: hidden;
+}
+
+.site-pair-fill {
+  display: grid;
+  place-items: center;
+  background: var(--pair-bg);
+}
+
+/* Text sets its own colour class; the sample's letters take the pair's. */
+.site-pair-sample .site-pair-text {
+  color: var(--pair-fg);
+}
+
+/* Glass over the category colours. */
+.site-glass-stage {
+  position: relative;
+  min-block-size: 15rem;
+  overflow: hidden;
+  border-radius: var(--site-radius-container);
+  background: var(--primitives-colors-background-25);
+}
+
+.site-blob {
+  position: absolute;
+  inline-size: 9rem;
+  block-size: 9rem;
+  border-radius: var(--site-radius-pill);
+  background: var(--blob);
+  left: var(--x);
+  top: var(--y);
+  transform: translate(-50%, -50%);
+}
+
+.site-glass-card {
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-start: 50%;
+  transform: translate(-50%, -50%);
+  inline-size: min(100%, 18rem);
+  padding: var(--site-space-300);
+  border-radius: var(--site-radius-container);
+  display: grid;
+  gap: var(--site-space-100);
+}
+
+.site-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(3rem, 1fr));
+  gap: var(--site-space-100);
+}
+
+.site-icon-cell {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: var(--site-radius-control);
+  background: var(--primitives-colors-background-25);
+}
+
+/* ---- Home: make it yours --------------------------------------------- */
+
+.site-brand {
+  display: grid;
+  gap: var(--site-space-400);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  align-items: start;
+}
+
+.site-brand-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-300);
+}
+
+.site-brand-app {
+  padding: var(--site-space-300);
+  border-radius: var(--site-radius-panel);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-300);
+}
+
+/* ---- Home: example miniatures ---------------------------------------- */
+
+/* The example itself, rendered small: the canvas is the example's real size
+   and the frame scales it to its own width (the script sets --scale). */
+.site-miniature {
+  position: relative;
+  aspect-ratio: var(--w) / var(--h);
+  overflow: hidden;
+  border-radius: var(--site-radius-container) var(--site-radius-container) 0 0;
+  background: var(--primitives-colors-background-25);
+  pointer-events: none;
+  user-select: none;
+}
+
+.site-miniature-canvas {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  inline-size: calc(var(--w) * 1px);
+  block-size: calc(var(--h) * 1px);
+  transform-origin: 0 0;
+  transform: scale(var(--scale));
+}
+
+.site-miniature-loading {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+/* Cards in a row are stretched to the tallest; the rows start at the top so
+   a shorter card keeps its spare height below its text, not above its title. */
+.site-example-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  overflow: hidden;
+}
+
+/* ---- Code ------------------------------------------------------------- */
+
+/* GAP-05: there is no code block in Kozmos. This is a Surface holding a
+   ScrollArea and a <pre>; the monospace family comes from the provider's
+   own scoped preflight. */
+.site-code {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-inline-size: 0;
+  border-radius: var(--site-radius-container);
+  overflow: hidden;
+}
+
+.site-code-bar {
+  padding-block: var(--site-space-100);
+  padding-inline: var(--site-space-200) var(--site-space-100);
+}
+
+.site-code-body {
+  max-block-size: 32rem;
+}
+
+.site-code-pre {
+  padding: var(--site-space-200);
+}
+
+/* ---- Foundations ------------------------------------------------------ */
+
+.site-ramp {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 6rem), 1fr));
+  gap: var(--site-space-100);
+}
+
+.site-swatch {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-50);
+  min-inline-size: 0;
+}
+
+/* A swatch is a Surface, whose edge keeps white on white and black on black
+   visible; the provider's preflight zeroes a plain box's border (GAP-52).
+   The colour fills it from inside. */
+.site-swatch-colour {
+  display: grid;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--site-radius-control);
+  overflow: hidden;
+}
+
+.site-swatch-fill {
+  background: var(--swatch);
+}
+
+.site-swatch-large {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--site-space-200);
+}
+
+.site-swatch-large .site-swatch-colour {
+  inline-size: calc(var(--primitives-layout-sizing-1000) * 1px);
+  aspect-ratio: 1;
+}
+
+.site-bar {
+  block-size: calc(var(--primitives-layout-sizing-200) * 1px);
+  inline-size: min(100%, calc(var(--len) * 1px));
+  border-radius: calc(var(--semantics-radius-marker) * 1px);
+  background: var(--primitives-colors-theme-600);
+}
+
+/* A scale's row inside a ListItem: the name, the bar, the value. */
+.site-scale-row {
+  flex: 1;
+  min-inline-size: 0;
+  display: grid;
+  grid-template-columns: minmax(6rem, auto) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--site-space-200);
+}
+
+/* A shape is a Surface, so its edge draws the corner (GAP-52, as for the
+   swatches); the tint fills it from inside. */
+.site-shape {
+  display: grid;
+  inline-size: calc(var(--primitives-layout-sizing-1000) * 1px);
+  block-size: calc(var(--primitives-layout-sizing-1000) * 1px);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.site-shape-fill {
+  background: var(--primitives-colors-theme-0);
+}
+
+.site-shape-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--site-space-300);
+  align-items: end;
+}
+
+.site-shape-cell {
+  display: grid;
+  gap: var(--site-space-50);
+  justify-items: center;
+}
+
+.site-elevated {
+  box-shadow: var(--shadow);
+}
+
+.site-opacity {
+  inline-size: calc(var(--primitives-layout-sizing-800) * 1px);
+  block-size: calc(var(--primitives-layout-sizing-800) * 1px);
+  border-radius: var(--site-radius-control);
+  background: var(--primitives-colors-theme-600);
+  opacity: var(--level);
+}
+
+.site-side-by-side {
+  display: grid;
+  gap: var(--site-space-300);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}
+
+.site-theme-sample {
+  padding: var(--site-space-300);
+  border-radius: var(--site-radius-panel);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-200);
+}
+
+/* ---- Footer ----------------------------------------------------------- */
+
+/* GAP-08: Kozmos has no footer; this one is Container, Stack, Text and Link. */
+.site-footer {
+  padding-block: var(--site-space-400);
+}
+
+.site-footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--site-space-300);
+}
+
+/* ---- Examples --------------------------------------------------------- */
+
+.site-example-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-200);
+  padding-block: var(--site-space-400) var(--site-space-300);
+}
+
+/* The example is drawn on its own canvas, edge to edge: a frame of definite
+   height that scrolls inside, like a device preview. An app needs the height
+   (AdaptiveMapShell fills its parent), and a page needs the frame: its own
+   Navbar is always sticky (GAP-19) and would otherwise stick over the site's
+   header while the page scrolls past the example. */
+.site-example-canvas {
+  isolation: isolate;
+  block-size: min(56rem, calc(100dvh - var(--site-space-900)));
+  min-block-size: 32rem;
+  overflow: auto;
+}
+
+.site-example-canvas[data-kind="app"] {
+  min-block-size: 36rem;
+  overflow: hidden;
+}
+
+.site-example-details {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-600);
+  padding-block: var(--site-space-600) var(--site-space-900);
+}
+
+/* ---- Status pages ----------------------------------------------------- */
+
+.site-status {
+  display: grid;
+  place-items: center;
+  min-block-size: 50dvh;
+  padding-block: var(--site-space-700);
+}
+
+/* ---- Component reference ---------------------------------------------- */
+
+.site-docs-group {
+  padding-inline: var(--site-space-150);
+  padding-block-start: var(--site-space-100);
+}
+
+.site-docs-drawer-nav {
+  padding: 0 var(--site-space-300) var(--site-space-300);
+  overflow-y: auto;
+}
+
+.site-demos {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-300);
+}
+
+.site-demo-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  overflow: hidden;
+}
+
+/* Every frame that hosts a demo or an example isolates its stacking, as the
+   hero scene's does: Kozmos's map overlays use z-index 50, the sticky Navbar
+   too, and a later overlay would draw over the header (GAPS.md, GAP-40). */
+
+/* The stage an example is drawn on: the muted background, so a component's
+   own surface reads against it. */
+.site-demo-stage {
+  isolation: isolate;
+  padding: var(--site-space-300);
+  background: var(--primitives-colors-background-25);
+  min-inline-size: 0;
+  overflow-x: auto;
+}
+
+.site-demo-stage-tall {
+  min-block-size: 30rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.site-demo-loading {
+  block-size: calc(var(--primitives-layout-sizing-1000) * 1px);
+  inline-size: 100%;
+}
+
+/* The index's preview: a component's first example, small and inert. */
+.site-preview {
+  isolation: isolate;
+  block-size: 12rem;
+  overflow: hidden;
+  padding: var(--site-space-300);
+  background: var(--primitives-colors-background-25);
+  pointer-events: none;
+  user-select: none;
+}
+
+.site-prev-next {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--site-space-300);
+  margin-block-start: var(--site-space-700);
+}
+
+/* A row of parts in a demo, wrapping; a column of them; a bounded box. */
+.site-demo-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--site-space-150);
+}
+
+.site-demo-column {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-200);
+  max-inline-size: 28rem;
+}
+
+.site-demo-wide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-200);
+}
+
+.site-demo-map {
+  position: relative;
+  block-size: 100%;
+  min-block-size: 26rem;
+}
+
+.site-demo-pin {
+  position: absolute;
+  left: var(--pin-x);
+  top: var(--pin-y);
+  transform: translate(-50%, -100%);
+}
+
+.site-demo-scroll {
+  block-size: 12rem;
+}
+
+/* Shapes for the skeleton demo, and a row tall enough for a vertical rule.
+   Skeleton's corners are its own (a scoped utility, GAP-04): a disc is a
+   round box that clips it, and the lines and the block keep Kozmos's
+   rounding. */
+.site-skeleton-disc {
+  inline-size: calc(var(--primitives-layout-sizing-600) * 1px);
+  block-size: calc(var(--primitives-layout-sizing-600) * 1px);
+  border-radius: var(--site-radius-pill);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.site-skeleton-fill {
+  block-size: 100%;
+}
+
+.site-skeleton-lines {
+  flex: 1;
+}
+
+.site-skeleton-line {
+  block-size: calc(var(--primitives-layout-sizing-200) * 1px);
+  inline-size: 100%;
+}
+
+.site-skeleton-line-short {
+  inline-size: 60%;
+}
+
+.site-skeleton-block {
+  block-size: calc(var(--primitives-layout-sizing-800) * 2px);
+  inline-size: 100%;
+}
+
+.site-demo-scroll-row {
+  block-size: calc(var(--primitives-layout-sizing-600) * 1px);
+}
+
+/* A stage for pins, which position themselves (LocationPin is absolute, tip
+   on its anchor): tall enough for a large pin, or one with a label above. */
+.site-demo-pins {
+  position: relative;
+  inline-size: 100%;
+  block-size: 6rem;
+}
+
+.site-demo-pins-tall {
+  block-size: 9rem;
+}
+
+/* The map shell needs a height to lay out in; the layer fills MapView's inset
+   region so pins can sit at percentages, as the venue example's does. */
+.site-demo-shell {
+  position: relative;
+  block-size: 34rem;
+}
+
+/* A POIResultList brings no padding; Kozmos's own panels pad by 16px. */
+.site-demo-panel {
+  padding: var(--site-space-200);
+}
+
+.site-demo-layer {
+  position: absolute;
+  top: var(--kozmos-map-inset-top, 0px);
+  right: var(--kozmos-map-inset-right, 0px);
+  bottom: var(--kozmos-map-inset-bottom, 0px);
+  left: var(--kozmos-map-inset-left, 0px);
+}
+
+.site-demo-centred {
+  display: grid;
+  place-items: center;
+  padding: var(--site-space-300);
+}
+
+.site-demo-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  gap: var(--site-space-150);
+}
+
+.site-demo-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: var(--site-space-150);
+  inline-size: 100%;
+}
