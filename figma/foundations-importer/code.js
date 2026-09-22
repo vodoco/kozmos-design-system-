@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "0b64d5867d71";
+const PLUGIN_BUILD = "6fdc2ffbc635";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -47197,9 +47197,16 @@ async function setBrowseCategoriesPanelTileIcon(
   if (!setInstanceSwapProperty(tile, componentSet, "Icon", symbol.id, stats)) {
     return;
   }
-  const icon = tile.findOne(
-    (node) => node.type === "INSTANCE" && node.name === "Icon",
-  );
+  // The layer the Icon property drives, whatever the swap made of its name.
+  const icon =
+    tile.findOne(
+      (node) =>
+        node.type === "INSTANCE" &&
+        node.componentPropertyReferences &&
+        typeof node.componentPropertyReferences.mainComponent === "string" &&
+        node.componentPropertyReferences.mainComponent.split("#")[0] === "Icon",
+    ) ||
+    tile.findOne((node) => node.type === "INSTANCE" && node.name === "Icon");
   if (!icon) {
     stats.warnings.push(`${name}: no Icon layer to tint after the swap.`);
     return;

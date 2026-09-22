@@ -1127,7 +1127,11 @@ section("A set runs after the sets it reaches into");
   };
   const writersFound = new Set();
   lines.forEach((line, index) => {
-    const found = line.match(
+    // A declaration prettier breaks after its `=` continues on the next line.
+    const joined = /=\s*$/.test(line)
+      ? `${line} ${(lines[index + 1] || "").trim()}`
+      : line;
+    const found = joined.match(
       /const ([A-Za-z0-9_]+) =\s*([A-Za-z0-9_.]+)\.findOne\(/,
     );
     if (!found) return;
