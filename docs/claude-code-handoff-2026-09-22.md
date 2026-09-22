@@ -110,6 +110,25 @@ This section supersedes what it names below; the rest of the document stands.
   already done: `ThemeProvider` has no default storage key, and `style.css`'s reset is scoped
   (`ds-handoff.md` §6 items 10 and 9). Two native `@scope` blocks remain in `style.css`, so the
   browser range (§6 item 6 below) stands.
+- **npm, decided at 17:50 (Olcay): publish as `@kozmos-ds`.** Logged in as `vodoco` (a personal
+  account with no organisation until then and one old package, `pointr-design-system`), he created
+  the npm organisation `kozmos-ds`; `vodoco` is its only member and owner. **2FA is disabled on
+  `vodoco`**: his to turn on, with the organisation's 2FA enforcement, before the first publish.
+  The rename is on `claude/npm-scope-kozmos-ds` (worktree
+  `/Volumes/4TB Depo/development/K/kozmos-design-system-npm-scope`), stacked on
+  `claude/react-per-module-build` (pushed, `fb24774`), local, in three commits: `apps/docs` made private
+  (`15993a4`) (it was public, and the first
+  `changeset publish` would have published the Storybook app), eighteen files formatted alone (the
+  commit hook formats every file a commit touches; the code compiles byte-identical; `63c4d8b`), then
+  `@kozmos/` → `@kozmos-ds/` in 247 files and the lockfile (`ad491c2`; fifteen checks green, and
+  Code Connect's 131 snippets import `@kozmos-ds/react`). Left as they were: the dated reports
+  and the archive (records), and seventeen `.ai-skills` guides and `PROJECT_SCOPE.md`, which a
+  rename would reformat — prettier rewrites their malformed nested code fences — so they are a
+  docs change of their own. The website (#55) imports `@kozmos/react` and follows after the
+  merge. Order: #56, then the per-module PR, then the rename PR; then his `NPM_TOKEN`; then the
+  Version Packages PR publishes 0.1.0; then the React Code Connect republish, on his word.
+- **#56's CI at `c5ec97c` is green** — Web (the story audit, and steps 40–47 on CI for the first
+  time), iOS and Android; `analyze-bundle` is red as decided (the per-module PR replaces it).
 
 ## 0. In one screen
 
