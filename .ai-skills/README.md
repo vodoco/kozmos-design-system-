@@ -47,7 +47,7 @@
 
 | Document                                                     | Purpose                                                                | When to Use                                                 |
 | ------------------------------------------------------------ | ---------------------------------------------------------------------- | ----------------------------------------------------------- |
-| [mcp-server-specification.md](./mcp-server-specification.md) | MCP server design for `@kozmos/mcp-server` package                     | Building AI-powered tooling, integrating with Claude/Cursor |
+| [mcp-server-specification.md](./mcp-server-specification.md) | MCP server design for `@kozmos-ds/mcp-server` package                  | Building AI-powered tooling, integrating with Claude/Cursor |
 | [ai-integration-guide.md](./ai-integration-guide.md)         | Context files for Claude, Cursor, Anti Gravity, Copilot, Codeium, etc. | Setting up AI agents in consuming projects                  |
 
 ### Master Reference
@@ -86,11 +86,11 @@ Kozmos is a multi-platform design system for **Pointr's indoor navigation SDK**.
 ### npm Packages
 
 ```
-@kozmos/tokens     - Design tokens (CSS vars, Swift, Kotlin)
-@kozmos/react      - React components
-@kozmos/vue        - Vue 3 components (Web Components)
-@kozmos/react-native - React Native components
-@kozmos/icons      - Cross-platform icons
+@kozmos-ds/tokens     - Design tokens (CSS vars, Swift, Kotlin)
+@kozmos-ds/react      - React components
+@kozmos-ds/vue        - Vue 3 components (Web Components)
+@kozmos-ds/react-native - React Native components
+@kozmos-ds/icons      - Cross-platform icons
 ```
 
 ### File Structure

@@ -65,7 +65,7 @@ The Kozmos MCP Server exposes the design system to AI agents via the Model Conte
                                       │ MCP Protocol (JSON-RPC over stdio)
                                       │
 ┌─────────────────────────────────────┴───────────────────────────────────┐
-│                         @kozmos/mcp-server                              │
+│                         @kozmos-ds/mcp-server                              │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │
@@ -83,7 +83,7 @@ The Kozmos MCP Server exposes the design system to AI agents via the Model Conte
 │  │                      Data Layer                                  │  │
 │  │                                                                  │  │
 │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │  │
-│  │  │ @kozmos/     │  │ @kozmos/     │  │ .ai-skills/  │          │  │
+│  │  │ @kozmos-ds/     │  │ @kozmos-ds/     │  │ .ai-skills/  │          │  │
 │  │  │ tokens       │  │ react (etc.) │  │ (docs)       │          │  │
 │  │  └──────────────┘  └──────────────┘  └──────────────┘          │  │
 │  └─────────────────────────────────────────────────────────────────┘  │
@@ -135,10 +135,10 @@ packages/mcp-server/
 
 ```bash
 # Global installation (recommended for system-wide use)
-npm install -g @kozmos/mcp-server
+npm install -g @kozmos-ds/mcp-server
 
 # Or in a project
-pnpm add -D @kozmos/mcp-server
+pnpm add -D @kozmos-ds/mcp-server
 ```
 
 ### Configuration for Claude Desktop
@@ -150,7 +150,7 @@ pnpm add -D @kozmos/mcp-server
   "mcpServers": {
     "kozmos": {
       "command": "npx",
-      "args": ["@kozmos/mcp-server"],
+      "args": ["@kozmos-ds/mcp-server"],
       "env": {
         "KOZMOS_PROJECT_ROOT": "/path/to/your/project"
       }
@@ -167,7 +167,7 @@ pnpm add -D @kozmos/mcp-server
   "mcpServers": {
     "kozmos": {
       "command": "npx",
-      "args": ["@kozmos/mcp-server"],
+      "args": ["@kozmos-ds/mcp-server"],
       "cwd": "."
     }
   }
@@ -182,7 +182,7 @@ pnpm add -D @kozmos/mcp-server
   "servers": {
     "kozmos": {
       "command": "npx",
-      "args": ["@kozmos/mcp-server"],
+      "args": ["@kozmos-ds/mcp-server"],
       "cwd": "${workspaceFolder}"
     }
   }
@@ -198,7 +198,7 @@ pnpm add -D @kozmos/mcp-server
     "servers": [
       {
         "name": "kozmos",
-        "command": "npx @kozmos/mcp-server",
+        "command": "npx @kozmos-ds/mcp-server",
         "transport": "stdio"
       }
     ]
@@ -851,11 +851,11 @@ export async function loadKozmosData(): Promise<KozmosData> {
 
   // Try to load from installed packages first
   const tokensPath = resolvePackage(
-    "@kozmos/tokens/build/json/tokens.json",
+    "@kozmos-ds/tokens/build/json/tokens.json",
     projectRoot,
   );
   const componentsPath = resolvePackage(
-    "@kozmos/react/dist/components.json",
+    "@kozmos-ds/react/dist/components.json",
     projectRoot,
   );
 
@@ -906,7 +906,7 @@ function resolvePackage(packagePath: string, root: string): string | null {
   "mcpServers": {
     "kozmos": {
       "command": "npx",
-      "args": ["@kozmos/mcp-server"],
+      "args": ["@kozmos-ds/mcp-server"],
       "env": {
         "KOZMOS_PROJECT_ROOT": "${workspaceFolder}"
       }
@@ -923,7 +923,7 @@ function resolvePackage(packagePath: string, root: string): string | null {
   "servers": {
     "kozmos": {
       "command": "npx",
-      "args": ["@kozmos/mcp-server"],
+      "args": ["@kozmos-ds/mcp-server"],
       "cwd": "${workspaceFolder}"
     }
   }
@@ -937,7 +937,7 @@ function resolvePackage(packagePath: string, root: string): string | null {
 mcp:
   servers:
     - name: kozmos
-      command: npx @kozmos/mcp-server
+      command: npx @kozmos-ds/mcp-server
       transport: stdio
       env:
         KOZMOS_PROJECT_ROOT: .
@@ -952,7 +952,7 @@ import { spawn } from "child_process";
 
 const transport = new StdioClientTransport({
   command: "npx",
-  args: ["@kozmos/mcp-server"],
+  args: ["@kozmos-ds/mcp-server"],
 });
 
 const client = new Client({
@@ -1062,7 +1062,7 @@ export default {
 
 ```json
 {
-  "name": "@kozmos/mcp-server",
+  "name": "@kozmos-ds/mcp-server",
   "version": "1.0.0",
   "description": "MCP server for Kozmos Design System AI integration",
   "bin": {
@@ -1081,12 +1081,12 @@ export default {
     "zod-to-json-schema": "^3.22.0"
   },
   "peerDependencies": {
-    "@kozmos/tokens": "*",
-    "@kozmos/react": "*"
+    "@kozmos-ds/tokens": "*",
+    "@kozmos-ds/react": "*"
   },
   "peerDependenciesMeta": {
-    "@kozmos/tokens": { "optional": true },
-    "@kozmos/react": { "optional": true }
+    "@kozmos-ds/tokens": { "optional": true },
+    "@kozmos-ds/react": { "optional": true }
   },
   "files": ["dist", "bin"],
   "keywords": ["mcp", "model-context-protocol", "design-system", "kozmos", "ai"]

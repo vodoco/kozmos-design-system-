@@ -1,5 +1,5 @@
 ---
-"@kozmos/react": patch
+"@kozmos-ds/react": patch
 ---
 
 Use the shared 16px control radius throughout POI detail surfaces, chips and

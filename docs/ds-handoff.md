@@ -205,7 +205,7 @@ PR #17's iOS map-panel sheet and `apps/Playground.swiftpm`, and any product scre
 
 The table below is the **Claude handover baseline**, not the state of Astra's local feature branch.
 For the latter, React now has 360 passing tests in 104 files, and fourteen adaptive checks pass
-in each of Chromium and WebKit (`pnpm --filter @kozmos/react test`, `pnpm test:adaptive`,
+in each of Chromium and WebKit (`pnpm --filter @kozmos-ds/react test`, `pnpm test:adaptive`,
 `ADAPTIVE_BROWSER=webkit pnpm test:adaptive`). Fourteen overlay checks (seven components, default
 and explicit containers) also pass per engine (`pnpm test:overlays`, with the same browser selector).
 Native/Figma numbers below were not re-measured in
@@ -217,11 +217,11 @@ this implementation batch. The worktree is `/private/tmp/kozmos-astra-review.hwX
 | `origin/main`    | `a02a008`, followed only by the switch handoff's merge — every PR through #51 merged (`git log --oneline a02a008..origin/main`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | Open PRs         | **none** besides the switch handoff's own, until it merges (`gh pr list --state open`). Merged 2026-09-17, in order: #47 the map mode toggle, #48 `components:classes:check`, #49 npm publish readiness and `packages:install:check` — #49 after its textual conflict with #48 was resolved by keeping both lines, and both checks were verified together locally and in CI — then #50 and #51, this handoff                                                                                                                                                                                                                                                                                                                                                        |
 | Branches         | `origin` carries `main` and `codex/wayfinding-map-panel` — MAP-595's prototype, parked (§9). Everything merged has been deleted. The local `codex/wayfinding-map-panel` holds one commit `origin` does not, `0b3acfd`, from 2026-09-13 (`git branch -vv`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Packages         | `@kozmos/react` `tokens` `icons` `vue` `product-contracts`, all `0.0.1`, never published — `npm view @kozmos/react` is a 404 and `git tag` lists nothing. Since #49, `vue` is private, all five carry `license: MIT`, and the four public ones a LICENSE file and README (§4.5)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Packages         | `@kozmos-ds/react` `tokens` `icons` `vue` `product-contracts`, all `0.0.1`, never published — `npm view @kozmos-ds/react` is a 404 and `git tag` lists nothing. Since #49, `vue` is private, all five carry `license: MIT`, and the four public ones a LICENSE file and README (§4.5)                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | React components | 98 directories in `packages/react/src/components`, beside one file, `PlatformSnippets.tsx` (`STATUS.md`: **Core 69** · Code-only 5 · Product/SDK 22 · Platform 2). **353 React tests**; iOS **57** (`swift test`); Android **25** unit tests plus `verifyPaparazziDebug`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | Figma            | `Kozmos DS - Core Library` `Yj4O8p6Y9h2Sa9zJVoAiVY`, Components page `4:4`, MetaStrip `1890:8911`. `pnpm figma:verify` on 2026-09-17: **95 of 95 sets**, presence and variant drift clean. **Build coverage 71 of 95** on `dd9f78a05cc0`; the 24 on `3e597100b157` are the Product / SDK lane. Two standing findings: **5 children overflow their box** and **29 icons are typed as characters**. **`MapControlButton`'s `State=Pressed` still paints filled** while code renders tinted — `figma:verify` compares structure, not paint (§6)                                                                                                                                                                                                                        |
 | Tokens           | **641 light + 641 dark** (`docs/figma-library-manifest.json`), up 18 for `Semantics.Emotion` (#40). 1,412 variables in the file (last measured 2026-09-03). **18** values carry floating-point noise — four font sizes, five letter-spacings, one line height, one paragraph spacing, and seven unitless numbers                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Typecheck        | `pnpm --filter @kozmos/react typecheck`: **0 errors**, and since #27 it sees all 92 `*.figma.tsx` files. The package's `build` runs the same `tsc`, so CI catches a regression                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Typecheck        | `pnpm --filter @kozmos-ds/react typecheck`: **0 errors**, and since #27 it sees all 92 `*.figma.tsx` files. The package's `build` runs the same `tsc`, so CI catches a regression                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | Gates            | the eleven in §7 green on 2026-09-17, plus `pnpm native:check` and the STATUS check. Since #48 and #49, CI also runs `components:classes:check` — a ratchet at **62/40/27** — and `packages:install:check`. `tokens:raw:check` is a ratchet: 35 raw colours across 7 components, 7 raw radii across 6 — unchanged                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | Chromatic        | **snapshot limit** since early September — nothing has been visually compared since, including a shadow change across 27 components and #19's animation fix; `UI Tests` shows PENDING on every PR for that reason                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | CI on `main`     | green. CI and Release last ran on `e9f5069`, because #50 and #51 are documentation, which CI skips on a push; on `e9f5069`, CI (web, iOS and Android), Visual Regression, Bundle Size, Lighthouse and Release all succeeded, and the release job ran `packages:install:check` before skipping publish. `Release Kozmos System` runs after CI and skips publish while `NPM_TOKEN` is absent. **GitHub Actions refused every job on 2026-09-16 and 2026-09-17** — "recent account payments have failed or your spending limit needs to be increased", no steps run — until Olcay unblocked it on 2026-09-17. Runs now warn that `actions/checkout@v4`, `actions/setup-node@v4` and `pnpm/action-setup@v3` target Node 20, which is deprecated and forced onto Node 24 |
@@ -407,26 +407,27 @@ unblocking ones first.
 
 **#49 closed most of this list.** What it did, and what stays open, measured on 2026-09-17:
 
-| Item                                         | State                                                                                                                                                                                                                                                                                          |
-| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `LICENSE` and `license` fields               | #49: MIT, copyright **Vodoco** (§5.22). A LICENSE file at the root and in each of the four public packages — npm copies one only from a package's own directory, never the monorepo root — and a `license` field in all five                                                                   |
-| `@kozmos/vue` not published                  | #49 marks it `private` (§5.15) — before it, the first publish would have shipped it                                                                                                                                                                                                            |
-| README per package                           | #49: all four public packages, every claim checked against the built package, every code sample type-checked by the install check                                                                                                                                                              |
-| `repository`, `homepage`, `bugs`             | **ruled out** while the repository is private (§5.21) — they would 404. `description` and `keywords` added                                                                                                                                                                                     |
-| `@kozmos/tokens` exports                     | #49: `.` with separate ESM and CommonJS declarations (`tokens.d.mts` / `tokens.d.ts`), `./css/light.css`, `./css/dark.css`, `./dist/*` so every old deep import still resolves                                                                                                                 |
-| CSS entry                                    | #49: `@kozmos/react/style.css`, beside `./dist/style.css`                                                                                                                                                                                                                                      |
-| A pack-and-install smoke test                | #49: `pnpm packages:install:check` — §7                                                                                                                                                                                                                                                        |
-| Type declarations                            | `@arethetypeswrong/cli`: tokens clean after #49; **FalseCJS on react and icons** (declarations use extensionless relative imports an ES-module declaration cannot resolve) and **CJSResolvesToESM on the types-only product-contracts** — pre-existing, held as a ratchet by the install check |
-| Provenance                                   | **not possible** while the repository is private: npm requires "a public `repository` that matches … where you are publishing with provenance from"                                                                                                                                            |
-| The stylesheet's global reset                | `@kozmos/react/style.css` includes Tailwind's preflight — body margin, heading sizes, block images and SVGs. The README says so; scoping or splitting it is open (§6)                                                                                                                          |
-| `ThemeProvider`'s storage key                | `vite-ui-theme`, a scaffold default that would land in every consumer's localStorage — cheap to rename before a publish (§6)                                                                                                                                                                   |
-| Declaration maps                             | `icons` and `product-contracts` ship `.d.ts.map` files pointing at a `src/` the tarball does not include                                                                                                                                                                                       |
-| Changesets, `NPM_TOKEN`, the `@kozmos` scope | not done. **The token alone publishes:** with no changeset pending, `changesets/action` publishes every unpublished package, so the first CI run to pass on `main` after a valid `NPM_TOKEN` exists ships all four at `0.0.1`. Add it last                                                     |
-| Chromatic                                    | still on its limit: a publish would ship visuals nobody has compared since early September                                                                                                                                                                                                     |
+| Item                                            | State                                                                                                                                                                                                                                                                                          |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LICENSE` and `license` fields                  | #49: MIT, copyright **Vodoco** (§5.22). A LICENSE file at the root and in each of the four public packages — npm copies one only from a package's own directory, never the monorepo root — and a `license` field in all five                                                                   |
+| `@kozmos-ds/vue` not published                  | #49 marks it `private` (§5.15) — before it, the first publish would have shipped it                                                                                                                                                                                                            |
+| README per package                              | #49: all four public packages, every claim checked against the built package, every code sample type-checked by the install check                                                                                                                                                              |
+| `repository`, `homepage`, `bugs`                | **ruled out** while the repository is private (§5.21) — they would 404. `description` and `keywords` added                                                                                                                                                                                     |
+| `@kozmos-ds/tokens` exports                     | #49: `.` with separate ESM and CommonJS declarations (`tokens.d.mts` / `tokens.d.ts`), `./css/light.css`, `./css/dark.css`, `./dist/*` so every old deep import still resolves                                                                                                                 |
+| CSS entry                                       | #49: `@kozmos-ds/react/style.css`, beside `./dist/style.css`                                                                                                                                                                                                                                   |
+| A pack-and-install smoke test                   | #49: `pnpm packages:install:check` — §7                                                                                                                                                                                                                                                        |
+| Type declarations                               | `@arethetypeswrong/cli`: tokens clean after #49; **FalseCJS on react and icons** (declarations use extensionless relative imports an ES-module declaration cannot resolve) and **CJSResolvesToESM on the types-only product-contracts** — pre-existing, held as a ratchet by the install check |
+| Provenance                                      | **not possible** while the repository is private: npm requires "a public `repository` that matches … where you are publishing with provenance from"                                                                                                                                            |
+| The stylesheet's global reset                   | `@kozmos-ds/react/style.css` includes Tailwind's preflight — body margin, heading sizes, block images and SVGs. The README says so; scoping or splitting it is open (§6)                                                                                                                       |
+| `ThemeProvider`'s storage key                   | `vite-ui-theme`, a scaffold default that would land in every consumer's localStorage — cheap to rename before a publish (§6)                                                                                                                                                                   |
+| Declaration maps                                | `icons` and `product-contracts` ship `.d.ts.map` files pointing at a `src/` the tarball does not include                                                                                                                                                                                       |
+| Changesets, `NPM_TOKEN`, the `@kozmos-ds` scope | not done. **The token alone publishes:** with no changeset pending, `changesets/action` publishes every unpublished package, so the first CI run to pass on `main` after a valid `NPM_TOKEN` exists ships all four at `0.0.1`. Add it last                                                     |
+| Chromatic                                       | still on its limit: a publish would ship visuals nobody has compared since early September                                                                                                                                                                                                     |
 
-The mechanics, now that #49 has merged, **in this order**: claim the `@kozmos` scope; settle §6's
+The mechanics, now that #49 has merged, **in this order**: claim the scope (done on 2026-09-22 as `@kozmos-ds`, an npm organisation owned
+by `vodoco`; `@kozmos` belongs to an unrelated personal account); settle §6's
 pre-publish items (1, 3, 9, 10); merge a changeset per package (`pnpm changeset`, "minor" for a first
-`0.1.0`); only then add `NPM_TOKEN` (an automation token for the `kozmos` org). The next CI run to
+`0.1.0`); only then add `NPM_TOKEN` (a publish token from `vodoco` for the `kozmos-ds` organisation). The next CI run to
 pass on `main` runs `release.yml`: the install check, then the version PR → merge it → the same
 workflow publishes. The order is the safeguard. Without a token, `release.yml` never reaches
 changesets at all; with one and no changeset pending, `changesets/action` logs "No changesets found.
@@ -476,7 +477,7 @@ informative · alert`, reading `Components.{Primary,Secondary,Tertiary} Buttons`
 14. **`Brand` (Readex Pro) stays, scoped with `unicode-range`** — the product is 93.8% Readex Pro,
     so the role matches what it sets. A declared system stack takes CJK, which the face does not
     cover, instead of whatever each browser picks.
-15. **`@kozmos/vue` is internal and is not published** — it mounts a React root per instance, so it
+15. **`@kozmos-ds/vue` is internal and is not published** — it mounts a React root per instance, so it
     cannot SSR and would make every consumer ship React. It stays as proof the React components
     mount.
 16. **Native enum names are normalised once, with deprecated aliases** — before the first publish,
@@ -540,7 +541,7 @@ action rather than an answer, needs a designer, or is work with nobody blocked o
    `lucide-react` directly in the source they ship, bypassing the registry entirely — 60 counting
    their stories and tests (`git grep -l lucide-react -- packages/react/src/components`, 2026-09-17).
    This line said 70 of 99 until then, which no count reproduces, on 2026-09-15's `1dd30f0` or since.
-3. **`@kozmos/icons` no longer re-exports lucide wholesale** (§11.1). It had to stop, because owning
+3. **`@kozmos-ds/icons` no longer re-exports lucide wholesale** (§11.1). It had to stop, because owning
    one outline while re-exporting its look-alike put two different Hearts under one name. It narrows
    the package's public surface on a package that has never been published, and nothing in the repo
    used it — but it is a public-API decision, and one line to reverse.
@@ -621,7 +622,7 @@ pnpm tokens:elevation:check && pnpm tokens:border:check && pnpm tokens:radius:ch
   && pnpm tokens:typography:check && pnpm tokens:contrast:check && pnpm tokens:raw:check \
   && pnpm figma:plugin:check && pnpm components:contract:check && pnpm figma:stamp:check \
   && pnpm docs:snippets:check && pnpm components:variant:check
-pnpm --filter "@kozmos/react..." build && pnpm components:classes:check   # reads dist/style.css, so build first
+pnpm --filter "@kozmos-ds/react..." build && pnpm components:classes:check   # reads dist/style.css, so build first
 pnpm packages:install:check      # packs, installs against React 18 and 19, type-checks READMEs; needs a build and the network
 pnpm native:check                 # Swift + Kotlin compile, ~6s (Android needs packages/android/local.properties)
 pnpm figma:verify                 # the live file against the plugin; needs FIGMA_ACCESS_TOKEN in .env (expires 2026-11-24)
@@ -639,8 +640,8 @@ resolves every export and README import, renders a component, type-checks every 
 holds `@arethetypeswrong/cli`'s findings as a ratchet. It needs the network and takes about fourteen
 seconds with a warm npm cache.
 
-A fresh worktree has no built workspace packages: run `pnpm --filter "@kozmos/react..." build`
-before `pnpm --filter @kozmos/react test`, or the failure is the worktree, not the code. If a
+A fresh worktree has no built workspace packages: run `pnpm --filter "@kozmos-ds/react..." build`
+before `pnpm --filter @kozmos-ds/react test`, or the failure is the worktree, not the code. If a
 typecheck then reports errors in files nobody touched, suspect the install before the code (§8).
 
 ## 8 · Traps that have cost real time
@@ -692,7 +693,7 @@ typecheck then reports errors in files nobody touched, suspect the install befor
 - **A gate that cannot fail is not a gate.** Run a new test against the unfixed code before
   believing it: four of the seven `cn` radius assertions fail against the old `cn`, which is the
   only reason they are worth having.
-- **`pnpm --filter @kozmos/react build` starts with `rm -rf dist`, and Storybook serves from that
+- **`pnpm --filter @kozmos-ds/react build` starts with `rm -rf dist`, and Storybook serves from that
   `dist`.** Rebuilding the package while Storybook is running breaks every story with "Failed to
   fetch dynamically imported module", naming whichever story you happen to click. Restart Storybook
   after a package rebuild; the error is not about that component.
@@ -847,7 +848,7 @@ since early September.
     Chromatic's limit pins pending on every PR.
 13. **An audit after the fact caught three things**, which is why #33 and #34 each carry a second
     commit: the example had rendered ten sections with invented values against the file's 22 real
-    ones; `@kozmos/icons` had put two different Hearts under one name; and `docs/README.md` did not
+    ones; `@kozmos-ds/icons` had put two different Hearts under one name; and `docs/README.md` did not
     index the new report. All three are fixed and pushed. A fourth suspicion did not survive
     checking — the `emotion` custom properties #32 writes do resolve, in
     `variables-light.css`/`-dark.css`; the legacy combined `variables.css` is simply a different,
@@ -924,7 +925,7 @@ the first time painter changes have reached the file since early September.
    earlier reports to Olcay wrong, since it described React's pressed state from the code without
    rendering it; a stacked caption at 1.9:1 on a fill on all three platforms; a spurious reveal on
    unset-to-false; iOS ignoring Reduce Motion; and no native tests. In #49: a types regression the PR
-   itself had introduced in `@kozmos/tokens`, which none of its checks could see, so the install
+   itself had introduced in `@kozmos-ds/tokens`, which none of its checks could see, so the install
    check gained a types ratchet, a file-type allowlist and React 18. In #48: an ordinary `"step/3"`
    string would have counted as a class. Every fix came with a test first run against the unfixed
    code, and the demo Artifact was republished with the fixes.
@@ -1024,7 +1025,7 @@ an inherited CSS attribute. Existing document-level modal semantics are retained
 The React stylesheet is bounded by native `@scope`, including nearest-root dark utilities.
 Its preflight and generic utilities no longer style unrelated host content; `:scope` precedence
 also prevents ordinary host reset/utility rules leaking inward. Keyframes are namespaced.
-`@kozmos/react/reset.css` is a separate optional global reset. This is a breaking pre-publication
+`@kozmos-ds/react/reset.css` is a separate optional global reset. This is a breaking pre-publication
 integration change: styled content needs a provider/scope. See `embedding-isolation.md` and the
 React README for migration and the exact limits, including `rem` sizing and host `!important`.
 
@@ -1400,7 +1401,7 @@ Two things were settled on 2026-09-14 before the first component:
 
 ### The rule that makes it useful
 
-An example may use **only** what `@kozmos/react` exports, its tokens and its roles. No hand-rolled
+An example may use **only** what `@kozmos-ds/react` exports, its tokens and its roles. No hand-rolled
 markup standing in for a missing component, no raw hex, no one-off class that quietly reinvents a
 part. The point of the exercise is to find out what the design system cannot do, and every
 workaround destroys exactly the evidence being collected.
@@ -1447,7 +1448,7 @@ and `openingHours` with its day rows — so the story names them in an `Alert` a
 their place. Ruled the same day: build both, `MetaStrip` in Core and opening hours as a Product /
 SDK example. **That is the next piece of work.**
 
-**The largest blocker was not a component but the icon set.** `@kozmos/icons` held 38 glyphs; the
+**The largest blocker was not a component but the icon set.** `@kozmos-ds/icons` held 38 glyphs; the
 card draws 19 and 14 had no Kozmos name. **PR #34** adds 13 of them carrying the Pointr Icon
 Library's own outlines, generated by `scripts/build-pointr-icons.mjs` (`pnpm icons:pointr:build`) —
 each verified to be the component this card instantiates, matched **by component key, not by name**.
@@ -1600,7 +1601,7 @@ platforms and React's Icon had never been in the linked configs, which are lists
 never been validated or sent while the manifest counted them linked; and every React snippet
 imported the mapping file's relative path (`from "./CategoryField"`) while no SwiftUI snippet
 imported anything. The configs now list the four (`a534276`) and map the imports to
-`@kozmos/react` and `import Kozmos` (`ef1b68b`), and the contract check refuses either gap
+`@kozmos-ds/react` and `import Kozmos` (`ef1b68b`), and the contract check refuses either gap
 again. `pnpm figma:connect:readback` (`98cb9de`) reads Dev Mode back through Figma desktop's
 Dev Mode MCP server: after the second round, 95 linked nodes on each platform, every one
 showing a snippet. Publish again only from this branch or from `main` after the merge; a
@@ -1673,7 +1674,7 @@ frame whose padding and stroke outgrow it — each slot had 12 above and below a
 before the fit cut the padding, and a fixed frame never shrinks back. Then Olcay's three rulings,
 as recommended (`1221183`, `b6830f4`, build `6fdc2ffbc635`; drift §9, the last two sections):
 the browse tiles carry the taxonomy's own quick-access symbols, vendored as the SVGs the
-taxonomy publishes and generated into `@kozmos/icons` and the Icons page by
+taxonomy publishes and generated into `@kozmos-ds/icons` and the Icons page by
 `pnpm icons:taxonomy:build`; DynamicIsland's "•" is the default icon, and the island is drawn as
 React and Compose draw it (240×44, 360×160 at 32, a 56 circle, where it was 240×48, 360×180 and
 64×48); the panel's title, which no platform draws, is hidden with its property kept, and its

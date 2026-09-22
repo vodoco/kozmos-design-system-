@@ -35,7 +35,7 @@ export default defineConfig({
   webServer: process.env.STORYBOOK_URL
     ? undefined
     : {
-        command: "npx turbo run dev --filter=@kozmos/docs",
+        command: "npx turbo run dev --filter=@kozmos-ds/docs",
         url: "http://localhost:6006",
         reuseExistingServer: false,
         timeout: 120 * 1000,

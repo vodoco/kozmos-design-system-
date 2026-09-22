@@ -1,6 +1,6 @@
 ---
-"@kozmos/react": minor
-"@kozmos/product-contracts": minor
+"@kozmos-ds/react": minor
+"@kozmos-ds/product-contracts": minor
 ---
 
 Add optional platform-neutral POI detail sections, summaries, opening hours,

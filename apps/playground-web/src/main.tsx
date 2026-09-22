@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "@kozmos/react/dist/style.css";
+import "@kozmos-ds/react/dist/style.css";
 import "./index.css";
 import App from "./App";
 

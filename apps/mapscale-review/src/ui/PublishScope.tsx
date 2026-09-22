@@ -1,4 +1,4 @@
-import { Icon, Text } from "@kozmos/react";
+import { Icon, Text } from "@kozmos-ds/react";
 import { ConfirmOverlay } from "./ConfirmOverlay";
 import { levelsHeldFromPublish, type HeldLevel } from "../mock/publishScope";
 import { SITE_NAME } from "../mock/site";

@@ -1,5 +1,5 @@
 import React from "react";
-import type { FloorPresentation } from "@kozmos/product-contracts";
+import type { FloorPresentation } from "@kozmos-ds/product-contracts";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "../../utils";
 import { Button } from "../Button";

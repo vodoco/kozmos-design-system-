@@ -130,7 +130,7 @@ docs(readme): update installation instructions
 
 ```bash
 # Start Storybook (React)
-pnpm --filter @kozmos/react storybook
+pnpm --filter @kozmos-ds/react storybook
 
 # Run tests
 pnpm test
@@ -148,7 +148,7 @@ pnpm typecheck
 pnpm build
 
 # Build specific package
-pnpm --filter @kozmos/tokens build
+pnpm --filter @kozmos-ds/tokens build
 ```
 
 ---

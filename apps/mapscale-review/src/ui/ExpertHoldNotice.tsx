@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Icon } from "@kozmos/react";
+import { Icon } from "@kozmos-ds/react";
 import { EXPERT_HOLD, HOLD_TONE } from "../mock/diff";
 
 /**

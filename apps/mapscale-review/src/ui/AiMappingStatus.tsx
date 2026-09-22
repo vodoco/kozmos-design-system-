@@ -4,7 +4,7 @@ import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
-} from "@kozmos/react";
+} from "@kozmos-ds/react";
 
 /**
  * The v9 dashboard's `AiMappingActionStatus` (Figma `b8dqhE3CPxitYfqlXuQJTC`, node 4355:50805),

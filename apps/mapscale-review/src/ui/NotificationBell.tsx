@@ -5,7 +5,7 @@ import {
   PopoverTrigger,
   PopoverContent,
   Text,
-} from "@kozmos/react";
+} from "@kozmos-ds/react";
 import {
   NOTIF_TONE,
   buildFeed,

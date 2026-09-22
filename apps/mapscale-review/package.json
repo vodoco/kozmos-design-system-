@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@emotion/is-prop-valid": "1.4.0",
-    "@kozmos/icons": "workspace:*",
-    "@kozmos/react": "workspace:*",
+    "@kozmos-ds/icons": "workspace:*",
+    "@kozmos-ds/react": "workspace:*",
     "framer-motion": "^11.0.0",
     "lucide-react": "0.563.0",
     "react": "^19.2.4",

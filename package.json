@@ -41,7 +41,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean && rm -rf node_modules",
-    "tokens:build": "pnpm --filter @kozmos/tokens build",
+    "tokens:build": "pnpm --filter @kozmos-ds/tokens build",
     "tokens:sync": "tsx scripts/sync-figma.ts",
     "figma:foundations": "node scripts/figma-build-foundations-payload.mjs",
     "figma:icons": "node scripts/figma-build-icon-catalog.mjs",

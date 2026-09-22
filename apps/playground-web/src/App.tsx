@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AnalyticsProvider } from "@kozmos/react";
+import { AnalyticsProvider } from "@kozmos-ds/react";
 import {
   RoutingInputGroup,
   MapControlsGroup,
@@ -10,7 +10,7 @@ import {
   FeedbackCard,
   Button,
   KozmosTheme,
-} from "@kozmos/react";
+} from "@kozmos-ds/react";
 import { Navigation, ArrowRight, CornerRightUp } from "lucide-react";
 
 function App() {

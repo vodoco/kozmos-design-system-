@@ -8,7 +8,7 @@ When operating on the `packages/react` or `packages/vue` workspaces, strictly ad
 
 1. **Topological Build Awareness**:
    - **Rule**: Never run raw package scripts (`pnpm build`) in isolation if the component relies on local workspace maps (`workspace:*`).
-   - You MUST utilize `turborepo` (`pnpm turbo run build --filter=@kozmos/...`) to mathematically guarantee transitive dependencies (like Design Tokens) compile first.
+   - You MUST utilize `turborepo` (`pnpm turbo run build --filter=@kozmos-ds/...`) to mathematically guarantee transitive dependencies (like Design Tokens) compile first.
 
 2. **TypeScript Strict Boundaries**:
    - The ecosystem leverages `verbatimModuleSyntax`.

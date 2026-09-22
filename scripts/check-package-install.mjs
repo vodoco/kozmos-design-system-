@@ -3,7 +3,7 @@
  *
  * Nothing else here tests what npm will actually hand people. The build can
  * pass, the types can check and every gate can be green while the tarball is
- * wrong: #27 put 92 `*.figma.d.ts` files into @kozmos/react's dist, and
+ * wrong: #27 put 92 `*.figma.d.ts` files into @kozmos-ds/react's dist, and
  * `files: ["dist"]` would have published them — found only by counting dist.
  * An `exports` map is sharper still: a path it does not list simply stops
  * resolving, for everyone outside the repo and for nobody inside it.
@@ -20,7 +20,7 @@
  * ship has to say so in its own package.json.
  *
  * It needs built packages and the network: run
- * `pnpm --filter "@kozmos/react..." build` first.
+ * `pnpm --filter "@kozmos-ds/react..." build` first.
  */
 import fs from "node:fs";
 import os from "node:os";
@@ -220,7 +220,7 @@ const typeProblems = new Set();
 const unreported = new Set();
 for (const { manifest, tarball } of packed) {
   // Written to a file, not read through a pipe: the tool exits before a large
-  // report has drained, which cut @kozmos/react's off at exactly 65,536 bytes
+  // report has drained, which cut @kozmos-ds/react's off at exactly 65,536 bytes
   // and left JSON that would not parse.
   const reportPath = path.join(work, `${path.basename(tarball)}.types.json`);
   const reportFile = fs.openSync(reportPath, "w");
@@ -305,7 +305,7 @@ for (const { manifest, files } of packed) {
 }
 
 // Whatever a README tells people to import, which the map must also reach: a
-// README promising `@kozmos/react/style.css` after the map dropped it would
+// README promising `@kozmos-ds/react/style.css` after the map dropped it would
 // otherwise pass, because a `*.css` declaration types any CSS import at all.
 const samples = [];
 for (const { manifest } of packed) {
@@ -316,7 +316,7 @@ for (const { manifest } of packed) {
   );
   for (const block of readme.matchAll(/```(tsx|ts|css)\n([\s\S]*?)```/g)) {
     for (const found of block[2].matchAll(
-      /(?:from\s+|import\s+|@import\s+)["'](@kozmos\/[^"']+)["']/g,
+      /(?:from\s+|import\s+|@import\s+)["'](@kozmos-ds\/[^"']+)["']/g,
     )) {
       if (!specifiers.includes(found[1])) specifiers.push(found[1]);
     }
@@ -333,8 +333,8 @@ for (const { manifest } of packed) {
 // without widening legacy action labels or importing workspace source.
 samples.push({
   file: "poi-details.tsx",
-  body: `import { POIDetailPanel } from "@kozmos/react";
-import type { POIDetailsPresentation, POIPresentation } from "@kozmos/product-contracts";
+  body: `import { POIDetailPanel } from "@kozmos-ds/react";
+import type { POIDetailsPresentation, POIPresentation } from "@kozmos-ds/product-contracts";
 const poi: POIPresentation = { id: "entry", name: "Entrance", floorId: "1", floorLabel: "Floor 1", media: [], actions: ["navigate"] };
 const details: POIDetailsPresentation = {
   summary: [{ id: "access", kind: "property", label: "Accessibility", value: "Step-free", tone: "success", iconUrl: "/access.png", iconMonochrome: true }, { id: "price", kind: "price", label: "Price", value: "3 of 4", priceLevel: 3 }],
@@ -376,14 +376,14 @@ if (typeof import.meta.resolve !== "function") {
 for (const name of ${JSON.stringify(requirable)}) {
   try {
     const exports = require(name);
-    results.push([name === "@kozmos/product-contracts" ? Object.keys(exports).length === 0 : Object.keys(exports).length > 0, "require(" + name + ") returns its exports (contracts intentionally has no runtime API)"]);
+    results.push([name === "@kozmos-ds/product-contracts" ? Object.keys(exports).length === 0 : Object.keys(exports).length > 0, "require(" + name + ") returns its exports (contracts intentionally has no runtime API)"]);
   } catch (error) {
     results.push([false, "require(" + name + ") — " + error.message]);
   }
 }
 
 console.warn = () => {};
-const kozmos = await import("@kozmos/react");
+const kozmos = await import("@kozmos-ds/react");
 const html = renderToStaticMarkup(
   createElement(kozmos.Button, { emotion: "success" }, createElement(kozmos.Icon, { name: "check" }), "Save"),
 );

@@ -1,5 +1,5 @@
 {
-  "name": "@kozmos/react",
+  "name": "@kozmos-ds/react",
   "version": "0.0.1",
   "description": "React components for the Kozmos design system: core controls and map, POI and wayfinding compositions, styled from Kozmos tokens.",
   "keywords": [
@@ -67,9 +67,9 @@
   },
   "dependencies": {
     "@emotion/is-prop-valid": "1.4.0",
-    "@kozmos/icons": "workspace:*",
-    "@kozmos/product-contracts": "workspace:*",
-    "@kozmos/tokens": "workspace:*",
+    "@kozmos-ds/icons": "workspace:*",
+    "@kozmos-ds/product-contracts": "workspace:*",
+    "@kozmos-ds/tokens": "workspace:*",
     "@radix-ui/react-accordion": "1.2.12",
     "@radix-ui/react-avatar": "1.1.11",
     "@radix-ui/react-checkbox": "1.3.3",

@@ -29,7 +29,7 @@ export default defineConfig({
     ctViteConfig: {
       resolve: {
         alias: {
-          "@kozmos/react": resolve(__dirname, "./src"),
+          "@kozmos-ds/react": resolve(__dirname, "./src"),
         },
       },
     },

@@ -21,7 +21,7 @@ export default defineConfig({
       reporter: ["text", "json", "html"],
     },
     alias: {
-      "@kozmos/react": resolve(__dirname, "./src"),
+      "@kozmos-ds/react": resolve(__dirname, "./src"),
     },
   },
 });

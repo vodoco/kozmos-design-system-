@@ -21,7 +21,7 @@ function toGlobalName(packageName: string) {
     "react-dom": "ReactDOM",
     "react-dom/client": "ReactDOMClient",
     "react/jsx-runtime": "ReactJsxRuntime",
-    "@kozmos/tokens": "KozmosTokens",
+    "@kozmos-ds/tokens": "KozmosTokens",
   };
 
   return (

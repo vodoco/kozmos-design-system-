@@ -27,7 +27,7 @@ Each entry follows this structure:
 
 - **ComponentName**: Description of breaking change
   - Migration: How to update
-  - Codemod: `npx @kozmos/codemod <name>` (if available)
+  - Codemod: `npx @kozmos-ds/codemod <name>` (if available)
 
 #### ⚠️ Deprecations
 
@@ -189,12 +189,12 @@ Each entry follows this structure:
 
 ##### From v1.x
 
-| Component     | Change                                         | Migration                 |
-| ------------- | ---------------------------------------------- | ------------------------- |
-| All           | Package renamed `@pointr/ui` → `@kozmos/react` | Update imports            |
-| ThemeProvider | Now required at app root                       | Wrap app in ThemeProvider |
-| Button        | `type` prop → `variant` prop                   | Rename prop               |
-| Input         | `onChangeText` → `onChange`                    | Rename prop               |
+| Component     | Change                                            | Migration                 |
+| ------------- | ------------------------------------------------- | ------------------------- |
+| All           | Package renamed `@pointr/ui` → `@kozmos-ds/react` | Update imports            |
+| ThemeProvider | Now required at app root                          | Wrap app in ThemeProvider |
+| Button        | `type` prop → `variant` prop                      | Rename prop               |
+| Input         | `onChangeText` → `onChange`                       | Rename prop               |
 
 #### ✨ New Features
 
@@ -421,7 +421,7 @@ https://github.com/AcmeCorp/kozmos/releases.atom
 
 ```typescript
 // Check version programmatically
-import { version, changelog } from "@kozmos/react";
+import { version, changelog } from "@kozmos-ds/react";
 
 console.log(version); // "3.0.0"
 console.log(changelog.breaking); // Array of breaking changes

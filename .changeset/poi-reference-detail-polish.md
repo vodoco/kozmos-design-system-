@@ -1,6 +1,6 @@
 ---
-"@kozmos/react": patch
-"@kozmos/product-contracts": minor
+"@kozmos-ds/react": patch
+"@kozmos-ds/product-contracts": minor
 ---
 
 Align POI navigation typography/icon sizes and compact informational chips with

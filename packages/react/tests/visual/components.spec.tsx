@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/experimental-ct-react";
 import React from "react";
-import { DynamicIsland } from "@kozmos/react";
+import { DynamicIsland } from "@kozmos-ds/react";
 
 test.describe("Kozmos Runtime Component Matrix", () => {
   test("DynamicIsland geometry and shadows - Compact", async ({ mount }) => {
