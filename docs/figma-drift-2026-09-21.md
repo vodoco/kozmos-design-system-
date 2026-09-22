@@ -931,3 +931,43 @@ kept in the repository since; the handoff of the 22nd, §5, has every number).
    the REST checks of the section above.
 7. With Figma in front: `pnpm figma:connect:readback -- --node 1933-9257 --node 280-1157 --node 170-1002`.
 8. Then the library can be published. Do not run Apply Text Styles.
+
+### Olcay's run of the afternoon, and what is left of it (the 22nd, evening)
+
+At 15:24Z Olcay pasted an Audit Library on `b3257790f931`: 22 warnings, 54 advisories. Read over
+REST with `scripts/figma-rest/`:
+
+- **All 97 sets carry `b3257790f931`, and 2,310 of the 2,416 icons are untinted.** The node ids
+  give the order the run took: Update All Core, then Update All Product / SDK, then Curated Icons →
+  Update last — its new sources, `1978:37173…37283`, were created after the last Product / SDK
+  icon. That sync drew the 56 Pointr Sources anew once more and orphaned the tints the Updates had
+  just laid; the eight taxonomy sources were kept. Each of the 22 warnings is an untinted icon,
+  black in dark mode at ratio 1: the audit's contrast pass does catch a lost tint, but names
+  contrast, not the tint.
+- **The keep fails in the live runtime.** A REST read at 14:03Z, of the file as the 09:47Z sync
+  left it, found all 56 sources to be instances of remote components whose keys equal the stored
+  `source-component-key`, and the sync still replaced every one. The code path is the same from
+  `0b64d5867d71` on. The fix goes in the next build, after this pass, so the build does not change
+  under Olcay: replace a source only when its main component's key is read and differs, keep it
+  with a warning when the key cannot be read, and name both keys in every replacement's warning.
+
+**What is left of the run** (it replaces the steps above; from the file as it stood at 15:26:16Z —
+check `lastModified` first with `figma-state.mjs`):
+
+1. Re-import the plugin from the worktree's new home — Plugins → Development → Import plugin from
+   manifest…,
+   `/Volumes/4TB Depo/development/K/kozmos-design-system-pointr/figma/foundations-importer/manifest.json`
+   — and run it; the header must read **Build b3257790f931**.
+2. **Do not run Curated Icons → Update.** The sources as they stand are the ones to tint through.
+3. **Update All Core**, never Rebuild.
+4. **Update All Product / SDK**, never Rebuild.
+5. **Audit Library**, and paste it: 0 warnings, `pluginBuild` `b3257790f931`, the advisories near 54.
+6. From the terminal: `scripts/figma-rest/with-figma-token.sh node scripts/figma-rest/icon-tints.mjs`,
+   which must exit 0; `pnpm figma:verify`; `pnpm tokens:radius:nesting --strict`; and the REST
+   checks of the sections above.
+7. **Import Foundations**, with the payload file loaded from the new worktree's
+   `docs/figma-foundations-payload.json` (the emotion text roles one step darker, `42fbe70`); then
+   Audit Library again.
+8. With Figma in front: `pnpm figma:connect:readback -- --node 1933-9257 --node 280-1157 --node 170-1002`.
+9. Then the library can be published. Do not run Apply Text Styles. After step 1 has worked, the
+   old folder, `/private/tmp/kozmos-browser-compat.uqPMBD`, is Olcay's to delete.
