@@ -1739,3 +1739,19 @@ both natives. The steppers are 32 circles with the plugin's rings — 2 current,
 three platforms. Each change has a test that fails on the old code. What it left — the group's
 container radius, React's island in dark mode, the native comment box, glass shadows on Compose,
 fixed fills under inks that flip — is in handoff §7.
+
+The same evening Olcay took the five decisions those left, each as recommended (`022f961`, plugin
+build `b3257790f931`). The four cards that float over the map — RouteSummary, RoutingInputGroup,
+SaveLocationCard, FeedbackCard — are the panel role, 24, on every platform; React drew the `2xl`
+primitive and Figma the container. The island is black with its content in the dark theme
+everywhere: React nests a dark provider, Figma's set takes the Kozmos collections' Dark mode on
+`Surface/0` (it bound `Colors/foreground/1000`, white in the Kozmos light ramp). The native
+comment box is washed, as React's is, through one internal washed field per native shared with the
+route points. The stepper's accent is React's primary pair on every platform, which also puts a
+readable ink on the completed step in the dark; Figma's grey completed ring and faded connector
+went with it. Compose Code Connect was republished with its light-only snippets themed, and the
+theme check now lets a Code Connect file read the one-theme palette only for a colour both themes
+share. Each change has a test that fails on the old code, and nine painter assertions fail on the
+previous build. Two findings: over REST a bound paint in this file renders its stored colour, not
+its variable's, so a REST render cannot confirm a binding; and the branch's first CI runs (PR #56)
+fail five checks `main` passes — handoff §8.

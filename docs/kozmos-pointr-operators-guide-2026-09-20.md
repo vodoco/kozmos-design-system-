@@ -736,3 +736,24 @@ _Added on the 22nd, from the open ones:_
   `test.fail` on WebKit, which turns red once the engine is fixed.
 - Every shell call starts in the main checkout, whatever the last one `cd`ed to: give worktree
   paths absolutely.
+
+_Added on the 22nd, from the five decisions:_
+
+- A washed field on the natives is `KozmosWashedField` (internal, `Input/WashedField.*`): React's
+  `bg-black/5 dark:bg-white/10 border-transparent` recipe, single-line at 40 or a text area from 80.
+  Use it where React washes a field; the outlined `KozmosInput` / `KozmosTextarea` elsewhere.
+- A subtree with its own theme: React nests `<ThemeProvider theme="dark">` (its root is
+  `display: contents`); SwiftUI `.environment(\.colorScheme, .dark)`; Compose
+  `LocalKozmosUseDarkTokens provides true`; Figma `applyKozmosDarkMode(node, stats)` in the
+  importer, which sets the Dark mode of every "Kozmos …" collection on the node.
+- Over REST, a bound paint in the Core library renders its stored colour, not its variable's
+  (the painter's fallback): read `boundVariables` ids for what a node is bound to, and check the
+  variable itself in Figma. The token has no variables scope for `/variables/local` (403).
+- The painter check's harness takes `createFigmaMock({ pages, collections })`, and mock nodes keep
+  `explicitVariableModes`, so a painter's variable modes can be asserted.
+- The branch's CI (PR #56) runs Linux Paparazzi at zero tolerance: a golden recorded on macOS can
+  fail there alone. The job uploads `build/paparazzi/failures` as `paparazzi-failures`, and
+  Gradle prints the difference (`7dec6c0`). Read the pixels before touching a tolerance: when
+  only a few pixels are more than two levels off (OffByTwo counts nothing else), the class may
+  take `CROSS_PLATFORM_MAX_PERCENT_DIFFERENCE` (0.0001 %, calibrated in its KDoc); anything
+  larger is a real difference.

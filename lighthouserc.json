@@ -7,7 +7,7 @@
         "http://localhost/iframe.html?id=components-button--default&viewMode=story",
         "http://localhost/iframe.html?id=components-dialog--default&viewMode=story",
         "http://localhost/iframe.html?id=feedback-toast--default&viewMode=story",
-        "http://localhost/vue/iframe.html?id=vue-poicard--default&viewMode=story"
+        "http://localhost/iframe.html?id=components-poicard--default&viewMode=story"
       ]
     },
     "assert": {

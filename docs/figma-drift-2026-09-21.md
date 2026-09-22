@@ -829,3 +829,52 @@ DynamicIsland only, so the run below is unchanged but for its build.
    eight tiles on their symbols, filled in their accents, their rows 12 apart; its title hidden; the island at
    240×44, 360×160 and 56×56 with its slots at 24, 24 and 32; the footers at 158 and 126.
 6. Then the library can be published.
+
+### The five decisions of the evening (`022f961`, build `b3257790f931`)
+
+Olcay took all five recommendations of handoff §7. In Figma four painters and one set moved:
+
+- **RouteSummary, RoutingInputGroup, SaveLocationCard and FeedbackCard are the panel role, 24**,
+  as SwiftUI and Compose draw them and React now does (it drew the `2xl` primitive, 32); here
+  they were the container, 20. Their slots nest in the panel: 24 less the 13 a slot sits in by,
+  11, where they were 7.
+- **DynamicIsland takes the Dark mode of every Kozmos collection and binds `Surface/0`** — the
+  Figma form of the dark subtree React, SwiftUI and Compose now give it. It bound
+  `Colors/foreground/1000`, which is white in the Kozmos light ramp; LocationPin's white ring
+  binds the same variable (`VariableID:4:171`).
+- **Stepper's accent is `Colors/theme/600`**, React's primary, on every platform (it was
+  theme/500 here and on the natives); a completed step's ring is its fill's colour (it was a
+  grey `foreground/500` ring round the blue), and the pending connector is `Border/Subtle` at its
+  own strength (it was faded to 32 %).
+
+The painter check (356) holds all three; nine of its new assertions fail on `c35a625c8160`. The
+replay differs from `c35a625c8160` in RouteSummary, RoutingInputGroup, SaveLocationCard,
+DynamicIsland and FeedbackCard; Stepper paints its own variants, so the replay does not reach it,
+and it changed too. Compose Code Connect was republished the same evening (111 docs): CategoryField's
+Theme maps to null, Pagination's example and Box's surface read the themed colours.
+
+**Over REST a bound paint renders its stored colour here, not its variable.** The island's fill
+and LocationPin's ring bind one variable, `4:171`, and render `#0B0D12` and `#FFFFFF` — each its
+painter's fallback — with no explicit mode on either. So a REST render cannot say what a binding
+resolves to: read the binding's id, and the variable in Figma.
+
+### The run, with build `b3257790f931`
+
+It supersedes the run above; `c35a625c8160` was never run.
+
+1. Run the plugin; the header must read **Build b3257790f931**.
+2. **Curated Icons → Update**, expected as above: `sourcesKept` 56, `failed` 0.
+3. **Update, one at a time, never Rebuild:** CategoryTile, BrowseCategoriesPanel, CategoryField,
+   DynamicIsland, Dialog, Drawer (as above); then **RouteSummary, RoutingInputGroup,
+   SaveLocationCard, FeedbackCard** and, on the Core page, **Stepper**.
+4. **Audit Library**, and paste it: no warning, icons 64 of 64, `pluginBuild` `b3257790f931`. The
+   advisory count may move from 54 with the island's content now in the dark theme; paste it and
+   it will be reconciled against the harness.
+5. From the terminal: `pnpm figma:verify`, `pnpm tokens:radius:nesting --strict` (the four cards at
+   24 with slots at 11 are exact concentrics), and over REST: the checks above; the four cards'
+   radius 24; the island's `explicitVariableModes` naming Dark for the Kozmos collections and its
+   fill bound to `Surface/0`; the stepper's indicators bound to `Colors/theme/600`.
+6. With Figma in front: `pnpm figma:connect:readback -- --node 1933-9257 --node 280-1157 --node 170-1002`
+   (the three republished Compose snippets; the Dev Mode server answers only while Figma is
+   frontmost).
+7. Then the library can be published.
