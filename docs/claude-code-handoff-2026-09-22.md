@@ -46,7 +46,7 @@ This section supersedes what it names below; the rest of the document stands.
     regenerated (`docs/figma-foundations-payload.json`); Olcay re-imports it after his pass, and the
     painters, which bind the emotion primitives directly (danger/600 ×28), follow in the next build.
   - **The natives' status colours** are a larger, older fault (success/alert/danger at 600 in 48
-    files; success-600 is 2.74:1 even on white): offered as its own session, `task_023c4e7b`.
+    files; success-600 is 2.74:1 even on white): offered as its own session, `task_a6b3124b`.
   - **Stepper labels** (supersedes §6.8): both natives draw React's label — the current step's in
     the foreground at medium weight, every other in foreground/400 (`e916524`); the pending number
     already matched. Figma's painter follows in the next build.
@@ -514,11 +514,12 @@ Read over REST with the tools in `scripts/figma-rest/` (read-only; the token is 
    package from a repository's root `Package.swift`, and this one is in `packages/ios`, so a Swift
    release needs a root manifest or a mirror repository; Compose needs `maven-publish` (GitHub
    Packages is the simplest channel). Recommended after npm.
-10. **Two tasks offered as separate sessions** (chips in the desktop app): `task_66e62865` — fills
+10. **Two tasks offered as separate sessions** (chips in the desktop app): `task_5764ffc8` — fills
     fixed across themes (theme/500) under inks that flip, about 3.7:1 in the dark on both natives;
-    `task_92e3c39c` — a Compose glass card shows its elevation shadow through the tint, and iOS
+    `task_063ad520` — a Compose glass card shows its elevation shadow through the tint, and iOS
     may. They replace `task_4270cdfe` and `task_d0f28ad7`, whose prompts sent a new session into
-    this worktree and branch; the new ones work in their own worktree and branch, from `main` once
+    this worktree and branch, and, since the move, `task_66e62865` and `task_92e3c39c`, which fenced
+    off only the old path; the new ones work in their own worktree and branch, from `main` once
     #56 has merged (from this branch before). Recommended: start both after the merge.
 11. **The AI companion** (carried): the device floor (iOS 26 on Apple Intelligence-capable
     iPhones), Apple Intelligence on in his Mac's System Settings for the simulators, and the
