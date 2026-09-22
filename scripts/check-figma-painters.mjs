@@ -20,6 +20,7 @@ import {
   boundPaintOpacityDrops,
   boundVariableName,
   createFigmaMock,
+  framesLargerThanAsked,
   freshStats,
   hexOf,
   loadPlugin,
@@ -888,6 +889,29 @@ section("BrowseCategoriesPanel");
     await plugin.configureCategoryTileProperties(tileSet, freshStats());
   }
 
+  // The taxonomy's symbols on the Icons page, drawn by the plugin's own sync.
+  const iconsPage = figma.root.children.find((page) => page.name === "Icons");
+  const symbols = (plugin.KOSMOS_ICON_DEFINITIONS || []).filter(
+    (definition) => definition.source === "taxonomy",
+  );
+  ok(
+    symbols.length === 8 &&
+      typeof plugin.syncTaxonomyIconSourceComponent === "function",
+    `eight taxonomy symbols to draw (${symbols.length})`,
+  );
+  for (const [index, definition] of symbols.entries()) {
+    const symbol = new MockNode("COMPONENT", `Icon / ${definition.name}`);
+    iconsPage.appendChild(symbol);
+    figma.currentPage = iconsPage;
+    await plugin.syncTaxonomyIconSourceComponent(
+      symbol,
+      definition,
+      index,
+      freshStats(),
+    );
+  }
+  figma.currentPage = figma.root.children[0];
+
   const component = figma.createComponent();
   const stats = freshStats();
   await plugin.updateBrowseCategoriesPanelVariant(component, {
@@ -933,6 +957,37 @@ section("BrowseCategoriesPanel");
       `tile ${index + 1} is ${label} in ${tint} with its count ${count} (got ${digits && digits.characters})`,
     );
   });
+  // renderIcon's symbol: the taxonomy's own, in the category's accent.
+  const symbolNames = [
+    "taxonomy-entrance-exit",
+    "taxonomy-service-space-office",
+    "taxonomy-security-space",
+    "taxonomy-transportation-space-boarding-gate",
+    "taxonomy-amenity-space-desk",
+    "taxonomy-parking-space",
+    "taxonomy-food-beverage-space",
+    "taxonomy-retail-space",
+  ];
+  taxonomy.forEach(([label, tint], index) => {
+    const icon =
+      instances[index] &&
+      instances[index].findOne(
+        (node) => node.type === "INSTANCE" && node.name === "Icon",
+      );
+    const shapes = icon ? icon.findAll((node) => node.type === "VECTOR") : [];
+    ok(
+      icon &&
+        icon.mainComponent &&
+        icon.mainComponent.name === `Icon / ${symbolNames[index]}` &&
+        shapes.length > 0 &&
+        shapes.every(
+          (shape) =>
+            shape.fills.length === 1 &&
+            boundVariableName(shape.fills[0]) === `Category/Accent/${tint}`,
+        ),
+      `${label}: the ${symbolNames[index]} symbol, filled in Category/Accent/${tint} (${icon && icon.mainComponent && icon.mainComponent.name}; ${shapes.map((shape) => boundVariableName(shape.fills[0])).join(", ")})`,
+    );
+  });
   const parking =
     instances[5] && instances[5].findOne((node) => node.name === "Label Text");
   ok(
@@ -949,6 +1004,96 @@ section("BrowseCategoriesPanel");
     stats.warnings.length === 0,
     `no warnings (${stats.warnings.join(" | ")})`,
   );
+
+  // No platform draws the label: React makes it the section's aria-label,
+  // SwiftUI its .accessibilityLabel, Compose its contentDescription. Figma drew
+  // it as a 16/24 title over the grid until 2026-09-22. The layer stays,
+  // hidden, bound to Panel Label Text, which Code Connect reads as `label`.
+  const panels = [];
+  for (const value of ["Basic", "Search", "Empty"]) {
+    const panel = figma.createComponent();
+    await plugin.updateBrowseCategoriesPanelVariant(panel, {
+      value,
+      variableByName,
+      fonts: FONTS,
+      stats: freshStats(),
+    });
+    panel.name = `Content=${value}`;
+    panels.push(panel);
+  }
+  const panelSet = figma.combineAsVariants(panels, figma.currentPage);
+  panelSet.name = "BrowseCategoriesPanel";
+  await plugin.configureBrowseCategoriesPanelProperties(panelSet, freshStats());
+  const property = Object.keys(panelSet.componentPropertyDefinitions).find(
+    (key) => key.split("#")[0] === "Panel Label Text",
+  );
+  for (const panel of panels) {
+    const label = panel.children.find(
+      (child) => child.name === "Panel Label Text",
+    );
+    ok(
+      Boolean(
+        label &&
+        label.type === "TEXT" &&
+        label.visible === false &&
+        property &&
+        label.componentPropertyReferences &&
+        label.componentPropertyReferences.characters === property,
+      ),
+      `${panel.name}: the label layer is hidden and bound to Panel Label Text`,
+    );
+    ok(
+      !panel.findOne(
+        (node) =>
+          node.type === "TEXT" &&
+          node.visible !== false &&
+          node.characters === "Browse categories",
+      ),
+      `${panel.name}: no visible title`,
+    );
+    const content = panel.children.find((child) => child.name === "Content");
+    ok(
+      Boolean(
+        content &&
+        content.paddingTop === 16 &&
+        content.paddingLeft === 16 &&
+        content.children.length === 1 &&
+        content.children[0].name ===
+          (panel.name === "Content=Empty"
+            ? "Empty State Slot"
+            : "Category Grid"),
+      ),
+      `${panel.name}: the grid or the empty state, padded 16 (p-4)`,
+    );
+  }
+  const [basic, search] = panels;
+  ok(
+    !basic.findOne(
+      (node) => node.name === "Search Header" || node.name === "Divider",
+    ),
+    "Basic: no search header and no rule",
+  );
+  const header = search.children.find(
+    (child) => child.name === "Search Header",
+  );
+  const rule = search.children[search.children.indexOf(header) + 1];
+  ok(
+    Boolean(
+      header &&
+      header.paddingTop === 16 &&
+      header.paddingLeft === 16 &&
+      header.children.length === 1 &&
+      header.children[0].name === "Search Slot" &&
+      rule &&
+      rule.name === "Divider" &&
+      rule.height === 1 &&
+      rule.layoutSizingHorizontal === "FILL" &&
+      boundVariableName(rule.fills[0]) === "Border/Subtle" &&
+      search.children[search.children.indexOf(rule) + 1].name === "Content",
+    ),
+    "Search: the search slot in a header padded 16, a 1px Border/Subtle rule, then the grid (border-b p-4)",
+  );
+  panelSet.remove();
   tileSet.remove();
 }
 
@@ -987,14 +1132,17 @@ section("A set runs after the sets it reaches into");
     );
     if (!found) return;
     const next = lines.slice(index, index + 30).join("\n");
+    // A write by assignment, or through a helper that paints what it is given.
     const write = new RegExp(
-      `\\b${found[1]}\\.(characters|setProperties|fills|strokes|visible|fontSize)\\s*[=(]`,
+      `\\b${found[1]}\\.(characters|setProperties|fills|strokes|visible|fontSize)\\s*[=(]` +
+        `|\\b(applyIconColorOverrides|scaleIconStrokes|setTranslucentTokenPaint)\\(\\s*${found[1]}\\b`,
     );
     if (write.test(next)) writersFound.add(enclosing(index));
   });
   // painter: [the set whose layer it writes, the set it paints]
   const reaches = {
     browseCategoriesPanelTile: ["CategoryTile", "BrowseCategoriesPanel"],
+    setBrowseCategoriesPanelTileIcon: ["CategoryTile", "BrowseCategoriesPanel"],
     updateCategoryTileVariant: ["Counter", "CategoryTile"],
   };
   ok(
@@ -1091,8 +1239,12 @@ section("A set runs after the sets it reaches into");
 
 // Two reported findings of figma:verify, from before 2026-09-20: Dialog's and
 // Drawer's primary action labels, 94 wide in a 90 box, because the width came
-// from 7.5 a character; and DynamicIsland's 24 slots at 26, because the label
-// fit left no room for the stroke at the top and bottom.
+// from 7.5 a character; and DynamicIsland's 24 slots at 26. Those were first
+// put down to a label fit that left the stroke no room, and fitting the label
+// closer did not move them: each slot was given 12 above and below and then
+// its stroke before the fit cut the padding, and the runtime grows a frame
+// its padding and stroke outgrow and never shrinks it back (see
+// AUTO_LAYOUT_BOX_FIELDS in the harness).
 section("Content fits the box it is drawn in");
 {
   if (typeof plugin.setDialogFooterActionSizing === "function") {
@@ -1128,7 +1280,90 @@ section("Content fits the box it is drawn in");
   } else ok(false, "setDialogFooterActionSizing is reachable");
 
   if (typeof plugin.updateDynamicIslandVariant === "function") {
-    for (const value of ["Compact", "Minimal"]) {
+    for (const [value, count] of [
+      ["Compact", 2],
+      ["Minimal", 1],
+      ["Expanded", 1],
+    ]) {
+      const component = figma.createComponent();
+      const stats = freshStats();
+      await plugin.updateDynamicIslandVariant(component, {
+        value,
+        variableByName,
+        fonts: FONTS,
+        stats,
+      });
+      const slots = component.children.filter((child) =>
+        child.name.endsWith("Slot"),
+      );
+      ok(
+        slots.length === count,
+        `${value}: ${count} slot(s) (${slots.length})`,
+      );
+      for (const slot of slots) {
+        const asked = slot.requestedSize || {};
+        ok(
+          slot.width === asked.width && slot.height === asked.height,
+          `${value} ${slot.name}: ${slot.width}×${slot.height}, the ${asked.width}×${asked.height} it was drawn at`,
+        );
+        const content = slot.children[0];
+        const needs =
+          (content ? content.height : 0) +
+          slot.paddingTop +
+          slot.paddingBottom +
+          2 * slot.strokeWeight;
+        ok(
+          needs <= slot.height,
+          `${value} ${slot.name}: content, padding and stroke take ${needs} of ${slot.height}`,
+        );
+      }
+      ok(
+        !stats.warnings.some((warning) =>
+          /where it was drawn at/.test(warning),
+        ),
+        `${value}: no slot reports a size it was not drawn at (${stats.warnings.join(" | ")})`,
+      );
+    }
+  } else ok(false, "updateDynamicIslandVariant is reachable");
+}
+
+// --- DynamicIsland ---------------------------------------------------------------
+
+// The set says it is generated from the React DynamicIsland API, and it was
+// drawn at 240×48, 360×180 and 64×48 at 24 while React and Compose draw a
+// 240×44 pill, a 360×160 card at 32 and a 56 circle. The sizes are read from
+// the React source, so the two cannot part again without this failing.
+section("DynamicIsland");
+{
+  const react = fs.readFileSync(
+    path.join(
+      ROOT,
+      "packages/react/src/components/DynamicIsland/DynamicIsland.tsx",
+    ),
+    "utf8",
+  );
+  const width = react.match(
+    /width:\s*islandState === "expanded"\s*\?\s*"calc\(100vw - 32px\)"\s*:\s*islandState === "minimal"\s*\?\s*(\d+)\s*:\s*(\d+),\s*maxWidth:\s*(\d+)/,
+  );
+  const height = react.match(
+    /height:\s*islandState === "expanded"\s*\?\s*(\d+)\s*:\s*islandState === "minimal"\s*\?\s*(\d+)\s*:\s*(\d+)/,
+  );
+  const radius = react.match(
+    /borderRadius:\s*islandState === "expanded"\s*\?\s*(\d+)\s*:\s*(\d+)/,
+  );
+  ok(
+    Boolean(width && height && radius),
+    "the React island's width, height and radius are readable",
+  );
+  if (width && height && radius) {
+    // CSS clamps a radius to half the shorter side; Figma draws the clamp.
+    const pill = (h) => Math.min(Number(radius[2]), h / 2);
+    const expected = {
+      Compact: [Number(width[2]), Number(height[3])],
+      Expanded: [Number(width[3]), Number(height[1])],
+      Minimal: [Number(width[1]), Number(height[2])],
+    };
+    for (const [value, [w, h]] of Object.entries(expected)) {
       const component = figma.createComponent();
       await plugin.updateDynamicIslandVariant(component, {
         value,
@@ -1136,22 +1371,310 @@ section("Content fits the box it is drawn in");
         fonts: FONTS,
         stats: freshStats(),
       });
-      for (const slot of component.children.filter((child) =>
-        child.name.endsWith("Slot"),
-      )) {
-        const text = slot.children.find((child) => child.type === "TEXT");
-        const needs =
-          (text ? text.height : 0) +
-          slot.paddingTop +
-          slot.paddingBottom +
-          2 * slot.strokeWeight;
-        ok(
-          needs <= slot.height,
-          `${value} ${slot.name}: label, padding and stroke take ${needs} of ${slot.height}`,
-        );
+      const r = value === "Expanded" ? Number(radius[1]) : pill(h);
+      ok(
+        component.width === w &&
+          component.height === h &&
+          component.cornerRadius === r,
+        `${value}: ${component.width}×${component.height} at ${component.cornerRadius}, as React draws it (${w}×${h} at ${r})`,
+      );
+    }
+  }
+
+  // One glyph, placed as an icon: a typed "•" is what figma:verify reports
+  // as a character where an icon belongs.
+  const minimal = figma.createComponent();
+  await plugin.updateDynamicIslandVariant(minimal, {
+    value: "Minimal",
+    variableByName,
+    fonts: FONTS,
+    stats: freshStats(),
+  });
+  const slot = named(minimal, "Minimal Content Slot");
+  const glyph = slot && slot.children[0];
+  const vector = glyph && glyph.findOne((node) => node.type === "VECTOR");
+  ok(
+    Boolean(
+      glyph &&
+      glyph.type === "INSTANCE" &&
+      slot.children.length === 1 &&
+      !minimal.findOne((node) => node.type === "TEXT") &&
+      vector &&
+      boundVariableName(vector.strokes[0]) === "Colors/foreground/400",
+    ),
+    `Minimal: the slot holds one icon instance tinted foreground/400, and no text (${glyph ? glyph.type + " " + glyph.name : "empty"})`,
+  );
+  ok(
+    Boolean(
+      glyph &&
+      glyph.width === 16 &&
+      slot.primaryAxisAlignItems === "CENTER" &&
+      slot.counterAxisAlignItems === "CENTER" &&
+      slot.paddingLeft + slot.paddingRight + 16 + 2 <= slot.width &&
+      slot.paddingTop + slot.paddingBottom + 16 + 2 <= slot.height &&
+      slot.cornerRadius === slot.width / 2,
+    ),
+    `Minimal: a 16 icon centred in a ${slot && slot.width} circle (padding ${slot && [slot.paddingTop, slot.paddingLeft].join("/")}, radius ${slot && slot.cornerRadius})`,
+  );
+}
+
+// --- Every frame keeps the size it was drawn at -----------------------------------
+
+// The runtime grows an auto-layout frame its padding and stroke outgrow, and
+// says nothing (see AUTO_LAYOUT_BOX_FIELDS in the harness). figma:verify sees
+// it only where the grown frame then overflows its parent, as DynamicIsland's
+// slots did; a slot drawn at 20 and grown to 26 inside a 44 card passes it.
+// So every Product / SDK set is painted here, variant by variant, as its
+// Update paints it, and every frame is held to the size it was drawn at. The
+// Core sets whose Update goes through the shared single-axis or state and
+// status helper are painted too; the rest update through code of their own,
+// which this cannot reach.
+section("Every frame keeps the size it was drawn at");
+{
+  // A set's Update hands its painter and its values to a shared helper, which
+  // needs the set in the file; returned instead, they can be painted here.
+  const capture = [
+    "",
+    ";updateSingleAxisComponent = async function (config) { return { __singleAxis: config }; };",
+    ";updateStateStatusComponent = async function (config) { return { __stateStatus: config }; };",
+    "",
+  ].join("\n");
+  const scanPages = ["Components", "Icons", "Utilities"].map(
+    (name) => new MockNode("PAGE", name),
+  );
+  const scanFigma = createFigmaMock({ pages: scanPages });
+  const scan = loadPlugin({
+    pluginPath: PLUGIN,
+    figma: scanFigma,
+    append: capture,
+  });
+  for (const definition of scan.KOSMOS_ICON_DEFINITIONS) {
+    scanPages[1].appendChild(mockIconComponent(definition.name));
+  }
+  const tokens = payloadVariables([...variableByName.keys()]);
+  const jobsFor = async (name, update) => {
+    const captured = await update();
+    if (captured && captured.__singleAxis) {
+      const config = captured.__singleAxis;
+      return config.values.map((value) => [config.updateVariant, { value }]);
+    }
+    if (captured && captured.__stateStatus) {
+      const config = captured.__stateStatus;
+      const jobs = [];
+      for (const state of config.states) {
+        for (const status of config.statuses) {
+          for (const type of config.types || [null]) {
+            jobs.push([config.updateVariant, { state, status, type }]);
+          }
+        }
+      }
+      return jobs;
+    }
+    const factory =
+      scan[name.charAt(0).toLowerCase() + name.slice(1) + "ComponentConfig"];
+    if (typeof factory !== "function") return null;
+    const config = factory();
+    return config
+      .combinations()
+      .map((props) => [config.updateVariant, { props }]);
+  };
+  const paint = async (sequence) => {
+    const outcome = {
+      reached: [],
+      unreached: [],
+      variants: 0,
+      thrown: [],
+      grown: [],
+    };
+    for (const [name, update] of sequence) {
+      const jobs = await jobsFor(name, update);
+      if (!jobs) {
+        outcome.unreached.push(name);
+        continue;
+      }
+      outcome.reached.push(name);
+      for (const [painter, args] of jobs) {
+        const component = scanFigma.createComponent();
+        scanPages[0].appendChild(component);
+        try {
+          await painter(component, {
+            ...args,
+            variableByName: tokens.variableByName,
+            fonts: FONTS,
+            stats: freshStats(),
+          });
+        } catch (error) {
+          outcome.thrown.push(
+            `${name} ${JSON.stringify(args)}: ${error.message}`,
+          );
+          continue;
+        }
+        outcome.variants += 1;
+        for (const frame of framesLargerThanAsked(component)) {
+          outcome.grown.push(
+            `${name} / ${component.name} > ${frame.name}: ${frame.width}×${frame.height}, drawn at ${frame.requestedSize.width}×${frame.requestedSize.height}`,
+          );
+        }
+        component.remove();
       }
     }
-  } else ok(false, "updateDynamicIslandVariant is reachable");
+    return outcome;
+  };
+
+  const product = await paint(scan.PRODUCT_SDK_UPDATE_SEQUENCE);
+  ok(
+    product.unreached.length === 0 && product.thrown.length === 0,
+    `every Product / SDK set is painted, all ${product.variants} variants (${product.unreached.join(", ")}${product.thrown.slice(0, 3).join(" | ")})`,
+  );
+  ok(
+    product.grown.length === 0,
+    `no Product / SDK frame is larger than it was drawn (${product.grown.length}: ${product.grown.slice(0, 4).join(" | ")})`,
+  );
+  const core = await paint(scan.CORE_UPDATE_SEQUENCE);
+  ok(
+    core.reached.length > 0 && core.thrown.length === 0,
+    `${core.reached.length} of ${scan.CORE_UPDATE_SEQUENCE.length} Core sets painted, ${core.variants} variants; the other ${core.unreached.length} update through code of their own (${core.thrown.slice(0, 3).join(" | ")})`,
+  );
+  ok(
+    core.grown.length === 0,
+    `no Core frame painted here is larger than it was drawn (${core.grown.length}: ${core.grown.slice(0, 4).join(" | ")})`,
+  );
+}
+
+// --- Curated Icons ------------------------------------------------------------------
+
+// Every tint an icon slot carries is an override keyed through its icon
+// source's layer id, so an Update that draws a source again drops them: until
+// 2026-09-22 every Curated Icons → Update did, for every set but the four it
+// repaints. A second run keeps every source layer, id for id; a source that is
+// no longer right is drawn again and said so; and the taxonomy's symbols are
+// drawn from the SVGs the plugin carries, as filled shapes that scale.
+section("Curated Icons");
+{
+  const library = new Map();
+  const iconsPage = new MockNode("PAGE", "Icons");
+  const icons = loadPlugin({
+    pluginPath: PLUGIN,
+    figma: createFigmaMock({ pages: [iconsPage], library }),
+  });
+  const definitions = icons.KOSMOS_ICON_DEFINITIONS;
+  const taxonomy = definitions.filter(
+    (definition) => definition.source === "taxonomy",
+  );
+  for (const definition of definitions) {
+    if (!definition.componentKey) continue;
+    const source = mockIconComponent(definition.name);
+    source.key = definition.componentKey;
+    library.set(definition.componentKey, source);
+  }
+  const components = () =>
+    iconsPage.children.filter((node) => node.type === "COMPONENT");
+  const sourceIds = () =>
+    new Map(
+      components().map((component) => [
+        component.name,
+        component.children.map((child) => child.id).join(","),
+      ]),
+    );
+
+  const first = await icons.syncIconSourceLibrary();
+  ok(
+    first.created === definitions.length &&
+      first.drawn === taxonomy.length &&
+      taxonomy.length === 8 &&
+      first.failed === 0,
+    `a first run makes all ${definitions.length}, drawing the ${taxonomy.length} taxonomy symbols (${JSON.stringify({ created: first.created, drawn: first.drawn, failed: first.failed })}; ${first.warnings.slice(0, 2).join(" | ")})`,
+  );
+  const before = sourceIds();
+  const second = await icons.syncIconSourceLibrary();
+  const after = sourceIds();
+  ok(
+    second.sourcesKept === definitions.length &&
+      second.sourcesReplaced === 0 &&
+      after.size === definitions.length &&
+      [...after].every(([name, ids]) => ids && before.get(name) === ids),
+    `a second run keeps every source layer, id for id (kept ${second.sourcesKept}, drawn again ${second.sourcesReplaced})`,
+  );
+  ok(
+    !second.warnings.some((warning) => /anew/.test(warning)),
+    `and reports nothing drawn anew (${second.warnings.join(" | ")})`,
+  );
+
+  // A source that is some other icon's is drawn again, and the run says what
+  // that costs.
+  const bus = components().find((node) => node.name === "Icon / bus");
+  const other = definitions.find((definition) => definition.name === "plus");
+  if (bus && other)
+    bus.children[0].mainComponent = library.get(other.componentKey);
+  const third = await icons.syncIconSourceLibrary();
+  ok(
+    third.sourcesReplaced === 1 &&
+      third.warnings.some(
+        (warning) =>
+          /anew \(bus\)/.test(warning) && /Update All Core/.test(warning),
+      ),
+    `a source that is not the icon's is drawn again, and named (${third.warnings.join(" | ")})`,
+  );
+
+  for (const definition of taxonomy) {
+    const component = components().find(
+      (node) => node.name === `Icon / ${definition.name}`,
+    );
+    const source = component && component.children[0];
+    const shapes = source
+      ? source.findAll((node) => node.type === "VECTOR")
+      : [];
+    const audit =
+      component && icons.auditIconSourceComponent(component, definition.name);
+    ok(
+      Boolean(
+        source &&
+        component.children.length === 1 &&
+        source.type === "FRAME" &&
+        source.name === "Taxonomy Source" &&
+        source.width === 24 &&
+        source.height === 24 &&
+        source.constraints.horizontal === "STRETCH" &&
+        source.constraints.vertical === "STRETCH" &&
+        shapes.length > 0 &&
+        shapes.every(
+          (shape) =>
+            shape.fills.length === 1 &&
+            hexOf(shape.fills[0]) === "#000000" &&
+            shape.strokes.length === 0 &&
+            shape.constraints.horizontal === "SCALE",
+        ) &&
+        audit &&
+        audit.issues.length === 0,
+      ),
+      `${definition.name}: a 24 Taxonomy Source of ${shapes.length} black filled shape(s) that scale, and the audit finds nothing (${audit && audit.issues.map((issue) => issue.message || issue.kind).join(", ")})`,
+    );
+  }
+  const pointr = components().filter(
+    (component) => !/taxonomy-/.test(component.name),
+  );
+  ok(
+    pointr.every(
+      (component) =>
+        icons.auditIconSourceComponent(
+          component,
+          component.name.replace(/^Icon \/ /, ""),
+        ).issues.length === 0,
+    ),
+    `the ${pointr.length} Pointr icons audit clean`,
+  );
+
+  // Offered where a painter tints fills — a category's icon — and nowhere else.
+  const general = await icons.findKozmosIconSourceComponents();
+  const categories = await icons.findKozmosIconSourceComponents({
+    withTaxonomy: true,
+  });
+  ok(
+    general.length === definitions.length - taxonomy.length &&
+      !general.some((component) => /taxonomy-/.test(component.name)) &&
+      categories.length === definitions.length,
+    `a general icon slot is offered the ${general.length} Pointr icons, a category's all ${categories.length}`,
+  );
 }
 
 // --- DirectionStep ---------------------------------------------------------------

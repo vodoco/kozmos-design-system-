@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -2287,12 +2288,24 @@ if (categoryTile.content.iconDecorative) {
   );
   const start = source.figma.indexOf("const KOSMOS_ICON_DEFINITIONS = [");
   const block = source.figma.slice(start, source.figma.indexOf("\n];", start));
+  // Entry by entry: a taxonomy symbol has no component key, and a pattern
+  // spanning entries would pair its name with the next entry's key.
   const definitions = new Map(
-    [
-      ...block.matchAll(
-        /name: "([a-z0-9-]+)",[\s\S]*?componentKey: "([0-9a-f]+)"/g,
-      ),
-    ].map((m) => [m[1], m[2]]),
+    block
+      .split(/\n {2}\{\n/)
+      .slice(1)
+      .map((entry) => {
+        const field = (key, pattern) =>
+          (entry.match(new RegExp(`^ {4}${key}: "(${pattern})",$`, "m")) ||
+            [])[1];
+        return [
+          field("name", "[a-z0-9-]+"),
+          {
+            componentKey: field("componentKey", "[0-9a-f]+"),
+            source: field("source", "[a-z]+"),
+          },
+        ];
+      }),
   );
   const catalog = JSON.parse(read("docs/figma-pointr-icon-catalog.json"));
   const items = Array.isArray(catalog)
@@ -2301,16 +2314,65 @@ if (categoryTile.content.iconDecorative) {
   const keyByName = new Map(
     items.map((item) => [item.name, item.componentKey]),
   );
+  // The taxonomy's symbols: the art the plugin draws them from, and the
+  // registry's own record that they are the taxonomy's.
+  const svgStart = source.figma.indexOf("const TAXONOMY_ICON_SVGS = {");
+  const drawn = new Set(
+    [
+      ...source.figma
+        .slice(svgStart, source.figma.indexOf("\n};", svgStart))
+        .matchAll(/^ {2}"([a-z0-9-]+)":(?:$| ')/gm),
+    ].map((m) => m[1]),
+  );
+  const taxonomyInRegistry = new Set(
+    [
+      ...registry.matchAll(
+        /name: "([a-z0-9-]+)",\s+figmaName: "[^"]+",\s+source: "taxonomy",/g,
+      ),
+    ].map((m) => m[1]),
+  );
   for (const name of names) {
-    if (!definitions.has(name)) {
+    const definition = definitions.get(name);
+    if (!definition) {
       fail(
         `figma/foundations-importer/code.js: curated icon "${name}" is in the registry but has no KOSMOS_ICON_DEFINITIONS entry`,
       );
-    } else if (definitions.get(name) !== keyByName.get(name)) {
+    } else if (definition.source === "taxonomy") {
+      if (definition.componentKey || !drawn.has(name)) {
+        fail(
+          `figma/foundations-importer/code.js: taxonomy symbol "${name}" needs its SVG in TAXONOMY_ICON_SVGS and no component key`,
+        );
+      }
+      if (!taxonomyInRegistry.has(name)) {
+        fail(
+          `packages/icons/src/registry.ts: "${name}" is a taxonomy symbol in the plugin, and its definition does not say source: "taxonomy"`,
+        );
+      }
+    } else if (definition.componentKey !== keyByName.get(name)) {
       fail(
         `figma/foundations-importer/code.js: "${name}" carries a component key the catalog does not`,
       );
     }
+  }
+  for (const name of drawn) {
+    if (!definitions.has(name) || definitions.get(name).source !== "taxonomy") {
+      fail(
+        `figma/foundations-importer/code.js: TAXONOMY_ICON_SVGS draws "${name}", which no taxonomy definition names`,
+      );
+    }
+  }
+  // And the art itself: React's symbols and the importer's, both generated
+  // from the SVGs the taxonomy published, which the package keeps.
+  try {
+    execFileSync(
+      process.execPath,
+      [path.join(root, "scripts/build-taxonomy-icons.mjs"), "--check"],
+      { cwd: root, stdio: "pipe" },
+    );
+  } catch (error) {
+    fail(
+      String((error.stderr && error.stderr.toString()) || error.message).trim(),
+    );
   }
   for (const name of definitions.keys()) {
     if (!names.includes(name)) {

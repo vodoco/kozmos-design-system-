@@ -215,9 +215,14 @@ function defineTextSizing(node) {
   }
 }
 
+// Every node by id, as the document resolves an id: a painter's component
+// need not sit on a page for an instance swap to find it.
+const nodesById = new Map();
+
 export class MockNode {
   constructor(type, name) {
     this.id = `${nextId++}:${nextId}`;
+    nodesById.set(this.id, this);
     this.type = type;
     this.name = name || type;
     this.parent = null;
@@ -298,6 +303,24 @@ export class MockNode {
 
   set strokes(value) {
     this._strokes = storePaints(this, value);
+    this.holdAutoLayoutMinimum();
+  }
+
+  // See AUTO_LAYOUT_BOX_FIELDS.
+  holdAutoLayoutMinimum() {
+    const box = this._box;
+    if (!box || !box.layoutMode || box.layoutMode === "NONE") return;
+    const stroked =
+      this.strokesIncludedInLayout !== false &&
+      Array.isArray(this._strokes) &&
+      this._strokes.some((paint) => paint && paint.visible !== false);
+    const stroke =
+      stroked && typeof box.strokeWeight === "number" ? box.strokeWeight : 0;
+    const width = (box.paddingLeft || 0) + (box.paddingRight || 0) + 2 * stroke;
+    const height =
+      (box.paddingTop || 0) + (box.paddingBottom || 0) + 2 * stroke;
+    if (this.width < width) this.width = width;
+    if (this.height < height) this.height = height;
   }
 
   // A text's size and leading, as Figma keeps them: a literal written to a
@@ -378,11 +401,12 @@ export class MockNode {
   resize(width, height) {
     this.width = width;
     this.height = height;
+    this.requestedSize = { width, height };
+    this.holdAutoLayoutMinimum();
   }
 
   resizeWithoutConstraints(width, height) {
-    this.width = width;
-    this.height = height;
+    this.resize(width, height);
   }
 
   rescale() {}
@@ -470,12 +494,42 @@ export class MockNode {
     return instance;
   }
 
+  async getMainComponentAsync() {
+    return this.mainComponent;
+  }
+
+  // An instance's own overrides; none are modelled, so nothing to reset.
+  resetOverrides() {}
+
   setProperties(properties) {
     if (this.type !== "INSTANCE")
       throw new Error("setProperties on a non-instance");
     for (const [key, value] of Object.entries(properties)) {
       const base = key.split("#")[0];
       this.componentProperties[key] = value;
+      // An instance swap puts the chosen component's layers in the nested
+      // instance, at the nested instance's size and name. What the layers it
+      // replaced carried — a tint — goes with them.
+      const swapped = this.findAll(
+        (node) =>
+          node.type === "INSTANCE" &&
+          node.componentPropertyReferences &&
+          node.componentPropertyReferences.mainComponent &&
+          node.componentPropertyReferences.mainComponent.split("#")[0] === base,
+      );
+      if (swapped.length && typeof value === "string") {
+        const component = nodesById.get(value);
+        if (!component || component.type !== "COMPONENT") {
+          throw new Error(`in setProperties: no component ${value} to swap in`);
+        }
+        for (const nested of swapped) {
+          for (const child of [...nested.children]) nested.removeChild(child);
+          for (const child of component.children) {
+            nested.appendChild(child.clone());
+          }
+          nested.mainComponent = component;
+        }
+      }
       const text = this.findOne(
         (node) =>
           node.type === "TEXT" &&
@@ -538,6 +592,56 @@ export function mockIconComponent(name) {
   return component;
 }
 
+// An auto-layout frame is never smaller than its padding, nor than its stroke
+// on each side when it has one: every frame in the live file lays its stroke
+// out (strokesIncludedInLayout, the runtime's default, which no painter sets).
+// No document says so; the file did, over REST on 2026-09-22. DynamicIsland's
+// three slots were made 24 high with 12 above and below, took a 1px stroke,
+// then had that padding cut to 3 and to 1 — and read 26, whatever their
+// padding and their label, while every slot made taller than 26 kept its
+// size. So a frame grows the moment its padding and stroke outgrow it, and a
+// fixed frame does not shrink back when the padding falls. `requestedSize`
+// keeps the size a painter last asked for, so a check can find every frame
+// that did not get it.
+const AUTO_LAYOUT_BOX_FIELDS = [
+  "layoutMode",
+  "paddingLeft",
+  "paddingRight",
+  "paddingTop",
+  "paddingBottom",
+  "strokeWeight",
+];
+for (const field of AUTO_LAYOUT_BOX_FIELDS) {
+  Object.defineProperty(MockNode.prototype, field, {
+    configurable: true,
+    get() {
+      return this._box ? this._box[field] : undefined;
+    },
+    set(value) {
+      if (!this._box) this._box = {};
+      this._box[field] = value;
+      this.holdAutoLayoutMinimum();
+    },
+  });
+}
+
+/** Auto-layout frames under `root` that are not the size last asked of them. */
+export function framesLargerThanAsked(root) {
+  const found = [];
+  (function walk(node) {
+    const asked = node.requestedSize;
+    if (
+      asked &&
+      isAutoLayoutNode(node) &&
+      (node.width > asked.width || node.height > asked.height)
+    ) {
+      found.push(node);
+    }
+    for (const child of node.children || []) walk(child);
+  })(root);
+  return found;
+}
+
 // Figma's rules for layout sizing, with its own messages, so a painter that
 // asks for one Figma refuses is caught here rather than in the live file's
 // run log: HUG takes an auto-layout frame, or text inside one; FILL takes a
@@ -593,7 +697,11 @@ for (const axis of ["layoutSizingHorizontal", "layoutSizingVertical"]) {
   });
 }
 
-export function createFigmaMock({ pages }) {
+/**
+ * `library` maps a component key to the component `importComponentByKeyAsync`
+ * returns for it, standing in for a team library.
+ */
+export function createFigmaMock({ pages, library }) {
   const root = new MockNode("DOCUMENT", "Document");
   for (const page of pages) root.appendChild(page);
   const figma = {
@@ -610,24 +718,44 @@ export function createFigmaMock({ pages }) {
     createEllipse: () => new MockNode("ELLIPSE", "Ellipse"),
     createLine: () => new MockNode("LINE", "Line"),
     createVector: () => new MockNode("VECTOR", "Vector"),
+    createPolygon: () => new MockNode("POLYGON", "Polygon"),
     createPage: () => {
       const page = new MockNode("PAGE", "Page");
       root.appendChild(page);
       return page;
     },
+    // As Figma draws an SVG: a frame of the SVG's size, on the current page,
+    // holding a vector for each path with that path's fill and stroke.
     createNodeFromSvg: (svg) => {
       const frame = new MockNode("FRAME", "Svg");
       frame.svg = svg;
-      const vector = new MockNode("VECTOR", "Vector");
-      vector.strokes = [
-        {
-          type: "SOLID",
-          color: { r: 0, g: 0, b: 0 },
-          opacity: 1,
-          visible: true,
-        },
-      ];
-      frame.appendChild(vector);
+      const root = svg.match(/<svg\b([^>]*)>/);
+      const size = (key) => {
+        const found =
+          root && root[1].match(new RegExp(`\\b${key}="([\\d.]+)"`));
+        return found ? Number(found[1]) : 100;
+      };
+      frame.resize(size("width"), size("height"));
+      frame.fills = [];
+      const paint = (hex) =>
+        hex && hex !== "none"
+          ? [{ type: "SOLID", color: parseHex(hex), opacity: 1, visible: true }]
+          : [];
+      for (const [, attributes] of svg.matchAll(/<path\b([^>]*?)\/?>/g)) {
+        const attribute = (key) => {
+          const found = attributes.match(
+            new RegExp(`(?:^|\\s)${key}="([^"]*)"`),
+          );
+          return found ? found[1] : null;
+        };
+        const vector = new MockNode("VECTOR", "Vector");
+        vector.resize(frame.width, frame.height);
+        vector.fills = paint(attribute("fill"));
+        vector.strokes = paint(attribute("stroke"));
+        vector.path = attribute("d");
+        frame.appendChild(vector);
+      }
+      figma.currentPage.appendChild(frame);
       return frame;
     },
     createSlot: () => new MockNode("SLOT", "Slot"),
@@ -646,8 +774,10 @@ export function createFigmaMock({ pages }) {
     getLocalPaintStylesAsync: async () => [],
     getLocalEffectStylesAsync: async () => [],
     getNodeByIdAsync: async (id) => root.findOne((node) => node.id === id),
-    importComponentByKeyAsync: async () => {
-      throw new Error("no library in the harness");
+    importComponentByKeyAsync: async (key) => {
+      const component = library && library.get(key);
+      if (!component) throw new Error(`no library component ${key}`);
+      return component;
     },
     variables: {
       setBoundVariableForPaint: (paint, field, variable) => ({
@@ -806,10 +936,13 @@ export function freshStats() {
 /**
  * Evaluate the plugin in a context whose `figma` is the mock. Returns the
  * context: `context.updateCategoryTileVariant`, `context.KOZMOS_RADIUS` and
- * every other top-level binding of `code.js` are properties on it.
+ * every other top-level binding of `code.js` are properties on it. `append`
+ * is script run after the plugin's own, where a top-level function can be
+ * reassigned for every caller: a check that wants the configuration a set's
+ * Update hands its shared helper replaces the helper with one that returns it.
  */
-export function loadPlugin({ pluginPath, figma }) {
-  const source = fs.readFileSync(pluginPath, "utf8");
+export function loadPlugin({ pluginPath, figma, append = "" }) {
+  const source = fs.readFileSync(pluginPath, "utf8") + append;
   const context = vm.createContext({
     figma,
     __html__: "",
