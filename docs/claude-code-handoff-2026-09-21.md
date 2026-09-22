@@ -296,6 +296,12 @@ a rule applies to falls behind the painters (the typography rule held 43 of 80);
 Label parser claims any `State=Default` name, which left the Glass skip dead; and a check that
 throws on an old build hides every section after it.
 
+Overnight into the 22nd: at 00:00 a cleanup of `/private/tmp` took this worktree's `.git` file,
+1,385 tracked files and the ignored `apps/PointrPlayground/QAConfig.json` (Olcay restores it),
+and left the plugin's files. Relinked by writing the `gitdir:` line back into `.git` (`git
+worktree repair` cannot when the file is gone), then `git restore .` after `git status` showed
+only deletions. Never `git worktree prune` while `git worktree list` reads "prunable".
+
 From Apply Text Styles at 21:36: a warning's remedy is part of the warning — surfacing
 FileUpload's unstyled labels put the panel's next step on Apply Text Styles, which restyled the
 whole library, so read what a new warning tells the reader to run, and what that does, before
