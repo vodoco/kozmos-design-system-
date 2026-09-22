@@ -24,7 +24,7 @@ try {
     });
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
-    await page.setContent(`<html><head><style>
+    await page.setContent(`<!doctype html><html><head><style>
       html {font-size:16px} body {margin:13px}
       input,textarea,button {background:orange;border:3px solid purple;border-radius:3px}
       label {font-size:30px} p {margin:20px}

@@ -97,6 +97,13 @@ jobs:
       - name: Verify No New Raw Values
         run: node --test scripts/lib/raw-value-patterns.test.mjs && pnpm tokens:raw:check
 
+      # A layout token is a bare number, and a bare number is not a length: the
+      # browser drops `height: var(--primitives-layout-spacing-200)` without a
+      # word. The map sheet's handle was 4px tall from the day it shipped.
+      # Reads the token values the build step above emits.
+      - name: Verify Owned Lengths Convert Their Tokens
+        run: pnpm tokens:unitless:check
+
       # A Tailwind class the build cannot generate is dropped without a word, and
       # a toHaveClass assertion still passes. bg-background/90 left
       # MapControlButton transparent over the map that way. This reads the
