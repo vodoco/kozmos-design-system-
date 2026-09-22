@@ -65,7 +65,15 @@ fun KozmosSpinner(
     modifier: Modifier = Modifier,
     size: KozmosSpinnerSize = KozmosSpinnerSize.Md,
     label: String = "Loading",
-    color: Color = KozmosThemeTokens.primitivesColorsTheme500
+    // The theme's own text colour, as React's `currentColor` and SwiftUI's
+    // foreground style resolve to. It defaulted to theme/500 whatever it sat
+    // on, which was the last place the three platforms disagreed once the arc
+    // was one drawing. `LocalContentColor` is the closer-looking analogue and
+    // is wrong here: outside a material `Surface` it stays its own default,
+    // black, which drew an invisible spinner on the dark surface — the first
+    // dark golden was a black rectangle. A control that sets a content colour
+    // — a Button, an IconButton — passes it in.
+    color: Color = KozmosThemeTokens.primitivesColorsForeground0
 ) {
     // One turn a second, linear — the same turn React's `kozmos-spin` takes.
     val transition = rememberInfiniteTransition(label = "kozmos-spinner")

@@ -42,6 +42,7 @@ public enum KozmosSpinnerSize: String, CaseIterable, Sendable {
 /// for less motion; the label still says what is happening.
 public struct KozmosSpinner: View {
     private let size: KozmosSpinnerSize
+    private let color: Color
     private let label: String
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -50,8 +51,18 @@ public struct KozmosSpinner: View {
     /// One turn a second, linear — the same turn React's `kozmos-spin` takes.
     static let turnDuration: Double = 1
 
-    public init(size: KozmosSpinnerSize = .md, label: String = "Loading") {
+    /// The colour is the theme's own text colour, as React's `currentColor` and
+    /// Compose's themed foreground resolve to — not SwiftUI's implicit
+    /// `.primary`, which follows the system appearance rather than the theme a
+    /// Kozmos surface is drawing in. A control that has a foreground of its own
+    /// — a button, an icon button — passes it in.
+    public init(
+        size: KozmosSpinnerSize = .md,
+        color: Color = KozmosColors.primitivesColorsForeground0,
+        label: String = "Loading"
+    ) {
         self.size = size
+        self.color = color
         self.label = label
     }
 
@@ -61,7 +72,7 @@ public struct KozmosSpinner: View {
             // is missing is what reads as motion; a full ring turning shows
             // nothing at all.
             .trim(from: 0, to: 0.75)
-            .stroke(style: StrokeStyle(lineWidth: size.lineWidth, lineCap: .round))
+            .stroke(color, style: StrokeStyle(lineWidth: size.lineWidth, lineCap: .round))
             .rotationEffect(.degrees(-90 + angle))
             .frame(width: size.points, height: size.points)
             .onAppear {

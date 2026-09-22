@@ -69,8 +69,7 @@ public struct KozmosButton: View {
                     // from assistive technology — the button is already
                     // disabled and named, and a second live region for one
                     // wait is a defect.
-                    KozmosSpinner(size: .sm)
-                        .foregroundColor(foregroundColor)
+                    KozmosSpinner(size: .sm, color: foregroundColor)
                         .accessibilityHidden(true)
                 }
                 Text(label)

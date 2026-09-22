@@ -48,7 +48,7 @@ public struct KozmosIconButton: View {
                     // own foreground — one drawing on all four platforms
                     // (2026-09-22). Hidden from assistive technology: the
                     // control is disabled and already named.
-                    KozmosSpinner(size: .sm)
+                    KozmosSpinner(size: .sm, color: foregroundColor)
                         .accessibilityHidden(true)
                 } else {
                     Image(systemName: iconName)

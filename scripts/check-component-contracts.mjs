@@ -9629,8 +9629,8 @@ assertContains(
 assertContains(
   files.iosButton,
   source.iosButton,
-  "KozmosSpinner(size: .sm)",
-  "iOS Button draws the system's arc while loading",
+  "KozmosSpinner(size: .sm, color: foregroundColor)",
+  "iOS Button draws the system's arc in its own foreground while loading",
 );
 
 assertContains(
@@ -9692,8 +9692,8 @@ assertContains(
 assertContains(
   files.iosIconButton,
   source.iosIconButton,
-  "KozmosSpinner(size: .sm)",
-  "iOS IconButton draws the system's arc while loading",
+  "KozmosSpinner(size: .sm, color: foregroundColor)",
+  "iOS IconButton draws the system's arc in its own foreground while loading",
 );
 
 // CategoryTile: the count is the system's counter, brand tone, at the icon
