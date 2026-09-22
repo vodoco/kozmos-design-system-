@@ -127,6 +127,24 @@ This section supersedes what it names below; the rest of the document stands.
   docs change of their own. The website (#55) imports `@kozmos/react` and follows after the
   merge. Order: #56, then the per-module PR, then the rename PR; then his `NPM_TOKEN`; then the
   Version Packages PR publishes 0.1.0; then the React Code Connect republish, on his word.
+- **GAP-56, the site's finding, fixed in the design system (18:30).** A Button put no space between a
+  caller's icon and its label on React and Android; Figma (`itemSpacing` 8, bound) and iOS
+  (`HStack(spacing: spacing100)`) keep 8. React: `.kozmos-button` takes `gap-2`, the loader loses
+  its `mr-2` — a physical margin that spaced it left-to-right only, so right-to-left it touched
+  the label — and the design system's own four compensating `mr-2`s go (RouteSummary,
+  SaveLocationCard twice, the POICard story). Android: `ButtonContent` lays the loader and the
+  content in a row spaced by `primitivesLayoutSpacing100`, and three compensating 8dp spacers go;
+  RouteSummary's and SaveLocationCard's goldens came out pixel-identical, POIDetailPanel's two
+  changed as meant (its action icons touched their labels). Tests fail on the old code:
+  `test:owned-css` measures both gaps in both directions (and fails on a half-fix that keeps the
+  loader's margin), and `theIconKeepsEightFromTheLabel` measures the layout (0.0 before, 8.0
+  after). The site then flips its GAP-56 proof to expect 8 and deletes `site-button-icon`,
+  `ex-dash-add` and `ex-inbox-prefs` in the same change, or those buttons show 16px.
+- **Found on the way, open:** Paparazzi cannot render a loading KozmosButton — material3 1.1.2's
+  indeterminate spinner throws `NoSuchMethodError` (`KeyframesSpecConfig.at`) against
+  animation-core 1.6.0, both from BOM 2024.01.00. Whether a device crashes too is unverified (the
+  Android playground has never run); a Compose BOM bump is the likely fix, with every golden
+  re-verified.
 - **#56's CI at `c5ec97c` is green** — Web (the story audit, and steps 40–47 on CI for the first
   time), iOS and Android; `analyze-bundle` is red as decided (the per-module PR replaces it).
 
