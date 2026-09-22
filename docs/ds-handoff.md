@@ -1755,3 +1755,16 @@ share. Each change has a test that fails on the old code, and nine painter asser
 previous build. Two findings: over REST a bound paint in this file renders its stored colour, not
 its variable's, so a REST render cannot confirm a binding; and the branch's first CI runs (PR #56)
 fail five checks `main` passes — handoff §8.
+
+On the afternoon of the 22nd the handoff for the next chat was written:
+[claude-code-handoff-2026-09-22.md](claude-code-handoff-2026-09-22.md). Writing it turned up two
+things. The live Figma file had been written at 09:47:15Z by a Curated Icons → Update that drew
+all 56 icon sources anew, although its sync keeps a source whose main component carries the
+definition's key; the tints laid through the old sources are gone from 2,325 of the library's
+2,415 icons, in 52 sets. No audit, `figma:verify` or CI step reads icon paints; the new
+`scripts/figma-rest/icon-tints.mjs` does. Olcay's run on `b3257790f931` therefore takes Update All
+Core and Update All Product / SDK after the icon sync (`figma-drift-2026-09-21.md` §9, the last
+section). And CI's steps after the story audit, never run on the branch, were run locally: one
+was red, the governance check, because `STATUS.md` had not been regenerated for the branch's new
+components; it is, and the check no longer counts Compose's `Motion` folder as a component. The
+session's Figma read tools are kept in `scripts/figma-rest/`.

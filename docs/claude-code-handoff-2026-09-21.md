@@ -1,5 +1,12 @@
 # Claude Code handoff — the initial sheet, the category state, the colours, the audit, and the Figma drift (2026-09-21)
 
+> **Superseded on the afternoon of the 22nd by
+> [claude-code-handoff-2026-09-22.md](claude-code-handoff-2026-09-22.md)** — read that first. It
+> revises §8 item 1 (the live file's icon sources were drawn anew at 09:47:15Z, and the run now
+> needs Update All Core and Update All Product / SDK) and corrects §8 item 2 (Chromatic's 276 are
+> first snapshots with no baseline, not changes). This document stays the record of the 20th and
+> 21st.
+
 For the next chat. Everything below is on disk or in git; nothing depends on this conversation.
 Read section 1, then open `docs/initial-sheet-2026-09-20.md` and
 `docs/kozmos-pointr-operators-guide-2026-09-20.md`, and you have the whole state.
@@ -330,7 +337,8 @@ ADAPTIVE_BROWSER=<chromium|firefox|webkit> pnpm test:search-sheet` (and `test:ma
    expected with no warning, icons 64 of 64 and 54 advisories; then `pnpm figma:verify` (every
    enforced check ok, no overflow, no typed glyph), `pnpm tokens:radius:nesting --strict`, and
    the REST read-back: the 56 Pointr Sources under the ids recorded before the run
-   (`icons-baseline-before-run.json` in the session's scratchpad; `lastModified` 08:10:23), the
+   (`docs/figma-icons-2026-09-22-0810Z.json`; `lastModified` 08:10:23 — stale since 09:47:15Z,
+   see the 22nd's handoff §5), the
    tiles' symbols and accents, the island's sizes, the footers. Every other set draws as this
    build does (a replay of all 26 Product / SDK sets and the 41 Core sets the harness reaches).
    Then the library can be published. Do not run Apply Text Styles. Code Connect is published
