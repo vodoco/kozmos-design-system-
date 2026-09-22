@@ -7,9 +7,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  Icon,
   MapView,
-  SegmentedControl,
   Slider,
   Stack,
   Surface,
@@ -21,12 +19,7 @@ import {
   Tag,
   Text,
   ThemeProvider,
-  type IconProps,
 } from "@kozmos/react";
-import { kozmosIconNames } from "@kozmos/icons";
-import { DirectionSample } from "../foundations/DirectionSample";
-import { GlassStage } from "../foundations/GlassStage";
-import { MotionRace } from "../foundations/MotionRace";
 import button from "../generated/components/button.json";
 import contract from "../generated/contrast-contract.json";
 import { contrastRatio, formatRatio, parseColour } from "../lib/contrast";
@@ -105,45 +98,6 @@ export function TokensTile() {
       </ThemeProvider>
       <Text size="sm">
         <SiteLink to="/foundations/colour">Every ramp and role</SiteLink>
-      </Text>
-    </Tile>
-  );
-}
-
-const textSizes = [
-  "4xl",
-  "3xl",
-  "2xl",
-  "xl",
-  "lg",
-  "base",
-  "sm",
-  "xs",
-] as const;
-
-export function TypeTile() {
-  return (
-    <Tile
-      span={4}
-      title="A type scale"
-      description="Eight sizes and four weights on Text; Heading takes the top six."
-    >
-      <Box className="site-type-scale">
-        {textSizes.map((size) => (
-          <Stack key={size} direction="row" align="baseline" gap={3}>
-            <Text as="span" size="xs" color="muted" className="site-mono">
-              {size}
-            </Text>
-            <Text as="span" size={size} weight="semibold" truncate>
-              Find your way
-            </Text>
-          </Stack>
-        ))}
-      </Box>
-      <Text size="sm">
-        <SiteLink to="/foundations/typography">
-          Families, tokens and sizes
-        </SiteLink>
       </Text>
     </Tile>
   );
@@ -357,139 +311,6 @@ export function ContrastTile() {
       <Text size="sm">
         <SiteLink to="/foundations/colour">All twenty-two pairs</SiteLink>
       </Text>
-    </Tile>
-  );
-}
-
-export function MotionTile() {
-  return (
-    <Tile
-      span={4}
-      title="Motion from tokens"
-      description="Three durations and two curves. The markers travel on the tokens; so does everything that moves in the components."
-    >
-      <MotionRace compact />
-    </Tile>
-  );
-}
-
-export function DirectionTile() {
-  return (
-    <Tile
-      span={4}
-      title="Right to left"
-      description="Set dir on a provider and the layout, the icons' slots and Radix's keyboard navigation follow."
-    >
-      <DirectionSample compact />
-    </Tile>
-  );
-}
-
-export function GlassTile() {
-  return (
-    <Tile
-      span={4}
-      title="Glass, when asked for"
-      description="A material a product chooses per surface, from the effect tokens. With transparency reduced, it is the plain colour."
-    >
-      <GlassStage />
-    </Tile>
-  );
-}
-
-const iconSample = [...kozmosIconNames].slice(0, 24) as NonNullable<
-  IconProps["name"]
->[];
-
-export function IconsTile() {
-  return (
-    <Tile
-      span={4}
-      title={`${kozmosIconNames.length} icons`}
-      description="Stable keys, aliases for the common ones, and outlines matched to the Figma library by component key."
-    >
-      <Box className="site-icon-grid" aria-hidden="true">
-        {iconSample.map((name) => (
-          <Box key={name} className="site-icon-cell">
-            <Icon name={name} />
-          </Box>
-        ))}
-      </Box>
-      <Text size="sm">
-        <SiteLink to="/foundations/icons">Search the set</SiteLink>
-      </Text>
-    </Tile>
-  );
-}
-
-export function FigmaTile() {
-  return (
-    <Tile
-      span={4}
-      title="Designed in Figma, linked to code"
-      description="The Core Library is painted by an importer plugin from the same tokens, and Code Connect is published for all three platforms, so Dev Mode shows a component's React, SwiftUI and Compose beside its design."
-    >
-      <Stack direction="row" wrap="wrap" gap={2}>
-        <Tag emotion="success" variant="outline">
-          Code Connect published
-        </Tag>
-        <Tag variant="secondary">React</Tag>
-        <Tag variant="secondary">SwiftUI</Tag>
-        <Tag variant="secondary">Compose</Tag>
-      </Stack>
-      <Text size="sm" color="muted">
-        Every variant in Figma is verified against the code’s contract before a
-        set is updated; the library is never rebuilt, only updated, so the node
-        ids Code Connect pins stay stable.
-      </Text>
-    </Tile>
-  );
-}
-
-export function ThemeTile() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-  return (
-    <Tile
-      span={4}
-      title="Themes that stay in their module"
-      description="A ThemeProvider owns its subtree, never the document, and its overlays follow it. Two providers can disagree on one page."
-    >
-      <SegmentedControl
-        label="This tile's theme"
-        size="sm"
-        items={[
-          { value: "light", label: "Light" },
-          { value: "dark", label: "Dark" },
-        ]}
-        value={theme}
-        onValueChange={(next) => {
-          if (next === "light" || next === "dark") setTheme(next);
-        }}
-      />
-      <ThemeProvider theme={theme}>
-        <Surface
-          className="site-theme-sample site-elevated"
-          style={{ "--shadow": "var(--semantics-elevation-raised)" }}
-        >
-          <Stack direction="row" align="center" justify="between" gap={2}>
-            <Text weight="semibold">Bookshop</Text>
-            <Tag emotion="success" variant="outline">
-              Open
-            </Tag>
-          </Stack>
-          <Text size="sm" color="muted">
-            First floor · 3 min on foot
-          </Text>
-          <Stack direction="row" gap={2}>
-            <Button size="sm" emotion="themed">
-              Directions
-            </Button>
-            <Button size="sm" variant="outline">
-              Save
-            </Button>
-          </Stack>
-        </Surface>
-      </ThemeProvider>
     </Tile>
   );
 }

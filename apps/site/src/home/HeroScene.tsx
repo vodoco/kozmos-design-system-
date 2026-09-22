@@ -8,8 +8,9 @@ import {
   MapView,
   RouteProgressRail,
   RouteSummary,
-  SegmentedControl,
   Surface,
+  Switch,
+  Text,
   ThemeProvider,
   UserLocationMarker,
   type CategoryTint,
@@ -58,7 +59,9 @@ const MAX_ZOOM = 1.6;
 /**
  * A map scene made of Kozmos parts: the map surface, category-tinted pins,
  * the visitor's marker, a manoeuvre on glass, the route summary, and the
- * map controls. Its theme and direction are its own provider's.
+ * map controls. Its theme and direction are its own provider's, and the two
+ * switches that change them sit in a strip inside the scene's frame, in the
+ * page's theme, so they read as the scene's and not the site's.
  */
 export function HeroScene() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
@@ -68,9 +71,9 @@ export function HeroScene() {
   const [selected, setSelected] = useState("gate");
 
   return (
-    <Box className="site-scene">
+    <Box className="site-scene-frame">
       <ThemeProvider theme={theme} dir={dir}>
-        <Box className="site-scene-frame">
+        <Box className="site-scene-map">
           <MapView
             mapLabel="Illustrative terminal map"
             style={{ "--zoom": zoom }}
@@ -152,32 +155,31 @@ export function HeroScene() {
           </MapView>
         </Box>
       </ThemeProvider>
-      <Box className="site-scene-controls">
-        <SegmentedControl
-          label="This scene's theme"
-          size="sm"
-          items={[
-            { value: "light", label: "Light" },
-            { value: "dark", label: "Dark" },
-          ]}
-          value={theme}
-          onValueChange={(next) => {
-            if (next === "light" || next === "dark") setTheme(next);
-          }}
-        />
-        <SegmentedControl
-          label="Direction"
-          size="sm"
-          items={[
-            { value: "ltr", label: "Left to right" },
-            { value: "rtl", label: "Right to left" },
-          ]}
-          value={dir}
-          onValueChange={(next) => {
-            if (next === "ltr" || next === "rtl") setDir(next);
-          }}
-        />
-      </Box>
+      <Surface
+        role="group"
+        aria-label="Scene settings"
+        className="site-scene-bar"
+      >
+        <Text as="span" size="sm" weight="medium">
+          Try the scene
+        </Text>
+        {/* A Switch is always as wide as its container (GAPS.md, GAP-44);
+            each sits in a box of its own size so the two share a row. */}
+        <Box className="site-scene-toggle">
+          <Switch
+            label="Dark"
+            checked={theme === "dark"}
+            onCheckedChange={(dark) => setTheme(dark ? "dark" : "light")}
+          />
+        </Box>
+        <Box className="site-scene-toggle">
+          <Switch
+            label="Right to left"
+            checked={dir === "rtl"}
+            onCheckedChange={(rtl) => setDir(rtl ? "rtl" : "ltr")}
+          />
+        </Box>
+      </Surface>
     </Box>
   );
 }

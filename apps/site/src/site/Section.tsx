@@ -3,12 +3,15 @@ import { Heading, Text } from "@kozmos/react";
 
 /** A titled section of a page: an h2, an optional lead, and its content. */
 export function Section({
+  id,
   title,
   lead,
   actions,
   level = 2,
   children,
 }: {
+  /** An anchor for links to this section. */
+  id?: string;
   title: string;
   lead?: ReactNode;
   /** Controls beside the title: a switch, a filter. */
@@ -18,7 +21,7 @@ export function Section({
 }) {
   const headingId = useId();
   return (
-    <section aria-labelledby={headingId} className="site-section">
+    <section id={id} aria-labelledby={headingId} className="site-section">
       <header className="site-section-header">
         <Heading
           level={level}

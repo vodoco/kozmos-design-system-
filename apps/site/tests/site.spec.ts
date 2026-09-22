@@ -290,11 +290,11 @@ test("the theme choice is kept across a reload", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
   await page.goto("/");
   await hydrated(page);
-  await page
-    .getByRole("group", { name: "Colour theme" })
-    .getByRole("radio", { name: "Dark" })
-    .click();
+  // The header's theme is a menu behind one small button.
+  await page.getByRole("button", { name: "Theme: System" }).click();
+  await page.getByRole("menuitemradio", { name: "Dark" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.getByRole("button", { name: "Theme: Dark" })).toBeVisible();
   await page.reload();
   await hydrated(page);
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
@@ -401,15 +401,12 @@ test.describe("home", () => {
       .locator("section[aria-labelledby='home-title'] [data-kozmos-root]")
       .first();
     await expect(scene).toHaveAttribute("data-theme", "dark");
-    await page
-      .getByRole("group", { name: "This scene's theme" })
-      .getByRole("radio", { name: "Light" })
-      .click();
+    // The scene's own switches sit in a strip inside its frame.
+    const settings = page.getByRole("group", { name: "Scene settings" });
+    await expect(settings.getByRole("switch", { name: "Dark" })).toBeChecked();
+    await settings.getByRole("switch", { name: "Dark" }).click();
     await expect(scene).toHaveAttribute("data-theme", "light");
-    await page
-      .getByRole("group", { name: "Direction" })
-      .getByRole("radio", { name: "Right to left" })
-      .click();
+    await settings.getByRole("switch", { name: "Right to left" }).click();
     await expect(scene).toHaveAttribute("dir", "rtl");
     await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
     await expect(
@@ -498,12 +495,307 @@ test.describe("home", () => {
     await page.goto("/");
     await scrolled(page);
     const miniature = page.getByRole("img", {
-      name: "Venue explorer example, shown small",
+      name: "Operations dashboard example, shown small",
     });
     await expect(miniature).toBeVisible();
     await expect(miniature.locator("[inert]")).toHaveCount(1);
     await expect(miniature.locator("input[type=search]")).toHaveCount(1);
     await expect(miniature.getByRole("searchbox")).toHaveCount(0);
+  });
+});
+
+/**
+ * What is painted inside the sticky header once each positioned, stacked
+ * element of the page has been scrolled under it: anything that is not the
+ * header's own is drawn over it.
+ */
+async function paintedOverHeader(page: Page) {
+  return page.evaluate(async () => {
+    const header = document.querySelector<HTMLElement>(
+      'header[data-slot="navbar"]',
+    );
+    if (!header) return ["no header"];
+    const stacked = [
+      ...document.querySelectorAll<HTMLElement>("main *"),
+    ].filter((element) => {
+      const style = getComputedStyle(element);
+      return style.position !== "static" && Number(style.zIndex) > 0;
+    });
+    const found = new Set<string>();
+    for (const element of stacked) {
+      const top = element.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo(0, Math.max(0, top - 24));
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      const box = header.getBoundingClientRect();
+      for (let x = 4; x < window.innerWidth; x += 16) {
+        for (const y of [
+          box.top + 3,
+          box.top + box.height / 2,
+          box.bottom - 3,
+        ]) {
+          const hit = document.elementFromPoint(x, y);
+          if (hit && !header.contains(hit)) {
+            found.add(
+              `${hit.tagName.toLowerCase()} "${(hit.getAttribute("aria-label") ?? hit.textContent ?? "").trim().slice(0, 30)}"`,
+            );
+          }
+        }
+      }
+    }
+    window.scrollTo(0, 0);
+    return [...found];
+  });
+}
+
+test.describe("the header", () => {
+  for (const viewport of [
+    { width: 1280, height: 800 },
+    { width: 1024, height: 768 },
+    { width: 768, height: 1024 },
+    { width: 390, height: 844 },
+  ]) {
+    test(`is one row at ${viewport.width}px`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await page.goto("/");
+      await hydrated(page);
+      const height = await page
+        .getByRole("banner")
+        .evaluate((element) => element.getBoundingClientRect().height);
+      // The Navbar's own minimum is 4rem; one row of controls fits inside it.
+      expect(height).toBeLessThanOrEqual(66);
+    });
+  }
+
+  for (const [path, width] of [
+    ["/", 1280],
+    ["/", 390],
+    ["/components/map-overlay", 1280],
+    ["/examples/kiosk-directory", 1280],
+  ] as const) {
+    test(`stays on top of ${path} at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto(path);
+      await scrolled(page);
+      expect(await paintedOverHeader(page)).toEqual([]);
+    });
+  }
+});
+
+test("on a phone, the site's pages are in the header's drawer", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await hydrated(page);
+  const banner = page.getByRole("banner");
+  await expect(banner.getByRole("link", { name: "Examples" })).toBeHidden();
+  await banner.getByRole("button", { name: "Site menu" }).click();
+  const drawer = page.getByRole("dialog", { name: "Kozmos" });
+  await expect(drawer).toBeVisible();
+  await drawer.getByRole("link", { name: "Examples" }).click();
+  await expect(page).toHaveURL(/\/examples$/);
+  await expect(drawer).toBeHidden();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Examples");
+});
+
+test.describe("home layout", () => {
+  test("the hero offers two next steps, and the examples come right after it", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await hydrated(page);
+    await expect(
+      page.locator('section[aria-labelledby="home-title"] .site-actions a'),
+    ).toHaveCount(2);
+    await expect(
+      page.locator("main .site-section-header h2").first(),
+    ).toHaveText("Built from it");
+  });
+
+  for (const width of [1280, 1024]) {
+    test(`every card grid ends on a full row at ${width}px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto("/");
+      await scrolled(page);
+      const lastRows = await page.evaluate(() => {
+        const grids = [
+          document.querySelector(".site-bento"),
+          document.querySelector("[aria-labelledby] .site-example-card")
+            ?.parentElement ?? null,
+        ].filter((grid): grid is Element => grid !== null);
+        return grids.map((grid) => {
+          const cards = [...grid.children].map((card) =>
+            card.getBoundingClientRect(),
+          );
+          const lastTop = Math.max(
+            ...cards.map((card) => Math.round(card.top)),
+          );
+          const row = cards.filter((card) => Math.round(card.top) === lastTop);
+          const used =
+            Math.max(...row.map((card) => card.right)) -
+            Math.min(...row.map((card) => card.left));
+          return {
+            grid: grid.className,
+            share: +(used / grid.getBoundingClientRect().width).toFixed(2),
+          };
+        });
+      });
+      expect(lastRows.length).toBe(2);
+      for (const row of lastRows)
+        expect(row.share, row.grid).toBeGreaterThan(0.98);
+    });
+  }
+
+  test("every section keeps its distance from the one before", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await scrolled(page);
+    const tight = await page.evaluate(() =>
+      [...document.querySelectorAll("main .site-section-header h2")]
+        .map((heading) => {
+          const top = heading.getBoundingClientRect().top;
+          const above = [...document.querySelectorAll("main *")]
+            .map((element) => element.getBoundingClientRect())
+            .filter(
+              (box) => box.height > 0 && box.width > 0 && box.bottom <= top + 1,
+            )
+            .reduce((bottom, box) => Math.max(bottom, box.bottom), 0);
+          return { title: heading.textContent, space: Math.round(top - above) };
+        })
+        .filter((section) => section.space < 48),
+    );
+    expect(tight).toEqual([]);
+  });
+
+  test("the page stays within six screens on a laptop", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/");
+    await scrolled(page);
+    const screens = await page.evaluate(
+      () => document.documentElement.scrollHeight / window.innerHeight,
+    );
+    expect(screens).toBeLessThanOrEqual(6);
+  });
+
+  test("the brand snippet is never an empty override", async ({ page }) => {
+    await page.goto("/");
+    await scrolled(page);
+    const code = await page
+      .getByRole("region", { name: "Make it yours" })
+      .locator("pre")
+      .first()
+      .textContent();
+    expect(code).not.toMatch(/tokens=\{\{\s*\}\}/);
+  });
+});
+
+/**
+ * Design-system gaps, measured. Each test pins what Kozmos draws today, so
+ * it fails the day Kozmos fixes the gap: that is the signal to change the
+ * expectation to the fixed one and close the gap in GAPS.md. DS-HANDOFF.md
+ * lists each fix and the test it flips.
+ */
+test.describe("design-system gaps, measured", () => {
+  test("GAP-38: the map sheet's handle is 4px tall and its grip has no width", async ({
+    page,
+  }) => {
+    await page.goto("/examples/phone-search");
+    await hydrated(page);
+    const size = await page
+      .getByRole("slider", { name: "Panel height" })
+      .evaluate((handle) => {
+        const grip = handle
+          .querySelector(".kozmos-map-sheet-grip")
+          ?.getBoundingClientRect();
+        return {
+          height: Math.round(handle.getBoundingClientRect().height),
+          gripWidth: grip ? Math.round(grip.width) : null,
+        };
+      });
+    expect(size).toEqual({ height: 4, gripWidth: 0 });
+  });
+
+  test("GAP-09: a link drawn as a button keeps its underline", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await hydrated(page);
+    const line = await page
+      .locator('section[aria-labelledby="home-title"] .site-actions a')
+      .first()
+      .evaluate((link) => getComputedStyle(link).textDecorationLine);
+    expect(line).toBe("underline");
+  });
+
+  test("GAP-40: MapView does not isolate its overlays", async ({ page }) => {
+    await page.goto("/");
+    await hydrated(page);
+    const isolation = await page
+      .getByRole("region", { name: "Illustrative terminal map" })
+      .evaluate((map) => getComputedStyle(map).isolation);
+    expect(isolation).toBe("auto");
+  });
+
+  test("GAP-42: a CardTitle's line height equals its font size", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await scrolled(page);
+    const ratio = await page
+      .locator(".site-tile h3")
+      .first()
+      .evaluate((title) => {
+        const style = getComputedStyle(title);
+        return parseFloat(style.lineHeight) / parseFloat(style.fontSize);
+      });
+    expect(ratio).toBe(1);
+  });
+
+  test("GAP-43: the Slider's thumb is 20px square", async ({ page }) => {
+    await page.goto("/");
+    await scrolled(page);
+    const box = await page
+      .getByRole("slider", { name: "Host width" })
+      .boundingBox();
+    expect(box && [Math.round(box.width), Math.round(box.height)]).toEqual([
+      20, 20,
+    ]);
+  });
+
+  test("GAP-03: a dark-mode visitor's page is light until the scripts run", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme: "dark" });
+    // No script file loads: only something inline, before the page's own
+    // scripts, could set the theme before the first paint.
+    await page.route("**/*.js", (route) => route.abort());
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    expect(
+      await page.evaluate(() => document.documentElement.dataset.theme ?? null),
+    ).toBeNull();
+  });
+
+  test("GAP-37: SearchBar keeps the browser's own clear button", async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== "chromium",
+      "the cancel button is a Blink and WebKit pseudo-element; WebKit's field is unstyled anyway (GAP-20)",
+    );
+    await page.goto("/components/search-bar");
+    await hydrated(page);
+    const field = page.locator(".site-demos").getByRole("searchbox").first();
+    await field.fill("bookshop");
+    const display = await field.evaluate(
+      (input) =>
+        getComputedStyle(input, "::-webkit-search-cancel-button").display,
+    );
+    expect(display).toBe("block");
   });
 });
 

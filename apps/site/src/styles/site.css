@@ -136,20 +136,40 @@ body {
   transform: none;
 }
 
-.site-header-nav {
+/* The header's one row: the page links, then the tools at the far end.
+   Below 48rem the links move into the drawer and only the tools remain. */
+.site-header-bar {
+  flex: 1 1 auto;
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--site-space-200);
+}
+
+.site-header-links {
+  display: none;
   gap: var(--site-space-100);
 }
 
-/* The theme switcher and the search button; on a phone the button wraps
-   under the switcher rather than widen the page. */
-.site-header-utilities {
+.site-header-tools {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: end;
-  gap: var(--site-space-100);
+  gap: var(--site-space-50);
+  margin-inline-start: auto;
+}
+
+.site-header-drawer-nav {
+  padding: var(--site-space-200);
+}
+
+@media (min-width: 48rem) {
+  .site-header-links {
+    display: flex;
+  }
+
+  .site-header-menu {
+    display: none;
+  }
 }
 
 /* The search dialog: the field, then the results in their own scroll. */
@@ -278,22 +298,64 @@ body {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
 }
 
+/* Three cards: one row from a small tablet up, auto-fit so they always
+   fill it, one column on a phone. */
+.site-grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+}
+
+/* Four cards: two by two, or four in a row where there is room for them. */
+.site-grid-4 {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 40rem) {
+  .site-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 72rem) {
+  .site-grid-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 .site-card-fill {
   block-size: 100%;
 }
 
-/* A full-bleed band with its own background. */
+/* The CI checks, short: two to a row, each a check mark, a name and its
+   command. */
+.site-checklist {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--site-space-200) var(--site-space-600);
+}
+
+@media (min-width: 48rem) {
+  .site-checklist {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.site-check {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--site-space-150);
+}
+
+/* A full-bleed band. The home page alternates plain and muted bands, all
+   with the same padding, so every section starts the same distance from the
+   one before it. */
 .site-band {
   padding-block: var(--site-space-700);
+}
+
+.site-band-muted {
   background: var(--primitives-colors-background-25);
-}
-
-.site-band-tint {
-  background: var(--primitives-colors-theme-0);
-}
-
-.site-band + .site-band {
-  border-block-start: var(--primitives-border-width-sm) solid
+  border-block: var(--primitives-border-width-sm) solid
     var(--semantics-border-subtle);
 }
 
@@ -328,8 +390,8 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
 .site-hero {
   display: grid;
   gap: var(--site-space-600);
-  align-items: center;
-  padding-block: var(--site-space-700);
+  align-items: start;
+  padding-block: var(--site-space-600);
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
 }
 
@@ -346,23 +408,40 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
   gap: var(--site-space-150);
 }
 
-/* The scene: a map drawn from Kozmos parts, in its own theme. */
-.site-scene {
+/* The scene: a map drawn from Kozmos parts, in its own theme, and the strip
+   with its two switches, in one rounded frame. The frame isolates its
+   stacking: the map's overlays are z-index 50, as the sticky Navbar is, and
+   would otherwise draw over the header as the page scrolls (GAPS.md,
+   GAP-40). */
+.site-scene-frame {
+  position: relative;
+  isolation: isolate;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--site-space-200);
+  inline-size: 100%;
+  border-radius: var(--site-radius-panel);
+  overflow: hidden;
+  box-shadow: var(--semantics-elevation-overlay);
 }
 
 /* A fixed height, not an aspect ratio: with a minimum height, an aspect
    ratio makes the width follow the height and the frame overflows a narrow
    column. MapView asks for 400px of height; this gives it that and more. */
-.site-scene-frame {
+.site-scene-map {
   position: relative;
-  inline-size: 100%;
   block-size: 27rem;
-  border-radius: var(--site-radius-panel);
-  overflow: hidden;
-  box-shadow: var(--semantics-elevation-overlay);
+}
+
+.site-scene-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--site-space-150) var(--site-space-300);
+  padding: var(--site-space-150) var(--site-space-300);
+}
+
+.site-scene-toggle {
+  flex: none;
 }
 
 .site-scene-layer {
@@ -412,13 +491,6 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
     animation: none;
     transition: none;
   }
-}
-
-.site-scene-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--site-space-200);
-  align-items: end;
 }
 
 .site-scene-step {
@@ -837,6 +909,7 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
    Navbar is always sticky (GAP-19) and would otherwise stick over the site's
    header while the page scrolls past the example. */
 .site-example-canvas {
+  isolation: isolate;
   block-size: min(56rem, calc(100dvh - var(--site-space-900)));
   min-block-size: 32rem;
   overflow: auto;
@@ -889,9 +962,14 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
   overflow: hidden;
 }
 
+/* Every frame that hosts a demo or an example isolates its stacking, as the
+   hero scene's does: Kozmos's map overlays use z-index 50, the sticky Navbar
+   too, and a later overlay would draw over the header (GAPS.md, GAP-40). */
+
 /* The stage an example is drawn on: the muted background, so a component's
    own surface reads against it. */
 .site-demo-stage {
+  isolation: isolate;
   padding: var(--site-space-300);
   background: var(--primitives-colors-background-25);
   border-block-start: var(--primitives-border-width-sm) solid
@@ -913,6 +991,7 @@ html[data-theme] .site-reveal:not([data-shown="true"]) {
 
 /* The index's preview: a component's first example, small and inert. */
 .site-preview {
+  isolation: isolate;
   block-size: 12rem;
   overflow: hidden;
   padding: var(--site-space-300);

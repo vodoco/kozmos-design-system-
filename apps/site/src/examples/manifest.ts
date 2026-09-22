@@ -19,12 +19,16 @@ export interface ExampleEntry {
   gaps: readonly string[];
   /** Shown small on the home page; the index shows every example. */
   featured?: boolean;
+  /** One sentence for the home page's card, where the summary is too long. */
+  tagline?: string;
 }
 
 export const examples: readonly ExampleEntry[] = [
   {
     slug: "wayfinding",
     featured: true,
+    tagline:
+      "Choose a place, compare the quickest and the step-free route, and walk it step by step, floor by floor.",
     title: "Wayfinding",
     kind: "app",
     summary:
@@ -37,6 +41,8 @@ export const examples: readonly ExampleEntry[] = [
   {
     slug: "phone-search",
     featured: true,
+    tagline:
+      "A phone’s map screen: search or browse the centre, then read about a place in a sheet at three heights.",
     title: "Phone search sheet",
     kind: "app",
     summary:
@@ -50,7 +56,6 @@ export const examples: readonly ExampleEntry[] = [
   },
   {
     slug: "kiosk-directory",
-    featured: true,
     title: "Kiosk directory",
     kind: "app",
     summary:
@@ -64,7 +69,6 @@ export const examples: readonly ExampleEntry[] = [
   },
   {
     slug: "venue-explorer",
-    featured: true,
     title: "Venue explorer",
     kind: "app",
     summary:
@@ -88,6 +92,9 @@ export const examples: readonly ExampleEntry[] = [
   },
   {
     slug: "dashboard",
+    featured: true,
+    tagline:
+      "The venues console: facts across every venue, and a table to search, filter, page through and add to.",
     title: "Operations dashboard",
     kind: "page",
     summary:

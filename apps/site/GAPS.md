@@ -54,6 +54,13 @@ purpose, because hiding it would hide the evidence).
 | GAP-35 | `BrowseCategoriesPanel` is four columns at any width          | Product / SDK          | composed     |
 | GAP-36 | `ToastViewport` pins itself to the viewport                   | Core                   | composed     |
 | GAP-37 | `SearchBar` shows the browser's clear button beside its own   | Product / SDK          | left visible |
+| GAP-38 | The map sheet's handle is 4px tall and its grip invisible     | Product / SDK          | left visible |
+| GAP-39 | `RouteSummary`'s title is always an `h2`                      | Product / SDK          | left visible |
+| GAP-40 | Map overlays draw over the sticky `Navbar`                    | Product / SDK          | composed     |
+| GAP-41 | `Navbar` has no narrow-screen pattern                         | Core                   | composed     |
+| GAP-42 | `CardTitle`'s line height is 1.0                              | Core                   | left visible |
+| GAP-43 | Controls with touch targets under 44px                        | Core                   | left visible |
+| GAP-44 | `Switch` is always as wide as its container                   | Core                   | composed     |
 
 ---
 
@@ -530,3 +537,98 @@ purpose, because hiding it would hide the evidence).
 - **Fix in Kozmos:** `::-webkit-search-cancel-button { appearance: none }` in
   the field's own CSS (not a scoped utility, so it reaches WebKit too,
   GAP-20), since the component draws its own clear.
+
+## GAP-38 · The map sheet's handle is 4px tall and its grip invisible
+
+- **What:** `AdaptiveMapShell`'s bottom sheet has a drag handle
+  (`role="slider"`, "Panel height") styled by `.kozmos-map-sheet-handle`
+  and `.kozmos-map-sheet-grip` in `packages/react/src/styles/owned-components.css`.
+  Three of their declarations use a layout token directly as a length —
+  `height: var(--primitives-layout-spacing-200)`,
+  `padding-top: var(--primitives-layout-spacing-75)` and
+  `width: var(--primitives-layout-sizing-500)` — and those tokens are
+  unitless (`16`, `6`, `40`), so the browser drops all three. Measured on
+  2026-09-22: the handle is 388 × 4 px, the grip 0 px wide. The sheet has no
+  visible grip and a 4px target to drag.
+- **Now:** left as Kozmos draws it, on the phone search example and the
+  adaptive tile; measured by a test in `tests/site.spec.ts`.
+- **Lane:** Product / SDK.
+- **Fix in Kozmos:** `calc(var(…) * 1px)`, as every other owned rule does;
+  the three are the only such declarations in the owned stylesheets.
+
+## GAP-39 · `RouteSummary`'s title is always an `h2`
+
+- **What:** `RouteSummary` renders its destination in an `h2`, whatever the
+  page around it. On the home page the hero scene's summary ("Gate B12")
+  becomes the first section of the page's outline, before any real
+  section. `POIDetailPanel` has `titleLevel` for exactly this.
+- **Now:** left visible.
+- **Lane:** Product / SDK.
+- **Fix in Kozmos:** a `titleLevel` prop (2–4), as `POIDetailPanel` has.
+
+## GAP-40 · Map overlays draw over the sticky `Navbar`
+
+- **What:** `MapOverlay` is `z-index: 50`, and so is the sticky `Navbar`;
+  `MapView` does not create a stacking context. Any map drawn from
+  `MapView` and `MapOverlay` outside `AdaptiveMapShell` (which isolates
+  itself) paints its overlays over the header as the page scrolls, because
+  it comes later in the document. Measured on the home page, the
+  MapOverlay reference page and the kiosk example.
+- **Now:** the site isolates every frame that hosts a map
+  (`isolation: isolate` on the scene frame, demo stages, index previews and
+  example canvases), and a test scrolls each stacked element under the
+  header and checks nothing draws over it.
+- **Lane:** Product / SDK.
+- **Fix in Kozmos:** `isolate` on `MapView`'s root, as `AdaptiveMapShell`'s
+  has; and a layer scale in which the page's navigation sits above a map's
+  own overlays.
+
+## GAP-41 · `Navbar` has no narrow-screen pattern
+
+- **What:** the Navbar's leading group has a 32rem flex basis, so anything
+  in its trailing slot (`actions`, `utilities`, `account`) wraps onto a
+  second row below 32rem plus the trailing width; the navigation slot wraps
+  its links into further rows. On a 390px phone the site's header was
+  227px tall — 27 % of the screen, and sticky. There is no way to collapse
+  the navigation into a menu.
+- **Now:** the site puts everything in the navigation slot: the links,
+  shown from 48rem, and three small tools — a theme menu, search, and a
+  button that opens the links in a `Drawer` below 48rem. One 64px row at
+  every width.
+- **Lane:** Core.
+- **Fix in Kozmos:** a narrow-screen mode — a `collapseBelow` breakpoint
+  that moves `navigation` into a drawer behind a menu button — and a
+  trailing slot that stays on the first row.
+
+## GAP-42 · `CardTitle`'s line height is 1.0
+
+- **What:** `CardTitle` is `text-2xl … leading-none`: 24px text on 24px
+  lines. A title that wraps — on a phone, "A map layout that fits its
+  container" — sets its lines touching.
+- **Now:** left visible.
+- **Lane:** Core.
+- **Fix in Kozmos:** the heading line-height token for its size, as
+  `Heading` uses.
+
+## GAP-43 · Controls with touch targets under 44px
+
+- **What:** measured on the site: the `Slider` thumb is 20 × 20 px
+  (`h-5 w-5`), a `TabsTrigger` 32px tall, a `Rating` star 24 × 24 px, and
+  `SearchBar`'s input 23px tall inside its 44px bar. They meet WCAG 2.2's
+  24px minimum by size or spacing, except the thumb, which passes only on
+  spacing; Kozmos's own rule for its buttons is 44px.
+- **Now:** left visible.
+- **Lane:** Core.
+- **Fix in Kozmos:** a 44px hit area around each (padding or a
+  pseudo-element), keeping the drawn size; the input filling its bar.
+
+## GAP-44 · `Switch` is always as wide as its container
+
+- **What:** `Switch` wraps itself in `flex flex-col gap-1.5 w-full`, so two
+  switches in a row each take the whole row; a caller's class cannot narrow
+  it (GAP-04). `Checkbox` has the same wrapper.
+- **Now:** the hero's "Try the scene" strip gives each switch a box of its
+  own size (`flex: none`), and the two share a row.
+- **Lane:** Core.
+- **Fix in Kozmos:** size the wrapper to its content (`inline-flex`), and
+  let a form stretch it where it wants a full-width row.

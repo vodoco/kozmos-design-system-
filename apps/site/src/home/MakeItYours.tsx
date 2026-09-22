@@ -40,6 +40,14 @@ function isBrand(value: string | undefined): value is Brand {
 
 /** The override as a consumer would write it, shortened. */
 function overrideSnippet(entries: [string, string][]) {
+  if (entries.length === 0) {
+    return [
+      "// Kozmos's own ramp: nothing to re-point.",
+      "<ThemeProvider>",
+      "  {app}",
+      "</ThemeProvider>",
+    ].join("\n");
+  }
   const shown = entries.slice(0, 4);
   const rest = entries.length - shown.length;
   return [

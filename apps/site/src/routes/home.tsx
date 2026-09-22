@@ -14,20 +14,13 @@ import { examples, exampleKindLabel } from "../examples/manifest";
 import { exampleComponents, miniatureSize } from "../examples/registry";
 import { HeroScene } from "../home/HeroScene";
 import { MakeItYours } from "../home/MakeItYours";
-import { Pipeline } from "../home/Pipeline";
+import { Checklist } from "../home/Pipeline";
 import {
   AdaptiveTile,
   ContrastTile,
-  DirectionTile,
   EmotionsTile,
-  FigmaTile,
-  GlassTile,
-  IconsTile,
-  MotionTile,
   PlatformsTile,
-  ThemeTile,
   TokensTile,
-  TypeTile,
 } from "../home/tiles";
 import { PACKAGES_PUBLISHED, pageTitle } from "../lib/site";
 import { ExampleMiniature } from "../site/ExampleMiniature";
@@ -69,8 +62,24 @@ const platforms = [
     description:
       "The Compose library module in packages/android. It is not published to a Maven repository yet.",
   },
+  {
+    title: "Figma",
+    technology: "The Core Library",
+    status: "Code Connect",
+    description:
+      "Painted from the same tokens by an importer plugin; every variant is checked against the code's contract, and Dev Mode shows each part's React, SwiftUI and Compose.",
+  },
 ];
 
+/** Three examples that look nothing alike: a map app, a phone, a console. */
+const featured = examples.filter((example) => example.featured);
+
+/**
+ * The home page, in the order a visitor asks: what is it (the hero), what
+ * has been built with it (the examples), what can it do (five live tiles),
+ * can it be ours (a brand module), where does it run, and how is it kept
+ * honest. Bands alternate plain and muted, each with the same padding.
+ */
 export default function Home() {
   return (
     <>
@@ -95,19 +104,72 @@ export default function Home() {
                 Get started
               </ButtonLink>
               <ButtonLink to="/components" variant="outline" size="lg">
-                Components
-              </ButtonLink>
-              <ButtonLink to="/foundations" variant="ghost" size="lg">
-                Foundations
-              </ButtonLink>
-              <ButtonLink to="/examples" variant="ghost" size="lg">
-                Examples
+                Browse components
               </ButtonLink>
             </Box>
           </Box>
           <HeroScene />
         </section>
       </Container>
+
+      <Box className="site-band site-band-muted">
+        <Container>
+          <Reveal>
+            <Section
+              title="Built from it"
+              lead="Pages and apps made of Kozmos components and nothing else, shown here live and small. Each one records where Kozmos fell short."
+              actions={
+                <Text size="sm">
+                  <SiteLink to="/examples">
+                    All {examples.length} examples
+                  </SiteLink>
+                </Text>
+              }
+            >
+              <Box className="site-grid site-grid-3">
+                {featured.map((example) => {
+                  const Example = exampleComponents[example.slug];
+                  const size = miniatureSize[example.kind];
+                  return (
+                    <Card key={example.slug} className="site-example-card">
+                      {Example ? (
+                        <ExampleMiniature
+                          label={`${example.title} example, shown small`}
+                          width={size.width}
+                          height={size.height}
+                        >
+                          <Example />
+                        </ExampleMiniature>
+                      ) : null}
+                      <CardHeader>
+                        <Stack
+                          direction="row"
+                          align="center"
+                          justify="between"
+                          gap={2}
+                        >
+                          <CardTitle>{example.title}</CardTitle>
+                          <Tag variant="secondary">
+                            {exampleKindLabel[example.kind]}
+                          </Tag>
+                        </Stack>
+                        <CardDescription>
+                          {example.tagline ?? example.summary}
+                        </CardDescription>
+                        <Text size="sm">
+                          <SiteLink to={`/examples/${example.slug}`}>
+                            Open {example.title}
+                          </SiteLink>
+                        </Text>
+                      </CardHeader>
+                    </Card>
+                  );
+                })}
+              </Box>
+            </Section>
+          </Reveal>
+        </Container>
+      </Box>
 
       <Box className="site-band">
         <Container>
@@ -117,130 +179,92 @@ export default function Home() {
               lead="Not screenshots. Each tile is Kozmos rendering itself, with something to press."
             >
               <Box className="site-bento">
-                <TokensTile />
-                <TypeTile />
-                <EmotionsTile />
                 <AdaptiveTile />
                 <PlatformsTile />
-                <ThemeTile />
+                <TokensTile />
+                <EmotionsTile />
                 <ContrastTile />
-                <MotionTile />
-                <DirectionTile />
-                <GlassTile />
-                <IconsTile />
-                <FigmaTile />
               </Box>
+              <Text size="sm" color="muted">
+                More in Foundations:{" "}
+                <SiteLink to="/foundations/typography">type</SiteLink>,{" "}
+                <SiteLink to="/foundations/motion">motion</SiteLink>,{" "}
+                <SiteLink to="/foundations/elevation">
+                  elevation and glass
+                </SiteLink>
+                , <SiteLink to="/foundations/icons">icons</SiteLink> and{" "}
+                <SiteLink to="/foundations/theming">theming</SiteLink>.
+              </Text>
             </Section>
           </Reveal>
         </Container>
       </Box>
 
-      <Container className="site-page">
-        <Reveal>
-          <Section
-            title="Make it yours"
-            lead="A product re-points tokens through the provider, per module, without a rebuild. The tokens carry two variant brand ramps; try them, dark, and right to left."
-          >
-            <MakeItYours />
-          </Section>
-        </Reveal>
-      </Container>
-
-      <Box className="site-band site-band-tint">
+      <Box className="site-band site-band-muted">
         <Container>
           <Reveal>
             <Section
-              title="Built from it"
-              lead="Pages and apps made of Kozmos components and nothing else, shown here live and small. Each one records where Kozmos fell short."
-              actions={
-                <Text size="sm">
-                  <SiteLink to="/examples">All examples</SiteLink>
-                </Text>
-              }
+              title="Make it yours"
+              lead="A product re-points tokens through the provider, per module, without a rebuild. The tokens carry two variant brand ramps; try them, dark, and right to left."
             >
-              <Box className="site-grid site-grid-wide">
-                {examples
-                  .filter((example) => example.featured)
-                  .map((example) => {
-                    const Example = exampleComponents[example.slug];
-                    const size = miniatureSize[example.kind];
-                    return (
-                      <Card key={example.slug} className="site-example-card">
-                        {Example ? (
-                          <ExampleMiniature
-                            label={`${example.title} example, shown small`}
-                            width={size.width}
-                            height={size.height}
-                          >
-                            <Example />
-                          </ExampleMiniature>
-                        ) : null}
-                        <CardHeader>
-                          <Stack
-                            direction="row"
-                            align="center"
-                            justify="between"
-                            gap={2}
-                          >
-                            <CardTitle>{example.title}</CardTitle>
-                            <Tag variant="secondary">
-                              {exampleKindLabel[example.kind]}
-                            </Tag>
-                          </Stack>
-                          <CardDescription>{example.summary}</CardDescription>
-                          <Text size="sm">
-                            <SiteLink to={`/examples/${example.slug}`}>
-                              Open {example.title}
-                            </SiteLink>
-                          </Text>
-                        </CardHeader>
-                      </Card>
-                    );
-                  })}
+              <MakeItYours />
+            </Section>
+          </Reveal>
+        </Container>
+      </Box>
+
+      <Box className="site-band">
+        <Container>
+          <Reveal>
+            <Section
+              title="Web, iOS, Android and Figma"
+              lead="React, SwiftUI and Jetpack Compose read the same tokens and are held to shared contracts that CI compares on every pull request; the Figma library is painted from the same tokens and linked to all three."
+            >
+              <Box className="site-grid site-grid-4">
+                {platforms.map((platform) => (
+                  <Card key={platform.title} className="site-card-fill">
+                    <CardHeader>
+                      <Stack
+                        direction="row"
+                        align="center"
+                        justify="between"
+                        gap={2}
+                      >
+                        <CardTitle>{platform.title}</CardTitle>
+                        <Tag variant="outline">{platform.status}</Tag>
+                      </Stack>
+                      <Text size="sm" weight="medium">
+                        {platform.technology}
+                      </Text>
+                      <CardDescription>{platform.description}</CardDescription>
+                    </CardHeader>
+                  </Card>
+                ))}
               </Box>
             </Section>
           </Reveal>
         </Container>
       </Box>
 
-      <Container className="site-page">
-        <Reveal>
-          <Section
-            title="Three platforms, one contract"
-            lead="React, SwiftUI and Jetpack Compose components read the same tokens and are held to shared contracts that CI compares on every pull request."
-          >
-            <Box className="site-grid site-grid-auto">
-              {platforms.map((platform) => (
-                <Card key={platform.title} className="site-card-fill">
-                  <CardHeader>
-                    <Stack
-                      direction="row"
-                      align="center"
-                      justify="between"
-                      gap={2}
-                    >
-                      <CardTitle>{platform.title}</CardTitle>
-                      <Tag variant="outline">{platform.status}</Tag>
-                    </Stack>
-                    <Text size="sm" weight="medium">
-                      {platform.technology}
-                    </Text>
-                    <CardDescription>{platform.description}</CardDescription>
-                  </CardHeader>
-                </Card>
-              ))}
-            </Box>
-          </Section>
-        </Reveal>
-        <Reveal>
-          <Section
-            title="Checked on every pull request"
-            lead="What the workflow runs before anything merges, in the order it runs it."
-          >
-            <Pipeline />
-          </Section>
-        </Reveal>
-      </Container>
+      <Box className="site-band site-band-muted">
+        <Container>
+          <Reveal>
+            <Section
+              title="Checked on every pull request"
+              lead="What the workflow runs before anything merges."
+              actions={
+                <Text size="sm">
+                  <SiteLink to="/get-started#checks">
+                    What each check does
+                  </SiteLink>
+                </Text>
+              }
+            >
+              <Checklist />
+            </Section>
+          </Reveal>
+        </Container>
+      </Box>
     </>
   );
 }

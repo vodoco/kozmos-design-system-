@@ -7,6 +7,7 @@ import {
   ListItem,
   Text,
 } from "@kozmos/react";
+import { Pipeline } from "../home/Pipeline";
 import { PACKAGES_PUBLISHED, PUBLIC_PACKAGES, pageTitle } from "../lib/site";
 import { CodeBlock } from "../site/CodeBlock";
 import { PageHeader, Section } from "../site/Section";
@@ -188,6 +189,14 @@ export default function GetStarted() {
         }
       >
         <CodeBlock label="Build commands" code={repositorySteps} />
+      </Section>
+
+      <Section
+        id="checks"
+        title="What every pull request runs"
+        lead="The checks the workflow runs before anything merges, in the order it runs them, and what each one holds the design system to."
+      >
+        <Pipeline />
       </Section>
     </Container>
   );
