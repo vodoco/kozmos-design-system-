@@ -5,9 +5,75 @@ on this conversation. It supersedes `docs/claude-code-handoff-2026-09-21.md`, wh
 detailed record of the 20th and 21st (its §3–§5: the parts' parameters, the QA app, the SDK).
 Read §0 and §1, then §6 and §7. Times of commits are BST; times read from Figma are UTC (`Z`).
 
+## 0a. Later on the 22nd (16:00–17:00 BST) — read this before §0
+
+This section supersedes what it names below; the rest of the document stands.
+
+- **Olcay's Figma run happened, and has to be finished.** At 15:24Z he pasted an Audit Library on
+  `b3257790f931`: 22 warnings, 54 advisories. Read over REST: all 97 sets carry `b3257790f931`, but
+  2,310 of 2,416 icons are still untinted. The node ids give the order — Update All Core (session
+  1976), then Update All Product / SDK (session 1978), then Curated Icons → Update last (its new
+  sources are `1978:37173…37283`, created after the last Product / SDK icon) — and that sync drew
+  all 56 Pointr sources anew a second time, orphaning the tints the Updates had just laid; the 8
+  taxonomy sources were kept. Every one of the 22 warnings is an untinted icon (black in dark mode,
+  ratio 1). **Asked of Olcay:** do not run Curated Icons → Update; run Update All Core, then Update
+  All Product / SDK, on the same build; Audit Library (expect 0 warnings); then the checks of §7
+  item 1 from step 6 — `icon-tints.mjs` must exit 0. Then Code Connect readback, then publish. This
+  replaces §7 item 1's steps 2–4.
+- **The keep is broken in the live runtime, not a one-off.** A REST read at 14:03Z, of the file as
+  the 09:47Z sync left it, found all 56 sources to be instances of remote components whose keys
+  equal the stored `source-component-key`, and Olcay's afternoon sync still replaced every one. The
+  code path is identical from `0b64d5867d71` on. Fix, in
+  the next plugin build (after Olcay's pass, so the build does not change under him): replace a
+  source only when its main component's key is read and differs, keep it (with a warning) when the
+  key cannot be read, and name both keys in every replacement's warning. With it, the audit rule
+  for icon-slot tints and `figma:verify`'s icon section (§7 item 3).
+- **Correction to §5 "Why nothing caught it":** the Audit Library's contrast pass does flag
+  untinted icons in dark mode (ratio 1, non-text) — the 15:24Z audit shows 21 such warnings — but it
+  names contrast, not a lost tint, and no audit ran between 09:47Z and 15:24Z.
+- **"Go with the recommendations" (Olcay, 16:00), done so far:**
+  - **Status text on every neutral surface** (supersedes §6.2): `Semantics.Emotion.*.Text` one step
+    darker in both theme files — success and alert 800 → 900, informative 700 → 800, danger 600 →
+    700 — and `pnpm tokens:contrast:check` holds each emotion's text on background/0, /50 and /100
+    in both themes (it failed seven times on the old tokens). React's status text and glyphs read
+    them through new Tailwind roles, `text-success-text`, `text-warning-text`, `text-info-text`,
+    `text-destructive-text` (39 uses in 16 files); `success`, `warning`, `info`, `destructive` stay
+    the fills, edges and rings, pinned in `contrast-contract.json`. iOS `Tag` and Compose `Tag` and
+    `Counter` read the tokens and follow. The full story audit passes, 0 of 1,104 (the POI sheet's
+    "Open" included), and the interaction checks in all three browsers. The Figma payload is
+    regenerated (`docs/figma-foundations-payload.json`); Olcay re-imports it after his pass, and the
+    painters, which bind the emotion primitives directly (danger/600 ×28), follow in the next build.
+  - **The natives' status colours** are a larger, older fault (success/alert/danger at 600 in 48
+    files; success-600 is 2.74:1 even on white): offered as its own session, `task_023c4e7b`.
+  - **Stepper labels** (supersedes §6.8): both natives draw React's label — the current step's in
+    the foreground at medium weight, every other in foreground/400 (`e916524`); the pending number
+    already matched. Figma's painter follows in the next build.
+  - **Changesets**: every public package now has a minor one, so each reaches 0.1.0.
+  - **The bundle, measured** (supersedes §6.3's "measure first"): of the ES bundle's 321.1 KB,
+    core components are 62.8 %, Product / SDK components 29.0 %, form-factor 1.5 %, shared code
+    about 7 % (AdaptiveMapShell 25 KB and POIDetailPanel 17.5 KB lead the SDK). A core entry would
+    be about 225 KB raw and 50 KB gzip, well inside 300 / 70. The split changes public import paths,
+    the React Code Connect snippets (a republish, his word) and the website app.
+
+- **Decided by Olcay at 17:00, both as recommended:**
+  - **The bundle split goes in its own PR after #56**: #56 merges with `analyze-bundle` knowingly
+    red (`main` is not protected; no check is required), and the split — `@kozmos/react` core, a
+    `@kozmos/react/sdk` entry for the Product / SDK parts, the analyzer measuring the core entry
+    and its chunks, the React Code Connect imports republished on his word, the website app
+    following — lands before 0.1.0.
+  - **The worktree moved** to `/Volumes/4TB Depo/development/K/kozmos-design-system-pointr`: copied
+    without `node_modules` (reinstalled from the pnpm store), git re-pointed with
+    `git worktree repair`, the old copy's `.git` renamed to `.git.moved-2026-09-22` with a
+    `MOVED-2026-09-22.txt` note, so nothing commits through it. The Storybook server on 6012 serves
+    the new copy. **Olcay:** re-import the Figma importer plugin from the new path's
+    `figma/foundations-importer/manifest.json` before deleting the old folder — Figma loads
+    `code.js` from wherever the manifest was imported, so the next plugin build lands only there.
+- **Commits of the evening:** `e916524` (stepper labels), `42fbe70` (emotion text), `c5ec97c`
+  (icons changeset), pushed; CI runs on them.
+
 ## 0. In one screen
 
-- **Where.** Worktree `/private/tmp/kozmos-browser-compat.uqPMBD`, branch
+- **Where.** Worktree `/Volumes/4TB Depo/development/K/kozmos-design-system-pointr`, branch
   `claude/pointr-browse-repairs`, pushed. PR #56 opens it into `main`; PR #55 (the website)
   stacks on it. Nothing is merged.
 - **Built.** Every ruling Olcay has given, on React, SwiftUI and Compose, each change with a test
@@ -87,8 +153,8 @@ And, from the same days:
 - Export only `FIGMA_ACCESS_TOKEN`, through `scripts/figma-rest/with-figma-token.sh`, and never
   print it. Never call the Dev Mode MCP's write tools.
 - Opening or merging a PR needs his word (#55 and #56 were opened by the site session).
-- Never `git worktree prune` while `git worktree list` reads "prunable". Moving the worktree off
-  `/private/tmp` needs his word.
+- Never `git worktree prune` while `git worktree list` reads "prunable". The worktree moved off
+  `/private/tmp` on his word on the 22nd (§0a); the old copy is his to delete.
 - Temporary files go in the session's scratchpad, not `/tmp`.
 - Every Bash call starts in the main checkout (`/Volumes/4TB Depo/development/K/kozmos-design-system-dev`),
   whatever the last call `cd`ed to: give worktree paths absolutely, or `cd` on the same line.
@@ -114,9 +180,9 @@ branch. It builds the site from Kozmos alone and writes what the design system l
 
 ### Exact working state
 
-- **Worktree:** `/private/tmp/kozmos-browser-compat.uqPMBD`, a git worktree of the main checkout
-  `/Volumes/4TB Depo/development/K/kozmos-design-system-dev`, which stays on `main` and is shared
-  with other sessions.
+- **Worktree:** `/Volumes/4TB Depo/development/K/kozmos-design-system-pointr`, a git worktree of
+  the main checkout `/Volumes/4TB Depo/development/K/kozmos-design-system-dev`, which stays on
+  `main` and is shared with other sessions.
 - **Branch:** `claude/pointr-browse-repairs`, pushed; `d767f9d` before this handoff's commits.
   The last change commits are `022f961` (the five decisions), `4df611b` (the Paparazzi
   tolerance) and `3610636` (the two overflows).
@@ -446,8 +512,9 @@ Read over REST with the tools in `scripts/figma-rest/` (read-only; the token is 
 11. **The AI companion** (carried): the device floor (iOS 26 on Apple Intelligence-capable
     iPhones), Apple Intelligence on in his Mac's System Settings for the simulators, and the
     companion surface the design system lacks (`docs/pointr-prototype-ai-companion-2026-09-21.md`).
-12. **The worktree** lives in `/private/tmp`, which a cleanup emptied once: moving it next to the
-    repository on the 4 TB volume needs his word. `QAConfig.json` is his to restore.
+12. **The worktree** moved on the 22nd, on his word, from `/private/tmp` (which a cleanup emptied
+    once) to `/Volumes/4TB Depo/development/K/kozmos-design-system-pointr` (§0a). `QAConfig.json` is
+    his to restore.
 
 **Publishing, as answered on the 22nd.** The Figma library can be published once his run is
 clean (§7 item 1) — now including the two Update Alls. npm is blocked, in order, by: the bundle
@@ -722,7 +789,7 @@ The auto-memory index (`MEMORY.md`) points at this document through
    site session's:
 
    ```bash
-   cd /private/tmp/kozmos-browser-compat.uqPMBD && git status && git fetch origin && git log --oneline -6 origin/claude/pointr-browse-repairs
+   cd "/Volumes/4TB Depo/development/K/kozmos-design-system-pointr" && git status && git fetch origin && git log --oneline -6 origin/claude/pointr-browse-repairs
    ```
 
    If the worktree is gone, check the branch out again next to the repository on the 4 TB
