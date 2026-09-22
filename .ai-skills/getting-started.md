@@ -21,21 +21,21 @@
 
 ### Required Software
 
-| Tool | Version | Purpose | Installation |
-|------|---------|---------|--------------|
-| **Node.js** | 20.x LTS | JavaScript runtime | `brew install node@20` or [nodejs.org](https://nodejs.org) |
-| **pnpm** | 9.x | Package manager | `npm install -g pnpm` |
-| **Git** | 2.40+ | Version control | `brew install git` |
-| **Xcode** | 15+ | iOS development | App Store |
+| Tool               | Version   | Purpose             | Installation                                                  |
+| ------------------ | --------- | ------------------- | ------------------------------------------------------------- |
+| **Node.js**        | 20.x LTS  | JavaScript runtime  | `brew install node@20` or [nodejs.org](https://nodejs.org)    |
+| **pnpm**           | 9.x       | Package manager     | `npm install -g pnpm`                                         |
+| **Git**            | 2.40+     | Version control     | `brew install git`                                            |
+| **Xcode**          | 15+       | iOS development     | App Store                                                     |
 | **Android Studio** | Hedgehog+ | Android development | [developer.android.com](https://developer.android.com/studio) |
 
 ### Optional but Recommended
 
-| Tool | Purpose | Installation |
-|------|---------|--------------|
-| **VS Code** / **Cursor** | Primary IDE | [code.visualstudio.com](https://code.visualstudio.com) |
-| **Figma Desktop** | Design integration | [figma.com/downloads](https://figma.com/downloads) |
-| **Docker** | Consistent environments | `brew install docker` |
+| Tool                     | Purpose                 | Installation                                           |
+| ------------------------ | ----------------------- | ------------------------------------------------------ |
+| **VS Code** / **Cursor** | Primary IDE             | [code.visualstudio.com](https://code.visualstudio.com) |
+| **Figma Desktop**        | Design integration      | [figma.com/downloads](https://figma.com/downloads)     |
+| **Docker**               | Consistent environments | `brew install docker`                                  |
 
 ### Verify Prerequisites
 
@@ -450,36 +450,42 @@ module.exports = {
     node: true,
   },
   extends: [
-    'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
-    'plugin:react/recommended',
-    'plugin:react-hooks/recommended',
-    'plugin:jsx-a11y/recommended',
-    'prettier',
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended",
+    "plugin:jsx-a11y/recommended",
+    "prettier",
   ],
-  parser: '@typescript-eslint/parser',
+  parser: "@typescript-eslint/parser",
   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
+    ecmaVersion: "latest",
+    sourceType: "module",
     ecmaFeatures: {
       jsx: true,
     },
   },
-  plugins: ['@typescript-eslint', 'react', 'react-hooks', 'jsx-a11y'],
+  plugins: ["@typescript-eslint", "react", "react-hooks", "jsx-a11y"],
   settings: {
     react: {
-      version: 'detect',
+      version: "detect",
     },
   },
   rules: {
-    'react/react-in-jsx-scope': 'off',
-    'react/prop-types': 'off',
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-    '@typescript-eslint/explicit-function-return-type': 'off',
-    '@typescript-eslint/explicit-module-boundary-types': 'off',
-    'jsx-a11y/anchor-is-valid': 'off',
+    "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off",
+    "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "jsx-a11y/anchor-is-valid": "off",
   },
-  ignorePatterns: ['dist', 'build', 'node_modules', '*.config.js', '*.config.ts'],
+  ignorePatterns: [
+    "dist",
+    "build",
+    "node_modules",
+    "*.config.js",
+    "*.config.ts",
+  ],
 };
 ```
 
@@ -492,7 +498,13 @@ module.exports = {
   "commit": false,
   "fixed": [],
   "linked": [
-    ["@kozmos/tokens", "@kozmos/react", "@kozmos/vue", "@kozmos/react-native", "@kozmos/icons"]
+    [
+      "@kozmos/tokens",
+      "@kozmos/react",
+      "@kozmos/vue",
+      "@kozmos/react-native",
+      "@kozmos/icons"
+    ]
   ],
   "access": "public",
   "baseBranch": "main",
@@ -944,9 +956,9 @@ After setup is complete:
 
 ## Version History
 
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0.0 | 2026-02-07 | Initial getting started guide |
+| Version | Date       | Changes                       |
+| ------- | ---------- | ----------------------------- |
+| 1.0.0   | 2026-02-07 | Initial getting started guide |
 
 ---
 
