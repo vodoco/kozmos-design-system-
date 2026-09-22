@@ -1714,3 +1714,28 @@ components on all three platforms (95 failures on the tree before), and the new 
 iOS, a Paparazzi snapshot recorded on the old code and the new, a component test on Chromium
 and WebKit — each fail on the old code. What it left is in handoff §7: Compose's dark mode
 beyond the edges, the WayfindingCard and routing fields' style, the cards' missing `surface`.
+
+Then those five, on Olcay's word, each as recommended. Compose follows the theme: the token
+build generates `KozmosThemeTokens` for all 453 colours of both palettes — it was written by
+hand and wrapped 82 — the 272 component reads of the light palette moved onto it, and
+`pnpm tokens:theme:check` holds them (73 failures on the tree before). On the way four more
+faults came up and were fixed. iOS's colour parser read eight hex digits alpha first and could
+not read `rgba()`, so the scrim drew nothing on Dialog and Drawer and the transparency tokens
+drew faint blues; the build now converts every value and throws on one it cannot write. The
+Backdrop dimmed with a primitive that turns light in dark mode on both natives; it is the scrim
+role. SwiftUI's island set the whole window dark; it scopes its own content, and Compose's reads
+the dark palette as it does. The packages' copies of the token build had drifted —
+`KozmosDesignTokens.kt` lacked the category palette, both `colors.xml` kept the emotional button
+colours from before `10cbfb8` — so one script copies every native output, CI holds them to the
+build, and the Figma sync uses the script. WayfindingInputRow on both natives is React's row,
+measured: the rail, two borderless raised fields in background/50 (muted at half as it reads on
+the card; opaque, because a platform shadow shows through a translucent fill), the swap
+floating at their end; React's own rail squeezed its ring to 10 × 8.2 and is fixed. The routing
+fields take the control radius on React too, as the radius rule says of a control, and the
+standard focus ring, as FeedbackCard's comment box now does — both were `rounded-panel` with
+`ring-0`; Compose's were Material's, 56 high, and are React's 40 with React's wash, rail and
+actions on both natives. FeedbackCard, RoutingInputGroup and SaveLocationCard take `surface` on
+both natives. The steppers are 32 circles with the plugin's rings — 2 current, 1 pending — on all
+three platforms. Each change has a test that fails on the old code. What it left — the group's
+container radius, React's island in dark mode, the native comment box, glass shadows on Compose,
+fixed fills under inks that flip — is in handoff §7.

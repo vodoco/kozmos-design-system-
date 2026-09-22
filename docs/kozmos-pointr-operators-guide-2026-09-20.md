@@ -76,7 +76,7 @@ and `tokens-dark.json` alike (a DTCG group: `{"$value": "#F9AC17", "$type": "col
 "…"}`), then:
 
 ```bash
-cd /private/tmp/kozmos-browser-compat.uqPMBD && pnpm tokens:build && cp packages/tokens/dist/ios/KozmosColors.swift packages/ios/Sources/KozmosColors.swift && cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosColors.kt packages/android/src/main/java/com/kozmos/tokens/KozmosColors.kt && cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosColorsDark.kt packages/android/src/main/java/com/kozmos/tokens/KozmosColorsDark.kt && pnpm tokens:contrast:check && pnpm tokens:raw:check && pnpm tokens:motion:check
+cd /private/tmp/kozmos-browser-compat.uqPMBD && pnpm tokens:build && pnpm tokens:native:copy && pnpm tokens:copies:check && pnpm tokens:theme:check && pnpm tokens:contrast:check && pnpm tokens:raw:check && pnpm tokens:motion:check
 ```
 
 The web reads `packages/tokens/dist/css/variables-*.css` at build; nothing to copy. A group named
@@ -697,9 +697,9 @@ _Added on the 22nd, from the edge sweep:_
   — on Compose read through `KozmosThemeTokens` — or a mark in `NATIVE_MARKS_ALLOWED` that
   names its one primitive and why. A different primitive in the same component still fails.
 - Compose's `KozmosColors` hold the light values only; anything that should follow the theme
-  reads `KozmosThemeTokens` (which now carries `semanticsBorderInput`). `KozmosSurfaceDefaults`
-  is `@Composable` for that reason; its `tint(style, background)` overload is the rule without
-  the theme, for a test.
+  reads `KozmosThemeTokens` — generated since the open ones below, for every colour.
+  `KozmosSurfaceDefaults` is `@Composable` for that reason; its `tint(style, background)`
+  overload is the rule without the theme, for a test.
 - A bare React `border` draws `--semantics-border-subtle` (`borderColor.DEFAULT` in the
   Tailwind config). Before, it was Tailwind's gray-200 in both themes, from the scoped reset.
 - A React component test must wrap the component in `ThemeProvider`: the package's CSS applies
@@ -707,3 +707,32 @@ _Added on the 22nd, from the edge sweep:_
 - Compose's Paparazzi goldens cover few of the swept components (Dialog's, Popover's, Menu's and
   Toast's tests are content models); `KozmosEdgeRolesPaparazziTest` draws the ones whose change
   was more than a colour.
+
+_Added on the 22nd, from the open ones:_
+
+- Compose reads every colour through `KozmosThemeTokens`, which `pnpm tokens:build` generates
+  for all 453 colours of both palettes (`packages/tokens/build.mjs`, `android-compose/themed`),
+  with each token's `$description` as its doc comment. `KozmosColors` and `KozmosColorsDark`
+  are one theme each, for tests. `KozmosThemeTokens.isDark` is the theme decision, for what one
+  colour cannot carry (the routing field's wash is black at 5 % light, white at 10 % dark).
+  `pnpm tokens:theme:check` holds all of it, and the island's and the scrims' scoping.
+- After `pnpm tokens:build`, `pnpm tokens:native:copy` copies every native output over the
+  packages' copies, walked from the build; `pnpm tokens:copies:check` fails while any differs,
+  and CI runs it. Hand-kept copy lists left both `colors.xml` behind from the 18th and
+  `KozmosDesignTokens.kt` from the 21st.
+- The Swift palette's parser reads `#RGB`, `#RRGGBB` and `#AARRGGBB`, alpha first. The build
+  converts CSS's `#RRGGBBAA` and `rgba()` to that and throws on a value it cannot write.
+- `.preferredColorScheme` sets the scheme of the whole window (SwiftUI applies it to the hosting
+  controller). Scope a subtree with `.environment(\.colorScheme, …)`; only the theme provider
+  may set the window's. Compose's equivalent is `LocalKozmosUseDarkTokens provides …`.
+- A translucent fill over a platform shadow shows the shadow through it on both natives; CSS
+  draws a box shadow outside the box only. Where the surface beneath is known, use the opaque
+  step it composites to (the wayfinding field: background/50). Glass is the open task.
+- A React field with `transition-all` animates its focus ring in over 300 ms: assert it with
+  Playwright's `toHaveCSS`, which retries, not a one-off `getComputedStyle`.
+- WebKit before Safari 26.4 applies no `@scope` rule to inputs, so a utility that overrides the
+  input recipe (`h-10`, `border-none`, `bg-muted/50`) is lost there
+  (`docs/browser-compatibility-2026-09-17.md`). `WayfindingInputRow.spec.tsx` pins it with
+  `test.fail` on WebKit, which turns red once the engine is fixed.
+- Every shell call starts in the main checkout, whatever the last one `cd`ed to: give worktree
+  paths absolutely.
