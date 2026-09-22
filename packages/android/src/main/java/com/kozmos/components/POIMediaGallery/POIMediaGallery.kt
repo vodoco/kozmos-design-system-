@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.kozmos.components.iconbutton.KozmosIconButton
 import com.kozmos.contracts.KozmosPOIMediaPresentation
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.tokens.KozmosDimensions
 import kotlinx.coroutines.launch
 
@@ -87,7 +87,7 @@ fun KozmosPOIMediaGallery(
             Text(
                 text = positionLabel(currentIndex + 1, media.size),
                 style = MaterialTheme.typography.bodySmall,
-                color = KozmosColors.primitivesColorsForeground500,
+                color = KozmosThemeTokens.primitivesColorsForeground500,
                 modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
             )
 

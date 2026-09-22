@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.kozmos.components.directionstep.DirectionType
 import com.kozmos.components.directionstep.icon
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.tokens.KozmosDimensions
 
 /** One step of an itinerary, as the products present it. */
@@ -72,13 +72,13 @@ private fun Endpoint(label: String, name: String, emphasised: Boolean) {
         Text(
             text = label.uppercase(),
             style = MaterialTheme.typography.labelSmall,
-            color = KozmosColors.primitivesColorsForeground500,
+            color = KozmosThemeTokens.primitivesColorsForeground500,
             modifier = Modifier.width(KozmosDimensions.primitivesLayoutSizing500).padding(top = 3.dp)
         )
         Text(
             text = name,
             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = if (emphasised) FontWeight.SemiBold else FontWeight.Normal),
-            color = if (emphasised) KozmosColors.primitivesColorsForeground100 else KozmosColors.primitivesColorsForeground500,
+            color = if (emphasised) KozmosThemeTokens.primitivesColorsForeground100 else KozmosThemeTokens.primitivesColorsForeground500,
             modifier = Modifier.padding(start = KozmosDimensions.primitivesLayoutSpacing150)
         )
     }
@@ -86,7 +86,7 @@ private fun Endpoint(label: String, name: String, emphasised: Boolean) {
 
 @Composable
 private fun StepRow(step: KozmosItineraryStep) {
-    val colour = if (step.isCurrent) KozmosColors.primitivesColorsTheme500 else KozmosColors.primitivesColorsForeground100
+    val colour = if (step.isCurrent) KozmosThemeTokens.primitivesColorsTheme500 else KozmosThemeTokens.primitivesColorsForeground100
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -99,7 +99,7 @@ private fun StepRow(step: KozmosItineraryStep) {
         Icon(
             imageVector = step.type.icon(),
             contentDescription = null,
-            tint = if (step.isCurrent) KozmosColors.primitivesColorsTheme500 else KozmosColors.primitivesColorsForeground500,
+            tint = if (step.isCurrent) KozmosThemeTokens.primitivesColorsTheme500 else KozmosThemeTokens.primitivesColorsForeground500,
             modifier = Modifier
                 .width(KozmosDimensions.primitivesLayoutSizing500)
                 .height(20.dp)

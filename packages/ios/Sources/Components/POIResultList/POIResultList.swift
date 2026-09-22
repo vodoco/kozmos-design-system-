@@ -67,7 +67,7 @@ public struct KozmosPOIResultList<EmptyStateContent: View>: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
                             .strokeBorder(
-                                KozmosColors.primitivesColorsForeground300,
+                                KozmosColors.semanticsBorderSubtle,
                                 style: StrokeStyle(lineWidth: 1, dash: [4, 4])
                             )
                     )

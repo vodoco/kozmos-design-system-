@@ -60,7 +60,10 @@ const BrowseCategoriesPanel = React.forwardRef<
               {emptyState}
             </div>
           ) : (
-            <ul className="m-0 grid list-none grid-cols-4 gap-2 p-0">
+            // Four across, 8 apart, and rows 12 apart: the prototype's grid
+            // (row-gap 12px, column-gap 8px, measured on 2026-09-22). The rows
+            // were 8 apart until then.
+            <ul className="m-0 grid list-none grid-cols-4 gap-x-2 gap-y-3 p-0">
               {categories.map((category) => (
                 <li className="min-w-0" key={category.id}>
                   <CategoryTile

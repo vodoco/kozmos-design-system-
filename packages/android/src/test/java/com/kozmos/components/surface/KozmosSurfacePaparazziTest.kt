@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import app.cash.paparazzi.Paparazzi
+import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
 import com.kozmos.tokens.KozmosEffects
 import org.junit.Assert.assertEquals
@@ -31,8 +32,11 @@ class KozmosSurfacePaparazziTest {
         assertEquals(20f, KozmosEffects.semanticsEffectGlass.blur, 0f)
         assertEquals(0.2f, KozmosEffects.semanticsEffectGlass.borderOpacity, 0.001f)
         // A Compose colour keeps eight bits of alpha: 0.7 comes back as 179/255.
-        assertEquals(KozmosEffects.semanticsEffectGlass.opacity, KozmosSurfaceDefaults.tint(KozmosSurfaceStyle.Glass).alpha, 0.005f)
-        assertEquals(1f, KozmosSurfaceDefaults.tint(KozmosSurfaceStyle.Solid).alpha, 0f)
+        // The fill is the theme's background, read in composition; the rule
+        // that makes it is this overload's, whatever the background.
+        val background = KozmosColors.primitivesColorsBackground0
+        assertEquals(KozmosEffects.semanticsEffectGlass.opacity, KozmosSurfaceDefaults.tint(KozmosSurfaceStyle.Glass, background).alpha, 0.005f)
+        assertEquals(1f, KozmosSurfaceDefaults.tint(KozmosSurfaceStyle.Solid, background).alpha, 0f)
     }
 
     @Test

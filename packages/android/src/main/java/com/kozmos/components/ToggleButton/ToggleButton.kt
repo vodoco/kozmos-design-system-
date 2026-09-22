@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.tokens.KozmosDimensions
 
 enum class KozmosToggleButtonVariant {
@@ -60,15 +60,15 @@ fun KozmosToggleButton(
     }
 
     val backgroundColor = if (checked) {
-        if (variant == KozmosToggleButtonVariant.Outline) KozmosColors.primitivesColorsBackground200 else KozmosColors.primitivesColorsTheme500
+        if (variant == KozmosToggleButtonVariant.Outline) KozmosThemeTokens.primitivesColorsBackground200 else KozmosThemeTokens.primitivesColorsTheme500
     } else {
-        if (variant == KozmosToggleButtonVariant.Outline) Color.Transparent else KozmosColors.primitivesColorsBackground100
+        if (variant == KozmosToggleButtonVariant.Outline) Color.Transparent else KozmosThemeTokens.primitivesColorsBackground100
     }
 
     val contentColor = if (checked) {
-        if (variant == KozmosToggleButtonVariant.Outline) KozmosColors.primitivesColorsForeground100 else KozmosColors.primitivesColorsBackground0
+        if (variant == KozmosToggleButtonVariant.Outline) KozmosThemeTokens.primitivesColorsForeground100 else KozmosThemeTokens.primitivesColorsBackground0
     } else {
-        KozmosColors.primitivesColorsForeground100
+        KozmosThemeTokens.primitivesColorsForeground100
     }
 
     Surface(
@@ -85,7 +85,7 @@ fun KozmosToggleButton(
                 if (variant == KozmosToggleButtonVariant.Outline) {
                     Modifier.border(
                         1.dp,
-                        if (checked) KozmosColors.primitivesColorsBackground400 else KozmosColors.primitivesColorsBackground300,
+                        if (checked) KozmosThemeTokens.primitivesColorsBackground400 else KozmosThemeTokens.primitivesColorsBackground300,
                         RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
                     )
                 } else Modifier

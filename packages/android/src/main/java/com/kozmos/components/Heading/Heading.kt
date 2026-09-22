@@ -7,7 +7,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 /**
  * Heading rank, mirroring the React `Heading.level` prop.
@@ -43,6 +43,6 @@ fun KozmosHeading(
         modifier = modifier.semantics { heading() },
         fontSize = level.fontSize.sp,
         fontWeight = FontWeight.Bold,
-        color = KozmosColors.primitivesColorsForeground100
+        color = KozmosThemeTokens.primitivesColorsForeground100
     )
 }

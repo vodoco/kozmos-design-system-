@@ -2220,7 +2220,7 @@
           build: "build-icons",
           update: "update-icons",
           rebuild: "update-icons",
-          hint: "Build or update the 38 local Icon / ... sources and preferred icon swap values.",
+          hint: "Build or update the Icons page: the curated Pointr icons, imported from the icon library, and the taxonomy's quick-access symbols, drawn from the SVGs this plugin carries — and the icon swap preferred values. An Update keeps every source layer that is still right, so the tints the sets carry through them survive it.",
         },
       };
 
@@ -3383,7 +3383,7 @@
             warning.includes("missing Figma text styles"),
           )
         ) {
-          return "Next: run Apply Text Styles, then audit again to confirm component typography is attached.";
+          return "Next: Update each set the warning names (Update, never Rebuild), then audit again.";
         }
         if (
           libraryState.warnings.some((warning) =>
@@ -3798,6 +3798,10 @@
           busy || !libraryState.audited || knownNoComponents;
         reorganizeComponentsButton.disabled =
           busy || !libraryState.audited || knownNoComponents;
+        // The bulk runs too: pressed during a run, they started a second
+        // sequence alongside the first (2026-09-21).
+        updateAllProductSdkButton.disabled = busy;
+        updateAllCoreButton.disabled = busy;
         const examplesDisabled =
           busy || !libraryState.audited || knownNoComponents;
         exampleDashboardButton.disabled = examplesDisabled;

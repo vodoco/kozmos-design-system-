@@ -45,7 +45,7 @@ const FeedbackCard = React.forwardRef<HTMLDivElement, FeedbackCardProps>(
       <div
         ref={ref}
         className={cn(
-          `${surfaceClass(surface)} shadow-overlay rounded-[var(--primitives-radius-2xl)] p-6 flex flex-col gap-4 transition-all duration-300`,
+          `${surfaceClass(surface)} shadow-overlay rounded-panel p-6 flex flex-col gap-4 transition-all duration-300`,
           className,
         )}
         {...props}
@@ -73,11 +73,14 @@ const FeedbackCard = React.forwardRef<HTMLDivElement, FeedbackCardProps>(
             </div>
 
             <div className="flex flex-col gap-3">
+              {/* The control radius and the standard focus ring, as every
+                  field has. Until 2026-09-22 this was rounded-panel (24) with
+                  ring-0, as the routing fields were: no visible focus. */}
               <Textarea
                 placeholder="Tell us more about your experience..."
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                className="min-h-[80px] resize-none bg-black/5 dark:bg-white/10 border-transparent focus-visible:bg-black/10 dark:focus-visible:bg-white/20 focus-visible:ring-0 transition-all duration-300 rounded-panel"
+                className="min-h-[80px] resize-none bg-black/5 dark:bg-white/10 border-transparent focus-visible:bg-black/10 dark:focus-visible:bg-white/20 transition-all duration-300"
               />
               <Button
                 className="w-full font-medium"

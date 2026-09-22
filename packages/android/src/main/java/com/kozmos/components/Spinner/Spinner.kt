@@ -4,7 +4,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosSpinner(
@@ -12,6 +12,6 @@ fun KozmosSpinner(
 ) {
     CircularProgressIndicator(
         modifier = modifier,
-        color = KozmosColors.primitivesColorsTheme500
+        color = KozmosThemeTokens.primitivesColorsTheme500
     )
 }

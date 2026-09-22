@@ -35,6 +35,23 @@ Names are stable keys such as `arrow-left`, `bell-01` and `calendar`.
 `back`, `close`, `delete` — into its key. Icons with their own outlines are also
 named exports, for example `import { Heart } from "@kozmos/icons"`.
 
+## Taxonomy symbols
+
+The taxonomy's quick-access symbols are here too, as the taxonomy publishes
+them: solid pictograms rather than outlines, named `taxonomy-` and their type —
+`taxonomy-entrance-exit`, `taxonomy-food-beverage-space` — and exported as
+components. A symbol fills with its colour, so a category's accent tints it:
+
+```tsx
+import { TaxonomyEntranceExit } from "@kozmos/icons";
+
+<TaxonomyEntranceExit color="var(--semantics-category-accent-green)" />;
+```
+
+Their definitions say `source: "taxonomy"` and the release they come from. To
+add one, name its published SVG in `scripts/build-taxonomy-icons.mjs` and run
+`node scripts/build-taxonomy-icons.mjs --fetch` from the repository root.
+
 ## Licence
 
 MIT

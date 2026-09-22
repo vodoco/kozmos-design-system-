@@ -78,7 +78,7 @@ public struct KozmosRoutePreviewPanel<StatusContent: View, AlertContent: View>: 
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(KozmosDimensions.primitivesLayoutSpacing200)
 
-            Divider().overlay(KozmosColors.primitivesColorsForeground300)
+            Divider().overlay(KozmosColors.semanticsBorderSubtle)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing150) {
@@ -99,7 +99,7 @@ public struct KozmosRoutePreviewPanel<StatusContent: View, AlertContent: View>: 
                             .overlay(
                                 RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
                                     .strokeBorder(
-                                        KozmosColors.primitivesColorsForeground300,
+                                        KozmosColors.semanticsBorderSubtle,
                                         style: StrokeStyle(lineWidth: 1, dash: [4, 4])
                                     )
                             )
@@ -139,7 +139,7 @@ public struct KozmosRoutePreviewPanel<StatusContent: View, AlertContent: View>: 
                 .padding(KozmosDimensions.primitivesLayoutSpacing200)
             }
 
-            Divider().overlay(KozmosColors.primitivesColorsForeground300)
+            Divider().overlay(KozmosColors.semanticsBorderSubtle)
 
             HStack(spacing: KozmosDimensions.primitivesLayoutSpacing150) {
                 KozmosIconButton(iconName: "arrow.left", variant: .outline, action: onBack)

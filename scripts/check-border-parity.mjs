@@ -22,6 +22,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { nativeEdges } from "./lib/native-edges.mjs";
 
 const ROOT = process.cwd();
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
@@ -273,6 +274,145 @@ for (const file of [
     if (src.includes(sym)) ok(`native: ${path.basename(file)} has ${sym}`);
     else fail(`native: ${file} lacks ${sym} — run pnpm tokens:build`);
   }
+}
+
+// 4b. the native components draw their edges in the roles
+//
+// The generated colour files above carry both roles, and until 2026-09-22 no
+// component had to read them: 31 edges in 17 SwiftUI components and 42 in 19
+// Compose ones were drawn in a foreground primitive, the fault section 3 was
+// written for, and a SwiftUI Divider in the system's own separator colour.
+// Compose reads a role through KozmosThemeTokens, which follows the theme;
+// KozmosColors holds the light values only.
+//
+// Marks that are not edges may keep one primitive each, named, as the
+// plugin's are: a different primitive in the same component is still caught.
+const NATIVE_MARKS_ALLOWED = {
+  "Stepper.swift": {
+    primitive: "primitivesColorsForeground500",
+    why: "a pending step's ring is its glyph, as in Figma",
+  },
+  "Stepper.kt": {
+    primitive: "primitivesColorsForeground500",
+    why: "a pending step's ring is its glyph, as in Figma",
+  },
+  "ColorPicker.swift": {
+    primitive: "primitivesColorsForeground0",
+    why: "the handle needs a hard ring to stay visible on any colour beneath it, as in Figma",
+  },
+  "ColorPicker.kt": {
+    primitive: "primitivesColorsForeground0",
+    why: "the handle needs a hard ring to stay visible on any colour beneath it, as in Figma",
+  },
+  "LocationPin.swift": {
+    primitive: "primitivesColorsForeground1000",
+    why: "a white ring is what makes a pin read against an arbitrary map, as in Figma",
+  },
+  "RoutingInputGroup.swift": {
+    primitive: "primitivesColorsForeground400",
+    why: "a later waypoint's ring is its glyph, in React's muted foreground (border-current text-muted-foreground)",
+  },
+  "RoutingInputGroup.kt": {
+    primitive: "primitivesColorsForeground400",
+    why: "a later waypoint's ring is its glyph, in React's muted foreground (border-current text-muted-foreground)",
+  },
+  "SaveLocationCard.swift": {
+    primitive: "primitivesColorsForeground900",
+    why: "the round button's hairline, React's ring-black/5: a raised button's edge, not a container's",
+  },
+  "SaveLocationCard.kt": {
+    primitive: "primitivesColorsForeground900",
+    why: "the round button's hairline, React's ring-black/5: a raised button's edge, not a container's",
+  },
+};
+{
+  const nativeOffenders = new Map();
+  const edges = nativeEdges(ROOT);
+  for (const edge of edges) {
+    const where = `${edge.platform}: ${edge.file}:${edge.line}`;
+    const allowed = NATIVE_MARKS_ALLOWED[path.basename(edge.file)];
+    for (const [primitive] of edge.text.matchAll(
+      /primitivesColorsForeground\d+/g,
+    )) {
+      if (allowed && allowed.primitive === primitive) continue;
+      nativeOffenders.set(`${where} draws an edge in ${primitive}`, true);
+    }
+    if (
+      edge.platform === "SwiftUI" &&
+      /^Divider\(\)/.test(edge.text) &&
+      !/semanticsBorder(Subtle|Input)/.test(edge.text)
+    )
+      nativeOffenders.set(
+        `${where} draws a Divider in the system's separator colour`,
+        true,
+      );
+    if (
+      edge.platform === "Compose" &&
+      /^(?:Horizontal|Vertical)?Divider\(\s*\)/.test(edge.text)
+    )
+      nativeOffenders.set(
+        `${where} draws a Divider in Material's colour`,
+        true,
+      );
+    if (
+      edge.platform === "Compose" &&
+      /\bKozmosColors\.semanticsBorder/.test(edge.text)
+    )
+      nativeOffenders.set(
+        `${where} reads a border role's light value; use KozmosThemeTokens`,
+        true,
+      );
+  }
+  if (nativeOffenders.size === 0)
+    ok(
+      `native: all ${edges.length} component edges read a border role or a named mark`,
+    );
+  else for (const k of [...nativeOffenders.keys()].sort()) fail(`native: ${k}`);
+}
+
+// 4c. the web: a bare border is the role, and no edge reads a foreground primitive
+{
+  if (
+    /borderColor:\s*\{\s*DEFAULT:\s*"var\(--semantics-border-subtle\)"/.test(
+      tailwind,
+    )
+  )
+    ok("web: a bare `border` draws --semantics-border-subtle");
+  else
+    fail(
+      "web: tailwind.config.js leaves a bare `border` Tailwind's gray-200; set theme.extend.borderColor.DEFAULT to var(--semantics-border-subtle)",
+    );
+  const WEB_MARKS_ALLOWED = {
+    "Stepper.tsx": "foreground-500",
+  };
+  const webOffenders = [];
+  const walkWeb = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walkWeb(full);
+      else if (
+        /\.(tsx|ts|css)$/.test(entry.name) &&
+        !/\.(test|stories)\./.test(entry.name)
+      ) {
+        const src = fs.readFileSync(full, "utf8");
+        for (const m of src.matchAll(
+          /\b(?:border|divide|ring|outline)(?:-[trblxy])?-\[color:var\(--primitives-colors-(foreground-\d+)\)\]/g,
+        )) {
+          if (WEB_MARKS_ALLOWED[entry.name] === m[1]) continue;
+          const line = src.slice(0, m.index).split("\n").length;
+          webOffenders.push(
+            `${path.relative(ROOT, full)}:${line} draws an edge in ${m[1]}`,
+          );
+        }
+      }
+    }
+  };
+  walkWeb(path.join(ROOT, "packages/react/src"));
+  if (webOffenders.length === 0)
+    ok("web: no component edge reads a foreground primitive");
+  else
+    for (const k of webOffenders)
+      fail(`web: ${k}; use border-input or border-border`);
 }
 
 // 5. the payload

@@ -44,6 +44,30 @@ try {
     "dark configuration did not reach the glass surface",
   );
   assert.equal(right.background, "rgba(255, 255, 255, 0.7)");
+  // Button's glass variant is the glass role (1f10259): the token's blur and
+  // saturation in either module, whatever its configuration, and the
+  // theme's tint at the token's opacity (Chromium reads 0.7 back as 0.698).
+  const role = (id) =>
+    page.getByTestId(id).evaluate((node) => {
+      const style = getComputedStyle(node);
+      return { blur: style.backdropFilter, background: style.backgroundColor };
+    });
+  for (const [id, rgb] of [
+    ["left-glass-button", "0, 0, 0"],
+    ["right-glass-button", "255, 255, 255"],
+  ]) {
+    const { blur, background } = await role(id);
+    assert.equal(
+      blur,
+      "blur(20px) saturate(1.8)",
+      `${id} left the token's blur`,
+    );
+    assert.match(
+      background,
+      new RegExp(`^rgba\\(${rgb}, 0\\.(698|7)\\)$`),
+      `${id} is not its theme's glass`,
+    );
+  }
   assert.match(left.noise, /data:image\/svg\+xml/);
   assert.equal(right.noise, "none");
   assert.notEqual(left.filter, right.filter);
@@ -122,6 +146,15 @@ try {
   assert.equal(simple.shadow, "none");
   assert.equal(simple.spotlightOpacity, "0");
   assert.equal(simple.transform, "matrix(1, 0, 0, 1, 0, 0)");
+  // Reduced transparency reaches the role as well, in its own module only.
+  assert.deepEqual(await role("left-glass-button"), {
+    blur: "blur(0px) saturate(1.8)",
+    background: "rgb(0, 0, 0)",
+  });
+  assert.equal(
+    (await role("right-glass-button")).blur,
+    "blur(20px) saturate(1.8)",
+  );
   console.log(
     "PASS reduced effects disable noise, texture, bevel and spotlight in portals",
   );

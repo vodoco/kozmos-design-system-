@@ -77,6 +77,15 @@ jobs:
       - name: Verify Border Parity
         run: pnpm tokens:border:check
 
+      # Compose reads colours through the generated themed accessor; iOS and
+      # the web follow the theme on their own. The build step above wrote the
+      # native token files, and the packages must carry them unchanged.
+      - name: Verify Theme Parity
+        run: pnpm tokens:theme:check
+
+      - name: Verify Native Token Copies Match the Build
+        run: pnpm tokens:copies:check
+
       - name: Verify Elevation Parity
         run: pnpm tokens:elevation:check
 

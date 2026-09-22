@@ -133,6 +133,52 @@ function fixAndroidXML(filePath) {
 }
 
 // Custom Format for iOS Dynamic Colors
+// A colour token's value as Android and the Swift palette both read it: eight
+// hex digits, alpha first. Token values are CSS — #RGB, #RRGGBB, #RRGGBBAA
+// with the alpha last, or rgb()/rgba() — and a value that is none of these
+// throws. Until 2026-09-22 the Swift palette passed CSS strings straight to its
+// parser, which reads eight digits alpha first and cannot read rgba() at all:
+// the scrim drew nothing and the transparent ramps drew faint blues.
+function cssColorToArgb(value, where) {
+  const text = String(value).trim();
+  const compose = text.match(/^Color\(0x([0-9a-fA-F]{8})\)$/);
+  if (compose) return compose[1].toLowerCase();
+  const rgba = text.match(
+    /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)$/,
+  );
+  if (rgba) {
+    const [r, g, b] = [rgba[1], rgba[2], rgba[3]].map((c) =>
+      parseInt(c, 10).toString(16).padStart(2, "0"),
+    );
+    const a =
+      rgba[4] === undefined
+        ? "ff"
+        : Math.round(parseFloat(rgba[4]) * 255)
+            .toString(16)
+            .padStart(2, "0");
+    return a + r + g + b;
+  }
+  const hex = text.match(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/);
+  if (!hex) throw new Error(`${where}: ${text} is not a colour the build can write`);
+  let digits = hex[1].toLowerCase();
+  if (digits.length === 3)
+    digits = digits
+      .split("")
+      .map((c) => c + c)
+      .join("");
+  if (digits.length === 6) return "ff" + digits;
+  return digits.slice(6, 8) + digits.slice(0, 6);
+}
+
+// The Swift palette's parser reads #RGB, #RRGGBB and #AARRGGBB. A six-digit
+// value is written as the token has it; anything else goes through
+// cssColorToArgb, alpha first.
+function swiftColorHex(value, where) {
+  const text = String(value).trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(text)) return text;
+  return "#" + cssColorToArgb(text, where).toUpperCase();
+}
+
 StyleDictionary.registerFormat({
   name: "ios-swift/dynamic",
   format: ({ dictionary }) => {
@@ -157,7 +203,7 @@ extension UIColor {
             (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
         case 6: // RGB (24-bit)
             (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8: // ARGB (32-bit)
+        case 8: // ARGB (32-bit): alpha first, as the token build writes it
             (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
         default:
             (a, r, g, b) = (1, 1, 1, 0)
@@ -206,11 +252,13 @@ ${dictionary.allTokens
   })
   .map((token) => {
     // Try all possible value locations (StyleDictionary puts custom properties in token.original)
-    const lightVal = firstDefinedTokenValue(token);
-    const darkVal =
-      (token.attributes && token.attributes.darkValue) || lightVal;
-
     const varName = toCamelCase(token.path);
+    const lightVal = swiftColorHex(firstDefinedTokenValue(token), varName);
+    const darkVal = swiftColorHex(
+      (token.attributes && token.attributes.darkValue) ||
+        firstDefinedTokenValue(token),
+      varName,
+    );
 
     return `    public static var ${varName}: Color {
         #if canImport(UIKit)
@@ -411,6 +459,21 @@ ${dictionary.allTokens
   },
 });
 
+// The colours a Compose palette carries. Both palettes and the themed accessor
+// select through this and name through `toCamelCase`, so every name the
+// accessor wraps is one the palettes declare.
+function isComposeColorToken(token) {
+  return (
+    (token.attributes && token.attributes.category === "color") ||
+    token.type === "color" ||
+    token.$type === "color" ||
+    token.path[0] === "color" ||
+    (token.name && token.name.toLowerCase().includes("color")) ||
+    token.path.includes("Colors") ||
+    token.path.includes("colors")
+  );
+}
+
 StyleDictionary.registerFormat({
   name: "android-compose/exact",
   format: ({ dictionary, options }) => {
@@ -422,66 +485,91 @@ import androidx.compose.ui.graphics.Color
 
 object ${className} {
 ${dictionary.allTokens
-  .filter((token) => {
-    return (
-      (token.attributes && token.attributes.category === "color") ||
-      token.type === "color" ||
-      token.$type === "color" ||
-      token.path[0] === "color" ||
-      (token.name && token.name.toLowerCase().includes("color")) ||
-      token.path.includes("Colors") ||
-      token.path.includes("colors")
-    );
-  })
+  .filter(isComposeColorToken)
   .map((token) => {
     const lightVal = firstDefinedTokenValue(token);
     const varName = toCamelCase(token.path);
-
-    // Extract pre-compiled Tokens Studio compose payloads explicitly ignoring double wraps natively
-    const composeMatch = String(lightVal).match(/Color\(0x([0-9a-fA-F]{8})\)/i);
-    if (composeMatch) {
-      return `  val ${varName} = Color(0x${composeMatch[1]})`;
-    }
-
-    let val = String(lightVal || "#000000");
-    const rgbaMatch = val.match(
-      /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/,
-    );
-    if (rgbaMatch) {
-      const r = parseInt(rgbaMatch[1], 10).toString(16).padStart(2, "0");
-      const g = parseInt(rgbaMatch[2], 10).toString(16).padStart(2, "0");
-      const b = parseInt(rgbaMatch[3], 10).toString(16).padStart(2, "0");
-      const a = rgbaMatch[4]
-        ? Math.round(parseFloat(rgbaMatch[4]) * 255)
-            .toString(16)
-            .padStart(2, "0")
-        : "ff";
-      val = `#${r}${g}${b}${a}`;
-    }
-
-    // Format CSS Hex to Kotlin 0xAARRGGBB
-    let hex = val.replace("#", "").toLowerCase();
-    if (hex.length === 6) hex = "ff" + hex;
-    if (hex.length === 3)
-      hex =
-        "ff" +
-        hex
-          .split("")
-          .map((c) => c + c)
-          .join("");
-    if (hex.length === 8) {
-      // CSS is #RRGGBBAA. Android is #AARRGGBB.
-      const r = hex.substr(0, 2);
-      const g = hex.substr(2, 2);
-      const b = hex.substr(4, 2);
-      const a = hex.substr(6, 2);
-      hex = a + r + g + b;
-    }
-
-    return `  val ${varName} = Color(0x${hex})`;
+    return `  val ${varName} = Color(0x${cssColorToArgb(lightVal, varName)})`;
   })
   .join("\n")}
 }`;
+  },
+});
+
+// A token description is prose, and a doc comment ends at the first `*/` and
+// nests at every `/*`. Neither belongs in prose, so both are broken apart.
+function kdocSafe(text) {
+  return String(text).replace(/\*\//g, "* /").replace(/\/\*/g, "/ *");
+}
+
+// Every colour, read for the theme the composition is in. `KozmosColors` and
+// `KozmosColorsDark` hold one theme each, and a composable that reads either is
+// pinned to it whatever the device shows. Until 2026-09-22 this object was
+// written by hand and wrapped 82 of the 453 colours, so the components reached
+// past it for the rest and drew light in dark mode. It is generated now, over
+// the palettes' own selection and names, with each token's description as its
+// doc comment, so the token sync copies it over the package like the palettes.
+const COMPOSE_THEMED_DOC =
+  "Every colour in the palette, read for the theme the composition is in: the palette a composable draws with. `KozmosColors` and `KozmosColorsDark` hold one theme each, and a component that reads either stays in that theme whatever the device shows. `pnpm tokens:theme:check` holds the components to this object.";
+
+const COMPOSE_IS_DARK_DOC =
+  "Whether the composition reads the dark palette: `LocalKozmosUseDarkTokens` when a provider sets it, the system's theme otherwise. Every accessor below decides by it. Read it only for what one colour cannot carry, such as a wash that is black at 5 % on light and white at 10 % on dark, as React's `bg-black/5 dark:bg-white/10` is.";
+
+const COMPOSE_DARK_LOCAL_DOC =
+  "Which palette `KozmosThemeTokens` reads: true for dark, false for light, null to follow the system. `KozmosThemeProvider` provides it from its theme mode.";
+
+StyleDictionary.registerFormat({
+  name: "android-compose/themed",
+  format: ({ dictionary }) => {
+    const doc = (text, indent) =>
+      [
+        `${indent}/**`,
+        ...wrapWords(kdocSafe(text), 76 - indent.length).map(
+          (line) => `${indent} * ${line}`,
+        ),
+        `${indent} */`,
+      ].join("\n");
+    const accessors = dictionary.allTokens
+      .filter(isComposeColorToken)
+      .map((token) => {
+        const name = toCamelCase(token.path);
+        const description =
+          token.$description || token.description || token.comment;
+        return [
+          ...(description ? [doc(description, "    ")] : []),
+          `    val ${name}: Color`,
+          `        @Composable @ReadOnlyComposable get() = themed(`,
+          `            KozmosColors.${name},`,
+          `            KozmosColorsDark.${name}`,
+          `        )`,
+        ].join("\n");
+      });
+    return `// Do not edit directly, this file was auto-generated.
+package com.kozmos.tokens
+
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.graphics.Color
+
+${doc(COMPOSE_DARK_LOCAL_DOC, "")}
+val LocalKozmosUseDarkTokens = compositionLocalOf<Boolean?> { null }
+
+${doc(COMPOSE_THEMED_DOC, "")}
+object KozmosThemeTokens {
+${doc(COMPOSE_IS_DARK_DOC, "    ")}
+    val isDark: Boolean
+        @Composable @ReadOnlyComposable get() =
+            LocalKozmosUseDarkTokens.current ?: isSystemInDarkTheme()
+
+    @Composable
+    @ReadOnlyComposable
+    private fun themed(light: Color, dark: Color): Color = if (isDark) dark else light
+
+${accessors.join("\n\n")}
+}
+`;
   },
 });
 
@@ -1174,6 +1262,11 @@ async function build() {
               filter: "isSemanticOrComponentColor",
               options: { className: "KozmosDesignTokens" },
             },
+            {
+              destination: "KozmosThemeTokens.kt",
+              format: "android-compose/themed",
+              filter: "isColor",
+            },
           ],
         },
       },
@@ -1245,6 +1338,37 @@ async function build() {
       },
     });
     await sdAndroidComposeDark.buildAllPlatforms();
+
+    // The themed accessor is built from the light tokens and names the dark
+    // palette for every colour, so the two palettes must name the same
+    // colours. A colour only one theme has is refused here, by name, rather
+    // than as a Gradle error in the package or a colour Compose cannot theme.
+    {
+      const dir = "dist/android/src/main/java/com/kozmos/tokens/";
+      const names = (file, pattern) =>
+        new Set(
+          [...fs.readFileSync(dir + file, "utf8").matchAll(pattern)].map(
+            (m) => m[1],
+          ),
+        );
+      const light = names("KozmosColors.kt", /^ {2}val (\w+) = Color\(/gm);
+      const dark = names("KozmosColorsDark.kt", /^ {2}val (\w+) = Color\(/gm);
+      const themed = names("KozmosThemeTokens.kt", /^ {4}val (\w+): Color$/gm);
+      const only = (a, b) => [...a].filter((name) => !b.has(name));
+      const problems = [
+        ...only(light, dark).map((n) => `${n} is light-only`),
+        ...only(dark, light).map((n) => `${n} is dark-only`),
+        ...only(light, themed).map((n) => `${n} has no themed accessor`),
+        ...only(themed, light).map((n) => `${n} is themed but in no palette`),
+      ];
+      if (problems.length)
+        throw new Error(
+          `The Compose palettes disagree (${problems.length}): ${problems.join("; ")}`,
+        );
+      console.log(
+        `✔︎ KozmosThemeTokens.kt themes all ${themed.size} colours of both palettes`,
+      );
+    }
 
     // 5. iOS (Swift Dynamic)
     console.log("\n🍎 Building iOS (Dynamic Swift)...");

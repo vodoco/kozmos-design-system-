@@ -6,14 +6,19 @@ public struct KozmosSaveLocationCard: View {
     private let title: String
     private let description: String
     private let isSaved: Bool
+    private let surface: KozmosSurfaceStyle
     private let onSaveToggle: (() -> Void)?
     private let onRouteToLocation: (() -> Void)?
     private let onEditNote: (() -> Void)?
 
+    /// `surface` is what the card is made of, as React's `surface` prop: `.solid`
+    /// (the default) or `.glass`, for a card over the map. Until 2026-09-22
+    /// SwiftUI drew it solid only.
     public init(
         title: String = "Mark My Car",
         description: String = "Remember where you parked",
         isSaved: Bool = false,
+        surface: KozmosSurfaceStyle = .solid,
         onSaveToggle: (() -> Void)? = nil,
         onRouteToLocation: (() -> Void)? = nil,
         onEditNote: (() -> Void)? = nil
@@ -21,6 +26,7 @@ public struct KozmosSaveLocationCard: View {
         self.title = title
         self.description = description
         self.isSaved = isSaved
+        self.surface = surface
         self.onSaveToggle = onSaveToggle
         self.onRouteToLocation = onRouteToLocation
         self.onEditNote = onEditNote
@@ -95,12 +101,11 @@ public struct KozmosSaveLocationCard: View {
             }
         }
         .padding(KozmosDimensions.primitivesLayoutSpacing300)
-        .background(KozmosColors.primitivesColorsBackground0.opacity(0.9))
         .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
-                .stroke(KozmosColors.primitivesColorsForeground900.opacity(0.08), lineWidth: 1)
-        )
+        // The solid surface React's card sits on by default: the background
+        // with the subtle border. It was the background at 90 % under a
+        // near-black hairline at 8 % until 2026-09-22.
+        .kozmosSurface(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous), style: surface)
         .kozmosElevation(KozmosShadows.semanticsElevationOverlay)
     }
 }

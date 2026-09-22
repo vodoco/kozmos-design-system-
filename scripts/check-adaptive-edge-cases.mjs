@@ -38,17 +38,27 @@ const cases = [
         window.setAdaptiveOptions({ safeAreaInsets: { top: NaN } });
       });
       await settleLayout(page);
+      // The map runs under the device's safe area and the chrome keeps it
+      // (55981f6): the top bar, not the map, starts below it.
       assert.equal(
         await page.evaluate(() => window.adaptiveSnapshot.mapBounds.y),
-        24,
+        0,
+        "the map runs under the safe area",
       );
+      const barTop = async () => {
+        const [bar, host] = await Promise.all([
+          page.getByRole("button", { name: "Search this floor" }).boundingBox(),
+          page.locator("#fixture").boundingBox(),
+        ]);
+        return bar.y - host.y;
+      };
+      assert((await barTop()) >= 24, "the top bar keeps the safe area");
       await page
         .locator("[data-map-status] > [aria-hidden=true]")
         .evaluate((node) => (node.style.paddingTop = "40px"));
       await settleLayout(page);
-      assert.equal(
-        await page.evaluate(() => window.adaptiveSnapshot.mapBounds.y),
-        40,
+      assert(
+        (await barTop()) >= 40,
         "safe-area changes must be observed without a window resize",
       );
     },
@@ -79,23 +89,41 @@ const cases = [
     },
   ],
   [
-    "large bottom panel leaves controls usable",
+    "a bottom sheet leaves the controls usable, or out of reach",
     async (page) => {
+      // Half the shell: the band above the sheet holds the controls.
       await page.evaluate(() =>
-        window.setAdaptiveOptions({ panelFraction: 0.88 }),
+        window.setAdaptiveOptions({ panelFraction: 0.5 }),
       );
       await settleLayout(page);
-      const controls = await page
-        .getByRole("button", { name: "Focus map" })
-        .boundingBox();
+      const focusMap = page.getByRole("button", { name: "Focus map" });
+      const controls = await focusMap.boundingBox();
       const panel = await page.locator("aside").boundingBox();
       assert(
         controls.y + controls.height <= panel.y + 1,
         `control ends at ${controls.y + controls.height}, panel starts at ${panel.y}`,
       );
-      await page
-        .getByRole("button", { name: "Focus map" })
-        .click({ timeout: 1000 });
+      await focusMap.click({ timeout: 1000 });
+      // 88 %: the sheet takes the band, as the shell keeps no height back for
+      // the controls (d0ec0b0). They are hidden then, never drawn under the
+      // sheet where a keyboard or a screen reader would still reach them.
+      await page.evaluate(() =>
+        window.setAdaptiveOptions({ panelFraction: 0.88 }),
+      );
+      await settleLayout(page);
+      assert.equal(
+        await focusMap.count(),
+        0,
+        "controls under the sheet must be out of reach",
+      );
+      assert(
+        !(await page.evaluate(() =>
+          window.adaptiveSnapshot.occlusions.some(
+            (occlusion) => occlusion.kind === "controls",
+          ),
+        )),
+        "hidden controls must not pad the camera",
+      );
     },
   ],
   [

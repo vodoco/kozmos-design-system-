@@ -36,7 +36,7 @@ import com.kozmos.components.directionstep.DirectionType
 import com.kozmos.components.directionstep.icon
 import com.kozmos.components.surface.KozmosSurfaceDefaults
 import com.kozmos.components.surface.KozmosSurfaceStyle
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.tokens.KozmosDimensions
 
 /** What TalkBack hears for the closed card: the instruction, then the detail. */
@@ -115,7 +115,7 @@ fun KozmosManoeuvreCard(
                         Icon(
                             imageVector = type.icon(),
                             contentDescription = null,
-                            tint = KozmosColors.primitivesColorsTheme500,
+                            tint = KozmosThemeTokens.primitivesColorsTheme500,
                             modifier = Modifier.size(KozmosDimensions.primitivesLayoutSizing300)
                         )
                     }
@@ -123,7 +123,7 @@ fun KozmosManoeuvreCard(
                         Text(
                             text = instruction,
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-                            color = KozmosColors.primitivesColorsForeground100,
+                            color = KozmosThemeTokens.primitivesColorsForeground100,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -131,7 +131,7 @@ fun KozmosManoeuvreCard(
                             Text(
                                 text = detail,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = KozmosColors.primitivesColorsForeground500
+                                color = KozmosThemeTokens.primitivesColorsForeground500
                             )
                         }
                     }
@@ -164,7 +164,7 @@ fun KozmosManoeuvreCard(
                     modifier = Modifier
                         .width(36.dp)
                         .height(5.dp)
-                        .background(KozmosColors.primitivesColorsBackground300, CircleShape)
+                        .background(KozmosThemeTokens.primitivesColorsBackground300, CircleShape)
                 )
             }
         }

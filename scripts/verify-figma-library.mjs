@@ -132,14 +132,20 @@ const toHex = (c) =>
     )
     .join("")
     .toUpperCase();
+// Figma paints fills bottom to top, so a reader sees the topmost visible solid;
+// near-transparent fills are decoration, not a readable background. The first
+// fill was read here until 2026-09-21: the white under a Selected
+// CategoryTile square's opaque tint.
 const solidFill = (node) => {
-  const fill = (node.fills || []).find(
-    (f) => f.type === "SOLID" && f.visible !== false,
-  );
-  // Near-transparent fills are decoration, not a readable background.
-  return fill && (fill.opacity === undefined || fill.opacity > 0.5)
-    ? toHex(fill.color)
-    : null;
+  const fill = (node.fills || [])
+    .filter(
+      (f) =>
+        f.type === "SOLID" &&
+        f.visible !== false &&
+        (f.opacity === undefined || f.opacity > 0.5),
+    )
+    .pop();
+  return fill ? toHex(fill.color) : null;
 };
 
 async function main() {

@@ -157,6 +157,7 @@ const AdaptiveMapShell = React.forwardRef<
     const bar = React.useRef<HTMLDivElement>(null);
     const buttons = React.useRef<HTMLDivElement>(null);
     const panelContent = React.useRef<HTMLDivElement>(null);
+    const panelElement = React.useRef<HTMLElement>(null);
     const [measured, setMeasured] = React.useState({
       ready: false,
       width: 0,
@@ -175,6 +176,14 @@ const AdaptiveMapShell = React.forwardRef<
     >(defaultPanelDetent);
     /** The sheet's height while a finger holds it; null when settled. */
     const [dragHeight, setDragHeight] = React.useState<number | null>(null);
+    /**
+     * True while the sheet eases to a new detent. Only a detent change or a
+     * drag's release animates; the sheet's first placement and a change of
+     * the host's size are immediate, so it never flies in from the top.
+     */
+    const [settling, setSettling] = React.useState(false);
+    /** The detent last requested, to tell a new request apart. */
+    const [shownDetent, setShownDetent] = React.useState<string | null>(null);
     const [scrolled, setScrolled] = React.useState(false);
     const drag = React.useRef<{
       pointerId: number;
@@ -325,9 +334,9 @@ const AdaptiveMapShell = React.forwardRef<
       panelPresentation,
       panelFraction: effectivePanelFraction,
       // The sheet never covers the top bar; the controls yield to it instead
-      // — their band above the sheet shrinks and they hide, as the iOS
-      // shell's do — so the largest detent is reachable with controls shown,
-      // as the prototype's full is.
+      // — their band above the sheet shrinks, and with none left they hide
+      // (the iOS shell bounds them to the same band) — so the largest detent
+      // is reachable with controls, as the prototype's full is.
       minimumMapHeight: topBar ? measured.barHeight + 32 : 0,
       safeAreaInsets: safe,
       chromeInsets: chrome,
@@ -364,23 +373,29 @@ const AdaptiveMapShell = React.forwardRef<
       height: topBar ? Math.min(measured.barHeight, chromeHeight) : 0,
     };
     const controlsY = barBounds.y + (topBar ? barBounds.height + gap : 0);
+    // The band the controls keep above a bottom sheet. A sheet that takes it
+    // all leaves them no room: they are hidden then, not drawn under the
+    // sheet where a keyboard or a screen reader would still reach them, and
+    // they no longer pad the camera.
+    const controlsBand = Math.max(
+      0,
+      available.y + available.height - gap - controlsY,
+    );
+    const controlsOutOfRoom = measured.ready && controlsBand === 0;
     const controlsBounds = {
       x: onRight
         ? available.x + gap
         : available.x + available.width - gap - measured.controlsWidth,
       y: controlsY,
       width: measured.controlsWidth,
-      height: Math.min(
-        measured.controlsHeight,
-        Math.max(0, available.y + available.height - gap - controlsY),
-      ),
+      height: Math.min(measured.controlsHeight, controlsBand),
     };
     const occlusions: AdaptiveMapLayoutSnapshot["occlusions"] = [
       ...(layout.panelBounds
         ? [{ kind: "panel" as const, bounds: layout.panelBounds }]
         : []),
       ...(topBar ? [{ kind: "top-bar" as const, bounds: barBounds }] : []),
-      ...(controls
+      ...(controls && !controlsOutOfRoom
         ? [{ kind: "controls" as const, bounds: controlsBounds }]
         : []),
     ];
@@ -430,6 +445,54 @@ const AdaptiveMapShell = React.forwardRef<
     }, [snapshot]);
 
     const isSheet = layout.presentation === "bottom";
+    const panelHidden = unavailable || (measured.ready && !layout.panelBounds);
+    // A newly requested detent — from a drag, the handle, the keyboard or
+    // the host — marks the sheet settling in the same render as its new
+    // height, so the transition is in place when the height changes. The
+    // request, not the detent it resolves to: the default resolves again once
+    // the shell is measured, and that first placement must not ease.
+    const detentKey = JSON.stringify(panelDetent ?? uncontrolledDetent ?? null);
+    if (shownDetent !== detentKey) {
+      setShownDetent(detentKey);
+      if (shownDetent !== null && isSheet) setSettling(true);
+    }
+    // Settled once the sheet's own transitions end, including one a newer
+    // detent started meanwhile; with none running (reduced motion, or the
+    // same height) at once.
+    React.useEffect(() => {
+      if (!settling) return;
+      let cancelled = false;
+      const wait = () => {
+        if (cancelled) return;
+        const element = panelElement.current;
+        const running =
+          element && typeof element.getAnimations === "function"
+            ? element
+                .getAnimations()
+                .filter(
+                  (animation) =>
+                    typeof CSSTransition !== "undefined" &&
+                    animation instanceof CSSTransition,
+                )
+            : [];
+        if (running.length === 0) {
+          setSettling(false);
+          return;
+        }
+        void Promise.allSettled(
+          running.map((animation) => animation.finished),
+        ).then(wait);
+      };
+      const frame =
+        typeof requestAnimationFrame === "function"
+          ? requestAnimationFrame(wait)
+          : null;
+      if (frame === null) wait();
+      return () => {
+        cancelled = true;
+        if (frame !== null) cancelAnimationFrame(frame);
+      };
+    }, [settling]);
     // The content scrolls only at the largest detent, and never while the
     // sheet is being dragged: the change mid-drag cancels the content's own
     // pan, so one finger never scrolls the list and moves the sheet at once.
@@ -483,6 +546,8 @@ const AdaptiveMapShell = React.forwardRef<
       drag.current = null;
       if (current.kind !== "sheet") return;
       suppressClick.current = true;
+      // The release eases to the detent, even back to the one it left.
+      setSettling(true);
       const dy = event.clientY - current.startY;
       // The flick's velocity over its last 100 ms, projected 120 ms on, so a
       // fast short drag still lands on the detent it was aiming for.
@@ -605,7 +670,7 @@ const AdaptiveMapShell = React.forwardRef<
         {controls && (
           <div
             ref={buttons}
-            hidden={unavailable}
+            hidden={unavailable || controlsOutOfRoom}
             className="absolute z-30 overflow-auto"
             style={{
               left: onRight ? available.x + gap : undefined,
@@ -614,10 +679,7 @@ const AdaptiveMapShell = React.forwardRef<
                 : measured.width - available.x - available.width + gap,
               top: controlsY,
               maxWidth: chromeWidth,
-              maxHeight: Math.max(
-                0,
-                available.y + available.height - gap - controlsY,
-              ),
+              maxHeight: controlsBand,
             }}
           >
             {controls}
@@ -625,17 +687,22 @@ const AdaptiveMapShell = React.forwardRef<
         )}
         {panel && (
           <aside
+            ref={panelElement}
             aria-label={panelLabel}
-            hidden={unavailable || (measured.ready && !layout.panelBounds)}
+            hidden={panelHidden}
             style={position(layout.panelBounds ?? zero)}
             className={cn(
               surfaceClass(panelSurface),
-              "z-40 flex flex-col overflow-hidden shadow-overlay",
+              "z-40 flex-col overflow-hidden shadow-overlay",
+              // Its own display would outrank the hidden attribute and keep
+              // a panel with no room drawn and in the accessibility tree.
+              panelHidden ? undefined : "flex",
               layout.presentation === "bottom"
                 ? "kozmos-map-sheet rounded-t-container"
                 : "rounded-container",
             )}
             data-dragging={dragHeight !== null ? "" : undefined}
+            data-settling={isSheet && settling ? "" : undefined}
             data-detent={
               isSheet ? panelDetentDescription(activeDetent) : undefined
             }

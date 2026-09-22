@@ -139,6 +139,70 @@ final class KozmosSearchSheetTests: XCTestCase {
         XCTAssertEqual(first.minY, second.minY, accuracy: 1, "the squares do not share a top edge: \(first.minY) vs \(second.minY)")
     }
 
+    /// The panel's rule under its search row is the container edge's role,
+    /// Border/Subtle (199, 202, 209 in light), as React's `border-b` draws it
+    /// and as the prototype draws every rule — a light grey. It was
+    /// foreground/300 (70, 74, 83), a text colour, until 2026-09-22.
+    @MainActor func testThePanelsRuleIsTheBorderRole() async throws {
+        let size = CGSize(width: 402, height: 220)
+        let panel = KozmosBrowseCategoriesPanel(
+            categories: [KozmosCategoryPresentation(id: "gates", label: "Gates")],
+            presentation: .panel,
+            onSelect: { _ in },
+            renderIcon: { _ in Image(systemName: "square.fill").resizable() },
+            search: { Color.red.frame(height: 20) },
+            actions: { EmptyView() },
+            emptyState: { EmptyView() }
+        )
+        .environment(\.colorScheme, .light)
+        let pixels = try await RenderedPixels.render(panel, size: size)
+        let search = try XCTUnwrap(
+            // The system red, which renders near (255, 59, 62).
+            pixels.boundingBox(in: CGRect(origin: .zero, size: size), where: { r, g, b in r > 200 && g < 100 && b < 100 }),
+            "no search row"
+        )
+        // The darkest pixel row between the search row and the grid is the rule.
+        var darkest: (r: UInt8, g: UInt8, b: UInt8) = (255, 255, 255)
+        var y = search.maxY + 1
+        while y < search.maxY + 40 {
+            let colour = pixels.color(at: CGPoint(x: size.width / 2, y: y))
+            if colour.r < darkest.r { darkest = colour }
+            y += 1 / pixels.scale
+        }
+        XCTAssertLessThan(darkest.r, 245, "no rule under the search row")
+        XCTAssertGreaterThan(darkest.r, 180, "the rule is darker than the border role: \(darkest)")
+        XCTAssertGreaterThan(Int(darkest.b), Int(darkest.r), "the rule is not the border role's cool grey: \(darkest)")
+    }
+
+    /// The empty state's dashed edge is the same role as the rule, as React's
+    /// `border-border` is.
+    @MainActor func testTheEmptyStatesEdgeIsTheBorderRole() async throws {
+        let size = CGSize(width: 402, height: 160)
+        let panel = KozmosBrowseCategoriesPanel(
+            categories: [],
+            presentation: .panel,
+            onSelect: { _ in },
+            renderIcon: { _ in EmptyView() },
+            search: { EmptyView() },
+            actions: { EmptyView() },
+            emptyState: { Color.clear.frame(height: 40) }
+        )
+        .environment(\.colorScheme, .light)
+        let pixels = try await RenderedPixels.render(panel, size: size)
+        var darkest: UInt8 = 255
+        var y: CGFloat = 0
+        while y < size.height {
+            var x: CGFloat = 0
+            while x < size.width {
+                darkest = min(darkest, pixels.color(at: CGPoint(x: x, y: y)).r)
+                x += 1 / pixels.scale
+            }
+            y += 1 / pixels.scale
+        }
+        XCTAssertLessThan(darkest, 240, "no edge around the empty state")
+        XCTAssertGreaterThan(darkest, 180, "the empty state's edge is darker than the border role: \(darkest)")
+    }
+
     @MainActor func testTheRowIsEightyTallWithADotOnTheCurrentFloor() async throws {
         func row(currentFloorId: String?) -> some View {
             KozmosPOIResultCard(

@@ -76,7 +76,7 @@ and `tokens-dark.json` alike (a DTCG group: `{"$value": "#F9AC17", "$type": "col
 "…"}`), then:
 
 ```bash
-cd /private/tmp/kozmos-browser-compat.uqPMBD && pnpm tokens:build && cp packages/tokens/dist/ios/KozmosColors.swift packages/ios/Sources/KozmosColors.swift && cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosColors.kt packages/android/src/main/java/com/kozmos/tokens/KozmosColors.kt && cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosColorsDark.kt packages/android/src/main/java/com/kozmos/tokens/KozmosColorsDark.kt && pnpm tokens:contrast:check && pnpm tokens:raw:check && pnpm tokens:motion:check
+cd /private/tmp/kozmos-browser-compat.uqPMBD && pnpm tokens:build && pnpm tokens:native:copy && pnpm tokens:copies:check && pnpm tokens:theme:check && pnpm tokens:contrast:check && pnpm tokens:raw:check && pnpm tokens:motion:check
 ```
 
 The web reads `packages/tokens/dist/css/variables-*.css` at build; nothing to copy. A group named
@@ -331,13 +331,15 @@ cd /private/tmp/kozmos-browser-compat.uqPMBD && pnpm figma:connect:readback
 
 It asks the server, read-only, for every linked node on React, SwiftUI and Compose, and fails on
 a node that shows nothing or a snippet whose import a consumer cannot use
-(`-- --label SwiftUI --node 1933:9257` narrows it).
+(`-- --label SwiftUI --node 1933:9257` narrows it). Keep Figma in front while it runs. Each call
+counts against Figma's daily limit for your account's Dev Mode server, which any other use of the
+server shares; a full pass is 285 calls.
 
 Which build ran is the first thing to read. The panel's header shows it ("Build …"), and an
 Audit Library report carries it as `pluginBuild`; a report without it came from a build before
 `50ba616`. Update All Core resumes by build stamp, so after any plugin change it starts again at
 Link: update the sets the change touched, one at a time, instead
-([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9 lists them for `ed50a03a1912`).
+([figma-drift-2026-09-21.md](figma-drift-2026-09-21.md) §9 lists them for `1001317b6546`).
 The painter check also refuses the layout sizing Figma refuses and counts the nodes a lookup
 visits, so a painter that asks for HUG on an icon, FILL before an append, or a whole-file search
 per variant fails there first.
@@ -502,6 +504,12 @@ _Added on the 21st, evening, from the Figma drift
   `docs/figma-pointr-icon-catalog.json`), then run Curated Icons → Update before the set.
   The plugin's definitions are generated from the registry (the audit of the 21st found the
   two had drifted by thirteen); `pnpm components:contract:check` holds both to the catalog.
+  A taxonomy quick-access symbol has no catalog entry: name its published SVG in
+  `scripts/build-taxonomy-icons.mjs`, run `node scripts/build-taxonomy-icons.mjs --fetch`
+  (it vendors the SVG under `packages/icons/src/taxonomy/svg` and writes both the React
+  component and the importer's `TAXONOMY_ICON_SVGS`), then add its registry and
+  `KOSMOS_ICON_DEFINITIONS` entries with `source: "taxonomy"`. `pnpm icons:taxonomy:check`
+  (which contract parity runs too) holds the outputs to the SVGs.
 - A helper that falls back to the library's default icon paints a magnifier where a close
   belongs: `productSdkIconInstance` falls back only when told (`fallbackToDefault`, the tile's
   and the field's data slots); a symbol's caller draws its typed glyph instead.
@@ -515,9 +523,12 @@ _Added on the 21st, evening, from the Figma drift
 - A search of `figma.root.children` in order walks the whole Components page (27,459 nodes in
   the live file) before Icons; the Tree block's 1,044 icon lookups stalled Update All Core. Read
   the page a component lives on first.
-- A bound paint's own opacity is not to be relied on: over REST the live file kept
-  CategoryField's 0.12 and lost CategoryTile's and DirectionStep's, from the same helper.
-  Translucency lives on layer opacity, and the audit composites those layers.
+- A strength laid on a bound paint is not to be relied on: over REST the live file kept
+  CategoryField's 0.12 and lost CategoryTile's and DirectionStep's, from the same helper, so a
+  wash's strength lives on layer opacity and the audit composites those layers. A token's own
+  alpha is another matter: it rides on the paint and shows (Overlay/Scrim at 0.502 draws
+  128/255), while the variable's alpha does not; binding a translucent token at 1 drew Button's
+  Glass opaque on `ed50a03a1912`.
 - HUG takes an auto-layout frame or text; FILL takes a child of an auto-layout frame, so set it
   after the append. A refusal is recorded in the run log, not thrown.
 - zsh does not split an unquoted `$VAR` into words; pass a list through `xargs`.
@@ -600,8 +611,128 @@ building.site)` is the whole site's (1196 at Boston Logan). Search and the tiles
   off from the start; `components:contract:check` now refuses it.
 - `figma connect publish` reports what it sent, not what Dev Mode shows. Read it back with
   `pnpm figma:connect:readback`.
-- Figma's Dev Mode MCP server stopped answering tool calls while Figma sat idle in the
-  background (the handshake still worked). The readback times each call out after 90 s and
-  stops after eight in a row.
+- Figma's Dev Mode MCP server answered no tool call for an hour and a half while Figma sat in
+  the background (the handshake still worked), and at once when Figma was brought to the front.
+  The readback times each call out after 90 s and stops after eight in a row.
+- The Dev Mode server has a daily limit per account: some 500 calls into the 21st it answered
+  "Rate limit exceeded, please try again tomorrow". The readback stops at the first refusal.
 - The worktree's publish and verify scripts look for `.env` above the worktree and find none;
   export only `FIGMA_ACCESS_TOKEN` from the main checkout's, never print it.
+
+_Added on the 21st, from the audit of 20:38:_
+
+- An audit reads the file as it is: two of the run's nineteen sets had been updated. Read
+  `pnpm figma:verify`'s build coverage before reading a warning as the code's.
+- A render is the truth: DirectionStep's 1.00 was a glyph not drawn, and the Selected
+  CategoryTile's 1.92 an icon not drawn, measured on the fill under the one that shows. The
+  audit now reads every fill a node stacks.
+- A list of the sets a rule applies to falls behind the painters: the typography rule held 43
+  of the 80 sets with text. The audit's variant parsers run in a chain whose Label parser claims
+  any `State=Default` name, so a branch on a later parser's field can be dead; the Glass skip
+  was.
+- A check that throws on an old build hides everything after it: report a missing node as a
+  failure and go on.
+
+_Added on the 21st, from Apply Text Styles at 21:36:_
+
+- A warning's remedy is part of the warning. Surfacing FileUpload's unstyled labels put the
+  panel's next step on Apply Text Styles, which restyled the whole library: 4,957 texts lost
+  their size and leading variables and 656 went from 12/16 to 14/20. Read what a new warning
+  tells the reader to run, and what that does, before shipping it.
+- A literal written to a field bound to a variable drops the binding in Figma. Bind after you
+  write, as the painters do.
+- An accidental bulk change in the file is undone from its version history; an Update redraws
+  one set, and the two update sequences redraw them all.
+
+_Added on the 21st, from Update All Core at 22:32:_
+
+- The panel is not where a run is: it froze on NavigationItem while the file had reached
+  SearchBar. Read the sets' stamps over REST. Since `b1d7702` a long set reports each variant
+  and phase and yields, so the panel moves and the file saves as it goes.
+- Do not press a bulk button twice: a second press used to start a second run alongside the
+  first. The panel disables them while busy now, and the plugin refuses a second run.
+- A new build restarts Update All Core from Link; update what is left one set at a time.
+
+_Added on the 22nd, from the audit of 06:58 and its REST read-back:_
+
+- Figma decides how a text's sizing, truncation and line limit combine, and no document says
+  so. Truncate first, then HUG vertically, then set `maxLines`, and read the three back: set
+  the other way round, CategoryTile's label became a fixed one-line box, and the try around it
+  said nothing. `clampTextLines` does it that way.
+- An Update draws a set's layers anew under new ids, and an override made inside a nested
+  instance of that set reads its default again. Update a set after the sets it writes inside
+  (`SETS_THAT_OVERRIDE_INSIDE`); a single Update names what to update next.
+- Compare two REST snapshots by layer path: ids change on every Update. A text's bound font size
+  and line height come back as arrays of aliases.
+- `pnpm figma:painters:check` runs `code.js` in Node's `vm`, which accepts spread syntax;
+  Figma's sandbox does not. Run `pnpm figma:plugin:check` too.
+- Every auto-layout frame the plugin draws lays its stroke out (`strokesIncludedInLayout` is the
+  runtime's default). Leave the stroke room when fitting content to a fixed size.
+- A build stamp older than the plugin marks a gap, not a difference. Replay both builds'
+  painters in the harness before asking for an Update: the Tree block's drawing from the 14th
+  is today's.
+
+_Added on the 22nd, from the three decisions:_
+
+- The runtime never lets an auto-layout frame be smaller than its padding and laid-out stroke:
+  it grows the frame the moment they outgrow it, and never shrinks a fixed frame back when the
+  padding falls. Give a frame its final padding before its stroke, or start it with none, and
+  read its size back. The harness models this; a frame larger than drawn fails the painter
+  check.
+- Curated Icons → Update keeps each icon's source layer while it is still right, because every
+  icon tint in the file is an override keyed through that layer's id. Its result says
+  `sourcesKept`; fewer than the icons already on the page means tints were lost, and the
+  warning names the icons and the sets to update.
+- A taxonomy symbol is filled, and a slot's tint is a stroke override on a Pointr outline. The
+  sets whose painter tints fills (CategoryTile, CategoryField) offer the symbols; no other set
+  does. A symbol swapped in by hand arrives black: fill its shape with the accent.
+- CI runs `pnpm tokens:radius:nesting --strict` against the live file. A Figma change is judged
+  by it after the run in Figma: a drawn frame inside another's corner must be concentric with it,
+  or be a pill.
+
+_Added on the 22nd, from the edge sweep:_
+
+- `pnpm tokens:border:check` reads every edge a native component draws, across line breaks
+  (`scripts/lib/native-edges.mjs`), and the web's sources. An edge is a `Semantics.Border` role
+  — on Compose read through `KozmosThemeTokens` — or a mark in `NATIVE_MARKS_ALLOWED` that
+  names its one primitive and why. A different primitive in the same component still fails.
+- Compose's `KozmosColors` hold the light values only; anything that should follow the theme
+  reads `KozmosThemeTokens` — generated since the open ones below, for every colour.
+  `KozmosSurfaceDefaults` is `@Composable` for that reason; its `tint(style, background)`
+  overload is the rule without the theme, for a test.
+- A bare React `border` draws `--semantics-border-subtle` (`borderColor.DEFAULT` in the
+  Tailwind config). Before, it was Tailwind's gray-200 in both themes, from the scoped reset.
+- A React component test must wrap the component in `ThemeProvider`: the package's CSS applies
+  only under `data-kozmos-root`, and without it the page lays out a grid as a list.
+- Compose's Paparazzi goldens cover few of the swept components (Dialog's, Popover's, Menu's and
+  Toast's tests are content models); `KozmosEdgeRolesPaparazziTest` draws the ones whose change
+  was more than a colour.
+
+_Added on the 22nd, from the open ones:_
+
+- Compose reads every colour through `KozmosThemeTokens`, which `pnpm tokens:build` generates
+  for all 453 colours of both palettes (`packages/tokens/build.mjs`, `android-compose/themed`),
+  with each token's `$description` as its doc comment. `KozmosColors` and `KozmosColorsDark`
+  are one theme each, for tests. `KozmosThemeTokens.isDark` is the theme decision, for what one
+  colour cannot carry (the routing field's wash is black at 5 % light, white at 10 % dark).
+  `pnpm tokens:theme:check` holds all of it, and the island's and the scrims' scoping.
+- After `pnpm tokens:build`, `pnpm tokens:native:copy` copies every native output over the
+  packages' copies, walked from the build; `pnpm tokens:copies:check` fails while any differs,
+  and CI runs it. Hand-kept copy lists left both `colors.xml` behind from the 18th and
+  `KozmosDesignTokens.kt` from the 21st.
+- The Swift palette's parser reads `#RGB`, `#RRGGBB` and `#AARRGGBB`, alpha first. The build
+  converts CSS's `#RRGGBBAA` and `rgba()` to that and throws on a value it cannot write.
+- `.preferredColorScheme` sets the scheme of the whole window (SwiftUI applies it to the hosting
+  controller). Scope a subtree with `.environment(\.colorScheme, …)`; only the theme provider
+  may set the window's. Compose's equivalent is `LocalKozmosUseDarkTokens provides …`.
+- A translucent fill over a platform shadow shows the shadow through it on both natives; CSS
+  draws a box shadow outside the box only. Where the surface beneath is known, use the opaque
+  step it composites to (the wayfinding field: background/50). Glass is the open task.
+- A React field with `transition-all` animates its focus ring in over 300 ms: assert it with
+  Playwright's `toHaveCSS`, which retries, not a one-off `getComputedStyle`.
+- WebKit before Safari 26.4 applies no `@scope` rule to inputs, so a utility that overrides the
+  input recipe (`h-10`, `border-none`, `bg-muted/50`) is lost there
+  (`docs/browser-compatibility-2026-09-17.md`). `WayfindingInputRow.spec.tsx` pins it with
+  `test.fail` on WebKit, which turns red once the engine is fixed.
+- Every shell call starts in the main checkout, whatever the last one `cd`ed to: give worktree
+  paths absolutely.

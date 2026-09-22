@@ -92,8 +92,8 @@ struct POIDetailSummary: View {
                 .accessibilityIdentifier("poi-summary-\(item.id)")
             }
         }
-        .overlay(alignment: .top) { Divider() }
-        .overlay(alignment: .bottom) { Divider() }
+        .overlay(alignment: .top) { Divider().overlay(KozmosColors.semanticsBorderSubtle) }
+        .overlay(alignment: .bottom) { Divider().overlay(KozmosColors.semanticsBorderSubtle) }
     }
 
     private func icon(_ item: KozmosPOIDetailSummary) -> some View {

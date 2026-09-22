@@ -1,6 +1,5 @@
 package com.kozmos.components.container
 
-import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
 
 import androidx.compose.foundation.layout.Box

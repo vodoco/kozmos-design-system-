@@ -132,7 +132,7 @@ public struct KozmosDialog<Content: View>: View {
         .cornerRadius(KozmosDimensions.semanticsRadiusContainer)
         .overlay(
             RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusContainer)
-                .stroke(KozmosColors.primitivesColorsForeground400, lineWidth: 1)
+                .stroke(KozmosColors.semanticsBorderSubtle, lineWidth: 1)
         )
         .kozmosElevation(KozmosShadows.semanticsElevationOverlay)
     }

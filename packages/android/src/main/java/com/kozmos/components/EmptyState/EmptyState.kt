@@ -14,7 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosEmptyState(
@@ -38,7 +38,7 @@ fun KozmosEmptyState(
         
         Text(
             text = title,
-            color = KozmosColors.primitivesColorsForeground100,
+            color = KozmosThemeTokens.primitivesColorsForeground100,
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center
@@ -48,7 +48,7 @@ fun KozmosEmptyState(
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = description,
-                color = KozmosColors.primitivesColorsForeground300,
+                color = KozmosThemeTokens.primitivesColorsForeground300,
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center
             )

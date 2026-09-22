@@ -31,12 +31,20 @@ import androidx.compose.ui.unit.dp
 import com.kozmos.components.button.KozmosButton
 import com.kozmos.providers.KozmosAnalyticsEvent
 import com.kozmos.providers.LocalKozmosAnalytics
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.components.surface.KozmosSurfaceDefaults
+import com.kozmos.components.surface.KozmosSurfaceStyle
 
+/**
+ * [surface] is what the card is made of, as React's `surface` prop:
+ * [KozmosSurfaceStyle.Solid] (the default) or [KozmosSurfaceStyle.Glass], for a
+ * card over the map. Until 2026-09-22 Compose drew it solid only.
+ */
 @Composable
 fun KozmosSaveLocationCard(
     modifier: Modifier = Modifier,
+    surface: KozmosSurfaceStyle = KozmosSurfaceStyle.Solid,
     title: String = "Mark My Car",
     description: String = "Remember where you parked",
     isSaved: Boolean = false,
@@ -49,10 +57,13 @@ fun KozmosSaveLocationCard(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
-        color = KozmosColors.primitivesColorsBackground0.copy(alpha = 0.9f),
+        // The solid surface React's card sits on by default, themed: the
+        // background with the subtle border. It was the background at 90 %
+        // under a near-black hairline at 8 % until 2026-09-22.
+        color = KozmosSurfaceDefaults.tint(surface),
         tonalElevation = 6.dp,
         shadowElevation = 12.dp,
-        border = BorderStroke(1.dp, KozmosColors.primitivesColorsForeground900.copy(alpha = 0.08f))
+        border = KozmosSurfaceDefaults.border(surface)
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing200),
@@ -68,21 +79,21 @@ fun KozmosSaveLocationCard(
                 Surface(
                     modifier = Modifier.size(48.dp),
                     shape = CircleShape,
-                    color = if (isSaved) KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle else KozmosColors.primitivesColorsBackground0,
-                    border = BorderStroke(1.dp, KozmosColors.primitivesColorsForeground900.copy(alpha = 0.08f))
+                    color = if (isSaved) KozmosThemeTokens.componentsPrimaryButtonsThemedButtonBackgroundIdle else KozmosThemeTokens.primitivesColorsBackground0,
+                    border = BorderStroke(1.dp, KozmosThemeTokens.primitivesColorsForeground900.copy(alpha = 0.08f))
                 ) {
                     androidx.compose.foundation.layout.Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.DirectionsCar,
                             contentDescription = null,
-                            tint = if (isSaved) KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle else KozmosColors.primitivesColorsForeground100
+                            tint = if (isSaved) KozmosThemeTokens.componentsPrimaryButtonsThemedButtonForegroundContentIdle else KozmosThemeTokens.primitivesColorsForeground100
                         )
                     }
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = title, style = MaterialTheme.typography.titleMedium, color = KozmosColors.primitivesColorsForeground100)
-                    Text(text = description, style = MaterialTheme.typography.bodyMedium, color = KozmosColors.primitivesColorsForeground500)
+                    Text(text = title, style = MaterialTheme.typography.titleMedium, color = KozmosThemeTokens.primitivesColorsForeground100)
+                    Text(text = description, style = MaterialTheme.typography.bodyMedium, color = KozmosThemeTokens.primitivesColorsForeground500)
                 }
 
                 if (isSaved && onEditNote != null) {
@@ -90,7 +101,7 @@ fun KozmosSaveLocationCard(
                         onClick = onEditNote,
                         modifier = Modifier.semantics { contentDescription = "Edit location note" }
                     ) {
-                        Icon(Icons.Default.Edit, contentDescription = null, tint = KozmosColors.primitivesColorsForeground500)
+                        Icon(Icons.Default.Edit, contentDescription = null, tint = KozmosThemeTokens.primitivesColorsForeground500)
                     }
                 }
             }
@@ -106,8 +117,8 @@ fun KozmosSaveLocationCard(
                             onSaveToggle?.invoke()
                         },
                         modifier = Modifier.weight(1f),
-                        border = BorderStroke(1.dp, KozmosColors.primitivesColorsTheme500),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = KozmosColors.primitivesColorsTheme500)
+                        border = BorderStroke(1.dp, KozmosThemeTokens.primitivesColorsTheme500),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = KozmosThemeTokens.primitivesColorsTheme500)
                     ) {
                         Icon(Icons.Default.LocationOn, contentDescription = null)
                         Spacer(modifier = Modifier.size(KozmosDimensions.primitivesLayoutSpacing100))

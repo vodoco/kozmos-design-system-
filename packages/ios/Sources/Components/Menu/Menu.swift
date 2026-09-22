@@ -75,7 +75,7 @@ public struct KozmosMenu: View {
                 Text(label)
                     .font(KozmosTypography.caption)
                     .foregroundColor(KozmosColors.primitivesColorsForeground500)
-                Divider()
+                Divider().overlay(KozmosColors.semanticsBorderSubtle)
             }
 
             ForEach(content.items) { item in

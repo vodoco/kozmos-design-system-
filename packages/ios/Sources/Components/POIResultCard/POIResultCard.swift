@@ -177,7 +177,7 @@ public struct KozmosPOIResultCard: View {
             .opacity(available ? 1 : 0.6)
 
             if !available, let unavailableReason = result.unavailableReason {
-                Divider().overlay(KozmosColors.primitivesColorsForeground300)
+                Divider().overlay(KozmosColors.semanticsBorderSubtle)
 
                 Text(unavailableReason)
                     .font(KozmosTypography.caption)
@@ -223,7 +223,7 @@ public struct KozmosPOIResultCard: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous)
-                    .stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1)
+                    .stroke(KozmosColors.semanticsBorderSubtle, lineWidth: 1)
             )
             .accessibilityLabel(logo.alt)
         }

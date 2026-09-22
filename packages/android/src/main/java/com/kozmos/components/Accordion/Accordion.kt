@@ -18,7 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.tokens.KozmosDimensions
 
 @Composable
@@ -78,7 +78,7 @@ fun KozmosAccordionTrigger(
                 modifier = Modifier.rotate(rotation)
             )
         }
-        Divider(color = KozmosColors.primitivesColorsBackground300)
+        Divider(color = KozmosThemeTokens.primitivesColorsBackground300)
     }
 }
 

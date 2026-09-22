@@ -32,7 +32,17 @@ try {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(`${base}/iframe.html?id=${id}&viewMode=story&globals=theme:light`);
     await page.locator("aside").first().waitFor();
-    // The sheet eases to its detent over 280 ms: measure it settled.
+    // The sheet takes its first detent at once: an eased first placement
+    // flew in from the shell's top.
+    const moving = await page
+      .locator("aside")
+      .first()
+      .evaluate((node) =>
+        node
+          .getAnimations()
+          .filter((animation) => ["top", "height"].includes(animation.transitionProperty)).length,
+      );
+    if (moving > 0) errors.push("the sheet's first placement eased");
     await page.waitForTimeout(600);
     return { context, page, errors };
   };
@@ -116,7 +126,16 @@ try {
     near(box.height, Math.max(H * 0.2, 112), 1.5, "−200 from medium does not reach collapsed");
     // The handle: a tap cycles, the keys step.
     const handle = page.getByRole("slider", { name: "Panel height" });
-    await handle.click(); await settle(page); box = await sheetBox(page);
+    await handle.click();
+    // A new detent eases, where the first placement and a host resize do not.
+    assert.ok(
+      await page
+        .locator("aside")
+        .first()
+        .evaluate((node) => node.getAnimations().some((animation) => animation.transitionProperty === "top")),
+      "a new detent did not ease",
+    );
+    await settle(page); box = await sheetBox(page);
     near(box.height, H * 0.54, 1.5, "a handle tap from collapsed is not medium");
     await handle.focus(); await page.keyboard.press("ArrowUp"); await settle(page); box = await sheetBox(page);
     near(box.height, H * 0.94, 1.5, "ArrowUp from medium is not large");

@@ -16,7 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosBreadcrumb(
@@ -34,7 +34,7 @@ fun KozmosBreadcrumb(
             Text(
                 text = item,
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (isLast) KozmosColors.primitivesColorsForeground100 else KozmosColors.primitivesColorsForeground500,
+                color = if (isLast) KozmosThemeTokens.primitivesColorsForeground100 else KozmosThemeTokens.primitivesColorsForeground500,
                 modifier = Modifier
                     .clickable(enabled = !isLast) { onItemClick(index) }
                     .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing50),
@@ -46,7 +46,7 @@ fun KozmosBreadcrumb(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
-                    tint = KozmosColors.primitivesColorsForeground500,
+                    tint = KozmosThemeTokens.primitivesColorsForeground500,
                     modifier = Modifier.padding(horizontal = KozmosDimensions.primitivesLayoutSpacing0)
                 )
             }

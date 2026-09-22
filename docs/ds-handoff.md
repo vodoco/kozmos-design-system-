@@ -1604,4 +1604,138 @@ imported anything. The configs now list the four (`a534276`) and map the imports
 again. `pnpm figma:connect:readback` (`98cb9de`) reads Dev Mode back through Figma desktop's
 Dev Mode MCP server: after the second round, 95 linked nodes on each platform, every one
 showing a snippet. Publish again only from this branch or from `main` after the merge; a
-publish from `main` before it would put back older mappings and drop the imports.
+publish from `main` before it would put back older mappings and drop the imports. After the
+third round, 23 of SwiftUI's 95 nodes read back clean before Figma's daily limit for the Dev
+Mode server refused the rest; the readback now stops at that refusal, and the remaining pass
+waits for the limit to reset.
+
+Olcay's Audit Library at 19:00 ran on `ed50a03a1912` with one set, Button, painted on it; the
+other 95 still carried this morning's builds, so most warnings were the old drawing again. Two
+were plugin defects. `c28921a` had bound every paint at opacity 1 on the premise that a bound
+colour carries its own alpha; rendered over REST, it does not show — Backdrop's scrim at paint
+opacity 0.502 draws 128/255, and Button's Glass, bound at 1, drew as an opaque near-white pill,
+1.03 against its label in Dark. The token's alpha rides on the paint again, and Surface QA's
+Slider spec names its Type axis, the missing instance on each panel (`aa876ce`, build
+`314962f54832`). The painter check (224) fails exactly those five on the old build. Button needs
+its Update again with the other eighteen.
+
+Olcay's Audit Library at 20:38 ran on `314962f54832` with two sets updated on it, Button and
+Badge: Glass draws translucent (over REST, paint opacity 0.102 and rendered alpha 49, like
+IconButton's), Badge's dark icons pass, and Surface QA draws 64 of 64. The five warnings are
+the four sets not yet updated, and rendered over REST two are worse than the audit read:
+DirectionStep's discs are solid under a glyph of their colour, so no glyph shows in any type,
+and the nine Selected CategoryTiles are white under an opaque tint with the icon unseen, which
+the audit measured on the white because it read a node's first fill only. Replayed without
+Figma — the old painter, then this build's over the same node, then the audit with the
+payload's tokens — the old drawing reproduces the live audit failure for failure and the Update
+reads clean. The audit now reads every fill a node stacks, holds every set's text to a style
+(FileUpload's 32 browse labels had none, and FileUpload was off the rule's list of 43), and
+measures Glass on purpose (`45e4b0f`, `5639895`, build `53ac76afe679`, no painter changes); the
+painter check (242) audits all 185 variants of the four sets in both modes. The seventeen
+remaining Updates are the run (drift §9).
+
+At 21:36, after that audit's FileUpload warning and the panel's next step, Apply Text Styles ran
+on the live file and restyled every text it could guess a style for: it writes a literal size and
+leading before attaching the style, so 4,957 texts in 46 sets lost their size and leading
+variables, and its guess set 656 of the pickers' 12/16 readouts at 14/20. The file's typography
+had not changed all day before that (11,186 bound fields at 14:58, 19:00 and 20:38), so the
+drift doc's earlier line crediting Apply Text Styles with the 14:58 typography warning was wrong
+and is corrected. Apply Text Styles now styles only unstyled text and binds its sizes back, its
+guess agrees with every styled text as the painters left them, and the audit and the panel name
+the set's Update (`bd4afde`, build `01f3be6891dc`, no painter changes; the painter check is 261).
+The repair is Olcay's: the version from before 21:36, or the two update sequences (drift §9).
+
+Update All Core then ran on `01f3be6891dc` after the version from before 21:36 was restored: it
+finished 66 Core sets and every text is bound and sized as at 20:55 again, but it stopped in
+TreeItem, the largest set (216 variants), with Figma's renderer at 100 % and no save for over
+ten minutes until Figma was quit, while the panel still read NavigationItem. The update paths had
+no yield inside a set, and the bulk buttons stayed enabled during a run with no guard in the
+plugin. A long set now reports each variant and phase and yields, the bulk buttons are disabled
+while busy, the plugin refuses a second run, and a run's result names its slowest sets
+(`b1d7702`, build `1001317b6546`, painters unchanged; the painter check is 267). Left: Update All
+Product / SDK, then the Tree block one set at a time (drift §9).
+
+On the 22nd the audit of 06:58 read no warning and 54 advisories, as forecast, and REST
+confirmed the typography and the washes; but `pnpm figma:verify` failed on five cut names in
+BrowseCategoriesPanel, whose grid of live tiles reached the file that morning. The tile's label
+was a fixed one-line box in the live runtime though the painter asked for two lines; the
+Product / SDK run had updated the panel before CategoryTile, whose Update reset the panel's
+counts to 12; and every tile shows a bus, the aviation quick access's icons not being on the
+Icons page. Fixed in `fc1adcc` (build `7241e855b611`): the label's order with a read-back, the
+run order with `SETS_THAT_OVERRIDE_INSIDE` and a note after an Update, ratios below a threshold
+rounded down, Dialog's and Drawer's footer widths measured, and a slot's stroke given room; the
+painter check is 290. The Tree block needs no Update: replayed, it draws as the build. Left: the
+run in drift §9, the panel's icons and two smaller decisions (handoff §7).
+
+Olcay's run of 08:10 confirmed the tile's two lines and the panel's counts in the live file, but
+DynamicIsland's slots still read 26: not the fit, as `fc1adcc` said, but the runtime growing a
+frame whose padding and stroke outgrow it — each slot had 12 above and below and its stroke
+before the fit cut the padding, and a fixed frame never shrinks back. Then Olcay's three rulings,
+as recommended (`1221183`, `b6830f4`, build `6fdc2ffbc635`; drift §9, the last two sections):
+the browse tiles carry the taxonomy's own quick-access symbols, vendored as the SVGs the
+taxonomy publishes and generated into `@kozmos/icons` and the Icons page by
+`pnpm icons:taxonomy:build`; DynamicIsland's "•" is the default icon, and the island is drawn as
+React and Compose draw it (240×44, 360×160 at 32, a 56 circle, where it was 240×48, 360×180 and
+64×48); the panel's title, which no platform draws, is hidden with its property kept, and its
+search sits in a header over a rule as on every platform. On the way: Curated Icons → Update
+drew every icon's source again under a new id, orphaning the tint of every icon slot in the file
+but four sets' — it keeps them now; the contract check could pair an icon with its neighbour's
+key; the check's scan of writes inside nested instances missed two shapes of write; and the
+typography rule, red on this branch since `a38e24a`, read `KozmosTypography.font(.callout)` as a
+bare style (`36d04e8`). The painter check is 346. Left: the run in drift §9, and four
+cross-platform differences for Olcay (handoff §7).
+
+That afternoon Olcay ruled the four differences as recommended (`21f508b`, build
+`c35a625c8160`). SwiftUI's island is React's and Compose's, a 240×44 capsule and a 56 circle.
+The browse grid's rows are 12 apart on every platform: the prototype, measured again, is a CSS
+grid with `row-gap` 12px and `column-gap` 8px, and React, Compose and Figma had 8. The panel's
+rule and its empty state's edge are the border role on SwiftUI and Compose, as on React and in
+Figma — the prototype draws every rule in one light grey, and the natives drew a near-black text
+colour, Compose's in its light value whatever the theme — and Compose's empty state is dashed as
+the others are. Each change has a test that fails on the old code: three island tests and two
+colour reads on iOS, a Paparazzi test whose goldens, recorded on both, show the rows 4dp further
+apart and the rule in the role in light and dark, a component test on Chromium and WebKit, and
+the painter check. The hand-swapped symbol stays as it is. Ruling them turned up the same edge
+fault library-wide on the native side — 31 lines in 17 SwiftUI components and 42 in 19 Compose
+ones draw an edge in a foreground primitive, and the border check never reads the components
+(handoff §7).
+
+Then, on Olcay's word, every edge into its role. A scan that reads each native edge call across
+its lines found 94 out of their roles — 42 in 26 SwiftUI files, 52 in 30 Compose ones — and the
+web had its own two: every bare `border` drew Tailwind's gray-200 in both themes, because the
+package's scoped reset never took the role as its default, and four control edges read
+`foreground/500` by its primitive. Container edges and dividers are Border/Subtle now, control
+boundaries Border/Input, a bare React border is Subtle, and Compose reads the roles and its
+Surface through the theme, where they were light in the dark. The cards React puts on the
+Surface are on the native one; the empty and status boxes are dashed everywhere; five marks
+keep a named primitive, the stepper's pending ring among them at the plugin's foreground/500,
+which React now draws too in place of a 1.2:1 muted ring. `pnpm tokens:border:check` holds the
+components on all three platforms (95 failures on the tree before), and the new tests — two on
+iOS, a Paparazzi snapshot recorded on the old code and the new, a component test on Chromium
+and WebKit — each fail on the old code. What it left is in handoff §7: Compose's dark mode
+beyond the edges, the WayfindingCard and routing fields' style, the cards' missing `surface`.
+
+Then those five, on Olcay's word, each as recommended. Compose follows the theme: the token
+build generates `KozmosThemeTokens` for all 453 colours of both palettes — it was written by
+hand and wrapped 82 — the 272 component reads of the light palette moved onto it, and
+`pnpm tokens:theme:check` holds them (73 failures on the tree before). On the way four more
+faults came up and were fixed. iOS's colour parser read eight hex digits alpha first and could
+not read `rgba()`, so the scrim drew nothing on Dialog and Drawer and the transparency tokens
+drew faint blues; the build now converts every value and throws on one it cannot write. The
+Backdrop dimmed with a primitive that turns light in dark mode on both natives; it is the scrim
+role. SwiftUI's island set the whole window dark; it scopes its own content, and Compose's reads
+the dark palette as it does. The packages' copies of the token build had drifted —
+`KozmosDesignTokens.kt` lacked the category palette, both `colors.xml` kept the emotional button
+colours from before `10cbfb8` — so one script copies every native output, CI holds them to the
+build, and the Figma sync uses the script. WayfindingInputRow on both natives is React's row,
+measured: the rail, two borderless raised fields in background/50 (muted at half as it reads on
+the card; opaque, because a platform shadow shows through a translucent fill), the swap
+floating at their end; React's own rail squeezed its ring to 10 × 8.2 and is fixed. The routing
+fields take the control radius on React too, as the radius rule says of a control, and the
+standard focus ring, as FeedbackCard's comment box now does — both were `rounded-panel` with
+`ring-0`; Compose's were Material's, 56 high, and are React's 40 with React's wash, rail and
+actions on both natives. FeedbackCard, RoutingInputGroup and SaveLocationCard take `surface` on
+both natives. The steppers are 32 circles with the plugin's rings — 2 current, 1 pending — on all
+three platforms. Each change has a test that fails on the old code. What it left — the group's
+container radius, React's island in dark mode, the native comment box, glass shadows on Compose,
+fixed fills under inks that flip — is in handoff §7.

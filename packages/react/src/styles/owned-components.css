@@ -37,7 +37,7 @@
     -webkit-appearance: none;
   }
   .kozmos-input {
-    @apply flex h-11 w-full rounded-control border border-[color:var(--primitives-colors-foreground-500)] bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-[color:var(--primitives-colors-foreground-400)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:placeholder:text-muted-foreground disabled:opacity-100;
+    @apply flex h-11 w-full rounded-control border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-[color:var(--primitives-colors-foreground-400)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:placeholder:text-muted-foreground disabled:opacity-100;
   }
   .kozmos-input-warning {
     @apply border-warning text-warning focus-visible:ring-warning;
@@ -131,21 +131,22 @@
     }
   }
   /* The map shell's bottom sheet: its height and top ease between detents
-     on the standard motion (the prototype's 280 ms curve) except under a finger; the handle's row
-     is 16 tall with a 40 x 4 capsule in a background-scale grey, the same
-     handle the iOS shell draws. */
+     on the standard motion (the prototype's 280 ms curve) while the shell
+     marks it settling, after a detent change or a drag's release. Never
+     under a finger, and never on its first placement or when the host
+     resizes: an eased first placement flew in from the host's top. The
+     handle's row is 16 tall with a 40 x 4 capsule in a background-scale
+     grey, the same handle the iOS shell draws. */
   .kozmos-map-sheet {
-    transition:
-      top var(--semantics-motion-duration-standard) var(--semantics-motion-easing-standard),
-      height var(--semantics-motion-duration-standard) var(--semantics-motion-easing-standard);
     touch-action: none;
   }
-  .kozmos-map-sheet[data-dragging] {
-    transition: none;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .kozmos-map-sheet {
-      transition: none;
+  @media (prefers-reduced-motion: no-preference) {
+    .kozmos-map-sheet[data-settling]:not([data-dragging]) {
+      transition:
+        top var(--semantics-motion-duration-standard)
+          var(--semantics-motion-easing-standard),
+        height var(--semantics-motion-duration-standard)
+          var(--semantics-motion-easing-standard);
     }
   }
   .kozmos-map-sheet-handle {
@@ -322,7 +323,8 @@
         var(
             --kozmos-surface-glass-opacity,
             var(--semantics-effect-glass-opacity)
-          ) + 0.1
+          ) +
+          0.1
       )
     );
   }

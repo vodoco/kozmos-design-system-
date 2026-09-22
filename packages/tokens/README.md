@@ -48,7 +48,7 @@ where the theme can change.
 
 ## Swift and Kotlin
 
-Generated sources ship under `dist/ios` and `dist/android`. The Kozmos iOS and Android packages carry copies of these same files.
+Generated sources ship under `dist/ios` and `dist/android`. The Kozmos iOS and Android packages carry copies of these same files: `pnpm tokens:native:copy` copies them over after a build, and `pnpm tokens:copies:check` fails while any copy differs.
 
 ## Licence
 

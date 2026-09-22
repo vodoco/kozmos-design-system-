@@ -31,7 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.providers.LocalKozmosAnalytics
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -53,7 +53,7 @@ fun KozmosSearchBar(
         modifier = modifier.fillMaxWidth(),
         shadowElevation = 8.dp,
         shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
-        color = KozmosColors.primitivesColorsBackground0
+        color = KozmosThemeTokens.primitivesColorsBackground0
     ) {
         Row(
             modifier = Modifier
@@ -66,15 +66,15 @@ fun KozmosSearchBar(
             Icon(
                 imageVector = Icons.Default.Search,
                 contentDescription = null,
-                tint = KozmosColors.primitivesColorsForeground500,
+                tint = KozmosThemeTokens.primitivesColorsForeground500,
                 modifier = Modifier.size(18.dp)
             )
             BasicTextField(
                 value = value,
                 onValueChange = onValueChange,
                 singleLine = true,
-                textStyle = MaterialTheme.typography.bodyLarge.copy(color = KozmosColors.primitivesColorsForeground100),
-                cursorBrush = SolidColor(KozmosColors.primitivesColorsTheme500),
+                textStyle = MaterialTheme.typography.bodyLarge.copy(color = KozmosThemeTokens.primitivesColorsForeground100),
+                cursorBrush = SolidColor(KozmosThemeTokens.primitivesColorsTheme500),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(
                     onSearch = {
@@ -91,7 +91,7 @@ fun KozmosSearchBar(
                 decorationBox = { inner ->
                     Box(contentAlignment = Alignment.CenterStart) {
                         if (value.isEmpty()) {
-                            Text(placeholder, style = MaterialTheme.typography.bodyLarge, color = KozmosColors.primitivesColorsForeground500)
+                            Text(placeholder, style = MaterialTheme.typography.bodyLarge, color = KozmosThemeTokens.primitivesColorsForeground500)
                         }
                         inner()
                     }
@@ -110,13 +110,13 @@ fun KozmosSearchBar(
                         modifier = Modifier
                             .size(KozmosDimensions.primitivesLayoutSizing300)
                             .clip(CircleShape)
-                            .background(KozmosColors.primitivesColorsBackground300),
+                            .background(KozmosThemeTokens.primitivesColorsBackground300),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Clear search",
-                            tint = KozmosColors.primitivesColorsForeground500,
+                            tint = KozmosThemeTokens.primitivesColorsForeground500,
                             modifier = Modifier.size(14.dp)
                         )
                     }

@@ -18,7 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosTable(
@@ -30,11 +30,11 @@ fun KozmosTable(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
-            .border(1.dp, KozmosColors.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
+            .border(1.dp, KozmosThemeTokens.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
     ) {
         if (header != null) {
             header()
-            Divider()
+            Divider(color = KozmosThemeTokens.semanticsBorderSubtle)
         }
         content()
     }
@@ -52,7 +52,7 @@ fun KozmosTableRow(
                 .padding(KozmosDimensions.primitivesLayoutSpacing200),
             content = content
         )
-        Divider()
+        Divider(color = KozmosThemeTokens.semanticsBorderSubtle)
     }
 }
 
@@ -78,7 +78,7 @@ fun RowScope.KozmosTableHeaderCell(
     Text(
         text = text,
         style = MaterialTheme.typography.titleSmall,
-        color = KozmosColors.primitivesColorsForeground500,
+        color = KozmosThemeTokens.primitivesColorsForeground500,
         modifier = modifier.weight(weight)
     )
 }

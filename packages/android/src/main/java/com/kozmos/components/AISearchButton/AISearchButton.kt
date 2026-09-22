@@ -29,7 +29,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 /**
  * The AI search, beside the search field: a 43 disc inside a 48 ring whose
@@ -76,13 +76,13 @@ fun KozmosAISearchButton(
                 .background(
                     Brush.sweepGradient(
                         listOf(
-                            KozmosColors.semanticsDataRed,
-                            KozmosColors.semanticsDataYellow,
-                            KozmosColors.primitivesColorsEmotionalSuccess500,
-                            KozmosColors.semanticsDataTeal,
-                            KozmosColors.semanticsDataBlue,
-                            KozmosColors.semanticsDataPurple,
-                            KozmosColors.semanticsDataRed
+                            KozmosThemeTokens.semanticsDataRed,
+                            KozmosThemeTokens.semanticsDataYellow,
+                            KozmosThemeTokens.primitivesColorsEmotionalSuccess500,
+                            KozmosThemeTokens.semanticsDataTeal,
+                            KozmosThemeTokens.semanticsDataBlue,
+                            KozmosThemeTokens.semanticsDataPurple,
+                            KozmosThemeTokens.semanticsDataRed
                         )
                     )
                 )
@@ -90,13 +90,13 @@ fun KozmosAISearchButton(
         Surface(
             modifier = Modifier.size(43.dp),
             shape = CircleShape,
-            color = KozmosColors.primitivesColorsBackground0
+            color = KozmosThemeTokens.primitivesColorsBackground0
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.Default.AutoAwesome,
                     contentDescription = null,
-                    tint = KozmosColors.primitivesColorsTheme500,
+                    tint = KozmosThemeTokens.primitivesColorsTheme500,
                     modifier = Modifier.size(16.dp)
                 )
             }

@@ -34,7 +34,7 @@ import com.kozmos.components.surface.KozmosSurfaceStyle
 import com.kozmos.components.button.KozmosButtonEmotion
 import com.kozmos.components.button.KozmosButtonSize
 import com.kozmos.components.button.KozmosButtonVariant
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.tokens.KozmosDimensions
 
 enum class KozmosRouteSummaryState {
@@ -75,7 +75,7 @@ fun KozmosRouteSummary(
                     Surface(
                         modifier = Modifier.size(40.dp),
                         shape = CircleShape,
-                        color = KozmosColors.primitivesColorsTheme500.copy(alpha = 0.12f)
+                        color = KozmosThemeTokens.primitivesColorsTheme500.copy(alpha = 0.12f)
                     ) {
                         androidx.compose.foundation.layout.Box(contentAlignment = Alignment.Center) {
                             transportModeIcon()
@@ -88,12 +88,12 @@ fun KozmosRouteSummary(
                     Text(
                         text = etaText,
                         style = MaterialTheme.typography.titleLarge,
-                        color = KozmosColors.primitivesColorsForeground100
+                        color = KozmosThemeTokens.primitivesColorsForeground100
                     )
                     Text(
                         text = distanceText,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = KozmosColors.primitivesColorsForeground500
+                        color = KozmosThemeTokens.primitivesColorsForeground500
                     )
                 }
 
@@ -107,7 +107,7 @@ fun KozmosRouteSummary(
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = null,
-                            tint = KozmosColors.primitivesColorsEmotionalDanger600
+                            tint = KozmosThemeTokens.primitivesColorsEmotionalDanger600
                         )
                     }
                 }
@@ -163,7 +163,7 @@ fun KozmosRouteSummary(
                 Text(
                     text = destination,
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-                    color = KozmosColors.primitivesColorsForeground100,
+                    color = KozmosThemeTokens.primitivesColorsForeground100,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f).semantics { heading() }
@@ -184,7 +184,7 @@ fun KozmosRouteSummary(
                     .fillMaxWidth()
                     .semantics(mergeDescendants = true) {}
             ) {
-                CompositionLocalProvider(LocalContentColor provides KozmosColors.primitivesColorsForeground100) {
+                CompositionLocalProvider(LocalContentColor provides KozmosThemeTokens.primitivesColorsForeground100) {
                     Text(
                         text = durationText,
                         style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)

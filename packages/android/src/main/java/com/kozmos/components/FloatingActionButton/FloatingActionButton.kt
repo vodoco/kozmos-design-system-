@@ -7,7 +7,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosFloatingActionButton(
@@ -18,8 +18,8 @@ fun KozmosFloatingActionButton(
     FloatingActionButton(
         onClick = onClick,
         modifier = modifier,
-        containerColor = KozmosColors.primitivesColorsTheme500,
-        contentColor = KozmosColors.primitivesColorsBackground0
+        containerColor = KozmosThemeTokens.primitivesColorsTheme500,
+        contentColor = KozmosThemeTokens.primitivesColorsBackground0
     ) {
         Icon(icon, contentDescription = "Action")
     }

@@ -19,11 +19,13 @@ class KozmosCategoryFieldConnect {
     val label: String = "Gates"
 
     // The Tint axis: Theme is the field with no category, the component's own
-    // default; the eight are the taxonomy's quick-access colours as the
-    // Semantics.Category tokens.
+    // default — null, as the tile's and the pin's, and React's undefined; it
+    // was a tint of light-only colours until 2026-09-22. The eight are the
+    // taxonomy's quick-access colours as the Semantics.Category tokens, the
+    // same in both themes.
     @FigmaProperty(FigmaType.Enum, "Tint")
-    val tint: KozmosCategoryTint = Figma.mapping(
-        "Theme" to KozmosCategoryTint(KozmosColors.primitivesColorsTheme500, KozmosInkedFill(KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle, KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle)),
+    val tint: KozmosCategoryTint? = Figma.mapping(
+        "Theme" to null,
         "Yellow" to KozmosCategoryTint(KozmosColors.semanticsCategoryAccentYellow, KozmosInkedFill(KozmosColors.semanticsCategoryFillYellow, KozmosColors.semanticsCategoryOnfillYellow)),
         "Orange" to KozmosCategoryTint(KozmosColors.semanticsCategoryAccentOrange, KozmosInkedFill(KozmosColors.semanticsCategoryFillOrange, KozmosColors.semanticsCategoryOnfillOrange)),
         "Turquoise" to KozmosCategoryTint(KozmosColors.semanticsCategoryAccentTurquoise, KozmosInkedFill(KozmosColors.semanticsCategoryFillTurquoise, KozmosColors.semanticsCategoryOnfillTurquoise)),

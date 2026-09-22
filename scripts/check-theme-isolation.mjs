@@ -67,12 +67,20 @@ try {
   assert.notEqual(light, dark);
   assert.equal(await background("nested-light-surface"), light);
   assert.equal(await background("nested-dark-surface"), dark);
-  assert.equal(await background("light-variant"), "rgba(255, 255, 255, 0.7)");
-  assert.equal(
-    await background("nested-light-variant"),
-    "rgba(255, 255, 255, 0.7)",
-  );
-  assert.equal(await background("nested-dark-variant"), "rgba(0, 0, 0, 0.7)");
+  // The translucent surface that follows its module's theme is the glass
+  // role since cae0b91, which replaced `bg-white/70 dark:bg-black/70` (the
+  // library no longer compiles those classes): the theme's glass colour at
+  // the token's 0.7, which Chromium keeps in 8 bits and reads back as 0.698.
+  for (const [id, rgb] of [
+    ["light-variant", "255, 255, 255"],
+    ["nested-light-variant", "255, 255, 255"],
+    ["nested-dark-variant", "0, 0, 0"],
+  ])
+    assert.match(
+      await background(id),
+      new RegExp(`^rgba\\(${rgb}, 0\\.(698|7)\\)$`),
+      `${id} is not its module's glass`,
+    );
   console.log(
     "PASS sibling and arbitrarily nested theme tokens and dark variants",
   );

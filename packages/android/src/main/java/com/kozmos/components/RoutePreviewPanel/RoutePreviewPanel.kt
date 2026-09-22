@@ -1,6 +1,5 @@
 package com.kozmos.components.routepreviewpanel
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -38,8 +37,9 @@ import com.kozmos.components.iconbutton.KozmosIconButtonVariant
 import com.kozmos.components.routeoptioncard.KozmosRouteOptionCard
 import com.kozmos.contracts.KozmosRouteOptionPresentation
 import com.kozmos.contracts.KozmosRouteReadiness
-import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.tokens.KozmosThemeTokens
+import com.kozmos.components.surface.kozmosDashedEdge
 
 /**
  * A route preview with selectable options and a continue action.
@@ -81,7 +81,7 @@ fun KozmosRoutePreviewPanel(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(KozmosColors.primitivesColorsBackground0)
+            .background(KozmosThemeTokens.primitivesColorsBackground0)
             .semantics { contentDescription = "Route preview" }
     ) {
         Column(
@@ -94,19 +94,19 @@ fun KozmosRoutePreviewPanel(
                 text = destinationLabel.uppercase(),
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold,
-                color = KozmosColors.primitivesColorsForeground500
+                color = KozmosThemeTokens.primitivesColorsForeground500
             )
             Text(
                 text = destinationName,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = KozmosColors.primitivesColorsForeground100,
+                color = KozmosThemeTokens.primitivesColorsForeground100,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }
 
-        Divider(color = KozmosColors.primitivesColorsForeground300)
+        Divider(color = KozmosThemeTokens.semanticsBorderSubtle)
 
         Column(
             modifier = Modifier
@@ -135,11 +135,15 @@ fun KozmosRoutePreviewPanel(
             }
 
             if (status != KozmosRouteReadiness.Ready && statusContent != null) {
+                // Dashed, in the container edge's role, themed, as React's
+                // and SwiftUI's are; it was a solid foreground/300 edge until
+                // 2026-09-22.
                 Surface(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .kozmosDashedEdge(KozmosThemeTokens.semanticsBorderSubtle, KozmosDimensions.semanticsRadiusPanel),
                     shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
-                    color = KozmosColors.primitivesColorsBackground100.copy(alpha = 0.4f),
-                    border = BorderStroke(1.dp, KozmosColors.primitivesColorsForeground300)
+                    color = KozmosThemeTokens.primitivesColorsBackground100.copy(alpha = 0.4f)
                 ) {
                     Box(
                         modifier = Modifier.padding(KozmosDimensions.primitivesLayoutSpacing300),
@@ -171,7 +175,7 @@ fun KozmosRoutePreviewPanel(
                     Text(
                         text = optionsCountLabel,
                         style = MaterialTheme.typography.bodySmall,
-                        color = KozmosColors.primitivesColorsForeground500
+                        color = KozmosThemeTokens.primitivesColorsForeground500
                     )
                 }
             }
@@ -181,7 +185,7 @@ fun KozmosRoutePreviewPanel(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
-                        .background(KozmosColors.primitivesColorsEmotionalAlert500.copy(alpha = 0.15f))
+                        .background(KozmosThemeTokens.primitivesColorsEmotionalAlert500.copy(alpha = 0.15f))
                         .padding(KozmosDimensions.primitivesLayoutSpacing150)
                 ) {
                     alert()
@@ -189,7 +193,7 @@ fun KozmosRoutePreviewPanel(
             }
         }
 
-        Divider(color = KozmosColors.primitivesColorsForeground300)
+        Divider(color = KozmosThemeTokens.semanticsBorderSubtle)
 
         Row(
             modifier = Modifier

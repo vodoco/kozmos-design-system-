@@ -1,6 +1,5 @@
 package com.kozmos.components.categorytile
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,8 +34,8 @@ import com.kozmos.components.counter.KozmosCounter
 import com.kozmos.contracts.KozmosCategoryPresentation
 import com.kozmos.providers.KozmosAnalyticsEvent
 import com.kozmos.providers.LocalKozmosAnalytics
-import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.tokens.KozmosThemeTokens
 
 /**
  * A single browsable category cell.
@@ -98,12 +97,12 @@ fun KozmosCategoryTile(
                         .size(KozmosDimensions.primitivesLayoutSizing800)
                         .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
                         .background(
-                            if (category.selected) (tint?.accent ?: KozmosColors.primitivesColorsTheme500).copy(alpha = 0.05f)
-                            else KozmosColors.primitivesColorsBackground0
+                            if (category.selected) (tint?.accent ?: KozmosThemeTokens.primitivesColorsTheme500).copy(alpha = 0.05f)
+                            else KozmosThemeTokens.primitivesColorsBackground0
                         )
                         .border(
                             width = if (category.selected) 2.dp else 1.dp,
-                            color = if (category.selected) (tint?.accent ?: KozmosColors.primitivesColorsTheme500) else KozmosColors.semanticsBorderSubtle,
+                            color = if (category.selected) (tint?.accent ?: KozmosThemeTokens.primitivesColorsTheme500) else KozmosThemeTokens.semanticsBorderSubtle,
                             shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
                         ),
                     contentAlignment = Alignment.Center
@@ -111,7 +110,7 @@ fun KozmosCategoryTile(
                     if (icon != null) {
                         // The icon in the theme colour, as on the other platforms;
                         // decorative, as there: the label names what it shows.
-                        CompositionLocalProvider(LocalContentColor provides (tint?.accent ?: KozmosColors.primitivesColorsTheme500)) {
+                        CompositionLocalProvider(LocalContentColor provides (tint?.accent ?: KozmosThemeTokens.primitivesColorsTheme500)) {
                             Box(modifier = Modifier.size(KozmosDimensions.primitivesLayoutSizing300).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
                                 icon()
                             }
@@ -137,9 +136,9 @@ fun KozmosCategoryTile(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 color = if (isEnabled) {
-                    KozmosColors.primitivesColorsForeground100
+                    KozmosThemeTokens.primitivesColorsForeground100
                 } else {
-                    KozmosColors.primitivesColorsForeground100.copy(alpha = 0.5f)
+                    KozmosThemeTokens.primitivesColorsForeground100.copy(alpha = 0.5f)
                 },
                 textAlign = TextAlign.Center
             )

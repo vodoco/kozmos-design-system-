@@ -90,16 +90,16 @@ style; drift to reconcile through the plugin, with the token as the source.
 
 ## 4. Change it yourself
 
-| Behaviour                       | Where                                                                                                                                                                                                                                  |
-| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The numbers                     | `packages/tokens/src/tokens-light.json` and `-dark.json`, `Semantics.Effect.glass` (synced with Figma's variables)                                                                                                                     |
-| The native emission             | `packages/tokens/build.mjs`: `glassEffect`, the `ios-swift/effects` and `android-compose/effects` formatters; then `pnpm tokens:build` and copy `dist/ios/KozmosEffects.swift` and `dist/android/…/KozmosEffects.kt` into the packages |
-| The web rule and its off switch | `packages/react/src/styles/owned-components.css`: `.kozmos-surface-glass`; `src/context/design-config.ts`: the two `--kozmos-surface-glass-*` variables                                                                                |
-| The web component               | `packages/react/src/components/GlassSurface/` (component, test, story, docs)                                                                                                                                                           |
-| The iOS role                    | `packages/ios/Sources/KozmosGlassSurface.swift`; its test `Tests/KozmosTests/KozmosGlassSurfaceTests.swift`                                                                                                                            |
-| The Android role                | `packages/android/src/main/java/com/kozmos/components/GlassSurface/GlassSurface.kt`; its golden test under `test/…/glasssurface/`                                                                                                      |
-| Who is on the role              | `scripts/check-glass-parity.mjs` §4 lists them and fails when one leaves it or hand-rolls glass again                                                                                                                                  |
-| The browser evidence            | `scripts/check-owned-css.mjs` (the role's computed values); `tests/integration/owned-css-host.tsx` renders it                                                                                                                          |
+| Behaviour                       | Where                                                                                                                                                                |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The numbers                     | `packages/tokens/src/tokens-light.json` and `-dark.json`, `Semantics.Effect.glass` (synced with Figma's variables)                                                   |
+| The native emission             | `packages/tokens/build.mjs`: `glassEffect`, the `ios-swift/effects` and `android-compose/effects` formatters; then `pnpm tokens:build` and `pnpm tokens:native:copy` |
+| The web rule and its off switch | `packages/react/src/styles/owned-components.css`: `.kozmos-surface-glass`; `src/context/design-config.ts`: the two `--kozmos-surface-glass-*` variables              |
+| The web component               | `packages/react/src/components/GlassSurface/` (component, test, story, docs)                                                                                         |
+| The iOS role                    | `packages/ios/Sources/KozmosGlassSurface.swift`; its test `Tests/KozmosTests/KozmosGlassSurfaceTests.swift`                                                          |
+| The Android role                | `packages/android/src/main/java/com/kozmos/components/GlassSurface/GlassSurface.kt`; its golden test under `test/…/glasssurface/`                                    |
+| Who is on the role              | `scripts/check-glass-parity.mjs` §4 lists them and fails when one leaves it or hand-rolls glass again                                                                |
+| The browser evidence            | `scripts/check-owned-css.mjs` (the role's computed values); `tests/integration/owned-css-host.tsx` renders it                                                        |
 
 ## 5. Decisions for Olcay
 

@@ -12,7 +12,7 @@ import com.figma.code.connect.Figma
 import com.figma.code.connect.FigmaConnect
 import com.figma.code.connect.FigmaProperty
 import com.figma.code.connect.FigmaType
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.tokens.KozmosDimensions
 
 @FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=170-1002")
@@ -31,15 +31,19 @@ class KozmosBoxConnect {
         }
     }
 
+    // React's Surface is bg-card, the Outlined adds the bare border: the
+    // subtle role. Read through the theme; it was light-only, the edge
+    // background/300, until 2026-09-22.
+    @Composable
     private fun surfaceModifier(): Modifier {
         val shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
         return when (surface) {
             "surface" -> Modifier
-                .background(KozmosColors.primitivesColorsBackground0, shape)
+                .background(KozmosThemeTokens.primitivesColorsBackground0, shape)
                 .padding(KozmosDimensions.primitivesLayoutSpacing200)
             "outlined" -> Modifier
-                .background(KozmosColors.primitivesColorsBackground0, shape)
-                .border(1.dp, KozmosColors.primitivesColorsBackground300, shape)
+                .background(KozmosThemeTokens.primitivesColorsBackground0, shape)
+                .border(1.dp, KozmosThemeTokens.semanticsBorderSubtle, shape)
                 .padding(KozmosDimensions.primitivesLayoutSpacing200)
             else -> Modifier
         }
