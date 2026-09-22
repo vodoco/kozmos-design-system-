@@ -1699,3 +1699,18 @@ the painter check. The hand-swapped symbol stays as it is. Ruling them turned up
 fault library-wide on the native side — 31 lines in 17 SwiftUI components and 42 in 19 Compose
 ones draw an edge in a foreground primitive, and the border check never reads the components
 (handoff §7).
+
+Then, on Olcay's word, every edge into its role. A scan that reads each native edge call across
+its lines found 94 out of their roles — 42 in 26 SwiftUI files, 52 in 30 Compose ones — and the
+web had its own two: every bare `border` drew Tailwind's gray-200 in both themes, because the
+package's scoped reset never took the role as its default, and four control edges read
+`foreground/500` by its primitive. Container edges and dividers are Border/Subtle now, control
+boundaries Border/Input, a bare React border is Subtle, and Compose reads the roles and its
+Surface through the theme, where they were light in the dark. The cards React puts on the
+Surface are on the native one; the empty and status boxes are dashed everywhere; five marks
+keep a named primitive, the stepper's pending ring among them at the plugin's foreground/500,
+which React now draws too in place of a 1.2:1 muted ring. `pnpm tokens:border:check` holds the
+components on all three platforms (95 failures on the tree before), and the new tests — two on
+iOS, a Paparazzi snapshot recorded on the old code and the new, a component test on Chromium
+and WebKit — each fail on the old code. What it left is in handoff §7: Compose's dark mode
+beyond the edges, the WayfindingCard and routing fields' style, the cards' missing `surface`.

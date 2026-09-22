@@ -242,15 +242,31 @@ ADAPTIVE_BROWSER=<chromium|firefox|webkit> pnpm test:search-sheet` (and `test:ma
     as React's and SwiftUI's are.
   - **A taxonomy symbol swapped into a tile by hand arrives black**, as recommended: left as
     it is, and documented on both sets.
-- **Open from the 22nd, found while ruling those:** the same fault as the rule, library-wide
-  on the native side. 31 lines in 17 SwiftUI components and 42 in 19 Compose ones draw an edge
-  in a `primitivesColorsForeground*` colour instead of a `Semantics.Border` role — the fault the
-  Figma painters had until 2026-09-03 (`scripts/check-border-parity.mjs` tells the story), and
-  that check reads only the generated colour files, never the components. They mix three
-  kinds: container edges in a text colour (a visible fault, as the rule was), control edges in
-  `foreground/500`, the value `Border/Input` aliases but not the role, and card hairlines in
-  `foreground/900` at 8 %, which may be meant. Recommended: sort them by kind against React,
-  move each to its role, and extend the border check to the native components.
+- **Done on the 22nd, on Olcay's word — every edge in its role.** The rule's fault was
+  library-wide: a scan that follows each edge call across lines (`scripts/lib/native-edges.mjs`)
+  found 94 native edges out of their roles — 42 in 26 SwiftUI files, 52 in 30 Compose ones —
+  and the web had two faults of its own: a bare `border` drew Tailwind's gray-200 (`#e5e7eb`)
+  in both themes, since the scoped reset's default was never the role, and four control edges
+  read `foreground/500` by its primitive. Now container edges and dividers are
+  `Semantics.Border.Subtle`, control boundaries `Border.Input`, a bare React `border` is Subtle
+  (`borderColor.DEFAULT`), and Compose reads both through `KozmosThemeTokens` (Input added),
+  as its `Surface` now does — the surface, its cards and every edge the sweep touched were
+  light in the dark. The three native cards React puts on the Surface (FeedbackCard,
+  RoutingInputGroup, SaveLocationCard) are on the native solid surface; the empty and status
+  boxes are dashed on every platform; Compose's routing fields are washed, not outlined, as
+  React's and SwiftUI's. Named marks keep one primitive each, as the plugin's do: the stepper's
+  pending ring (`foreground/500` — the plugin's ruling; React's `border-muted` read 1.2:1 and
+  moves to it), the colour handle's ring, the pin's halo, a later waypoint's ring (React's muted
+  foreground), the save button's hairline. `pnpm tokens:border:check` now holds all of it and
+  fails 95 times on the tree before; new tests on iOS, Compose and the web each fail on the old
+  code.
+- **Open from the sweep** (none an edge): Compose's CategoryTile in the dark draws white squares
+  and near-invisible labels — its fill and text read `KozmosColors`, and 67 Compose component files
+  read those light-only values somewhere; WayfindingCard's fields are borderless and raised in
+  React, outlined on the natives; RoutingInputGroup's fields are `rounded-panel` in React and
+  the control radius on the natives, and Compose keeps a focus outline React does not draw; the
+  native cards have no `surface` parameter for glass, as React's do; the iOS stepper's circles
+  are 24 at 2 where React's are 32 at 1.
 - The AI companion: the device floor (iOS 26 on Apple Intelligence-capable iPhones), Apple
   Intelligence on in his Mac's System Settings for the simulators, and the companion surface the
   DS lacks (the prototype's chat is measured).

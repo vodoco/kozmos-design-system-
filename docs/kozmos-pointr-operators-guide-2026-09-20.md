@@ -689,3 +689,21 @@ _Added on the 22nd, from the three decisions:_
 - CI runs `pnpm tokens:radius:nesting --strict` against the live file. A Figma change is judged
   by it after the run in Figma: a drawn frame inside another's corner must be concentric with it,
   or be a pill.
+
+_Added on the 22nd, from the edge sweep:_
+
+- `pnpm tokens:border:check` reads every edge a native component draws, across line breaks
+  (`scripts/lib/native-edges.mjs`), and the web's sources. An edge is a `Semantics.Border` role
+  — on Compose read through `KozmosThemeTokens` — or a mark in `NATIVE_MARKS_ALLOWED` that
+  names its one primitive and why. A different primitive in the same component still fails.
+- Compose's `KozmosColors` hold the light values only; anything that should follow the theme
+  reads `KozmosThemeTokens` (which now carries `semanticsBorderInput`). `KozmosSurfaceDefaults`
+  is `@Composable` for that reason; its `tint(style, background)` overload is the rule without
+  the theme, for a test.
+- A bare React `border` draws `--semantics-border-subtle` (`borderColor.DEFAULT` in the
+  Tailwind config). Before, it was Tailwind's gray-200 in both themes, from the scoped reset.
+- A React component test must wrap the component in `ThemeProvider`: the package's CSS applies
+  only under `data-kozmos-root`, and without it the page lays out a grid as a list.
+- Compose's Paparazzi goldens cover few of the swept components (Dialog's, Popover's, Menu's and
+  Toast's tests are content models); `KozmosEdgeRolesPaparazziTest` draws the ones whose change
+  was more than a colour.
