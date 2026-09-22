@@ -107,9 +107,11 @@ detents, no drag, no snap. **The Compose shell** caps its bottom panel at 64 % o
 no detents, no drag. On both, the whole machine of §1–§2 is missing.
 
 **The parts** exist: `SearchBar` (44, `y+23` geometry), `AISearchButton`, `CategoryTile` and
-`BrowseCategoriesPanel` (64 square, four columns, 8 between — its rows are 8 apart where the
-prototype's are 12, and it pins its search slot over a divider the prototype does not draw, on an
-opaque `Background0` that would show inside a glass sheet), `POIResultCard` / `POIResultList`
+`BrowseCategoriesPanel` (64 square, four columns, 8 between, rows 12 apart as the prototype's —
+on every platform since 2026-09-22; web, Compose and Figma had 8 — and in its panel presentation
+it pins its search slot over a rule the prototype's sheet does not draw, on an opaque
+`Background0` that would show inside a glass sheet; SwiftUI's sheet presentation draws neither,
+while React and Compose have no such presentation), `POIResultCard` / `POIResultList`
 (80 / 104 rows), `Chip` with an icon and `onRemove` (the category chip; its count badge is a
 `Badge`), `Button` for Cancel, `IconButton` outline for Filters, `POIDetailPanel` for the card.
 Missing as parts: nothing the sheet itself needs. The Assistant overlay and the Filters panel are

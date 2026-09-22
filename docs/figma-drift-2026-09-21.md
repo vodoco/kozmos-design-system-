@@ -796,10 +796,21 @@ A replay of every Product / SDK set and the 41 reachable Core sets under `7241e8
 CategoryField's changes are their Icon swap's offer and their descriptions. The painter check is
 346; on `7241e855b611` its 32 new and strengthened assertions fail and nothing else does.
 
-### The run, with build `6fdc2ffbc635`
+### The four rulings of the afternoon (`21f508b`, build `c35a625c8160`)
 
-1. Run the plugin; the header must read **Build 6fdc2ffbc635**. An Audit Library now warns that
-   eight icon sources are missing — that is the next step.
+Olcay ruled the four differences above as recommended. Three are code on the platforms (handoff
+§7 has them whole); in Figma one line moved: **the browse grid's rows are 12 apart**, the
+prototype's — measured again on the 22nd, a CSS grid with `row-gap` 12px and `column-gap` 8px —
+where Figma, React and Compose drew 8 and SwiftUI 12. The painter check holds rows 12 and
+columns 8, and fails on `7241e855b611`. The island's geometry and the panel's rule were already
+right here. The replay still differs from `7241e855b611` in BrowseCategoriesPanel and
+DynamicIsland only, so the run below is unchanged but for its build.
+
+### The run, with build `c35a625c8160`
+
+1. Run the plugin; the header must read **Build c35a625c8160** (`6fdc2ffbc635`, which drew the
+   rows 8 apart, is superseded). An Audit Library now warns that eight icon sources are missing
+   — that is the next step.
 2. **Curated Icons → Update.** Expected under Show Details: `planned` 64, `imported` 56,
    `drawn` 8, `created` 8, `refreshed` 56, `sourcesKept` 56, `sourcesReplaced` 8 (the eight new
    symbols), `failed` 0, and no warning that a source was drawn anew — `sourcesKept` below 56
@@ -809,12 +820,12 @@ CategoryField's changes are their Icon swap's offer and their descriptions. The 
    CategoryTile, whose layers it writes into, and after Curated Icons, whose symbols it tints),
    then CategoryField, then DynamicIsland; then Dialog and Drawer, still owed from `7241e855b611`.
 4. **Audit Library**, and paste it. Expected: no warning, icons 64 of 64, Surface QA 64 of 64,
-   `pluginBuild` `6fdc2ffbc635`, the advisories as at 06:58 (54) — the panel's symbols are the
+   `pluginBuild` `c35a625c8160`, the advisories as at 06:58 (54) — the panel's symbols are the
    accents its buses were.
 5. From the terminal: `pnpm figma:verify` — every enforced check ok, no overflow, **no typed
    glyph** — `pnpm tokens:radius:nesting --strict` (CI's gate on the live file; the island's
    slots are pills or exact concentrics, and the panel's new frames draw nothing, so it should
    stay at zero), and over REST: the 56 Pointr Sources under their recorded ids; the panel's
-   eight tiles on their symbols, filled in their accents; its title hidden; the island at
+   eight tiles on their symbols, filled in their accents, their rows 12 apart; its title hidden; the island at
    240×44, 360×160 and 56×56 with its slots at 24, 24 and 32; the footers at 158 and 126.
 6. Then the library can be published.

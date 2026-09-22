@@ -1684,3 +1684,18 @@ key; the check's scan of writes inside nested instances missed two shapes of wri
 typography rule, red on this branch since `a38e24a`, read `KozmosTypography.font(.callout)` as a
 bare style (`36d04e8`). The painter check is 346. Left: the run in drift §9, and four
 cross-platform differences for Olcay (handoff §7).
+
+That afternoon Olcay ruled the four differences as recommended (`21f508b`, build
+`c35a625c8160`). SwiftUI's island is React's and Compose's, a 240×44 capsule and a 56 circle.
+The browse grid's rows are 12 apart on every platform: the prototype, measured again, is a CSS
+grid with `row-gap` 12px and `column-gap` 8px, and React, Compose and Figma had 8. The panel's
+rule and its empty state's edge are the border role on SwiftUI and Compose, as on React and in
+Figma — the prototype draws every rule in one light grey, and the natives drew a near-black text
+colour, Compose's in its light value whatever the theme — and Compose's empty state is dashed as
+the others are. Each change has a test that fails on the old code: three island tests and two
+colour reads on iOS, a Paparazzi test whose goldens, recorded on both, show the rows 4dp further
+apart and the rule in the role in light and dark, a component test on Chromium and WebKit, and
+the painter check. The hand-swapped symbol stays as it is. Ruling them turned up the same edge
+fault library-wide on the native side — 31 lines in 17 SwiftUI components and 42 in 19 Compose
+ones draw an edge in a foreground primitive, and the border check never reads the components
+(handoff §7).
