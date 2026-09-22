@@ -370,6 +370,60 @@ try {
       assert.equal(loader.width, "16px");
       assert.match(loader.animationName, /^kozmos-/);
       assert.notEqual(loader.animationDuration, "0s");
+      // One drawing, not four. Until 2026-09-22 React drew lucide's `Loader2`
+      // here and in `Spinner`, iOS a tinted `ProgressView`, Android material3's
+      // indicator and Figma an ellipse with a dash pattern; no two matched. The
+      // arc is three quarters of a circle of radius 9 in the icons' own 24 box,
+      // stroke 2, round caps, so it scales as every Kozmos icon does.
+      const arc = (testId) =>
+        page.getByTestId(testId).locator("svg").evaluate((node) => {
+          const path = node.querySelector("path");
+          return {
+            viewBox: node.getAttribute("viewBox"),
+            d: path && path.getAttribute("d"),
+            width: path && path.getAttribute("stroke-width"),
+            cap: path && path.getAttribute("stroke-linecap"),
+            paths: node.querySelectorAll("path").length,
+            // With the turn running the box is the rotated square's, up to 41 %
+            // wider mid-turn; stop it to measure the layout box it occupies.
+            box: (() => {
+              const own = node.style.animation;
+              node.style.animation = "none";
+              const width = node.getBoundingClientRect().width;
+              node.style.animation = own;
+              return width;
+            })(),
+          };
+        });
+      const buttonArc = await arc(`${id}-loading`);
+      const spinnerArc = await arc(`${id}-spinner`);
+      for (const [where, drawn] of [
+        ["the button's loader", buttonArc],
+        ["the spinner", spinnerArc],
+      ]) {
+        assert.deepEqual(
+          {
+            viewBox: drawn.viewBox,
+            d: drawn.d,
+            width: drawn.width,
+            cap: drawn.cap,
+            paths: drawn.paths,
+          },
+          {
+            viewBox: "0 0 24 24",
+            d: "M12 3a9 9 0 1 1-9 9",
+            width: "2",
+            cap: "round",
+            paths: 1,
+          },
+          `${where} is not the system's arc: ${JSON.stringify(drawn)}`,
+        );
+      }
+      assert.deepEqual(
+        [buttonArc.box, spinnerArc.box, (await arc(`${id}-spinner-xl`)).box],
+        [16, 24, 48],
+        "the arc's sizes are not the Spinner/size tokens",
+      );
       // GAP-56: a Button keeps 8px between its icon and its label, as Figma's Button
       // (itemSpacing 8, bound) and iOS's (HStack spacing 100) do: a caller's icon, and the
       // loading spinner, without a margin of either's own. Measured on the spinner's layout box
@@ -604,6 +658,38 @@ try {
     );
     await page.close();
   }
+
+  // GAP-50: the spinner, the skeleton and the loading button turned whatever
+  // the visitor had asked for. The turn now lives on one owned class, so one
+  // media query answers for the arc wherever it is drawn — and the status role
+  // still announces the wait when the turn stops.
+  const still = await browser.newPage({
+    viewport: { width: 600, height: 600 },
+    reducedMotion: "reduce",
+  });
+  await still.setContent(
+    `<!doctype html><html><head><style>${css}</style></head><body data-kozmos-root data-theme="light"><div id="fixture"></div></body></html>`,
+  );
+  await still.addScriptTag({ content: code });
+  await still.getByTestId("outer-spinner").waitFor();
+  for (const testId of ["outer-spinner", "outer-loading"]) {
+    const animation = await still
+      .getByTestId(testId)
+      .locator("svg")
+      .evaluate((node) => getComputedStyle(node).animationName);
+    assert.equal(
+      animation,
+      "none",
+      `${testId} keeps turning under prefers-reduced-motion: ${animation}`,
+    );
+  }
+  assert.equal(
+    await still.getByTestId("outer-spinner").getAttribute("role"),
+    "status",
+    "a spinner that has stopped must still say it is waiting",
+  );
+  console.log("PASS reduced motion: the arc rests, the status role remains");
+  await still.close();
 } finally {
   await browser.close();
 }

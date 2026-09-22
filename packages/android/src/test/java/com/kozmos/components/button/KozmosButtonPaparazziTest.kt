@@ -51,10 +51,11 @@ class KozmosButtonPaparazziTest {
      * iOS's (HStack spacing 100) do, so a caller's icon no longer touches its label. Measured
      * from the layout, not the pixels, where a glyph's inset would count as gap.
      *
-     * The loader is a sibling in the same spaced row, so this measures its spacing too. It is not
-     * rendered here: material3 1.1.2's indeterminate spinner throws NoSuchMethodError
-     * (KeyframesSpecConfig.at) against animation-core 1.6.0, both from BOM 2024.01.00, which is
-     * why no golden shows a loading button — a finding of its own.
+     * The loader is a sibling in the same spaced row, so this measures its spacing too. It is
+     * rendered in `aLoadingButtonDrawsTheSystemsArc` below: until 2026-09-22 it could not be,
+     * because material3 1.1.2's indeterminate spinner throws NoSuchMethodError
+     * (KeyframesSpecConfig.at) against animation-core 1.6.0, both from BOM 2024.01.00. The
+     * system's own arc is a Canvas on a plain tween, so a golden can exist at last.
      */
     @Test
     fun theIconKeepsEightFromTheLabel() {
@@ -113,6 +114,29 @@ class KozmosButtonPaparazziTest {
                         KozmosButton(onClick = {}, variant = KozmosButtonVariant.Glass) { Text("Glass") }
                         KozmosIconButton(icon = Icons.Default.Add, onClick = {}, contentDescription = "Add", variant = KozmosIconButtonVariant.Glass)
                     }
+                }
+            }
+        }
+    }
+
+    /**
+     * The first golden of a loading button on Android.
+     *
+     * material3's indeterminate indicator threw against this BOM, so the state existed in the
+     * API and had never been rendered — on a golden or, as far as anyone had checked, a device.
+     * The button now draws the system's own arc: three quarters of a circle from the top, round
+     * caps, stroke 2 in the icons' 24 box, at the small size, in the button's own foreground.
+     *
+     * The arc's own geometry is measured in the browser, where the same drawing is a path this
+     * check cannot reach through Compose; here the golden is the evidence that it renders at all,
+     * and `theIconKeepsEightFromTheLabel` above measures the row that holds it.
+     */
+    @Test
+    fun aLoadingButtonDrawsTheSystemsArc() {
+        paparazzi.snapshot {
+            MaterialTheme {
+                Box(modifier = Modifier.background(Color.White).padding(24.dp)) {
+                    KozmosButton(onClick = {}, isLoading = true) { Text("Loading") }
                 }
             }
         }

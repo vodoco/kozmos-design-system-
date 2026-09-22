@@ -20,6 +20,7 @@ import {
   Text,
   Heading,
   POIDetailPanel,
+  Spinner,
 } from "@kozmos/react";
 
 function Controls({ id }: { id: string }) {
@@ -84,6 +85,8 @@ function Controls({ id }: { id: string }) {
       <Button isLoading data-testid={`${id}-loading`}>
         Loading
       </Button>
+      <Spinner data-testid={`${id}-spinner`} />
+      <Spinner size="xl" data-testid={`${id}-spinner-xl`} />
       <Button data-testid={`${id}-icon-label`}>
         <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" />
         Navigate

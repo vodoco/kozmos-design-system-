@@ -62,6 +62,14 @@ jobs:
       - name: Verify Component Contracts
         run: pnpm components:contract:check
 
+      # Also never run by any workflow until 2026-09-22. It reports the axes a
+      # platform is missing, and fails when the analysis it writes is stale, so
+      # the record and the code cannot drift apart unnoticed. Its own controls
+      # run first: the enum reader lost a whole axis to a doc comment holding
+      # commas, and said the platform was missing what it had just been given.
+      - name: Verify Component Variant Parity
+        run: node --test scripts/skills/variant-parity.test.mjs && pnpm components:variant:check
+
       - name: Verify Native POI Fixtures Match Storybook
         run: node --import tsx scripts/sync-ios-poi-examples.mjs
 

@@ -19,6 +19,7 @@
  */
 
 import fs from "node:fs";
+import { pathToFileURL } from "node:url";
 import path from "node:path";
 import prettier from "prettier";
 
@@ -437,8 +438,15 @@ function nativeAxes(component, files, enumPattern, language) {
  * one line (`Default, Info, Success` in Kotlin, `case a, b` in Swift), and
  * Kotlin entries may carry constructor arguments (`Quickest("quickest")`).
  */
-function enumBodyValues(block, language) {
-  let body = block.slice(1, -1);
+export function enumBodyValues(block, language) {
+  // Comments first: a doc comment inside the body carries commas, and the
+  // split below would tear it into entries. Blanked, not removed, so nothing
+  // downstream shifts. Spinner's whole size axis disappeared this way on
+  // 2026-09-22, and the check reported the platform as missing it.
+  let body = block
+    .slice(1, -1)
+    .replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, " "))
+    .replace(/\/\/[^\n]*/g, (c) => c.replace(/[^\n]/g, " "));
 
   // Kotlin separates entries from members with `;`; Swift declares members
   // after the cases, so cut at the first `func`/`var`/`init`.
@@ -991,4 +999,5 @@ async function main() {
   }
 }
 
-await main();
+// Only when run, not when a test imports `enumBodyValues`.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) await main();
