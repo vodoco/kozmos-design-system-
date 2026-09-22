@@ -929,11 +929,13 @@ section("BrowseCategoriesPanel");
     rows.length === 2 && rows.every((row) => row.children.length === 4),
     "two rows of four",
   );
+  // The prototype's grid, measured on 2026-09-22: row-gap 12px, column-gap
+  // 8px. The rows were 8 apart until then.
   ok(
     grid &&
-      grid.itemSpacing === 8 &&
+      grid.itemSpacing === 12 &&
       rows.every((row) => row.itemSpacing === 8),
-    "gap 8 both ways",
+    `rows 12 apart, columns 8 (rows ${grid && grid.itemSpacing}, columns ${rows.map((row) => row.itemSpacing).join("/")})`,
   );
   const instances = rows.flatMap((row) => row.children);
   ok(

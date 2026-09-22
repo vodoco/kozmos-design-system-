@@ -73,8 +73,11 @@ public struct KozmosBrowseCategoriesPanel<Icon: View, Search: View, Actions: Vie
                 }
                 .padding(KozmosDimensions.primitivesLayoutSpacing200)
 
+                // The container edge's role, as React's border-b draws it and
+                // as the prototype draws every rule (a light grey). It was
+                // foreground/300, a text colour, until 2026-09-22.
                 if presentation == .panel {
-                    Divider().overlay(KozmosColors.primitivesColorsForeground300)
+                    Divider().overlay(KozmosColors.semanticsBorderSubtle)
                 }
             }
 
@@ -93,7 +96,7 @@ public struct KozmosBrowseCategoriesPanel<Icon: View, Search: View, Actions: Vie
                         .overlay(
                             RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
                                 .strokeBorder(
-                                    KozmosColors.primitivesColorsForeground300,
+                                    KozmosColors.semanticsBorderSubtle,
                                     style: StrokeStyle(lineWidth: 1, dash: [4, 4])
                                 )
                         )

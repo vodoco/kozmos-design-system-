@@ -1,6 +1,5 @@
 package com.kozmos.components.browsecategoriespanel
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,15 +15,21 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.kozmos.components.categorytile.KozmosCategoryTile
 import com.kozmos.components.categorytile.KozmosCategoryTint
 import com.kozmos.contracts.KozmosCategoryPresentation
-import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.tokens.KozmosThemeTokens
 
 /**
  * A scrollable grid of browsable categories with optional search and actions.
@@ -73,17 +78,40 @@ fun KozmosBrowseCategoriesPanel(
                 }
             }
 
-            Divider(color = KozmosColors.primitivesColorsForeground300)
+            // The container edge's role, as React's border-b draws it and as
+            // the prototype draws every rule (a light grey), themed. It was
+            // foreground/300, a text colour, in its light value only, until
+            // 2026-09-22.
+            Divider(color = KozmosThemeTokens.semanticsBorderSubtle)
         }
 
         if (categories.isEmpty()) {
+            // Dashed, in the same role, as React's and SwiftUI's empty states
+            // are; it was a solid foreground/300 edge until 2026-09-22.
+            val edge = KozmosThemeTokens.semanticsBorderSubtle
+            val radius = KozmosDimensions.semanticsRadiusPanel
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(KozmosDimensions.primitivesLayoutSpacing200),
-                shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
-                color = KozmosColors.primitivesColorsBackground100.copy(alpha = 0.4f),
-                border = BorderStroke(1.dp, KozmosColors.primitivesColorsForeground300)
+                    .padding(KozmosDimensions.primitivesLayoutSpacing200)
+                    .drawWithContent {
+                        drawContent()
+                        // Inside the edge, as SwiftUI's strokeBorder draws it.
+                        val width = 1.dp.toPx()
+                        val dash = 4.dp.toPx()
+                        drawRoundRect(
+                            color = edge,
+                            topLeft = Offset(width / 2, width / 2),
+                            size = Size(size.width - width, size.height - width),
+                            cornerRadius = CornerRadius(radius.toPx() - width / 2),
+                            style = Stroke(
+                                width = width,
+                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(dash, dash))
+                            )
+                        )
+                    },
+                shape = RoundedCornerShape(radius),
+                color = KozmosThemeTokens.primitivesColorsBackground100.copy(alpha = 0.4f)
             ) {
                 Box(
                     modifier = Modifier.padding(KozmosDimensions.primitivesLayoutSpacing300),
@@ -94,14 +122,16 @@ fun KozmosBrowseCategoriesPanel(
             }
         } else {
             LazyVerticalGrid(
-                // Four across, gap 8: the prototype's grid of icon squares.
+                // Four across, 8 apart, and rows 12 apart: the prototype's grid
+                // (row-gap 12px, column-gap 8px, measured on 2026-09-22). The
+                // rows were 8 apart here until then.
                 columns = GridCells.Fixed(4),
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(
                     KozmosDimensions.primitivesLayoutSpacing200
                 ),
                 horizontalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing100),
-                verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing100)
+                verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing150)
             ) {
                 items(categories, key = { it.id }) { category ->
                     KozmosCategoryTile(

@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "6fdc2ffbc635";
+const PLUGIN_BUILD = "c35a625c8160";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -492,7 +492,8 @@ const DYNAMIC_ISLAND_STATES = ["Compact", "Expanded", "Minimal"];
 // The React component's geometry, which Compose draws too: a 240×44 pill, a
 // 360×160 card at 32, and a 56 circle — its borderRadius of 100 clamps to half
 // the height. It was 240×48, 360×180 and 64×48 at 24 here until 2026-09-22,
-// with no note of why. SwiftUI draws the pill 36 high and the circle at 48.
+// with no note of why. SwiftUI draws them so too since the same day; it drew
+// the pill 36 high and as wide as its container, and the circle at 48.
 const DYNAMIC_ISLAND_GEOMETRY = {
   Compact: { width: 240, height: 44, radius: 22 },
   Expanded: { width: 360, height: 160, radius: 32 },
@@ -47014,13 +47015,15 @@ async function updateBrowseCategoriesPanelVariant(
     return;
   }
 
-  // The grid is the React's: four across at gap 8, each a live CategoryTile
-  // in its category's colour — the taxonomy's aviation quick access (10.12.0),
-  // one of each of the eight colours — with its count.
+  // The grid is the prototype's: four across 8 apart and rows 12 apart
+  // (row-gap 12px, column-gap 8px, measured on 2026-09-22), as React, SwiftUI
+  // and Compose draw it; the rows were 8 apart here until then. Each tile is a
+  // live CategoryTile in its category's colour — the taxonomy's aviation quick
+  // access (10.12.0), one of each of the eight colours — with its count.
   const grid = productSdkFrame("Category Grid", {
     primarySizing: "AUTO",
     counterSizing: "FIXED",
-    spacing: 8,
+    spacing: 12,
     width: contentWidth,
     height: 220,
   });
@@ -47232,7 +47235,7 @@ function configureBrowseCategoriesPanelProperties(componentSet, stats) {
 
 const BROWSE_CATEGORIES_PANEL_DESCRIPTION = [
   "Kozmos BrowseCategoriesPanel generated from the React BrowseCategoriesPanel API.",
-  "The grid is four live CategoryTile instances across at gap 8, each in its category's Tint with its label, count and symbol — the aviation quick access at 10.12.0; tint maps to the panel's tint callback and renderIcon to each tile's Icon, the category's taxonomy symbol in its accent.",
+  "The grid is four live CategoryTile instances across, 8 apart, its rows 12 apart as the prototype's are, each in its category's Tint with its label, count and symbol — the aviation quick access at 10.12.0; tint maps to the panel's tint callback and renderIcon to each tile's Icon, the category's taxonomy symbol in its accent.",
   "Content covers the panel with and without the search slot, plus its empty state.",
   "Panel Label Text maps to BrowseCategoriesPanel.label, the panel's accessible name: no platform draws it, so its layer is hidden.",
   "Search puts the search slot in a header padded 16 over a 1px Border/Subtle rule, as React's border-b p-4 does.",
