@@ -64,7 +64,7 @@ public struct KozmosWayfindingInputRow: View {
                 .padding(KozmosDimensions.primitivesLayoutSpacing150)
                 .background(KozmosColors.primitivesColorsBackground0)
                 .cornerRadius(KozmosDimensions.semanticsRadiusControl)
-                .overlay(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl).stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl).stroke(KozmosColors.semanticsBorderInput, lineWidth: 1))
             
             HStack {
                 Spacer()
@@ -82,7 +82,7 @@ public struct KozmosWayfindingInputRow: View {
                 .padding(KozmosDimensions.primitivesLayoutSpacing150)
                 .background(KozmosColors.primitivesColorsBackground0)
                 .cornerRadius(KozmosDimensions.semanticsRadiusControl)
-                .overlay(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl).stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl).stroke(KozmosColors.semanticsBorderInput, lineWidth: 1))
         }
     }
 }

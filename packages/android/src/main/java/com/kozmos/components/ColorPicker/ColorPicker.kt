@@ -73,7 +73,7 @@ fun KozmosColorPicker(
     val color = colorFromHex(normalizedValue)
     val hsl = rgbToHsl(hexToRgb(normalizedValue))
     val fieldShape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
-    val borderColor = statusColor(status) ?: KozmosThemeTokens.primitivesColorsForeground500
+    val borderColor = statusColor(status) ?: KozmosThemeTokens.semanticsBorderInput
     val fieldBackground = if (!enabled || readOnly) {
         KozmosThemeTokens.primitivesColorsBackground100
     } else {
@@ -107,7 +107,7 @@ fun KozmosColorPicker(
                 modifier = Modifier
                     .size(32.dp)
                     .background(color, RoundedCornerShape(KozmosDimensions.semanticsRadiusMarker))
-                    .border(1.dp, KozmosThemeTokens.primitivesColorsForeground500, RoundedCornerShape(KozmosDimensions.semanticsRadiusMarker))
+                    .border(1.dp, KozmosThemeTokens.semanticsBorderInput, RoundedCornerShape(KozmosDimensions.semanticsRadiusMarker))
             )
             Text(
                 text = normalizedValue,
@@ -130,7 +130,7 @@ fun KozmosColorPicker(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(KozmosThemeTokens.primitivesColorsBackground0, fieldShape)
-                    .border(1.dp, KozmosThemeTokens.primitivesColorsForeground500, fieldShape)
+                    .border(1.dp, KozmosThemeTokens.semanticsBorderInput, fieldShape)
                     .padding(KozmosDimensions.primitivesLayoutSpacing150),
                 verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing150)
             ) {
@@ -191,7 +191,7 @@ private fun ColorArea(color: Color, hsl: HslColor) {
             .height(144.dp)
             .background(Brush.horizontalGradient(listOf(Color.White, color)), shape)
             .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black)), shape)
-            .border(1.dp, KozmosThemeTokens.primitivesColorsForeground500, shape)
+            .border(1.dp, KozmosThemeTokens.semanticsBorderSubtle, shape)
     ) {
         val handleSize = 18.dp
         Box(
@@ -292,7 +292,7 @@ private fun CompactValueBox(text: String, modifier: Modifier = Modifier) {
         modifier = modifier
             .height(36.dp)
             .background(KozmosThemeTokens.primitivesColorsBackground0, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
-            .border(1.dp, KozmosThemeTokens.primitivesColorsForeground500, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
+            .border(1.dp, KozmosThemeTokens.semanticsBorderInput, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
             .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing100, vertical = KozmosDimensions.primitivesLayoutSpacing75)
     )
 }
@@ -304,7 +304,7 @@ private fun PaletteSelector(label: String) {
             .fillMaxWidth()
             .height(40.dp)
             .background(KozmosThemeTokens.primitivesColorsBackground0, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
-            .border(1.dp, KozmosThemeTokens.primitivesColorsForeground500, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
+            .border(1.dp, KozmosThemeTokens.semanticsBorderInput, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
             .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing150),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -347,7 +347,7 @@ private fun PresetGrid(
                             .background(colorFromHex(preset), RoundedCornerShape(KozmosDimensions.semanticsRadiusMarker))
                             .border(
                                 if (preset == selectedValue) 2.dp else 1.dp,
-                                KozmosThemeTokens.primitivesColorsForeground500,
+                                KozmosThemeTokens.semanticsBorderInput,
                                 RoundedCornerShape(KozmosDimensions.semanticsRadiusMarker)
                             )
                             .clickable(enabled = enabled) { onValueChange(preset) }

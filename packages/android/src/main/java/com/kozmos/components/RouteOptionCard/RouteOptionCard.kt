@@ -29,6 +29,7 @@ import com.kozmos.contracts.KozmosRouteOptionPresentation
 import com.kozmos.contracts.KozmosRoutePreference
 import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.tokens.KozmosThemeTokens
 
 /**
  * A selectable route option.
@@ -73,7 +74,7 @@ fun KozmosRouteOptionCard(
             color = if (option.selected) {
                 KozmosColors.primitivesColorsTheme500
             } else {
-                KozmosColors.primitivesColorsForeground300
+                KozmosThemeTokens.semanticsBorderSubtle
             }
         )
     ) {

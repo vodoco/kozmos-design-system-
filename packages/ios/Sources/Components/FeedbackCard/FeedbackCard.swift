@@ -75,12 +75,11 @@ public struct KozmosFeedbackCard: View {
             }
         }
         .padding(KozmosDimensions.primitivesLayoutSpacing300)
-        .background(KozmosColors.primitivesColorsBackground0.opacity(0.9))
         .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
-                .stroke(KozmosColors.primitivesColorsForeground900.opacity(0.08), lineWidth: 1)
-        )
+        // The solid surface React's card sits on by default: the background
+        // with the subtle border. It was the background at 90 % under a
+        // near-black hairline at 8 % until 2026-09-22.
+        .kozmosSurface(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
         .kozmosElevation(KozmosShadows.semanticsElevationOverlay)
     }
 }

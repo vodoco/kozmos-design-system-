@@ -9,9 +9,9 @@ public struct KozmosSeparator: View {
     
     public var body: some View {
         if orientation == .horizontal {
-            Divider()
+            Divider().overlay(KozmosColors.semanticsBorderSubtle)
         } else {
-            Divider()
+            Divider().overlay(KozmosColors.semanticsBorderSubtle)
                 .frame(width: 1)
                 .frame(maxHeight: .infinity)
         }

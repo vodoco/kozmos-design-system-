@@ -92,6 +92,13 @@ module.exports = {
         input: "var(--semantics-border-input)",
         ring: "var(--primitives-colors-theme-600)",
       }),
+      // A bare `border` is the container edge, as `border` above says: the
+      // role. Until 2026-09-22 it was Tailwind's own gray-200 (#e5e7eb), in
+      // the dark as in the light, on every border the package left bare —
+      // Dialog, Popover, Toast, Menu, the listbox, the tables.
+      borderColor: {
+        DEFAULT: "var(--semantics-border-subtle)",
+      },
       borderRadius: {
         sm: "var(--primitives-radius-sm)",
         md: "var(--primitives-radius-md)", // Alias for Base in new system, or strictly md

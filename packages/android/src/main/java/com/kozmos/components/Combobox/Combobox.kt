@@ -173,7 +173,7 @@ fun KozmosCombobox(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(KozmosThemeTokens.primitivesColorsBackground0, fieldShape)
-                        .border(1.dp, KozmosThemeTokens.primitivesColorsForeground500, fieldShape)
+                        .border(1.dp, KozmosThemeTokens.semanticsBorderInput, fieldShape)
                         .padding(KozmosDimensions.primitivesLayoutSpacing150)
                 )
             } else {
@@ -229,7 +229,7 @@ internal fun selectionFieldColors(
     }
     return SelectionFieldColors(
         background = if (!enabled || readOnly) KozmosThemeTokens.primitivesColorsBackground100 else KozmosThemeTokens.primitivesColorsBackground0,
-        border = statusColor ?: KozmosThemeTokens.primitivesColorsForeground500,
+        border = statusColor ?: KozmosThemeTokens.semanticsBorderInput,
         text = textColor,
         placeholder = if (!enabled) KozmosThemeTokens.primitivesColorsForeground500 else KozmosThemeTokens.primitivesColorsForeground400,
         label = statusColor ?: textColor,

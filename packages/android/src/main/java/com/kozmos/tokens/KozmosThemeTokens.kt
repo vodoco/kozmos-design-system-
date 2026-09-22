@@ -157,6 +157,17 @@ object KozmosThemeTokens {
             KozmosColorsDark.semanticsBorderSubtle
         )
 
+    /**
+     * The control boundary role — a field's, a picker's, a swatch's edge.
+     * Components drew it as `primitivesColorsForeground500`, the value it
+     * aliases, until 2026-09-22, when the edges moved onto their roles.
+     */
+    val semanticsBorderInput: Color
+        @Composable get() = themed(
+            KozmosDesignTokens.semanticsBorderInput,
+            KozmosColorsDark.semanticsBorderInput
+        )
+
     val semanticsOverlayScrim: Color
         @Composable get() = themed(
             KozmosDesignTokens.semanticsOverlayScrim,

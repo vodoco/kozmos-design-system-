@@ -83,7 +83,7 @@ fun KozmosToast(
         shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
         color = KozmosThemeTokens.primitivesColorsBackground0,
         shadowElevation = 8.dp,
-        border = BorderStroke(1.dp, KozmosThemeTokens.primitivesColorsForeground400)
+        border = BorderStroke(1.dp, KozmosThemeTokens.semanticsBorderSubtle)
     ) {
         Row(
             modifier = Modifier.padding(

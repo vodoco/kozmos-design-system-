@@ -1,6 +1,5 @@
 package com.kozmos.components.routinginputgroup
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -35,6 +34,10 @@ import com.kozmos.providers.KozmosAnalyticsEvent
 import com.kozmos.providers.LocalKozmosAnalytics
 import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.tokens.KozmosThemeTokens
+import com.kozmos.components.surface.KozmosSurfaceDefaults
+import com.kozmos.components.surface.KozmosSurfaceStyle
+import androidx.compose.ui.graphics.Color
 
 data class KozmosRoutePoint(
     val id: String,
@@ -56,10 +59,13 @@ fun KozmosRoutingInputGroup(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
-        color = KozmosColors.primitivesColorsBackground0.copy(alpha = 0.9f),
+        // The solid surface React's card sits on by default, themed: the
+        // background with the subtle border. It was the background at 90 %
+        // under a near-black hairline at 8 % until 2026-09-22.
+        color = KozmosSurfaceDefaults.tint(KozmosSurfaceStyle.Solid),
         tonalElevation = 6.dp,
         shadowElevation = 12.dp,
-        border = BorderStroke(1.dp, KozmosColors.primitivesColorsForeground900.copy(alpha = 0.08f))
+        border = KozmosSurfaceDefaults.border(KozmosSurfaceStyle.Solid)
     ) {
         Row(
             modifier = Modifier
@@ -86,9 +92,15 @@ fun KozmosRoutingInputGroup(
                             singleLine = true,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
+                            // No edge at rest, a wash instead, as React's field
+                            // (border-transparent, bg-black/5) and SwiftUI's are;
+                            // the theme's edge stays to mark focus. It was
+                            // outlined in foreground/300 until 2026-09-22.
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = KozmosColors.primitivesColorsTheme500,
-                                unfocusedBorderColor = KozmosColors.primitivesColorsForeground300
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedContainerColor = KozmosThemeTokens.primitivesColorsForeground0.copy(alpha = 0.05f),
+                                unfocusedContainerColor = KozmosThemeTokens.primitivesColorsForeground0.copy(alpha = 0.05f)
                             )
                         )
 
@@ -161,7 +173,7 @@ private fun RouteTimeline(points: List<KozmosRoutePoint>) {
                         )
                         .border(
                             2.dp,
-                            if (index == 0) KozmosColors.primitivesColorsTheme500 else KozmosColors.primitivesColorsForeground500,
+                            if (index == 0) KozmosColors.primitivesColorsTheme500 else KozmosThemeTokens.primitivesColorsForeground400,
                             CircleShape
                         )
                 )

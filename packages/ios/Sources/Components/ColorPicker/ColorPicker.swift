@@ -75,7 +75,7 @@ public struct KozmosColorPicker: View {
                         .frame(width: 32, height: 32)
                         .overlay(
                             RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusMarker)
-                                .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: 1)
+                                .stroke(KozmosColors.semanticsBorderInput, lineWidth: 1)
                         )
 
                     Text(normalizedValue)
@@ -150,7 +150,7 @@ public struct KozmosColorPicker: View {
         .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
         .overlay(
             RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
-                .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: 1)
+                .stroke(KozmosColors.semanticsBorderInput, lineWidth: 1)
         )
         .kozmosElevation(KozmosShadows.semanticsElevationOverlay)
     }
@@ -191,7 +191,7 @@ public struct KozmosColorPicker: View {
         .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
         .overlay(
             RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
-                .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: 1)
+                .stroke(KozmosColors.semanticsBorderSubtle, lineWidth: 1)
         )
         .accessibilityLabel("Saturation and lightness")
         .accessibilityValue("\(Int(currentHsl.s)) percent saturation, \(Int(currentHsl.l)) percent lightness")
@@ -229,7 +229,7 @@ public struct KozmosColorPicker: View {
             .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
             .overlay(
                 RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
-                    .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: 1)
+                    .stroke(KozmosColors.semanticsBorderInput, lineWidth: 1)
             )
 
             ForEach(channelLabels, id: \.self) { channel in
@@ -242,7 +242,7 @@ public struct KozmosColorPicker: View {
                     .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
                     .overlay(
                         RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
-                            .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: 1)
+                            .stroke(KozmosColors.semanticsBorderInput, lineWidth: 1)
                     )
             }
 
@@ -254,7 +254,7 @@ public struct KozmosColorPicker: View {
                 .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
                 .overlay(
                     RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
-                        .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: 1)
+                        .stroke(KozmosColors.semanticsBorderInput, lineWidth: 1)
                 )
         }
     }
@@ -276,7 +276,7 @@ public struct KozmosColorPicker: View {
         .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
         .overlay(
             RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
-                .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: 1)
+                .stroke(KozmosColors.semanticsBorderInput, lineWidth: 1)
         )
     }
 
@@ -293,7 +293,7 @@ public struct KozmosColorPicker: View {
                         .aspectRatio(1, contentMode: .fit)
                         .overlay(
                             RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusMarker)
-                                .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: preset == normalizedValue ? 2 : 1)
+                                .stroke(KozmosColors.semanticsBorderInput, lineWidth: preset == normalizedValue ? 2 : 1)
                         )
                 }
                 .buttonStyle(.plain)

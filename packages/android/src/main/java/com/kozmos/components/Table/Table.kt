@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosTable(
@@ -34,7 +35,7 @@ fun KozmosTable(
     ) {
         if (header != null) {
             header()
-            Divider()
+            Divider(color = KozmosThemeTokens.semanticsBorderSubtle)
         }
         content()
     }
@@ -52,7 +53,7 @@ fun KozmosTableRow(
                 .padding(KozmosDimensions.primitivesLayoutSpacing200),
             content = content
         )
-        Divider()
+        Divider(color = KozmosThemeTokens.semanticsBorderSubtle)
     }
 }
 

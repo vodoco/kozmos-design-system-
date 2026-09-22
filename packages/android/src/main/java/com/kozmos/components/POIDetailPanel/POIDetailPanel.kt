@@ -56,6 +56,7 @@ import com.kozmos.contracts.KozmosPOIPresentation
 import com.kozmos.contracts.KozmosPOIServicePresentation
 import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.tokens.KozmosThemeTokens
 
 /** Controlled state for a single POI action button. */
 data class KozmosPOIActionState(
@@ -130,7 +131,7 @@ fun KozmosPOIDetailPanel(
         border = if (presentation == KozmosPOIDetailPanelPresentation.Sheet) {
             null
         } else {
-            BorderStroke(1.dp, KozmosColors.primitivesColorsForeground300)
+            BorderStroke(1.dp, KozmosThemeTokens.semanticsBorderSubtle)
         },
         shadowElevation = when (presentation) {
             KozmosPOIDetailPanelPresentation.Panel -> 16.dp
@@ -149,7 +150,7 @@ fun KozmosPOIDetailPanel(
         Column(modifier = Modifier.fillMaxWidth()) {
             Header(poi = poi, onClose = onClose, closeLabel = closeLabel, surface = insetSurface)
 
-            Divider(color = KozmosColors.primitivesColorsForeground300)
+            Divider(color = KozmosThemeTokens.semanticsBorderSubtle)
 
             Column(
                 modifier = Modifier
@@ -251,7 +252,7 @@ fun KozmosPOIDetailPanel(
                             },
                         shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
                         color = if (presentation == KozmosPOIDetailPanelPresentation.Sheet) insetSurface else insetSurface.copy(alpha = 0.4f),
-                        border = BorderStroke(1.dp, KozmosColors.primitivesColorsForeground300)
+                        border = BorderStroke(1.dp, KozmosThemeTokens.semanticsBorderSubtle)
                     ) {
                         Text(
                             text = accessRestrictionsLabel,
@@ -398,7 +399,7 @@ private fun Services(
                 Surface(
                     shape = RoundedCornerShape(percent = 50),
                     color = KozmosColors.primitivesColorsBackground0,
-                    border = BorderStroke(1.dp, KozmosColors.primitivesColorsForeground300)
+                    border = BorderStroke(1.dp, KozmosThemeTokens.semanticsBorderSubtle)
                 ) {
                     Text(
                         text = service.label,

@@ -972,10 +972,12 @@ assertContains(
   "rounded-control",
   "React Input radius class uses the Control role",
 );
+// The control boundary's role, which aliases foreground/500; the field read
+// the primitive itself until 2026-09-22 (scripts/check-border-parity.mjs).
 assertContains(
   ownedCssPath,
   ownedInput,
-  "--primitives-colors-foreground-500",
+  "border border-input",
   "React Input neutral border token",
 );
 assertContains(
@@ -1005,7 +1007,7 @@ assertContains(
 assertContains(
   files.reactSlider,
   source.reactSlider,
-  "border-[color:var(--primitives-colors-foreground-500)] bg-secondary",
+  "border border-input bg-secondary",
   "React Slider inactive track boundary",
 );
 assertContains(

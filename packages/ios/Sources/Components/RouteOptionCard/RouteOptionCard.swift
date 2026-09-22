@@ -82,7 +82,7 @@ public struct KozmosRouteOptionCard<Icon: View>: View {
                     .stroke(
                         option.selected
                             ? KozmosColors.primitivesColorsTheme500
-                            : KozmosColors.primitivesColorsForeground300,
+                            : KozmosColors.semanticsBorderSubtle,
                         lineWidth: option.selected ? 2 : 1
                     )
             )

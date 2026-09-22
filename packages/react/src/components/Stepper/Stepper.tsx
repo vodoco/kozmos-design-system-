@@ -30,7 +30,10 @@ const Stepper = React.forwardRef<HTMLDivElement, StepperProps>(
                       ? "border-primary bg-primary text-primary-foreground"
                       : isCurrent
                         ? "border-primary text-foreground"
-                        : "border-muted text-muted-foreground",
+                        : // A pending step's ring is its glyph: foreground/500,
+                          // as Figma and the natives draw it. `border-muted`
+                          // read 1.2:1 on the page until 2026-09-22.
+                          "border-[color:var(--primitives-colors-foreground-500)] text-muted-foreground",
                   )}
                 >
                   {isCompleted ? <Check className="h-4 w-4" /> : index + 1}

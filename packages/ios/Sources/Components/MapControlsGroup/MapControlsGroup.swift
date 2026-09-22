@@ -63,7 +63,7 @@ public struct KozmosMapControlsGroup: View {
             .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusContainer, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusContainer, style: .continuous)
-                    .stroke(KozmosColors.primitivesColorsForeground900.opacity(0.08), lineWidth: 1)
+                    .stroke(KozmosColors.semanticsBorderSubtle, lineWidth: 1)
             )
             .kozmosElevation(KozmosShadows.semanticsElevationFloating)
 

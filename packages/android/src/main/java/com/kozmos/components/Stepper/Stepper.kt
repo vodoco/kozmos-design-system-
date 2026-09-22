@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosStepper(
@@ -51,7 +52,7 @@ fun KozmosStepper(
                         .background(if (isCompleted) KozmosColors.primitivesColorsTheme500 else Color.Transparent)
                         .border(
                             width = KozmosDimensions.primitivesLayoutSpacing25,
-                            color = if (isCompleted || isCurrent) KozmosColors.primitivesColorsTheme500 else KozmosColors.primitivesColorsForeground300,
+                            color = if (isCompleted || isCurrent) KozmosColors.primitivesColorsTheme500 else KozmosThemeTokens.primitivesColorsForeground500,
                             shape = CircleShape
                         ),
                     contentAlignment = Alignment.Center
@@ -84,7 +85,7 @@ fun KozmosStepper(
                     modifier = Modifier
                         .weight(1f)
                         .height(KozmosDimensions.primitivesLayoutSpacing25)
-                        .background(if (index < currentStep) KozmosColors.primitivesColorsTheme500 else KozmosColors.primitivesColorsBackground300)
+                        .background(if (index < currentStep) KozmosColors.primitivesColorsTheme500 else KozmosThemeTokens.semanticsBorderSubtle)
                 )
             }
         }

@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.kozmos.tokens.KozmosColors
 import com.kozmos.providers.LocalKozmosAnalytics
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosWayfindingCard(
@@ -80,7 +81,7 @@ fun KozmosWayfindingInputRow(
             singleLine = true,
             colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = KozmosColors.primitivesColorsTheme500,
-                unfocusedBorderColor = KozmosColors.primitivesColorsForeground300
+                unfocusedBorderColor = KozmosThemeTokens.semanticsBorderInput
             ) 
         )
         Row(
@@ -109,7 +110,7 @@ fun KozmosWayfindingInputRow(
             singleLine = true,
             colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = KozmosColors.primitivesColorsTheme500,
-                unfocusedBorderColor = KozmosColors.primitivesColorsForeground300
+                unfocusedBorderColor = KozmosThemeTokens.semanticsBorderInput
             )
         )
     }

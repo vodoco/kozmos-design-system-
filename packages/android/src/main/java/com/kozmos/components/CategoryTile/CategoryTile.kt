@@ -1,6 +1,5 @@
 package com.kozmos.components.categorytile
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +36,7 @@ import com.kozmos.providers.KozmosAnalyticsEvent
 import com.kozmos.providers.LocalKozmosAnalytics
 import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.tokens.KozmosThemeTokens
 
 /**
  * A single browsable category cell.
@@ -103,7 +103,7 @@ fun KozmosCategoryTile(
                         )
                         .border(
                             width = if (category.selected) 2.dp else 1.dp,
-                            color = if (category.selected) (tint?.accent ?: KozmosColors.primitivesColorsTheme500) else KozmosColors.semanticsBorderSubtle,
+                            color = if (category.selected) (tint?.accent ?: KozmosColors.primitivesColorsTheme500) else KozmosThemeTokens.semanticsBorderSubtle,
                             shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
                         ),
                     contentAlignment = Alignment.Center

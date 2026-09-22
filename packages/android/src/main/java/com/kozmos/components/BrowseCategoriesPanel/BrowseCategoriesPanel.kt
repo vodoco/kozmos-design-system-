@@ -15,18 +15,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.kozmos.components.categorytile.KozmosCategoryTile
 import com.kozmos.components.categorytile.KozmosCategoryTint
+import com.kozmos.components.surface.kozmosDashedEdge
 import com.kozmos.contracts.KozmosCategoryPresentation
 import com.kozmos.tokens.KozmosDimensions
 import com.kozmos.tokens.KozmosThemeTokens
@@ -88,28 +83,12 @@ fun KozmosBrowseCategoriesPanel(
         if (categories.isEmpty()) {
             // Dashed, in the same role, as React's and SwiftUI's empty states
             // are; it was a solid foreground/300 edge until 2026-09-22.
-            val edge = KozmosThemeTokens.semanticsBorderSubtle
             val radius = KozmosDimensions.semanticsRadiusPanel
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(KozmosDimensions.primitivesLayoutSpacing200)
-                    .drawWithContent {
-                        drawContent()
-                        // Inside the edge, as SwiftUI's strokeBorder draws it.
-                        val width = 1.dp.toPx()
-                        val dash = 4.dp.toPx()
-                        drawRoundRect(
-                            color = edge,
-                            topLeft = Offset(width / 2, width / 2),
-                            size = Size(size.width - width, size.height - width),
-                            cornerRadius = CornerRadius(radius.toPx() - width / 2),
-                            style = Stroke(
-                                width = width,
-                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(dash, dash))
-                            )
-                        )
-                    },
+                    .kozmosDashedEdge(KozmosThemeTokens.semanticsBorderSubtle, radius),
                 shape = RoundedCornerShape(radius),
                 color = KozmosThemeTokens.primitivesColorsBackground100.copy(alpha = 0.4f)
             ) {

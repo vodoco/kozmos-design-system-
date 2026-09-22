@@ -141,7 +141,7 @@ const Slider = React.forwardRef<
             props.onValueCommit?.(value);
           }}
         >
-          <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-pill border border-[color:var(--primitives-colors-foreground-500)] bg-secondary">
+          <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-pill border border-input bg-secondary">
             <SliderPrimitive.Range
               className={cn(
                 "absolute h-full bg-primary",

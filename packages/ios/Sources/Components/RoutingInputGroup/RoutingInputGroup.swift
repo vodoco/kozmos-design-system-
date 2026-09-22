@@ -91,12 +91,11 @@ public struct KozmosRoutingInputGroup: View {
             }
         }
         .padding(KozmosDimensions.primitivesLayoutSpacing200)
-        .background(KozmosColors.primitivesColorsBackground0.opacity(0.9))
         .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
-                .stroke(KozmosColors.primitivesColorsForeground900.opacity(0.08), lineWidth: 1)
-        )
+        // The solid surface React's card sits on by default: the background
+        // with the subtle border. It was the background at 90 % under a
+        // near-black hairline at 8 % until 2026-09-22.
+        .kozmosSurface(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
         .kozmosElevation(KozmosShadows.semanticsElevationOverlay)
     }
 
@@ -109,7 +108,7 @@ public struct KozmosRoutingInputGroup: View {
                         .foregroundColor(KozmosColors.primitivesColorsTheme500)
                 } else {
                     Circle()
-                        .strokeBorder(index == 0 ? KozmosColors.primitivesColorsTheme500 : KozmosColors.primitivesColorsForeground500, lineWidth: 2)
+                        .strokeBorder(index == 0 ? KozmosColors.primitivesColorsTheme500 : KozmosColors.primitivesColorsForeground400, lineWidth: 2)
                         .background(
                             Circle()
                                 .fill(index == 0 ? KozmosColors.primitivesColorsTheme500.opacity(0.18) : Color.clear)

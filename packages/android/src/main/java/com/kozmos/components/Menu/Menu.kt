@@ -78,7 +78,7 @@ fun KozmosMenu(
                 },
                 onClick = {}
             )
-            Divider()
+            Divider(color = KozmosThemeTokens.semanticsBorderSubtle)
         }
 
         content.items.forEach { item ->

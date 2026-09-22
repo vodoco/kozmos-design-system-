@@ -51,7 +51,7 @@ fun KozmosOTPInput(
         KozmosInputStatus.Success -> KozmosThemeTokens.primitivesColorsEmotionalSuccess600
         KozmosInputStatus.Default -> null
     }
-    val inactiveBorderColor = statusColor ?: KozmosThemeTokens.primitivesColorsForeground500
+    val inactiveBorderColor = statusColor ?: KozmosThemeTokens.semanticsBorderInput
     val fieldBackground = if (!enabled || readOnly) {
         KozmosThemeTokens.primitivesColorsBackground100
     } else {

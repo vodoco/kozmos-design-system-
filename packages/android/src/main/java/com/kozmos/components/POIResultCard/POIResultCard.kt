@@ -40,6 +40,7 @@ import com.kozmos.providers.KozmosAnalyticsEvent
 import com.kozmos.providers.LocalKozmosAnalytics
 import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.tokens.KozmosThemeTokens
 
 /** Characters `encodeURIComponent` leaves untouched. */
 private const val URI_COMPONENT_UNRESERVED =
@@ -123,7 +124,7 @@ fun KozmosPOIResultCard(
             color = if (result.selected) {
                 KozmosColors.primitivesColorsTheme500
             } else {
-                KozmosColors.semanticsBorderSubtle
+                KozmosThemeTokens.semanticsBorderSubtle
             }
         )
     ) {
@@ -254,7 +255,7 @@ fun KozmosPOIResultCard(
             }
 
             if (!available && result.unavailableReason != null) {
-                Divider(color = KozmosColors.primitivesColorsForeground300)
+                Divider(color = KozmosThemeTokens.semanticsBorderSubtle)
 
                 Text(
                     text = result.unavailableReason,

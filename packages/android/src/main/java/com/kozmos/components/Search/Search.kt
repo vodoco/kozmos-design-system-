@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosSearch(
@@ -31,7 +32,7 @@ fun KozmosSearch(
         singleLine = true,
         colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
             focusedBorderColor = com.kozmos.tokens.KozmosColors.primitivesColorsTheme500,
-            unfocusedBorderColor = com.kozmos.tokens.KozmosColors.primitivesColorsForeground300,
+            unfocusedBorderColor = KozmosThemeTokens.semanticsBorderInput,
             cursorColor = com.kozmos.tokens.KozmosColors.primitivesColorsTheme500,
             focusedLeadingIconColor = com.kozmos.tokens.KozmosColors.primitivesColorsForeground500,
             unfocusedLeadingIconColor = com.kozmos.tokens.KozmosColors.primitivesColorsForeground500
