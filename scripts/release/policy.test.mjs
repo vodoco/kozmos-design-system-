@@ -167,13 +167,13 @@ for (const [label, mutate] of [
   });
 
 const manifests = [
-  { name: "@kozmos/a", version: "0.1.0-next.0" },
-  { name: "@kozmos/private", version: "0.1.0", private: true },
+  { name: "@kozmos-ds/a", version: "0.1.0-next.0" },
+  { name: "@kozmos-ds/private", version: "0.1.0", private: true },
 ];
 const plan = {
   schemaVersion: 1,
   tag: "next",
-  packages: [{ name: "@kozmos/a", version: "0.1.0-next.0" }],
+  packages: [{ name: "@kozmos-ds/a", version: "0.1.0-next.0" }],
 };
 test("reviewed exact versions pass; empty, stale, duplicate, private or pending plans fail", () => {
   validatePlan(plan, manifests);
@@ -182,8 +182,8 @@ test("reviewed exact versions pass; empty, stale, duplicate, private or pending 
     { tag: "latest" },
     { tag: "arbitrary" },
     { packages: [...plan.packages, ...plan.packages] },
-    { packages: [{ name: "@kozmos/a", version: "0.1.0" }] },
-    { packages: [{ name: "@kozmos/private", version: "0.1.0" }] },
+    { packages: [{ name: "@kozmos-ds/a", version: "0.1.0" }] },
+    { packages: [{ name: "@kozmos-ds/private", version: "0.1.0" }] },
   ]) {
     assert.throws(() => validatePlan({ ...plan, ...patch }, manifests));
   }
@@ -197,10 +197,10 @@ const entry = (name, dependencies = {}) => ({
   manifest: { dependencies },
 });
 test("dependency order, selected subsets and identical-version retry", async () => {
-  const a = entry("@kozmos/a", { "@kozmos/b": "^1.0.0" });
-  const b = entry("@kozmos/b");
+  const a = entry("@kozmos-ds/a", { "@kozmos-ds/b": "^1.0.0" });
+  const b = entry("@kozmos-ds/b");
   const registry = {
-    "@kozmos/b": {
+    "@kozmos-ds/b": {
       versions: { "1.0.0": { dist: { integrity: b.integrity } } },
       "dist-tags": { next: "1.0.0" },
     },
@@ -237,8 +237,8 @@ test("dependency order, selected subsets and identical-version retry", async () 
 });
 
 test("preflight refuses registry failures, collisions, missing dependencies and cycles", async () => {
-  const a = entry("@kozmos/a", { "@kozmos/b": "^1.0.0" });
-  const b = entry("@kozmos/b");
+  const a = entry("@kozmos-ds/a", { "@kozmos-ds/b": "^1.0.0" });
+  const b = entry("@kozmos-ds/b");
   const names = new Set([a.name, b.name]);
   await assert.rejects(
     preparePublication([a], names, async () => null),
@@ -275,7 +275,7 @@ test("preflight refuses registry failures, collisions, missing dependencies and 
 });
 
 test("partial publish failure stops immediately; no automatic retag or overwrite", async () => {
-  const entries = [entry("@kozmos/a"), entry("@kozmos/b")];
+  const entries = [entry("@kozmos-ds/a"), entry("@kozmos-ds/b")];
   let writes = 0;
   await assert.rejects(
     publishPrepared(
@@ -305,7 +305,7 @@ test("partial publish failure stops immediately; no automatic retag or overwrite
 });
 
 test("stale tag on an existing version fails before any package can publish", async () => {
-  const a = entry("@kozmos/a");
+  const a = entry("@kozmos-ds/a");
   await assert.rejects(
     preparePublication([a], new Set([a.name]), async () => ({
       versions: { [a.version]: { dist: { integrity: a.integrity } } },

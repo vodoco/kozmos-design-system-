@@ -77,7 +77,7 @@ test("GitHub evidence uses the current attempt and all job pages before reading 
   const fixturePlan = {
     schemaVersion: 1,
     tag: "next",
-    packages: [{ name: "@kozmos/example", version: "0.1.0" }],
+    packages: [{ name: "@kozmos-ds/example", version: "0.1.0" }],
   };
   assert.deepEqual(
     await verifyRequest(env, api({}, calls), () => fixturePlan),

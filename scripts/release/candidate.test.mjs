@@ -8,7 +8,7 @@ import { writeCandidate, readCandidate } from "./candidate.mjs";
 
 const sha = "a".repeat(40);
 const manifest = {
-  name: "@kozmos/example",
+  name: "@kozmos-ds/example",
   version: "0.1.0",
   publishConfig: { access: "public" },
 };
@@ -82,7 +82,7 @@ test("tampered bytes, path traversal, duplicates and symlinks are refused", (t) 
 
 test("packed identity, privacy, tag and registry cannot override the plan", (t) => {
   for (const changed of [
-    { ...manifest, name: "@kozmos/other" },
+    { ...manifest, name: "@kozmos-ds/other" },
     { ...manifest, private: true },
     { ...manifest, publishConfig: { registry: "https://example.com/" } },
     { ...manifest, publishConfig: { tag: "latest" } },
