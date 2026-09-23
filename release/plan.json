@@ -1,5 +1,10 @@
 {
   "schemaVersion": 1,
   "tag": "next",
-  "packages": []
+  "packages": [
+    { "name": "@kozmos-ds/react", "version": "0.1.0" },
+    { "name": "@kozmos-ds/tokens", "version": "0.1.0" },
+    { "name": "@kozmos-ds/icons", "version": "0.1.0" },
+    { "name": "@kozmos-ds/product-contracts", "version": "0.1.0" }
+  ]
 }
