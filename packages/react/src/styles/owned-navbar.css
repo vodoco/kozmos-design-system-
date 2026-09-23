@@ -1,0 +1,52 @@
+/* A navbar grows with its content. Available module width controls wrapping;
+   no action disappears at a viewport breakpoint and no stateful slot is cloned. */
+@kozmos-owned {
+  .kozmos-navbar {
+    @apply sticky top-0 z-50 w-full border-b bg-background px-4 shadow-raised;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    min-block-size: 4rem;
+    padding-block: 0.5rem;
+  }
+  .kozmos-navbar-leading {
+    display: flex;
+    flex: 1 1 32rem;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+  .kozmos-navbar-logo,
+  .kozmos-navbar-context,
+  .kozmos-navbar-primary-action {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow-wrap: anywhere;
+  }
+  .kozmos-navbar-navigation {
+    display: flex;
+    flex: 1 1 16rem;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+  .kozmos-navbar-navigation > * {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    flex-wrap: wrap;
+  }
+  .kozmos-navbar-trailing {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+}

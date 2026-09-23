@@ -1,4 +1,5 @@
-import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as NavbarStories from "./Navbar.stories";
 import { PlatformSnippets } from "../PlatformSnippets";
 
@@ -7,6 +8,13 @@ import { PlatformSnippets } from "../PlatformSnippets";
 # Navbar
 
 Horizontal app navigation shell. Compose route items with `NavigationItem` inside the `navigation` slot, and pass product context through named slots such as `logo`, `context`, `primaryAction`, `actions`, `utilities`, and `account`.
+
+The shell wraps according to its available width, including inside a narrow pane
+on a large screen. Its minimum height is 64px, not a fixed height: context, actions,
+and navigation remain available rather than disappearing at a breakpoint. Allow
+the host layout to grow with it. Consumer-provided navigation groups should wrap
+and should not impose fixed widths larger than their container. `navigationLabel`
+names the navigation landmark (default: “Main navigation”).
 
 <Canvas>
   <Story of={NavbarStories.Default} />
@@ -20,23 +28,28 @@ Horizontal app navigation shell. Compose route items with `NavigationItem` insid
 
 <PlatformSnippets
     react={`
-import { Navbar } from "@kozmos/react"
-import { NavigationItem } from "@kozmos/react"
-
-<Navbar
-  logo={<strong>Kozmos</strong>}
-  navigation={
-    <div className="flex items-center gap-2">
-      <NavigationItem href="/overview" placement="top" selected>
-        Overview
-      </NavigationItem>
-      <NavigationItem href="/explore" placement="top">
-        Explore
-      </NavigationItem>
-    </div>
-  }
-  account={<button type="button">Account</button>}
-/>
+import { Navbar } from "@kozmos/react";
+import { NavigationItem } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Navbar
+        logo={<strong>Kozmos</strong>}
+        navigation={
+          <div className="flex items-center gap-2">
+            <NavigationItem href="/overview" placement="top" selected>
+              Overview
+            </NavigationItem>
+            <NavigationItem href="/explore" placement="top">
+              Explore
+            </NavigationItem>
+          </div>
+        }
+        account={<button type="button">Account</button>}
+      />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

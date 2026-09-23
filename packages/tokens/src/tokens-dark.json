@@ -1184,12 +1184,12 @@
         "25": {
           "$type": "color",
           "$value": "#070708",
-          "$description": "The dark ramp inverts \u2014 0 is the page and higher steps lift off it \u2014 so these sit the same proportion along 0 -> 100 as their light counterparts."
+          "$description": "The dark ramp inverts — 0 is the page and higher steps lift off it — so these sit the same proportion along 0 -> 100 as their light counterparts."
         },
         "50": {
           "$type": "color",
           "$value": "#0C0D0E",
-          "$description": "The dark ramp inverts \u2014 0 is the page and higher steps lift off it \u2014 so these sit the same proportion along 0 -> 100 as their light counterparts."
+          "$description": "The dark ramp inverts — 0 is the page and higher steps lift off it — so these sit the same proportion along 0 -> 100 as their light counterparts."
         },
         "100": {
           "$value": "#17191C",
@@ -2436,7 +2436,7 @@
       "Container": {
         "$value": "{Primitives.Layout.radius.250}",
         "$type": "dimension",
-        "$description": "Cards and dialogs: a surface that holds controls. Deliberately rounder than Control \u2014 the two were both 16, so a 44px field and a 400px card drew the same corner and the role distinction was cosmetic."
+        "$description": "Cards and dialogs: a surface that holds controls. Deliberately rounder than Control — the two were both 16, so a 44px field and a 400px card drew the same corner and the role distinction was cosmetic."
       },
       "Panel": {
         "$value": "{Primitives.Layout.radius.300}",
@@ -2466,7 +2466,7 @@
         "surface": {
           "$value": "{Primitives.Colors.background.200}",
           "$type": "color",
-          "$description": "The quiet field an emotional label sits on \u2014 a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
+          "$description": "The quiet field an emotional label sits on — a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
         },
         "onSurface": {
           "$value": "{Primitives.Colors.foreground.0}",
@@ -2476,14 +2476,14 @@
         "text": {
           "$value": "{Primitives.Colors.foreground.400}",
           "$type": "color",
-          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place \u2014 success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
+          "$description": "The emotion as text or a glyph on the page itself — white or either grey a panel, card or sheet paints (background/0, /50, /100). The step differs per emotion because the ramps reach 4.5:1 on background/100 at different places: success and alert 900, informative 800, danger 700, themed 600. Measured on white alone they were one step lighter, and four of six failed on a sheet's grey. The product draws success at 600, which is 2.74:1 even on white."
         }
       },
       "themed": {
         "surface": {
           "$value": "{Primitives.Colors.theme.100}",
           "$type": "color",
-          "$description": "The quiet field an emotional label sits on \u2014 a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
+          "$description": "The quiet field an emotional label sits on — a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
         },
         "onSurface": {
           "$value": "{Primitives.Colors.theme.900}",
@@ -2493,14 +2493,14 @@
         "text": {
           "$value": "{Primitives.Colors.theme.600}",
           "$type": "color",
-          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place \u2014 success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
+          "$description": "The emotion as text or a glyph on the page itself — white or either grey a panel, card or sheet paints (background/0, /50, /100). The step differs per emotion because the ramps reach 4.5:1 on background/100 at different places: success and alert 900, informative 800, danger 700, themed 600. Measured on white alone they were one step lighter, and four of six failed on a sheet's grey. The product draws success at 600, which is 2.74:1 even on white."
         }
       },
       "success": {
         "surface": {
           "$value": "{Primitives.Colors.emotional.success.100}",
           "$type": "color",
-          "$description": "The quiet field an emotional label sits on \u2014 a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
+          "$description": "The quiet field an emotional label sits on — a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
         },
         "onSurface": {
           "$value": "{Primitives.Colors.emotional.success.900}",
@@ -2508,16 +2508,16 @@
           "$description": "Ink on the matching surface. Never on the page: on white it is the wrong end of the ramp."
         },
         "text": {
-          "$value": "{Primitives.Colors.emotional.success.800}",
+          "$value": "{Primitives.Colors.emotional.success.900}",
           "$type": "color",
-          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place \u2014 success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
+          "$description": "The emotion as text or a glyph on the page itself — white or either grey a panel, card or sheet paints (background/0, /50, /100). The step differs per emotion because the ramps reach 4.5:1 on background/100 at different places: success and alert 900, informative 800, danger 700, themed 600. Measured on white alone they were one step lighter, and four of six failed on a sheet's grey. The product draws success at 600, which is 2.74:1 even on white."
         }
       },
       "danger": {
         "surface": {
           "$value": "{Primitives.Colors.emotional.danger.100}",
           "$type": "color",
-          "$description": "The quiet field an emotional label sits on \u2014 a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
+          "$description": "The quiet field an emotional label sits on — a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
         },
         "onSurface": {
           "$value": "{Primitives.Colors.emotional.danger.900}",
@@ -2525,16 +2525,16 @@
           "$description": "Ink on the matching surface. Never on the page: on white it is the wrong end of the ramp."
         },
         "text": {
-          "$value": "{Primitives.Colors.emotional.danger.600}",
+          "$value": "{Primitives.Colors.emotional.danger.700}",
           "$type": "color",
-          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place \u2014 success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
+          "$description": "The emotion as text or a glyph on the page itself — white or either grey a panel, card or sheet paints (background/0, /50, /100). The step differs per emotion because the ramps reach 4.5:1 on background/100 at different places: success and alert 900, informative 800, danger 700, themed 600. Measured on white alone they were one step lighter, and four of six failed on a sheet's grey. The product draws success at 600, which is 2.74:1 even on white."
         }
       },
       "alert": {
         "surface": {
           "$value": "{Primitives.Colors.emotional.alert.100}",
           "$type": "color",
-          "$description": "The quiet field an emotional label sits on \u2014 a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
+          "$description": "The quiet field an emotional label sits on — a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
         },
         "onSurface": {
           "$value": "{Primitives.Colors.emotional.alert.900}",
@@ -2542,16 +2542,16 @@
           "$description": "Ink on the matching surface. Never on the page: on white it is the wrong end of the ramp."
         },
         "text": {
-          "$value": "{Primitives.Colors.emotional.alert.800}",
+          "$value": "{Primitives.Colors.emotional.alert.900}",
           "$type": "color",
-          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place \u2014 success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
+          "$description": "The emotion as text or a glyph on the page itself — white or either grey a panel, card or sheet paints (background/0, /50, /100). The step differs per emotion because the ramps reach 4.5:1 on background/100 at different places: success and alert 900, informative 800, danger 700, themed 600. Measured on white alone they were one step lighter, and four of six failed on a sheet's grey. The product draws success at 600, which is 2.74:1 even on white."
         }
       },
       "informative": {
         "surface": {
           "$value": "{Primitives.Colors.emotional.info.100}",
           "$type": "color",
-          "$description": "The quiet field an emotional label sits on \u2014 a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
+          "$description": "The quiet field an emotional label sits on — a tag, a counter, a status pill. Paired with onSurface it clears 4.5:1 in both modes; the emotional ramps invert between the two files, so one alias is right in both."
         },
         "onSurface": {
           "$value": "{Primitives.Colors.emotional.info.900}",
@@ -2559,9 +2559,9 @@
           "$description": "Ink on the matching surface. Never on the page: on white it is the wrong end of the ramp."
         },
         "text": {
-          "$value": "{Primitives.Colors.emotional.info.700}",
+          "$value": "{Primitives.Colors.emotional.info.800}",
           "$type": "color",
-          "$description": "The emotion as text or a glyph on the page itself. The step differs per emotion because the ramps do not reach 4.5:1 at the same place \u2014 success and alert need 800, informative 700, danger and themed 600. The product draws success at 600, which is 2.74:1 and fails."
+          "$description": "The emotion as text or a glyph on the page itself — white or either grey a panel, card or sheet paints (background/0, /50, /100). The step differs per emotion because the ramps reach 4.5:1 on background/100 at different places: success and alert 900, informative 800, danger 700, themed 600. Measured on white alone they were one step lighter, and four of six failed on a sheet's grey. The product draws success at 600, which is 2.74:1 even on white."
         }
       }
     },
@@ -2569,7 +2569,7 @@
       "Raised": {
         "$value": "{shadow.sm}",
         "$type": "shadow",
-        "$description": "A surface lifted just off the page: cards, list rows, a file row. Barely there on purpose \u2014 the surface and its border do the work, and the shadow only says it is not painted on."
+        "$description": "A surface lifted just off the page: cards, list rows, a file row. Barely there on purpose — the surface and its border do the work, and the shadow only says it is not painted on."
       },
       "Floating": {
         "$value": "{shadow.md}",
@@ -2716,6 +2716,21 @@
             "com.figma.variableId": "VariableID:1440:2661",
             "com.figma.isOverride": true
           }
+        },
+        "quick": {
+          "$type": "duration",
+          "$value": "150ms",
+          "$description": "A state's small change: a border, a colour, a control appearing."
+        },
+        "standard": {
+          "$type": "duration",
+          "$value": "280ms",
+          "$description": "A layout change: a sheet between detents, a row changing form."
+        },
+        "deliberate": {
+          "$type": "duration",
+          "$value": "460ms",
+          "$description": "A large move across the screen: a panel entering, the AI search docking."
         }
       },
       "slide": {
@@ -2734,6 +2749,18 @@
             "com.figma.variableId": "VariableID:1440:2663",
             "com.figma.isOverride": true
           }
+        }
+      },
+      "easing": {
+        "standard": {
+          "$type": "other",
+          "$value": "cubic-bezier(0.4, 0, 0.2, 1)",
+          "$description": "Ease out then settle: what moves between detents and forms."
+        },
+        "emphasised": {
+          "$type": "other",
+          "$value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+          "$description": "A small overshoot: a chip or a mode popping into place."
         }
       }
     },
@@ -2791,6 +2818,207 @@
               "com.figma.variableId": "VariableID:1440:2673",
               "com.figma.isOverride": true
             }
+          }
+        }
+      }
+    },
+    "Category": {
+      "$description": "The taxonomy's eight quick-access colours (measured from the published 10.12.0 sprite atlas's section markers, light and dark alike), for a category's tile, chip and pin. Accent draws icons and strokes; Fill fills a count pill or counter; OnFill is the ink on that fill, chosen so the digits reach 4.5:1 (scripts/check-token-contrast.mjs holds it).",
+      "Accent": {
+        "Yellow": {
+          "$value": "#F9AC17",
+          "$type": "color",
+          "$description": "The taxonomy's yellow quick-access colour.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Orange": {
+          "$value": "#E5801A",
+          "$type": "color",
+          "$description": "The taxonomy's orange quick-access colour.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Turquoise": {
+          "$value": "#37A4A4",
+          "$type": "color",
+          "$description": "The taxonomy's turquoise quick-access colour.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Red": {
+          "$value": "#D92626",
+          "$type": "color",
+          "$description": "The taxonomy's red quick-access colour.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Blue": {
+          "$value": "#2080DF",
+          "$type": "color",
+          "$description": "The taxonomy's blue quick-access colour.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Navy": {
+          "$value": "#4D4DB2",
+          "$type": "color",
+          "$description": "The taxonomy's navy quick-access colour.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Green": {
+          "$value": "#339933",
+          "$type": "color",
+          "$description": "The taxonomy's green quick-access colour.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Pink": {
+          "$value": "#B24DB2",
+          "$type": "color",
+          "$description": "The taxonomy's pink quick-access colour.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        }
+      },
+      "Fill": {
+        "Yellow": {
+          "$value": "#F9AC17",
+          "$type": "color",
+          "$description": "A filled pill or counter in the yellow category.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Orange": {
+          "$value": "#E5801A",
+          "$type": "color",
+          "$description": "A filled pill or counter in the orange category.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Turquoise": {
+          "$value": "#37A4A4",
+          "$type": "color",
+          "$description": "A filled pill or counter in the turquoise category.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Red": {
+          "$value": "#D92626",
+          "$type": "color",
+          "$description": "A filled pill or counter in the red category.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Blue": {
+          "$value": "#1E77CF",
+          "$type": "color",
+          "$description": "A filled pill or counter in the blue category. Darkened 7 % from the accent so white ink reaches 4.57:1; no ink reaches 4.5 on the accent itself.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Navy": {
+          "$value": "#4D4DB2",
+          "$type": "color",
+          "$description": "A filled pill or counter in the navy category.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Green": {
+          "$value": "#339933",
+          "$type": "color",
+          "$description": "A filled pill or counter in the green category.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Pink": {
+          "$value": "#B24DB2",
+          "$type": "color",
+          "$description": "A filled pill or counter in the pink category.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        }
+      },
+      "OnFill": {
+        "Yellow": {
+          "$value": "#17191C",
+          "$type": "color",
+          "$description": "The ink on the yellow fill: the dark ink.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Orange": {
+          "$value": "#17191C",
+          "$type": "color",
+          "$description": "The ink on the orange fill: the dark ink.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Turquoise": {
+          "$value": "#17191C",
+          "$type": "color",
+          "$description": "The ink on the turquoise fill: the dark ink.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Red": {
+          "$value": "#FFFFFF",
+          "$type": "color",
+          "$description": "The ink on the red fill: white.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Blue": {
+          "$value": "#FFFFFF",
+          "$type": "color",
+          "$description": "The ink on the blue fill: white.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Navy": {
+          "$value": "#FFFFFF",
+          "$type": "color",
+          "$description": "The ink on the navy fill: white.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Green": {
+          "$value": "#17191C",
+          "$type": "color",
+          "$description": "The ink on the green fill: the dark ink.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
+          }
+        },
+        "Pink": {
+          "$value": "#FFFFFF",
+          "$type": "color",
+          "$description": "The ink on the pink fill: white.",
+          "$extensions": {
+            "com.figma.scopes": ["ALL_SCOPES"]
           }
         }
       }
@@ -4344,7 +4572,7 @@
             "content": {
               "idle": {
                 "$type": "color",
-                "$value": "#5C6069",
+                "$value": "{Primitives.Colors.foreground.400}",
                 "$extensions": {
                   "com.figma.variableId": "VariableID:1440:2844",
                   "com.figma.isOverride": true
@@ -4360,7 +4588,7 @@
               },
               "hover": {
                 "$type": "color",
-                "$value": "#6f6a5d",
+                "$value": "{Primitives.Colors.foreground.300}",
                 "$extensions": {
                   "com.figma.variableId": "VariableID:1440:2845",
                   "com.figma.isOverride": true
@@ -4368,7 +4596,7 @@
               },
               "pressed": {
                 "$type": "color",
-                "$value": "#464A53",
+                "$value": "{Primitives.Colors.foreground.200}",
                 "$extensions": {
                   "com.figma.variableId": "VariableID:1440:2846",
                   "com.figma.isOverride": true
@@ -4376,7 +4604,7 @@
               },
               "focus": {
                 "$type": "color",
-                "$value": "#6f6a5d",
+                "$value": "{Primitives.Colors.foreground.300}",
                 "$extensions": {
                   "com.figma.variableId": "VariableID:1440:2847",
                   "com.figma.isOverride": true

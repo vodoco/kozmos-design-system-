@@ -1,4 +1,5 @@
-import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as FloorSelectorStories from "./FloorSelector.stories";
 import { PlatformSnippets } from "../PlatformSnippets";
 
@@ -14,15 +15,31 @@ Displays the FloorSelector interface topology natively.
 
 <Controls />
 
+## Variants
+
+`vertical-list`, `horizontal-list` and `compact-stepper` exist on every platform. iOS also has
+`collapsible`, for a control parked in a corner of a map: it shows the current level only and
+opens the full list on touch, each row the level's short label beside its name, the current one
+filled. React and Compose do not have that variant yet.
+
 ## Implementation
 
 <div className="subheading">Code</div>
 
 <PlatformSnippets
     react={`
-import { FloorSelector } from "@kozmos/react"
-
-<FloorSelector />
+import { useState } from "react";
+import { FloorSelector } from "@kozmos/react";
+export function Example() {
+  const [floor, setFloor] = useState("G");
+  return (
+    <FloorSelector
+      floors={["G", "1", "2"]}
+      selectedFloor={floor}
+      onFloorSelect={setFloor}
+    />
+  );
+}
     `}
     vue={`
 <script setup>

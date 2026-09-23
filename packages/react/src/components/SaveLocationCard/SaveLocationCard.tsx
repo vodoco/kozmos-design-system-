@@ -1,10 +1,13 @@
 import React from "react";
 import { cn } from "../../utils";
+import { surfaceClass, type SurfaceVariant } from "../Surface";
 import { Button } from "../Button";
 import { Car, Navigation, MapPin, Edit3 } from "lucide-react";
 import { useKozmosAnalytics } from "../../utils/analytics";
 
 export interface SaveLocationCardProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** What the card sits on: solid by default, glass where the product asks for it. */
+  surface?: SurfaceVariant;
   title?: string;
   description?: string;
   isSaved?: boolean;
@@ -20,6 +23,7 @@ const SaveLocationCard = React.forwardRef<
   (
     {
       className,
+      surface = "solid",
       title = "Mark My Car",
       description = "Remember where you parked",
       isSaved = false,
@@ -36,7 +40,7 @@ const SaveLocationCard = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "bg-white/70 dark:bg-black/70 backdrop-blur-3xl ring-1 ring-black/5 dark:ring-white/10 shadow-overlay rounded-[var(--primitives-radius-2xl)] p-5 flex flex-col gap-4 transition-all duration-300",
+          `${surfaceClass(surface)} shadow-overlay rounded-panel p-5 flex flex-col gap-4 transition-all duration-300`,
           className,
         )}
         {...props}
@@ -53,7 +57,7 @@ const SaveLocationCard = React.forwardRef<
           >
             <Car className="w-6 h-6" />
           </div>
-          <div className="flex flex-col flex-1">
+          <div className="min-w-0 flex flex-col flex-1">
             <span className="font-semibold text-base text-foreground tracking-tight">
               {title}
             </span>
@@ -64,6 +68,7 @@ const SaveLocationCard = React.forwardRef<
               variant="ghost"
               size="icon"
               onClick={onEditNote}
+              type="button"
               className="shrink-0 text-muted-foreground"
               aria-label="Edit location note"
             >
@@ -73,8 +78,9 @@ const SaveLocationCard = React.forwardRef<
         </div>
 
         {/* Primary Actions */}
-        <div className="flex items-center gap-3 w-full mt-2">
+        <div className="flex flex-wrap items-center gap-3 w-full mt-2">
           <Button
+            type="button"
             variant={isSaved ? "outline" : "default"}
             className="flex-1 font-medium"
             onClick={() => {
@@ -84,20 +90,22 @@ const SaveLocationCard = React.forwardRef<
               onSaveToggle?.();
             }}
           >
-            <MapPin className="w-4 h-4 mr-2" />
+            <MapPin className="w-4 h-4" />
             {isSaved ? "Remove Location" : "Save Location"}
           </Button>
 
           {isSaved && onRouteToLocation && (
             <Button
+              type="button"
               variant="default"
-              className="flex-1 font-medium bg-green-600 hover:bg-green-700 text-white"
+              emotion="success"
+              className="flex-1 font-medium"
               onClick={() => {
                 trackEvent("SaveLocationCard", "route_requested", {});
                 onRouteToLocation();
               }}
             >
-              <Navigation className="w-4 h-4 mr-2" />
+              <Navigation className="w-4 h-4" />
               Guide Me
             </Button>
           )}

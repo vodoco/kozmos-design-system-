@@ -32,19 +32,35 @@ import { PlatformSnippets } from '../PlatformSnippets';
 
 <PlatformSnippets
   react={`
-import { MultiSelect } from '@kozmos/react';
-
-<MultiSelect
-  label="Categories"
-  options={categories}
-  placeholder="Add a category"
-  emptyText="No categories match"
-  onValueChange={(values, options) => setFilters(options)}
-  clearable
-/>
-
-// Capped selection
-<MultiSelect label="Amenities" options={amenities} maxSelected={3} />
+import { useState } from "react";
+import { MultiSelect } from "@kozmos/react";
+const categories = [
+  { value: "food", label: "Food" },
+  { value: "shops", label: "Shops" },
+];
+const amenities = [
+  { value: "lift", label: "Lift" },
+  { value: "toilets", label: "Toilets" },
+  { value: "parking", label: "Parking" },
+  { value: "wifi", label: "Wi-Fi" },
+];
+export function Example() {
+  const [filters, setFilters] = useState<string[]>([]);
+  return (
+    <>
+      <MultiSelect
+        label="Categories"
+        options={categories}
+        value={filters}
+        placeholder="Add a category"
+        emptyText="No categories match"
+        onValueChange={setFilters}
+        clearable
+      />
+      <MultiSelect label="Amenities" options={amenities} maxSelected={3} />
+    </>
+  );
+}
   `}
   vue={`
 <script setup>

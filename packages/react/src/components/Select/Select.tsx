@@ -3,10 +3,11 @@ import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 
-import { cn } from "../../utils";
+import { cn, mergeAriaIds } from "../../utils";
 
 import { FieldWrapper } from "../FieldWrapper";
 import { useKozmosAnalytics } from "../../utils/analytics";
+import { inertOutside } from "../../utils/modal-inert";
 
 const SelectPortal = createThemePortal(SelectPrimitive.Portal);
 
@@ -36,33 +37,53 @@ const SelectTrigger = React.forwardRef<
     error?: boolean | string;
     wrapperClassName?: string;
   }
->(({ className, children, error, wrapperClassName, ...props }, ref) => {
-  const errorId = React.useId();
-  const hasError = !!error;
-  const isStringError = typeof error === "string";
+>(
+  (
+    {
+      className,
+      children,
+      error,
+      wrapperClassName,
+      "aria-describedby": ariaDescribedBy,
+      "aria-invalid": ariaInvalid,
+      ...props
+    },
+    ref,
+  ) => {
+    const errorId = React.useId();
+    const hasError = !!error;
+    const isStringError = typeof error === "string";
 
-  return (
-    <FieldWrapper error={error} errorId={errorId} className={wrapperClassName}>
-      <SelectPrimitive.Trigger
-        ref={ref}
-        aria-invalid={hasError}
-        aria-describedby={hasError && isStringError ? errorId : undefined}
-        className={cn(
-          "flex h-11 w-full items-center justify-between rounded-control border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
-          hasError &&
-            "border-destructive text-destructive focus:ring-destructive",
-          className,
-        )}
-        {...props}
+    return (
+      <FieldWrapper
+        error={error}
+        errorId={errorId}
+        className={wrapperClassName}
       >
-        {children}
-        <SelectPrimitive.Icon asChild>
-          <ChevronDown className="h-4 w-4 opacity-50" />
-        </SelectPrimitive.Icon>
-      </SelectPrimitive.Trigger>
-    </FieldWrapper>
-  );
-});
+        <SelectPrimitive.Trigger
+          ref={ref}
+          aria-invalid={hasError || ariaInvalid}
+          aria-describedby={mergeAriaIds(
+            ariaDescribedBy,
+            hasError && isStringError ? errorId : undefined,
+          )}
+          className={cn(
+            "flex h-11 w-full items-center justify-between rounded-control border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+            hasError &&
+              "border-destructive text-destructive-text focus:ring-destructive",
+            className,
+          )}
+          {...props}
+        >
+          {children}
+          <SelectPrimitive.Icon asChild>
+            <ChevronDown className="h-4 w-4 opacity-50" />
+          </SelectPrimitive.Icon>
+        </SelectPrimitive.Trigger>
+      </FieldWrapper>
+    );
+  },
+);
 SelectTrigger.displayName = SelectPrimitive.Trigger.displayName;
 
 const SelectScrollUpButton = React.forwardRef<
@@ -111,33 +132,45 @@ const SelectContent = React.forwardRef<
   (
     { className, children, position = "popper", portalContainer, ...props },
     ref,
-  ) => (
-    <SelectPortal container={portalContainer}>
-      <SelectPrimitive.Content
-        ref={ref}
-        className={cn(
-          "relative z-50 max-h-96 min-w-32 overflow-hidden rounded-control border bg-popover text-popover-foreground shadow-overlay data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
-          position === "popper" &&
-            "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
-          className,
-        )}
-        position={position}
-        {...props}
-      >
-        <SelectScrollUpButton />
-        <SelectPrimitive.Viewport
+  ) => {
+    const release = React.useRef<(() => void) | undefined>();
+    const contentRef = React.useCallback(
+      (node: HTMLDivElement | null) => {
+        release.current?.();
+        release.current = node ? inertOutside(node) : undefined;
+        if (typeof ref === "function") ref(node);
+        else if (ref) ref.current = node;
+      },
+      [ref],
+    );
+    return (
+      <SelectPortal container={portalContainer}>
+        <SelectPrimitive.Content
+          ref={contentRef}
           className={cn(
-            "p-3",
+            "relative z-50 max-h-96 min-w-32 overflow-hidden rounded-control border bg-popover text-popover-foreground shadow-overlay data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
             position === "popper" &&
-              "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]",
+              "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
+            className,
           )}
+          position={position}
+          {...props}
         >
-          {children}
-        </SelectPrimitive.Viewport>
-        <SelectScrollDownButton />
-      </SelectPrimitive.Content>
-    </SelectPortal>
-  ),
+          <SelectScrollUpButton />
+          <SelectPrimitive.Viewport
+            className={cn(
+              "p-3",
+              position === "popper" &&
+                "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]",
+            )}
+          >
+            {children}
+          </SelectPrimitive.Viewport>
+          <SelectScrollDownButton />
+        </SelectPrimitive.Content>
+      </SelectPortal>
+    );
+  },
 );
 SelectContent.displayName = SelectPrimitive.Content.displayName;
 

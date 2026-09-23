@@ -33,27 +33,40 @@ import { PlatformSnippets } from '../PlatformSnippets';
 
 <PlatformSnippets
   react={`
-import { Combobox } from '@kozmos/react';
-
-<Combobox
-  label="Venue"
-  options={venues}
-  emptyText="No venues match that name"
-  onValueChange={(value, option) => selectVenue(option)}
-  clearable
-/>
-
-// Controlled, with custom filtering
-<Combobox
-  label="Venue"
-  options={venues}
-  value={value}
-  inputValue={query}
-  onInputValueChange={setQuery}
-  filterOption={(option, input) =>
-    option.label.toLowerCase().includes(input.toLowerCase())
-  }
-/>
+import { useState } from "react";
+import { Combobox } from "@kozmos/react";
+const venues = [
+  { value: "central", label: "Central venue" },
+  { value: "west", label: "West venue" },
+];
+export function Example() {
+  const [selected, setSelected] = useState("");
+  const [value, setValue] = useState("");
+  const [query, setQuery] = useState("");
+  return (
+    <>
+      <Combobox
+        label="Venue"
+        options={venues}
+        emptyText="No venues match that name"
+        onValueChange={setSelected}
+        clearable
+      />
+      <output>Selected venue: {selected || "None"}</output>
+      <Combobox
+        label="Venue with custom filtering"
+        options={venues}
+        value={value}
+        onValueChange={setValue}
+        inputValue={query}
+        onInputValueChange={setQuery}
+        filterOption={(option, input) =>
+          option.label.toLowerCase().includes(input.toLowerCase())
+        }
+      />
+    </>
+  );
+}
   `}
   vue={`
 <script setup>

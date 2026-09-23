@@ -42,20 +42,11 @@ jobs:
       - name: Execute StyleDictionary Aggregation
         run: pnpm --filter @kozmos/tokens build
 
+      # Every native file the build writes, walked from the build: the list
+      # this step kept by hand missed the effects, motion and themed colour
+      # files.
       - name: Route Native Token Output Arrays
-        run: |
-          mkdir -p packages/ios/Sources
-          cp packages/tokens/dist/ios/KozmosColors.swift packages/ios/Sources/KozmosColors.swift
-          cp packages/tokens/dist/ios/KozmosDimensions.swift packages/ios/Sources/KozmosDimensions.swift
-          cp packages/tokens/dist/ios/KozmosShadows.swift packages/ios/Sources/KozmosShadows.swift
-          mkdir -p packages/android/src/main/java/com/kozmos/tokens
-          cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosColors.kt packages/android/src/main/java/com/kozmos/tokens/KozmosColors.kt
-          cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosColorsDark.kt packages/android/src/main/java/com/kozmos/tokens/KozmosColorsDark.kt
-          cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosDesignTokens.kt packages/android/src/main/java/com/kozmos/tokens/KozmosDesignTokens.kt
-          cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosDimensions.kt packages/android/src/main/java/com/kozmos/tokens/KozmosDimensions.kt
-          cp packages/tokens/dist/android/src/main/java/com/kozmos/tokens/KozmosShadows.kt packages/android/src/main/java/com/kozmos/tokens/KozmosShadows.kt
-          cp packages/tokens/dist/android/src/main/res/values/colors.xml packages/android/src/main/res/values/colors.xml
-          cp packages/tokens/dist/android/src/main/res/values-night/colors.xml packages/android/src/main/res/values-night/colors.xml
+        run: pnpm tokens:native:copy && pnpm tokens:copies:check
 
       - name: Generate Cross-Platform Semantic PR
         uses: peter-evans/create-pull-request@v6

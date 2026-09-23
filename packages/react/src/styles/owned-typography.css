@@ -1,0 +1,69 @@
+/* Component-owned type recipes; the existing public scale and tokens are kept. */
+@kozmos-owned {
+  .kozmos-text-xs {
+    @apply text-xs;
+  }
+  .kozmos-text-sm {
+    @apply text-sm;
+  }
+  .kozmos-text-base {
+    @apply text-base;
+  }
+  .kozmos-text-lg {
+    @apply text-lg;
+  }
+  .kozmos-text-xl {
+    @apply text-xl;
+  }
+  .kozmos-text-2xl {
+    @apply text-2xl;
+  }
+  .kozmos-text-3xl {
+    @apply text-3xl;
+  }
+  .kozmos-text-4xl {
+    @apply text-4xl;
+  }
+  .kozmos-text-normal {
+    @apply font-normal;
+  }
+  .kozmos-text-medium {
+    @apply font-medium;
+  }
+  .kozmos-text-semibold {
+    @apply font-semibold;
+  }
+  .kozmos-text-bold {
+    @apply font-bold;
+  }
+  .kozmos-text-left {
+    @apply text-left;
+  }
+  .kozmos-text-center {
+    @apply text-center;
+  }
+  .kozmos-text-right {
+    @apply text-right;
+  }
+  .kozmos-text-justify {
+    @apply text-justify;
+  }
+  .kozmos-text-default {
+    @apply text-foreground;
+  }
+  .kozmos-text-muted {
+    @apply text-muted-foreground;
+  }
+  .kozmos-text-primary {
+    @apply text-primary;
+  }
+  .kozmos-text-destructive {
+    @apply text-destructive-text;
+  }
+  .kozmos-text-white {
+    @apply text-white;
+  }
+  .kozmos-text-truncate {
+    @apply truncate;
+  }
+}

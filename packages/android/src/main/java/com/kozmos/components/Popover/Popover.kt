@@ -46,7 +46,7 @@ fun KozmosPopover(
                 shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
                 shadowElevation = 4.dp,
                 color = KozmosThemeTokens.semanticsSurface0,
-                border = BorderStroke(1.dp, KozmosThemeTokens.primitivesColorsForeground400),
+                border = BorderStroke(1.dp, KozmosThemeTokens.semanticsBorderSubtle),
                 modifier = modifier
             ) {
                 Box(modifier = Modifier.padding(KozmosDimensions.primitivesLayoutSpacing200)) {

@@ -2,6 +2,7 @@ import { Copy } from "./icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
+  buttonVariants,
   Card,
   Icon,
   IconButton,
@@ -1324,11 +1325,18 @@ export function FeaturePanel({
                 }}
               >
                 {links.map((l) => (
-                  <Button key={l.key} variant="outline" size="sm" asChild>
-                    <a href={l.href} target="_blank" rel="noreferrer noopener">
-                      {l.label}
-                    </a>
-                  </Button>
+                  <a
+                    key={l.key}
+                    className={buttonVariants({
+                      variant: "outline",
+                      size: "sm",
+                    })}
+                    href={l.href}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  >
+                    {l.label}
+                  </a>
                 ))}
               </div>
             )}

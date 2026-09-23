@@ -4,6 +4,9 @@
     "label": "SwiftUI",
     "language": "swift",
     "swiftPackagePath": "Package.swift",
+    "importPaths": {
+      "Sources/Components/": "import Kozmos"
+    },
     "include": [
       "Sources/Components/Link/Link.figma.swift",
       "Sources/Components/Link/Link.swift",
@@ -77,6 +80,8 @@
       "Sources/Components/Stepper/Stepper.swift",
       "Sources/Components/Tooltip/Tooltip.figma.swift",
       "Sources/Components/Tooltip/Tooltip.swift",
+      "Sources/Components/Backdrop/Backdrop.figma.swift",
+      "Sources/Components/Backdrop/Backdrop.swift",
       "Sources/Components/Dialog/Dialog.figma.swift",
       "Sources/Components/Dialog/Dialog.swift",
       "Sources/Components/Drawer/Drawer.figma.swift",
@@ -157,6 +162,10 @@
       "Sources/Components/BrowseCategoriesPanel/BrowseCategoriesPanel.swift",
       "Sources/Components/CategoryTile/CategoryTile.figma.swift",
       "Sources/Components/CategoryTile/CategoryTile.swift",
+      "Sources/Components/CategoryField/CategoryField.figma.swift",
+      "Sources/Components/CategoryField/CategoryField.swift",
+      "Sources/Components/AISearchButton/AISearchButton.figma.swift",
+      "Sources/Components/AISearchButton/AISearchButton.swift",
       "Sources/Components/FloorSelector/FloorSelector.figma.swift",
       "Sources/Components/FloorSelector/FloorSelector.swift",
       "Sources/Components/LocationPin/LocationPin.figma.swift",

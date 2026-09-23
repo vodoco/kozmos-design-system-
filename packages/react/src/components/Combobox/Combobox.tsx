@@ -1,6 +1,7 @@
 import React from "react";
-import { Check, ChevronDown, X } from "lucide-react";
-import { cn } from "../../utils";
+import { ChevronDown, X } from "lucide-react";
+import { cn, mergeAriaIds } from "../../utils";
+import { OptionRow } from "../Listbox/OptionRow";
 import { useKozmosAnalytics } from "../../utils/analytics";
 import { FieldWrapper } from "../FieldWrapper";
 import { inputVariants, type InputStatus } from "../Input/Input";
@@ -90,6 +91,10 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(
       status = "default",
       value,
       wrapperClassName,
+      "aria-label": ariaLabel,
+      "aria-labelledby": ariaLabelledBy,
+      "aria-describedby": callerDescribedBy,
+      "aria-invalid": callerInvalid,
       ...props
     },
     ref,
@@ -130,8 +135,20 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(
     const activeOption = activeIndex >= 0 ? filteredOptions[activeIndex] : null;
     const activeOptionId =
       open && activeOption ? `${inputId}-option-${activeIndex}` : undefined;
+    const listboxOpen = open && filteredOptions.length > 0;
+
+    React.useEffect(() => {
+      if (activeOptionId)
+        rootRef.current?.ownerDocument
+          .getElementById(activeOptionId)
+          ?.scrollIntoView?.({ block: "nearest" });
+    }, [activeOptionId]);
     const canClear =
       clearable && !disabled && !readOnly && Boolean(visibleInputValue);
+
+    React.useEffect(() => {
+      if (disabled || readOnly) setOpen(false);
+    }, [disabled, readOnly]);
 
     React.useEffect(() => {
       if (inputValue === undefined) {
@@ -196,18 +213,29 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(
         required={required}
         status={resolvedStatus}
       >
-        <div ref={rootRef} className="relative">
+        <div
+          ref={rootRef}
+          className="relative"
+          onBlur={(event) => {
+            if (
+              !event.currentTarget.contains(event.relatedTarget as Node | null)
+            )
+              setOpen(false);
+          }}
+        >
           <input
             ref={ref}
             id={inputId}
             role="combobox"
             aria-autocomplete="list"
-            aria-controls={listboxId}
-            aria-expanded={open}
+            aria-controls={listboxOpen ? listboxId : undefined}
+            aria-expanded={listboxOpen}
             aria-haspopup="listbox"
             aria-activedescendant={open ? activeOptionId : undefined}
-            aria-describedby={describedBy}
-            aria-invalid={resolvedStatus === "error" || undefined}
+            aria-label={ariaLabel}
+            aria-labelledby={ariaLabelledBy}
+            aria-describedby={mergeAriaIds(callerDescribedBy, describedBy)}
+            aria-invalid={resolvedStatus === "error" ? true : callerInvalid}
             autoComplete="off"
             className={cn(
               inputVariants({ status: resolvedStatus }),
@@ -229,6 +257,14 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(
               if (!open) setOpen(true);
             }}
             onKeyDown={(event) => {
+              onKeyDown?.(event);
+              if (
+                event.defaultPrevented ||
+                disabled ||
+                readOnly ||
+                event.nativeEvent.isComposing
+              )
+                return;
               if (event.key === "ArrowDown") {
                 event.preventDefault();
                 setOpen(true);
@@ -251,7 +287,6 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(
               } else if (event.key === "Escape") {
                 setOpen(false);
               }
-              onKeyDown?.(event);
             }}
             {...props}
           />
@@ -284,8 +319,10 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(
           </div>
           {open && (
             <div
-              id={listboxId}
-              role="listbox"
+              id={listboxOpen ? listboxId : undefined}
+              role={listboxOpen ? "listbox" : "status"}
+              aria-label={listboxOpen ? (ariaLabel ?? label) : undefined}
+              aria-labelledby={listboxOpen ? ariaLabelledBy : undefined}
               className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-control border bg-popover p-3 text-popover-foreground shadow-overlay"
             >
               {filteredOptions.length === 0 ? (
@@ -298,39 +335,19 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(
                   const active = index === activeIndex;
 
                   return (
-                    <div
+                    <OptionRow
                       key={option.value}
                       id={`${inputId}-option-${index}`}
-                      role="option"
-                      aria-selected={selected}
-                      aria-disabled={option.disabled || undefined}
-                      className={cn(
-                        "flex cursor-pointer items-start gap-2 rounded-marker px-3 py-2 text-sm outline-none",
-                        active && "bg-accent text-accent-foreground",
-                        option.disabled &&
-                          "cursor-not-allowed text-muted-foreground opacity-60",
-                      )}
-                      onMouseEnter={() => setActiveIndex(index)}
+                      option={option}
+                      selected={selected}
+                      active={active}
+                      disabled={option.disabled}
+                      onMouseEnter={() => {
+                        if (!option.disabled) setActiveIndex(index);
+                      }}
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() => selectOption(option)}
-                    >
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium">
-                          {option.label}
-                        </span>
-                        {option.description && (
-                          <span className="block truncate text-xs text-muted-foreground">
-                            {option.description}
-                          </span>
-                        )}
-                      </span>
-                      {selected && (
-                        <Check
-                          className="mt-0.5 h-4 w-4 shrink-0"
-                          aria-hidden="true"
-                        />
-                      )}
-                    </div>
+                    />
                   );
                 })
               )}

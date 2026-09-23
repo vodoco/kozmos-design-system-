@@ -53,7 +53,7 @@ fun KozmosListbox(
             .heightIn(max = maxHeight)
             .clip(shape)
             .background(KozmosThemeTokens.primitivesColorsBackground0)
-            .border(1.dp, KozmosThemeTokens.primitivesColorsForeground500, shape)
+            .border(1.dp, KozmosThemeTokens.semanticsBorderSubtle, shape)
             .verticalScroll(rememberScrollState())
             .padding(KozmosDimensions.primitivesLayoutSpacing50),
         verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing50)

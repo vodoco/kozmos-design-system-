@@ -12,7 +12,7 @@ export const chipVariants = cva(
         brand:
           "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15",
         destructive:
-          "border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/15",
+          "border-destructive/30 bg-destructive/10 text-[var(--semantics-emotion-danger-on-surface)] hover:bg-destructive/15",
       },
       size: {
         sm: "h-7 text-xs",

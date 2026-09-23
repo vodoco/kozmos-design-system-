@@ -1,5 +1,6 @@
 
-import { Canvas, Meta, Story, Controls, Source } from '@storybook/blocks';
+import { Canvas, Meta, Story, Source } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as TooltipStories from './Tooltip.stories';
 import { PlatformSnippets } from '../PlatformSnippets';
 
@@ -26,16 +27,21 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@kozmos/react"
-
-<TooltipProvider>
-  <Tooltip>
-    <TooltipTrigger>Hover</TooltipTrigger>
-    <TooltipContent>
-      <p>Add to library</p>
-    </TooltipContent>
-  </Tooltip>
-</TooltipProvider>
+} from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>Hover</TooltipTrigger>
+          <TooltipContent>
+            <p>Add to library</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

@@ -11,7 +11,11 @@ public struct KozmosBackdrop: View {
     
     public var body: some View {
         if visible {
-            KozmosColors.primitivesColorsBackground900.opacity(0.4)
+            // The scrim role, as React, Figma, the dialog and the drawer draw
+            // it: black at half, in both themes. It was background/900 at 40 %
+            // until 2026-09-22, which turns light in dark mode and lifted the
+            // page instead of dimming it.
+            KozmosColors.semanticsOverlayScrim
                 .edgesIgnoringSafeArea(.all)
                 .onTapGesture {
                     onTap()

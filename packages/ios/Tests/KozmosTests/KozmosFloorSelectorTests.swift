@@ -79,4 +79,35 @@ final class KozmosFloorSelectorTests: XCTestCase {
         XCTAssertNil(view.reachableIndex(step: 1))
         XCTAssertNil(view.reachableIndex(step: -1))
     }
+
+    #if os(iOS)
+    /// The open list names every level: "L2" alone told a visitor nothing the
+    /// closed pill did not. Rendered: the list is wider than the pill, and
+    /// its rows are wider than a square.
+    @MainActor func testTheOpenCollapsibleListNamesEveryLevel() async throws {
+        let floors = [
+            KozmosFloorPresentation(id: "b:1", label: "First Floor", shortLabel: "L1"),
+            KozmosFloorPresentation(id: "b:2", label: "Second Floor", shortLabel: "L2"),
+        ]
+        let size = CGSize(width: 320, height: 240)
+        let view = VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                KozmosFloorSelector(floors: floors, selectedFloor: .constant("b:2"), variant: .collapsible, expanded: true)
+            }
+        }
+        .padding(16)
+        .background(Color.white)
+        let pixels = try await RenderedPixels.render(view, size: size)
+        let control = KozmosDimensions.primitivesLayoutSizing500
+        // The pill itself is hidden while the list is open; what is drawn above
+        // the pill's row is the list.
+        let list = try XCTUnwrap(pixels.boundingBox(in: CGRect(x: 0, y: 0, width: size.width, height: size.height - 16 - control - 12),
+                                                    where: RenderedPixels.isInk), "no open list drawn")
+        XCTAssertGreaterThan(list.width, control * 2.5, "the open list is no wider than a column of squares: it carries no names")
+        XCTAssertGreaterThan(list.maxX, size.width - 16 - control - 24, "the list is not anchored to the pill's trailing edge")
+    }
+    #endif
 }
+

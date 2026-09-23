@@ -10,20 +10,21 @@ const UserLocationMarker = React.forwardRef<
   HTMLDivElement,
   UserLocationMarkerProps
 >(({ className, heading = 0, showHeading = true, ...props }, ref) => {
+  const gradientId = `kozmos-location-cone-${React.useId().replace(/:/g, "")}`;
   return (
     <div
       ref={ref}
       role="img"
       aria-label="User location"
       className={cn(
-        "relative flex items-center justify-center min-h-[48px] min-w-[48px]",
+        "relative flex items-center justify-center min-h-16 min-w-16",
         className,
       )}
       {...props}
     >
-      {/* Pulsing ring background */}
-      <div className="absolute h-10 w-10 rounded-pill bg-data-blue opacity-30 animate-pulse outline-none pointer-events-none" />
-      <div className="absolute h-14 w-14 rounded-pill bg-data-blue opacity-10 animate-ping outline-none pointer-events-none" />
+      {/* The halo: 64 at 14 %, still. The ring: 48, pulsing. */}
+      <div className="absolute h-16 w-16 rounded-pill bg-data-blue opacity-[0.14] outline-none pointer-events-none" />
+      <div className="absolute h-12 w-12 rounded-pill bg-data-blue opacity-30 animate-ping motion-reduce:animate-none outline-none pointer-events-none" />
 
       {/* Heading Cone (if active) */}
       {showHeading && (
@@ -38,11 +39,11 @@ const UserLocationMarker = React.forwardRef<
           <svg viewBox="0 0 100 100" className="h-full w-full">
             <path
               d="M50 50 L85 10 A 50 50 0 0 0 15 10 Z"
-              fill="url(#coneGradient)"
+              fill={`url(#${gradientId})`}
               opacity="0.4"
             />
             <defs>
-              <radialGradient id="coneGradient" cx="50%" cy="50%" r="50%">
+              <radialGradient id={gradientId} cx="50%" cy="50%" r="50%">
                 <stop
                   offset="0%"
                   stopColor="var(--semantics-data-blue)"
@@ -60,7 +61,7 @@ const UserLocationMarker = React.forwardRef<
       )}
 
       {/* Core Dot bordered with white */}
-      <div className="relative h-[18px] w-[18px] rounded-pill border-2 border-background bg-data-blue shadow-floating z-10" />
+      <div className="relative h-[18px] w-[18px] rounded-pill border-[3px] border-background bg-data-blue shadow-floating z-10" />
     </div>
   );
 });

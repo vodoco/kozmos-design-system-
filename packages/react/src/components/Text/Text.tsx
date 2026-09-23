@@ -4,39 +4,39 @@ import { Slot } from "@radix-ui/react-slot";
 import { cn } from "../../utils";
 import type { BoxProps } from "../Box/Box";
 
-const textVariants = cva("text-foreground", {
+const textVariants = cva("kozmos-reset kozmos-text", {
   variants: {
     size: {
-      xs: "text-xs",
-      sm: "text-sm",
-      base: "text-base",
-      lg: "text-lg",
-      xl: "text-xl",
-      "2xl": "text-2xl",
-      "3xl": "text-3xl",
-      "4xl": "text-4xl",
+      xs: "kozmos-text-xs",
+      sm: "kozmos-text-sm",
+      base: "kozmos-text-base",
+      lg: "kozmos-text-lg",
+      xl: "kozmos-text-xl",
+      "2xl": "kozmos-text-2xl",
+      "3xl": "kozmos-text-3xl",
+      "4xl": "kozmos-text-4xl",
     },
     weight: {
-      normal: "font-normal",
-      medium: "font-medium",
-      semibold: "font-semibold",
-      bold: "font-bold",
+      normal: "kozmos-text-normal",
+      medium: "kozmos-text-medium",
+      semibold: "kozmos-text-semibold",
+      bold: "kozmos-text-bold",
     },
     align: {
-      left: "text-left",
-      center: "text-center",
-      right: "text-right",
-      justify: "text-justify",
+      left: "kozmos-text-left",
+      center: "kozmos-text-center",
+      right: "kozmos-text-right",
+      justify: "kozmos-text-justify",
     },
     color: {
-      default: "text-foreground",
-      muted: "text-muted-foreground",
-      primary: "text-primary",
-      destructive: "text-destructive",
-      white: "text-white",
+      default: "kozmos-text-default",
+      muted: "kozmos-text-muted",
+      primary: "kozmos-text-primary",
+      destructive: "kozmos-text-destructive",
+      white: "kozmos-text-white",
     },
     truncate: {
-      true: "truncate",
+      true: "kozmos-text-truncate",
     },
   },
   defaultVariants: {

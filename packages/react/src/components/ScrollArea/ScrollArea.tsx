@@ -5,6 +5,8 @@ export interface ScrollAreaProps extends React.HTMLAttributes<HTMLDivElement> {
   orientation?: "vertical" | "horizontal" | "both";
   hideScrollbar?: boolean;
   snap?: "none" | "x" | "y" | "both";
+  /** Attributes for the scrollable, keyboard-focusable viewport. The ref remains on the outer wrapper. */
+  viewportProps?: React.HTMLAttributes<HTMLDivElement>;
 }
 
 const ScrollArea = React.forwardRef<HTMLDivElement, ScrollAreaProps>(
@@ -15,6 +17,7 @@ const ScrollArea = React.forwardRef<HTMLDivElement, ScrollAreaProps>(
       orientation = "vertical",
       hideScrollbar = true,
       snap = "none",
+      viewportProps,
       ...props
     },
     ref,
@@ -36,8 +39,10 @@ const ScrollArea = React.forwardRef<HTMLDivElement, ScrollAreaProps>(
         {...props}
       >
         <div
+          tabIndex={0}
+          {...viewportProps}
           className={cn(
-            "w-full rounded-[inherit] outline-none",
+            "w-full rounded-[inherit] outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
             orientation !== "horizontal" && "h-full",
             orientation === "vertical" && "overflow-y-auto overflow-x-hidden",
             orientation === "horizontal" &&
@@ -48,8 +53,9 @@ const ScrollArea = React.forwardRef<HTMLDivElement, ScrollAreaProps>(
             snap === "x" && "snap-x snap-mandatory",
             snap === "y" && "snap-y snap-mandatory",
             snap === "both" && "snap-both snap-mandatory",
+            viewportProps?.className,
           )}
-          style={{ WebkitOverflowScrolling: "touch" }}
+          style={{ WebkitOverflowScrolling: "touch", ...viewportProps?.style }}
         >
           {children}
         </div>

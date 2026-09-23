@@ -1,38 +1,52 @@
 package com.kozmos.components.categorytile
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.kozmos.components.counter.CounterTone
+import com.kozmos.components.counter.KozmosCounter
 import com.kozmos.contracts.KozmosCategoryPresentation
 import com.kozmos.providers.KozmosAnalyticsEvent
 import com.kozmos.providers.LocalKozmosAnalytics
-import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.tokens.KozmosThemeTokens
 
 /**
  * A single browsable category cell.
  *
  * Mirrors the React `CategoryTile`: the tile owns presentation and selection
  * semantics only. Category identity, labels, counts, and selected state are
- * supplied by the consuming app through [KozmosCategoryPresentation].
+ * supplied by the consuming app through [KozmosCategoryPresentation]. A
+ * `resultCount` draws as the system's counter at the icon square's top-right;
+ * `resultCountLabel` is its spoken form (the state description) and draws
+ * nothing. A `tint` — the category's colours — takes the icon, the selection's
+ * stroke and the counter's fill and ink; the square stays neutral.
  */
 @Composable
 fun KozmosCategoryTile(
@@ -40,6 +54,9 @@ fun KozmosCategoryTile(
     onSelect: (String) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    /** The category's own colour, as the chosen-category field wears it: it
+     *  takes the icon and the counter's fill; the square stays neutral. */
+    tint: KozmosCategoryTint? = null,
     icon: (@Composable () -> Unit)? = null
 ) {
     val trackEvent = LocalKozmosAnalytics.current
@@ -58,64 +75,73 @@ fun KozmosCategoryTile(
         },
         modifier = modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 112.dp)
             .semantics {
                 contentDescription = category.label
                 selected = category.selected
                 category.resultCountLabel?.let { stateDescription = it }
             },
         enabled = isEnabled,
-        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
-        color = if (category.selected) {
-            KozmosColors.primitivesColorsTheme500.copy(alpha = 0.05f)
-        } else {
-            KozmosColors.primitivesColorsBackground0
-        },
-        border = BorderStroke(
-            width = if (category.selected) 2.dp else 1.dp,
-            color = if (category.selected) {
-                KozmosColors.primitivesColorsTheme500
-            } else {
-                KozmosColors.primitivesColorsForeground300
-            }
-        )
+        shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
+        color = androidx.compose.ui.graphics.Color.Transparent
     ) {
         Column(
-            modifier = Modifier.padding(KozmosDimensions.primitivesLayoutSpacing150),
+            modifier = Modifier.padding(KozmosDimensions.primitivesLayoutSpacing50),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(
-                KozmosDimensions.primitivesLayoutSpacing100,
-                Alignment.CenterVertically
-            )
+            verticalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing75)
         ) {
-            if (icon != null) {
+            // The icon's square: 64, radius Control, the container edge; the
+            // selection shows on it. The label sits under it, two lines at most.
+            Box {
                 Box(
-                    modifier = Modifier.size(40.dp),
+                    modifier = Modifier
+                        .size(KozmosDimensions.primitivesLayoutSizing800)
+                        .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
+                        .background(
+                            if (category.selected) (tint?.accent ?: KozmosThemeTokens.primitivesColorsTheme500).copy(alpha = 0.05f)
+                            else KozmosThemeTokens.primitivesColorsBackground0
+                        )
+                        .border(
+                            width = if (category.selected) 2.dp else 1.dp,
+                            color = if (category.selected) (tint?.accent ?: KozmosThemeTokens.primitivesColorsTheme500) else KozmosThemeTokens.semanticsBorderSubtle,
+                            shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
-                    icon()
+                    if (icon != null) {
+                        // The icon in the theme colour, as on the other platforms;
+                        // decorative, as there: the label names what it shows.
+                        CompositionLocalProvider(LocalContentColor provides (tint?.accent ?: KozmosThemeTokens.primitivesColorsTheme500)) {
+                            Box(modifier = Modifier.size(KozmosDimensions.primitivesLayoutSizing300).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
+                                icon()
+                            }
+                        }
+                    }
+                }
+                category.resultCount?.let { count ->
+                    // The count: the system's counter, brand tone, at the
+                    // square's top-right, four beyond its edges so the icon
+                    // stays clear. The spoken form is `resultCountLabel`.
+                    KozmosCounter(
+                        text = count.toString(),
+                        tone = CounterTone.Brand,
+                        fill = tint?.fill,
+                        modifier = Modifier.align(Alignment.TopEnd).offset(x = 4.dp, y = (-4).dp)
+                    )
                 }
             }
 
             Text(
                 text = category.label,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
                 color = if (isEnabled) {
-                    KozmosColors.primitivesColorsForeground100
+                    KozmosThemeTokens.primitivesColorsForeground100
                 } else {
-                    KozmosColors.primitivesColorsForeground100.copy(alpha = 0.5f)
+                    KozmosThemeTokens.primitivesColorsForeground100.copy(alpha = 0.5f)
                 },
                 textAlign = TextAlign.Center
             )
-
-            category.resultCountLabel?.let { resultCountLabel ->
-                Text(
-                    text = resultCountLabel,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = KozmosColors.primitivesColorsForeground500,
-                    textAlign = TextAlign.Center
-                )
-            }
         }
     }
 }

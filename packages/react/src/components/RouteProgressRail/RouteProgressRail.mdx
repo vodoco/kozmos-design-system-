@@ -1,0 +1,40 @@
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
+import * as RouteProgressRailStories from "./RouteProgressRail.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={RouteProgressRailStories} />
+
+# RouteProgressRail
+
+How far along the route the visitor is, as a rail: a dot where it starts, a disc carrying the current manoeuvre's arrow that travels the track, a dot where it ends. Progress is 0 to 1 and anything outside is clamped; the disc runs from just after the start dot to just before the end dot. Assistive technology hears the label the caller gives ("Step 2 of 4") and the progress as a percentage.
+
+Products measure progress by ground covered, so a lift or a level change — no distance — does not move the disc.
+
+<Canvas>
+  <Story of={RouteProgressRailStories.Midway} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { RouteProgressRail } from "@kozmos/react";
+
+export function Example() {
+  return <RouteProgressRail progress={0.5} type="left" label="Step 2 of 4" />;
+}
+    `}
+    swift={`
+import SwiftUI
+
+KozmosRouteProgressRail(progress: 0.5, type: .left, label: "Step 2 of 4")
+`}
+    kotlin={`
+KozmosRouteProgressRail(progress = 0.5f, type = DirectionType.Left, label = "Step 2 of 4")
+    `}
+/>

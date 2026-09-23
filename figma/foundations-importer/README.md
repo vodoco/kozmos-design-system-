@@ -45,7 +45,7 @@ Select **Pagination** and click **Build** for paged lists, tables, and search re
 
 Select **Accordion** and click **Build** for disclosure groups. It creates Closed and Open examples with editable trigger/content text while leaving Radix interaction behavior, collapsibility, and animation in product code.
 
-Select **Curated Icons** and click **Build** to create the curated Kozmos icon source set on the `Icons` page. The first pass imports the 38 icons from `@kozmos/icons` / `docs/figma-pointr-icon-catalog.json` by Pointr component key, then applies them as preferred values for Button and IconButton `Icon` instance-swap slots.
+Select **Curated Icons** and click **Build** to create the curated Kozmos icon source set on the `Icons` page. The first pass imports the icons `packages/icons/src/registry.ts` names (56 today) from `docs/figma-pointr-icon-catalog.json` by Pointr component key — the plugin's `KOSMOS_ICON_DEFINITIONS` is the registry's twin, and `pnpm components:contract:check` holds both to the catalog — then applies them as preferred values for Button and IconButton `Icon` instance-swap slots.
 
 Select **Curated Icons** and click **Update** when the curated registry or Pointr source components change. It updates icon source components in place, preserves their node IDs, and keeps each nested `Pointr Source` stretched to the 24px icon bounds so resized Button/IconButton slots do not clip or overflow the source artwork.
 
@@ -95,14 +95,25 @@ placeholder and a warning until those Core sets exist.
 Each set uses a single variant axis, matching the Core layout and data-display
 convention that avoids variant explosion:
 
-- **DirectionStep** — `Type` of Straight, Left, Right, Destination, plus editable
-  instruction, distance, and duration text. Turn glyphs are text rather than
-  auto-mirroring icons, because a left turn stays a physical left turn in RTL.
+- **AISearchButton** — `State` of Default and Disabled: the search row's AI
+  search, a 48 circle whose ring is a 2.5 band of the six data colours around a
+  43 disc, with a 16 stars-01 icon. Run Curated Icons first.
+- **CategoryField** — `Tint` of Theme and the taxonomy's eight category colours:
+  the search field's form once a category is chosen, 48 tall with a 28 icon, a
+  15/20 label, a 22 count pill (`Show Count`) and a 32 clear. Run Curated Icons
+  first.
+- **DirectionStep** — `Type` of the fourteen cases: Straight, Left, Right,
+  Destination, the lift, escalator and stairs up and down, LevelUp, LevelDown,
+  Transition and TurnBack, plus editable instruction, distance, and duration
+  text. Each is a 24 icon from the Icons page; an instance does not mirror, so
+  a left turn stays a physical left turn in RTL. Run Curated Icons first.
 - **FloorSelector** — `Variant` of VerticalList, HorizontalList, CompactStepper.
   Every floor target stays 44px so it satisfies the shared touch-target contract.
   Floor identity and ordering remain product data, not Figma variants.
 - **LocationPin** — `State` of Default, Selected, Featured, OffFloor, Disabled
-  crossed with `Size` of Sm, Md, Lg (15 variants). Selected pins grow as well as
+  crossed with `Size` of Sm, Md, Lg and `Tint` of Theme and the taxonomy's eight
+  category colours (135 variants); a tint's fill is the marker and its ink the
+  number, and a featured pin keeps the alert colour. Selected pins grow as well as
   recolor and off-floor pins use a dashed outline, so state is never carried by
   color alone. `variant` (colour role) and `labelPlacement` are deliberately not
   variant axes: colour is a token override and label placement is renderer

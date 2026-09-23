@@ -2,6 +2,8 @@ import React from "react";
 import { cn } from "../../utils";
 
 export interface NavbarProps extends React.HTMLAttributes<HTMLElement> {
+  /** Accessible name for the navigation landmark. */
+  navigationLabel?: string;
   logo?: React.ReactNode;
   context?: React.ReactNode;
   /** @deprecated Use context instead. */
@@ -26,6 +28,7 @@ const Navbar = React.forwardRef<HTMLElement, NavbarProps>(
       utilities,
       account,
       children,
+      navigationLabel = "Main navigation",
       ...props
     },
     ref,
@@ -38,25 +41,25 @@ const Navbar = React.forwardRef<HTMLElement, NavbarProps>(
       <header
         ref={ref}
         data-slot="navbar"
-        className={cn(
-          "sticky top-0 z-50 flex h-16 w-full items-center border-b bg-background px-4 shadow-raised",
-          className,
-        )}
+        className={cn("kozmos-reset kozmos-navbar", className)}
         {...props}
       >
         <div
           data-slot="navbar-leading"
-          className="flex min-w-0 flex-1 items-center gap-4"
+          className="kozmos-reset kozmos-navbar-leading"
         >
           {logo ? (
-            <div data-slot="navbar-logo" className="shrink-0">
+            <div
+              data-slot="navbar-logo"
+              className="kozmos-reset kozmos-navbar-logo"
+            >
               {logo}
             </div>
           ) : null}
           {contextContent ? (
             <div
               data-slot="navbar-context"
-              className="hidden min-w-0 shrink md:block"
+              className="kozmos-reset kozmos-navbar-context"
             >
               {contextContent}
             </div>
@@ -64,7 +67,7 @@ const Navbar = React.forwardRef<HTMLElement, NavbarProps>(
           {primaryAction ? (
             <div
               data-slot="navbar-primary-action"
-              className="hidden shrink-0 md:flex"
+              className="kozmos-reset kozmos-navbar-primary-action"
             >
               {primaryAction}
             </div>
@@ -72,7 +75,8 @@ const Navbar = React.forwardRef<HTMLElement, NavbarProps>(
           {navigationContent ? (
             <nav
               data-slot="navbar-navigation"
-              className="hidden min-w-0 flex-1 items-center justify-center gap-4 md:flex"
+              aria-label={navigationLabel}
+              className="kozmos-reset kozmos-navbar-navigation"
             >
               {navigationContent}
             </nav>
@@ -81,7 +85,7 @@ const Navbar = React.forwardRef<HTMLElement, NavbarProps>(
         {hasTrailing ? (
           <div
             data-slot="navbar-trailing"
-            className="flex shrink-0 items-center gap-2"
+            className="kozmos-reset kozmos-navbar-trailing"
           >
             {actions ? (
               <div data-slot="navbar-actions" className="contents">

@@ -1,9 +1,11 @@
 import { defineConfig } from "vite";
 import path from "node:path";
+import dts from "vite-plugin-dts";
 
 const externals = ["lucide-react", "react", "react/jsx-runtime"];
 
 export default defineConfig({
+  plugins: [dts({ insertTypesEntry: true, rollupTypes: true })],
   build: {
     sourcemap: true,
     lib: {

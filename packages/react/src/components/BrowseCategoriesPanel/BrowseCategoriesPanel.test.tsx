@@ -44,4 +44,30 @@ describe("BrowseCategoriesPanel", () => {
       screen.getByText("No categories are available on this floor."),
     ).toBeVisible();
   });
+
+  it("passes a category's colours to its tile", () => {
+    render(
+      <BrowseCategoriesPanel
+        categories={[
+          { id: "dining", label: "Dining", selected: false, resultCount: 3 },
+        ]}
+        onSelect={() => {}}
+        renderIcon={() => <svg />}
+        tint={() => ({
+          accent: "var(--semantics-category-accent-red)",
+          fill: "var(--semantics-category-fill-red)",
+          onFill: "var(--semantics-category-on-fill-red)",
+        })}
+      />,
+    );
+    const counter = screen.getByText("3");
+    expect(counter.style.getPropertyValue("background-color")).toBe(
+      "var(--semantics-category-fill-red)",
+    );
+    expect(
+      (counter.parentElement as HTMLElement).style.getPropertyValue(
+        "--kozmos-category-tint",
+      ),
+    ).toBe("var(--semantics-category-accent-red)");
+  });
 });

@@ -14,12 +14,20 @@ Reusable navigation row/item primitive for top navigation, side navigation, and 
 
 <PlatformSnippets
     react={`
-import { NavigationItem } from "@kozmos/react"
-import { Search } from "lucide-react"
-
-<NavigationItem href="/explore" icon={<Search className="h-5 w-5" />} selected>
-  Explore
-</NavigationItem>
+import { NavigationItem, Icon } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <NavigationItem
+        href="/explore"
+        icon={<Icon name="search-md" />}
+        selected
+      >
+        Explore
+      </NavigationItem>
+    </>
+  );
+}
     `}
     swift={`
 import SwiftUI

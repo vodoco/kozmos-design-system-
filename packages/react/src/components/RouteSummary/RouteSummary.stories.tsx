@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Bike, Navigation } from "lucide-react";
 import { RouteSummary } from "./RouteSummary";
+import { RouteProgressRail } from "../RouteProgressRail";
 
 const meta = {
   title: "Map/RouteSummary",
@@ -34,6 +35,26 @@ export const Preview: Story = {
     transportModeIcon: <Navigation className="h-5 w-5" />,
     onEndRoute: () => console.log("end route"),
     onStartNavigation: () => console.log("start navigation"),
+  },
+  render: Active.render,
+};
+
+/**
+ * The navigation layout: the destination with End beside it, the time,
+ * distance and arrival on one row, the rail below.
+ */
+export const Navigation_: Story = {
+  name: "Navigation",
+  args: {
+    destination: "Airport Shuttles",
+    durationText: "4 min",
+    distanceText: "201 m",
+    arrivalText: "Arrive 12:58",
+    surface: "glass",
+    onEndRoute: () => console.log("end route"),
+    progress: (
+      <RouteProgressRail progress={0.16} type="straight" label="Step 1 of 4" />
+    ),
   },
   render: Active.render,
 };

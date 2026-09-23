@@ -1,4 +1,5 @@
-import { Canvas, Meta, Story, Controls, Source } from "@storybook/blocks";
+import { Canvas, Meta, Story, Source } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as ButtonStories from "./Button.stories";
 
 <Meta of={ButtonStories} />
@@ -21,9 +22,14 @@ import { PlatformSnippets } from "../PlatformSnippets";
 
 <PlatformSnippets
     react={`
-import { Button } from '@kozmos/react';
-
-<Button variant="default">Button</Button>
+import { Button } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Button variant="default">Button</Button>
+    </>
+  );
+}
     `}
     vue={`
 <script setup lang="ts">
@@ -36,89 +42,21 @@ import { KozmosButton } from '@kozmos/vue';
     `}
     swift={`
 import SwiftUI
+import Kozmos
 
-public enum KozmosButtonVariant {
-case \`default\`
-case destructive
-case outline
-case secondary
-case ghost
-case link
-}
-
-public enum KozmosButtonSize {
-case \`default\`
-case sm
-case lg
-case icon
-}
-
-public struct KozmosButton: View {
-let label: String
-let variant: KozmosButtonVariant
-let size: KozmosButtonSize
-let action: () -> Void
-
-    public init(
-        _ label: String,
-        variant: KozmosButtonVariant = .default,
-        size: KozmosButtonSize = .default,
-        action: @escaping () -> Void
-    ) {
-        self.label = label
-        self.variant = variant
-        self.size = size
-        self.action = action
-    }
-
-    public var body: some View {
-        Button(action: action) {
-            Text(label)
-                .font(.system(size: fontSize, weight: .medium))
-                .padding(padding)
-                .background(backgroundColor)
-                .foregroundColor(foregroundColor)
-                .cornerRadius(6)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(borderColor, lineWidth: variant == .outline ? 1 : 0)
-                )
-        }
-    }
-
+// Inside a SwiftUI view body.
+KozmosButton("Button", variant: .default) {
+// Handle the action.
 }
 `}
     kotlin={`
-package com.kozmos.components.button
+import androidx.compose.material3.Text
+import com.kozmos.components.button.KozmosButton
+import com.kozmos.components.button.KozmosButtonVariant
 
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-
-enum class KozmosButtonVariant {
-Default,
-Destructive,
-Outline,
-Secondary,
-Ghost,
-Link
-}
-
-@Composable
-fun KozmosButton(
-text: String,
-onClick: () -> Unit,
-modifier: Modifier = Modifier,
-variant: KozmosButtonVariant = KozmosButtonVariant.Default,
-) {
-Button(
-onClick = onClick,
-modifier = modifier,
-) {
-Text(text)
-}
+// Inside a @Composable function.
+KozmosButton(onClick = {}, variant = KozmosButtonVariant.Default) {
+Text("Button")
 }
 `}
 />
@@ -134,14 +72,54 @@ The token tiers already split the same way — `Components.Primary Buttons` is f
 with `idle`, `hover`, `pressed` and `focus` since long before this prop existed. A variant
 picks the tier; the emotion picks the colour inside it.
 
-| Emotion       | Filled background | Reads                                                 |
-| ------------- | ----------------- | ----------------------------------------------------- |
-| `themed`      | `#0D44C2`         | the brand blue; the default look                      |
-| `neutral`     | `#C7CAD1`         | the same grey `variant="secondary"` has always drawn  |
-| `success`     | `#1E995B`         | a completed or confirmed action                       |
-| `danger`      | `#B01736`         | a destructive action                                  |
-| `informative` | `#2379A4`         | a neutral notice                                      |
-| `alert`       | `#CD8905`         | something that needs attention but is not destructive |
+Colours are resolved from the active theme tokens, rather than fixed hex values.
+
+<table>
+  <thead>
+    <tr>
+      <th>Emotion</th>
+      <th>Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <code>themed</code>
+      </td>
+      <td>Brand emphasis; the default look</td>
+    </tr>
+    <tr>
+      <td>
+        <code>neutral</code>
+      </td>
+      <td>Neutral action</td>
+    </tr>
+    <tr>
+      <td>
+        <code>success</code>
+      </td>
+      <td>Completed or confirmed action</td>
+    </tr>
+    <tr>
+      <td>
+        <code>danger</code>
+      </td>
+      <td>Destructive action</td>
+    </tr>
+    <tr>
+      <td>
+        <code>informative</code>
+      </td>
+      <td>Informational action</td>
+    </tr>
+    <tr>
+      <td>
+        <code>alert</code>
+      </td>
+      <td>Attention needed, without destructive intent</td>
+    </tr>
+  </tbody>
+</table>
 
 Leave `emotion` unset and nothing changes: `secondary` is already `neutral` and
 `destructive` is already `danger`, by the values in the tokens. `glass` is an effect rather
@@ -149,10 +127,17 @@ than a weight and takes no emotion.
 
 <PlatformSnippets
     react={`
-import { Button } from '@kozmos/react';
-
-<Button emotion="success">Publish</Button>
-<Button variant="outline" emotion="danger">Delete</Button>
+import { Button } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Button emotion="success">Publish</Button>
+      <Button variant="outline" emotion="danger">
+        Delete
+      </Button>
+    </>
+  );
+}
     `}
     swift={`
 import SwiftUI

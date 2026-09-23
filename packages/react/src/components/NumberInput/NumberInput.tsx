@@ -1,6 +1,6 @@
 import React from "react";
 import { Minus, Plus } from "lucide-react";
-import { cn } from "../../utils";
+import { cn, mergeAriaIds } from "../../utils";
 import { FieldWrapper } from "../FieldWrapper";
 import { inputVariants, type InputStatus } from "../Input/Input";
 
@@ -49,6 +49,8 @@ export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
       showSteppers = true,
       status = "default",
       wrapperClassName,
+      "aria-describedby": callerDescribedBy,
+      "aria-invalid": callerInvalid,
       ...props
     },
     ref,
@@ -68,24 +70,12 @@ export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
           ? helperId
           : undefined;
     const stepperDisabled = disabled || readOnly;
-    const fieldToneClass = cn(
-      resolvedStatus === "error" &&
-        "border-destructive focus-visible:ring-destructive",
-      resolvedStatus === "warning" &&
-        "border-warning focus-visible:ring-warning",
-      resolvedStatus === "success" &&
-        "border-success focus-visible:ring-success",
-    );
-    const stepperToneClass = cn(
-      resolvedStatus === "error" &&
-        "border-destructive text-destructive focus-visible:ring-destructive",
-      resolvedStatus === "warning" &&
-        "border-warning text-warning focus-visible:ring-warning",
-      resolvedStatus === "success" &&
-        "border-success text-success focus-visible:ring-success",
-      resolvedStatus === "default" &&
-        "border-[color:var(--primitives-colors-foreground-500)]",
-    );
+    const stepperToneClass = {
+      default: "",
+      error: "kozmos-number-step-error",
+      warning: "kozmos-number-step-warning",
+      success: "kozmos-number-step-success",
+    }[resolvedStatus];
 
     const setRefs = React.useCallback(
       (node: HTMLInputElement | null) => {
@@ -108,12 +98,19 @@ export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
       const input = internalRef.current;
       if (!input || stepperDisabled) return;
 
+      const previousValue = input.value;
+      let value: number | null;
       try {
-        const value = stepValue(input, direction);
-        onValueChange?.(value);
+        value = stepValue(input, direction);
       } catch {
-        onValueChange?.(numericValueFromInput(input));
+        value = numericValueFromInput(input);
+      } finally {
+        // Native stepping mutates the DOM. A controlled field only displays a
+        // new value when the parent accepts it, just like native typing in React.
+        if (props.value !== undefined) input.value = previousValue;
       }
+      // Consumer exceptions must not be mistaken for native stepping failures.
+      onValueChange?.(value);
     };
 
     return (
@@ -127,38 +124,38 @@ export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
         status={resolvedStatus}
         className={wrapperClassName}
       >
-        <div className="flex w-full items-stretch">
+        <div className="kozmos-reset kozmos-number-field">
           {showSteppers && (
             <button
               type="button"
               aria-label="Decrease value"
               className={cn(
-                "flex h-11 w-11 shrink-0 items-center justify-center rounded-l-control border border-r-0 bg-background text-foreground ring-offset-background transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
+                "kozmos-reset kozmos-field-action kozmos-number-step kozmos-number-decrement",
                 stepperToneClass,
               )}
               disabled={stepperDisabled}
               onClick={() => handleStep("decrement")}
             >
-              <Minus className="h-4 w-4" aria-hidden="true" />
+              <Minus
+                className="kozmos-reset kozmos-field-action-icon"
+                aria-hidden="true"
+              />
             </button>
           )}
           <input
             type="number"
             id={inputId}
             className={cn(
-              inputVariants({ status: "default" }),
-              fieldToneClass,
-              "text-foreground",
-              "min-w-0 flex-1 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
-              showSteppers && "rounded-none text-center",
-              !showSteppers && "text-left",
+              inputVariants({ status: resolvedStatus }),
+              "kozmos-number-input",
+              showSteppers && "kozmos-number-with-steppers",
               className,
             )}
             ref={setRefs}
             disabled={disabled}
             readOnly={readOnly}
-            aria-invalid={isInvalid || undefined}
-            aria-describedby={describedBy}
+            aria-invalid={isInvalid ? true : callerInvalid}
+            aria-describedby={mergeAriaIds(callerDescribedBy, describedBy)}
             onChange={handleChange}
             {...props}
           />
@@ -167,13 +164,16 @@ export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
               type="button"
               aria-label="Increase value"
               className={cn(
-                "flex h-11 w-11 shrink-0 items-center justify-center rounded-r-control border border-l-0 bg-background text-foreground ring-offset-background transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
+                "kozmos-reset kozmos-field-action kozmos-number-step kozmos-number-increment",
                 stepperToneClass,
               )}
               disabled={stepperDisabled}
               onClick={() => handleStep("increment")}
             >
-              <Plus className="h-4 w-4" aria-hidden="true" />
+              <Plus
+                className="kozmos-reset kozmos-field-action-icon"
+                aria-hidden="true"
+              />
             </button>
           )}
         </div>

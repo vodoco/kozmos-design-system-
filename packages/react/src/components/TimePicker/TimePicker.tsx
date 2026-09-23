@@ -1,6 +1,6 @@
 import React from "react";
 import { Clock } from "lucide-react";
-import { cn } from "../../utils";
+import { cn, mergeAriaIds } from "../../utils";
 import { useKozmosAnalytics } from "../../utils/analytics";
 import { FieldWrapper } from "../FieldWrapper";
 import { inputVariants, type InputStatus } from "../Input/Input";
@@ -54,6 +54,8 @@ const TimePicker = React.forwardRef<HTMLInputElement, TimePickerProps>(
       required,
       status = "default",
       wrapperClassName,
+      "aria-describedby": ariaDescribedBy,
+      "aria-invalid": ariaInvalid,
       ...props
     },
     ref,
@@ -88,20 +90,20 @@ const TimePicker = React.forwardRef<HTMLInputElement, TimePickerProps>(
         required={required}
         status={resolvedStatus}
       >
-        <div className="relative">
+        <div className="kozmos-reset kozmos-temporal-field">
           <Clock
             aria-hidden="true"
-            className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            className="kozmos-reset kozmos-temporal-icon"
           />
           <input
             ref={ref}
             id={inputId}
             type="time"
-            aria-describedby={describedBy || undefined}
-            aria-invalid={resolvedStatus === "error" || undefined}
+            aria-describedby={mergeAriaIds(ariaDescribedBy, describedBy)}
+            aria-invalid={resolvedStatus === "error" ? true : ariaInvalid}
             className={cn(
               inputVariants({ status: resolvedStatus }),
-              "block w-full appearance-none pl-9",
+              "kozmos-temporal-input kozmos-time-input",
               className,
             )}
             disabled={disabled}

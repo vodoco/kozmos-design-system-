@@ -78,7 +78,7 @@ fun KozmosDrawer(
                 modifier = drawerSurfaceModifier(side),
                 shape = drawerShape(side),
                 color = KozmosThemeTokens.semanticsSurface0,
-                border = BorderStroke(1.dp, KozmosThemeTokens.primitivesColorsForeground400),
+                border = BorderStroke(1.dp, KozmosThemeTokens.semanticsBorderSubtle),
                 shadowElevation = 20.dp
             ) {
                 Column(

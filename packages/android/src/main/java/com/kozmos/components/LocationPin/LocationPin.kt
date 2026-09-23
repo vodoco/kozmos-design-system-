@@ -19,7 +19,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.components.categorytile.KozmosCategoryTint
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.tokens.KozmosDimensions
 
 /** Colour role of a map marker, mirroring the React `LocationPin.variant` prop. */
@@ -64,14 +65,18 @@ fun KozmosLocationPin(
     selected: Boolean = false,
     featured: Boolean = false,
     offFloor: Boolean = false,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    /** A category's colours for the marker — its fill, with its ink for the
+     *  number — over the variant's; a featured pin keeps the alert colour. */
+    tint: KozmosCategoryTint? = null
 ) {
     val markerColor: Color = when {
-        featured -> KozmosColors.primitivesColorsEmotionalAlert500
-        variant == KozmosLocationPinVariant.Default -> KozmosColors.primitivesColorsForeground100
-        variant == KozmosLocationPinVariant.Primary -> KozmosColors.primitivesColorsTheme500
-        variant == KozmosLocationPinVariant.Secondary -> KozmosColors.primitivesColorsForeground400
-        else -> KozmosColors.primitivesColorsThemeVariant1500
+        featured -> KozmosThemeTokens.primitivesColorsEmotionalAlert500
+        tint != null -> tint.fill.fill
+        variant == KozmosLocationPinVariant.Default -> KozmosThemeTokens.primitivesColorsForeground100
+        variant == KozmosLocationPinVariant.Primary -> KozmosThemeTokens.primitivesColorsTheme500
+        variant == KozmosLocationPinVariant.Secondary -> KozmosThemeTokens.primitivesColorsForeground400
+        else -> KozmosThemeTokens.primitivesColorsThemeVariant1500
     }
 
     // Selected pins grow as well as recolor, so selection is not colour-only.
@@ -93,6 +98,9 @@ fun KozmosLocationPin(
         this.selected = isSelected
     }
 
+    // Read in composition: the draw block below runs outside it.
+    val hollowFill = KozmosThemeTokens.primitivesColorsBackground0
+    val pinRing = KozmosThemeTokens.primitivesColorsForeground1000
     val marker: @Composable () -> Unit = {
         Box(contentAlignment = Alignment.Center) {
             Canvas(modifier = Modifier.size(diameter)) {
@@ -101,12 +109,8 @@ fun KozmosLocationPin(
                 // and the marker colour moves to the stroke. Shape carries the
                 // state, so it is never colour-only, and a dashed stroke at
                 // this diameter reads as a cogwheel rather than a dashed ring.
-                val fill = if (offFloor) {
-                    KozmosColors.primitivesColorsBackground0
-                } else {
-                    markerColor
-                }
-                val ring = if (offFloor) markerColor else KozmosColors.primitivesColorsForeground1000
+                val fill = if (offFloor) hollowFill else markerColor
+                val ring = if (offFloor) markerColor else pinRing
                 val ringWidth = (if (offFloor) 3f else 2f) * density
 
                 drawCircle(color = fill.copy(alpha = alpha), radius = radius)
@@ -123,7 +127,9 @@ fun KozmosLocationPin(
                     fontSize = (diameter.value * 0.44f).sp,
                     fontWeight = FontWeight.Bold,
                     color = (
-                        if (offFloor) markerColor else KozmosColors.primitivesColorsForeground1000
+                        // Off the floor the number sits on the white disc in the
+                        // foreground; the ring keeps the colour (Olcay, 2026-09-21).
+                        if (offFloor) KozmosThemeTokens.primitivesColorsForeground0 else (tint?.fill?.ink ?: KozmosThemeTokens.primitivesColorsForeground1000)
                         ).copy(alpha = alpha)
                 )
             }
@@ -136,7 +142,7 @@ fun KozmosLocationPin(
                 text = it,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = KozmosColors.primitivesColorsForeground100.copy(alpha = alpha),
+                color = KozmosThemeTokens.primitivesColorsForeground100.copy(alpha = alpha),
                 maxLines = 1
             )
         }

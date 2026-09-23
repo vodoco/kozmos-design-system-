@@ -1,4 +1,5 @@
-import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as MapViewStories from "./MapView.stories";
 import { PlatformSnippets } from "../PlatformSnippets";
 
@@ -20,9 +21,14 @@ Displays the MapView interface topology natively.
 
 <PlatformSnippets
     react={`
-import { MapView } from "@kozmos/react"
-
-<MapView />
+import { MapView } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <MapView />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

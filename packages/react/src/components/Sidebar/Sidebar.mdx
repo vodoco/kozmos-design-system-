@@ -1,4 +1,5 @@
-import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as SidebarStories from "./Sidebar.stories";
 import { PlatformSnippets } from "../PlatformSnippets";
 
@@ -20,19 +21,24 @@ Vertical navigation shell. Compose persistent destinations with `NavigationItem`
 
 <PlatformSnippets
     react={`
-import { Sidebar } from "@kozmos/react"
-import { NavigationItem } from "@kozmos/react"
-
-<Sidebar
-  header={<strong>Workspace</strong>}
-  navigation={
-    <div className="flex flex-col gap-1">
-      <NavigationItem selected>Overview</NavigationItem>
-      <NavigationItem>Explore</NavigationItem>
-    </div>
-  }
-  footer={<NavigationItem>Account</NavigationItem>}
-/>
+import { Sidebar } from "@kozmos/react";
+import { NavigationItem } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Sidebar
+        header={<strong>Workspace</strong>}
+        navigation={
+          <div className="flex flex-col gap-1">
+            <NavigationItem selected>Overview</NavigationItem>
+            <NavigationItem>Explore</NavigationItem>
+          </div>
+        }
+        footer={<NavigationItem>Account</NavigationItem>}
+      />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

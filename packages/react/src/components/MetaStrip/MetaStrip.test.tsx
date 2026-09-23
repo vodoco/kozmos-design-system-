@@ -27,7 +27,9 @@ describe("MetaStrip", () => {
 
     // A price band reads on its own, so the label is hidden — but a screen
     // reader still gets it, which is the whole reason the label is required.
-    expect(screen.getByText("Price band")).toHaveClass("sr-only");
+    expect(screen.getByText("Price band")).toHaveClass(
+      "kozmos-meta-label-hidden",
+    );
   });
 
   it("draws the label when asked", () => {
@@ -39,7 +41,9 @@ describe("MetaStrip", () => {
       </MetaStrip>,
     );
 
-    expect(screen.getByText("Wait")).not.toHaveClass("sr-only");
+    expect(screen.getByText("Wait")).not.toHaveClass(
+      "kozmos-meta-label-hidden",
+    );
   });
 
   it("pairs each term with its value, term first", () => {

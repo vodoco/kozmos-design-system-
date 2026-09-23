@@ -1,4 +1,5 @@
-import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as ToggleButtonStories from "./ToggleButton.stories";
 import { PlatformSnippets } from "../PlatformSnippets";
 
@@ -20,9 +21,14 @@ Displays the ToggleButton interface topology natively.
 
 <PlatformSnippets
     react={`
-import { ToggleButton } from "@kozmos/react"
-
-<ToggleButton />
+import { ToggleButton } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <ToggleButton aria-label="Show labels">Labels</ToggleButton>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

@@ -26,8 +26,14 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import {
+  collectSnippets,
+  writeReactSnippetFixtures,
+  writeSnippetNegativeControl,
+} from "./lib/doc-snippets.mjs";
 
 const ROOT = process.cwd();
+const docSnippets = collectSnippets(ROOT);
 const PACKAGES = path.join(ROOT, "packages");
 const problems = [];
 const ok = (m) => console.log(`  ok    ${m}`);
@@ -53,19 +59,10 @@ const FORBIDDEN = [
 const ALLOWED =
   /^package\/(package\.json|README\.md|LICENSE)$|\.(d\.ts|d\.mts|d\.cts|mjs|cjs|js|map|css|swift|kt|xml)$/;
 
-// Type-resolution problems @arethetypeswrong/cli reports today, kept as a
-// ratchet: a new one fails, and so does one that goes away, so a fix is locked
-// in by deleting its line. The two FalseCJS entries need declarations emitted
-// as ES modules with explicit relative extensions, which is a change to how
-// those packages build. product-contracts is types only, so it has no runtime
-// entry for a CommonJS require to break. @kozmos/tokens had FalseCJS too, from
-// the exports map this check arrived with, and was fixed before it merged.
+// All package declarations now match their ESM/CJS runtime format. Keep this
+// zero baseline: any new resolver problem fails publication checks.
 const ATTW = "@arethetypeswrong/cli@0.18.5";
-const KNOWN_TYPE_PROBLEMS = new Set([
-  "@kozmos/icons FalseCJS",
-  "@kozmos/product-contracts CJSResolvesToESM",
-  "@kozmos/react FalseCJS",
-]);
+const KNOWN_TYPE_PROBLEMS = new Set();
 
 // Every React major the packages' peer ranges accept.
 const REACT_MAJORS = [18, 19];
@@ -332,6 +329,26 @@ for (const { manifest } of packed) {
   }
 }
 
+// Rich POI details must also typecheck as a real installed-package consumer,
+// without widening legacy action labels or importing workspace source.
+samples.push({
+  file: "poi-details.tsx",
+  body: `import { POIDetailPanel } from "@kozmos/react";
+import type { POIDetailsPresentation, POIPresentation } from "@kozmos/product-contracts";
+const poi: POIPresentation = { id: "entry", name: "Entrance", floorId: "1", floorLabel: "Floor 1", media: [], actions: ["navigate"] };
+const details: POIDetailsPresentation = {
+  summary: [{ id: "access", kind: "property", label: "Accessibility", value: "Step-free", tone: "success", iconUrl: "/access.png", iconMonochrome: true }, { id: "price", kind: "price", label: "Price", value: "3 of 4", priceLevel: 3 }],
+  groups: [{ id: "amenities", heading: "Amenities", items: [{ id: "wifi", label: "WiFi", iconName: "wifi", iconUrl: "/wifi.png", iconMonochrome: true }] }],
+  tags: [{ id: "pay", label: "Payment", iconUrl: "/payment.png" }],
+  supplementaryActions: [{ action: "call", label: "Call" }],
+};
+export function Example() {
+  return <POIDetailPanel poi={poi} details={details}
+    actionLabels={{ navigate: "Go", favourite: "Favourite", bookmark: "Bookmark", share: "Share", order: "Order" }}
+    onAction={() => undefined} onSupplementaryAction={(action, id) => { console.log(action, id); }} />;
+}`,
+});
+
 const requirable = packed
   .filter(({ manifest }) => manifest.exports?.["."]?.require)
   .map(({ manifest }) => manifest.name);
@@ -358,7 +375,8 @@ if (typeof import.meta.resolve !== "function") {
 
 for (const name of ${JSON.stringify(requirable)}) {
   try {
-    results.push([Object.keys(require(name)).length > 0, "require(" + name + ") returns its exports"]);
+    const exports = require(name);
+    results.push([name === "@kozmos/product-contracts" ? Object.keys(exports).length === 0 : Object.keys(exports).length > 0, "require(" + name + ") returns its exports (contracts intentionally has no runtime API)"]);
   } catch (error) {
     results.push([false, "require(" + name + ") — " + error.message]);
   }
@@ -447,12 +465,98 @@ for (const major of REACT_MAJORS) {
     );
   }
 
+  const snippetMapping = writeReactSnippetFixtures(app, docSnippets);
+  writeSnippetNegativeControl(app);
+  let negativeOutput = "";
+  try {
+    run(
+      path.join(app, "node_modules/.bin/tsc"),
+      ["-p", "tsconfig.doc-snippets-negative.json"],
+      app,
+    );
+  } catch (error) {
+    negativeOutput = String(error.stdout || error.stderr || error);
+  }
+  if (
+    ["TS2305", "TS2322", "TS2304"].every((code) =>
+      negativeOutput.includes(code),
+    )
+  ) {
+    ok(
+      `React ${major}: negative control rejects missing exports, invalid props and undeclared application state`,
+    );
+  } else {
+    fail(
+      `React ${major}: snippet compiler negative control did not reject all expected errors:\n${negativeOutput}`,
+    );
+  }
+  try {
+    run(
+      path.join(app, "node_modules/.bin/tsc"),
+      ["-p", "tsconfig.doc-snippets.json"],
+      app,
+    );
+    ok(
+      `React ${major}: all ${Object.keys(snippetMapping).length} exact Docs recipes compile against installed tarballs (strict NodeNext; library checking enabled)`,
+    );
+  } catch (error) {
+    fail(
+      `React ${major}: Docs recipes fail:\n${String(error.stdout || error.stderr || error).trim()}\nSource mapping: ${path.join(app, "doc-snippets-map.json")}`,
+    );
+  }
+
   const readmeDir = path.join(app, "readme");
+  const modesDir = path.join(app, "module-modes");
+  fs.mkdirSync(modesDir);
+  const modesFixture = fs.readFileSync(
+    path.join(PACKAGES, "react/tests/types/package-modes.ts"),
+    "utf8",
+  );
+  for (const extension of ["mts", "cts"]) {
+    fs.writeFileSync(
+      path.join(modesDir, `consumer.${extension}`),
+      modesFixture,
+    );
+  }
+  for (const moduleMode of ["node16", "nodenext"]) {
+    try {
+      run(
+        path.join(app, "node_modules/.bin/tsc"),
+        [
+          "--noEmit",
+          "--strict",
+          "--esModuleInterop",
+          "--target",
+          "es2022",
+          "--module",
+          moduleMode,
+          "--moduleResolution",
+          moduleMode,
+          "module-modes/consumer.mts",
+          "module-modes/consumer.cts",
+        ],
+        app,
+      );
+      ok(
+        `React ${major}: strict ${moduleMode} ESM and CJS consumers (library checking enabled)`,
+      );
+    } catch (error) {
+      fail(
+        `React ${major}: ${moduleMode} declarations fail:\n${String(error.stdout || error.stderr || error).trim()}`,
+      );
+    }
+  }
   fs.mkdirSync(readmeDir);
   for (const { file, body } of samples) {
     // Every sample is its own module, as it would be in an app.
     fs.writeFileSync(path.join(readmeDir, file), `${body}\nexport {};\n`);
   }
+  // Positive AND negative public API assertions against the actual installed
+  // declarations, under each supported React major (not source aliases).
+  fs.copyFileSync(
+    path.join(PACKAGES, "react/tests/types/native-button.tsx"),
+    path.join(readmeDir, "native-button-contract.tsx"),
+  );
   // What a README sample leaves to the reader — the app it wraps, where
   // analytics events go — and what a bundler provides: a type for CSS imports.
   fs.writeFileSync(
@@ -488,7 +592,7 @@ declare module "*.css";
       app,
     );
     ok(
-      `React ${major}: ${samples.length} README code sample(s) type-check against the installed packages`,
+      `React ${major}: ${samples.length} README code sample(s) and the native Button API contract type-check against the installed packages`,
     );
   } catch (error) {
     const lines = String(error.stdout || error.stderr || error)
@@ -497,7 +601,7 @@ declare module "*.css";
       .filter((line) => line.includes("error TS"))
       .slice(0, 5);
     fail(
-      `React ${major}: README samples do not type-check:\n          ${lines.join("\n          ")}`,
+      `React ${major}: README samples or native Button API contract do not type-check:\n          ${lines.join("\n          ")}`,
     );
   }
 }

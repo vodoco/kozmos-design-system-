@@ -38,10 +38,17 @@ import { PlatformSnippets } from '../PlatformSnippets';
 
 <PlatformSnippets
   react={`
-import { NavigationAnnouncer } from '@kozmos/react';
-
-// Announces whenever the instruction changes
-<NavigationAnnouncer message={currentStep.instruction} isActive={isNavigating} />
+import { NavigationAnnouncer } from "@kozmos/react";
+// Pass instruction updates from the product's navigation state.
+export function Example({
+  instruction,
+  isNavigating,
+}: {
+  instruction: string;
+  isNavigating: boolean;
+}) {
+  return <NavigationAnnouncer message={instruction} isActive={isNavigating} />;
+}
   `}
   vue={`
 <script setup>

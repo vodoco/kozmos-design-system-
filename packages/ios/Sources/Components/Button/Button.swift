@@ -78,11 +78,13 @@ public struct KozmosButton: View {
                 minWidth: size == .icon ? 44 : nil,
                 minHeight: 44
             )
-            .background(backgroundColor)
-            .cornerRadius(KozmosDimensions.semanticsRadiusControl)
-            .overlay(
-                RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
-                    .stroke(borderColor, lineWidth: variant == .outline ? 1 : 0)
+            .kozmosButtonSurface(
+                variant == .glass ? .glass : nil,
+                fill: backgroundColor,
+                stroke: borderColor,
+                strokeWidth: variant == .outline ? 1 : 0,
+                // The corner the button always had; a continuous one would move every baseline.
+                shape: RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
             )
         }
         .disabled(isDisabled || isLoading)
@@ -159,7 +161,8 @@ public struct KozmosButton: View {
         case .outline, .ghost: return Color.clear
         case .secondary: return KozmosColors.componentsPrimaryButtonsNeutralButtonBackgroundIdle
         case .link: return Color.clear
-        case .glass: return KozmosColors.primitivesColorsForeground0.opacity(0.16)
+        // The glass variant is the glass surface; the fill is the surface's.
+        case .glass: return Color.clear
         }
     }
     
@@ -172,7 +175,7 @@ public struct KozmosButton: View {
         case .destructive: return KozmosColors.componentsPrimaryButtonsDangerButtonForegroundContentIdle
         case .outline, .ghost, .link: return KozmosColors.primitivesColorsTheme500
         case .secondary: return KozmosColors.primitivesColorsForeground100
-        case .glass: return KozmosColors.primitivesColorsForeground1000
+        case .glass: return KozmosColors.primitivesColorsForeground100
         }
     }
     
@@ -183,6 +186,28 @@ public struct KozmosButton: View {
         switch variant {
         case .outline: return KozmosColors.primitivesColorsForeground300
         default: return Color.clear
+        }
+    }
+}
+
+extension View {
+    /// A button's surface: the glass surface role for the glass variant —
+    /// composed from `Semantics.Effect.glass`, as every glass surface is —
+    /// or the variant's own fill and edge.
+    @ViewBuilder
+    func kozmosButtonSurface<S: InsettableShape>(
+        _ style: KozmosSurfaceStyle?,
+        fill: Color,
+        stroke: Color,
+        strokeWidth: CGFloat,
+        shape: S
+    ) -> some View {
+        if let style {
+            kozmosSurface(shape, style: style)
+        } else {
+            background(fill)
+                .clipShape(shape)
+                .overlay(shape.stroke(stroke, lineWidth: strokeWidth))
         }
     }
 }

@@ -23,17 +23,17 @@ cannot".
 
 | Measure                                   | Result |
 | ----------------------------------------- | ------ |
-| Components scanned                        | 98     |
-| Declaring at least one React variant axis | 30     |
-| Variations that are compositional only    | 68     |
-| Components with variant gaps — iOS        | 3/30   |
-| Components with variant gaps — Android    | 3/30   |
-| Components with variant gaps — Figma      | 3/30   |
-| Components with variant gaps — Vue        | 0/30   |
-| Components absent entirely — iOS          | 0/98   |
-| Components absent entirely — Android      | 0/98   |
-| Components absent entirely — Figma        | 4/98   |
-| Components absent entirely — Vue          | 1/98   |
+| Components scanned                        | 104    |
+| Declaring at least one React variant axis | 29     |
+| Variations that are compositional only    | 75     |
+| Components with variant gaps — iOS        | 4/29   |
+| Components with variant gaps — Android    | 4/29   |
+| Components with variant gaps — Figma      | 4/29   |
+| Components with variant gaps — Vue        | 0/29   |
+| Components absent entirely — iOS          | 1/104  |
+| Components absent entirely — Android      | 0/104  |
+| Components absent entirely — Figma        | 8/104  |
+| Components absent entirely — Vue          | 7/104  |
 
 <!-- /generated:headline -->
 
@@ -52,6 +52,10 @@ component gains an axis on one platform before another.
 <!-- generated:gaps -->
 
 ```
+AdaptiveMapShell
+  - ios missing axes -> panelSizing (fraction, content)
+  - android missing axes -> panelSizing (fraction, content)
+  - figma missing axes -> panelSizing (fraction, content)
 Icon
   - figma: component/set absent
 Link
@@ -135,21 +139,21 @@ The design-system contract here is the **spacing token**, not the container.
 
 <!-- generated:absent -->
 
-### iOS — 0 of 98
+### iOS — 1 of 104
+
+Surface.
+
+### Android — 0 of 104
 
 None.
 
-### Android — 0 of 98
+### Figma — 8 of 104
 
-None.
+FieldWrapper, Icon, Itinerary, ManoeuvreCard, NavigationAnnouncer, RouteProgressRail, Surface, ThemeProvider.
 
-### Figma — 4 of 98
+### Vue — 7 of 104
 
-FieldWrapper, Icon, NavigationAnnouncer, ThemeProvider.
-
-### Vue — 1 of 98
-
-MetaStrip.
+AISearchButton, CategoryField, Itinerary, ManoeuvreCard, MetaStrip, RouteProgressRail, Surface.
 
 <!-- /generated:absent -->
 

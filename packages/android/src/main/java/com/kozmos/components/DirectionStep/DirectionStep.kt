@@ -16,6 +16,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.Elevator
+import androidx.compose.material.icons.filled.Escalator
+import androidx.compose.material.icons.filled.Stairs
+import androidx.compose.material.icons.filled.UTurnLeft
+import androidx.compose.material.icons.filled.ArrowRightAlt
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.TurnLeft
 import androidx.compose.material.icons.filled.TurnRight
@@ -28,10 +34,48 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
+/**
+ * What a step of a route asks for. The four turns, and the transitions the
+ * routing engines describe: a level change by lift, escalator or stairs — up
+ * or down — or by something unnamed; a same-level transition, a walkway or a
+ * corridor to another building; and turning back. Each platform draws the
+ * closest glyph its own icon set has, and the instruction's words carry the
+ * rest.
+ */
 enum class DirectionType {
-    Straight, Left, Right, Destination
+    Straight, Left, Right, Destination,
+    LiftUp, LiftDown,
+    EscalatorUp, EscalatorDown,
+    StairsUp, StairsDown,
+    /** A level change by a transition the route does not name. */
+    LevelUp, LevelDown,
+    /** A transition on the same level: a walkway, a corridor, another building. */
+    Transition,
+    TurnBack
+}
+
+/**
+ * The arrow for a direction, one table for every part that draws one.
+ * Turn icons must NOT auto-mirror: "turn left" stays a physical left turn
+ * in RTL locales. Only reading-order affordances (back, forward, chevrons)
+ * belong to Icons.AutoMirrored. Material has a lift, an escalator and
+ * stairs of its own, with no direction: the instruction says up or down; an
+ * unnamed level change shows the direction of travel.
+ */
+fun DirectionType.icon(): ImageVector = when (this) {
+    DirectionType.Straight -> Icons.Default.ArrowUpward
+    DirectionType.Left -> Icons.Default.TurnLeft
+    DirectionType.Right -> Icons.Default.TurnRight
+    DirectionType.Destination -> Icons.Default.LocationOn
+    DirectionType.LiftUp, DirectionType.LiftDown -> Icons.Default.Elevator
+    DirectionType.EscalatorUp, DirectionType.EscalatorDown -> Icons.Default.Escalator
+    DirectionType.StairsUp, DirectionType.StairsDown -> Icons.Default.Stairs
+    DirectionType.LevelUp -> Icons.Default.ArrowUpward
+    DirectionType.LevelDown -> Icons.Default.ArrowDownward
+    DirectionType.Transition -> Icons.Default.ArrowRightAlt
+    DirectionType.TurnBack -> Icons.Default.UTurnLeft
 }
 
 @Composable
@@ -42,22 +86,14 @@ fun KozmosDirectionStep(
     distance: String? = null,
     duration: String? = null
 ) {
-    // Turn icons must NOT auto-mirror: "turn left" stays a physical left turn
-    // in RTL locales. Only reading-order affordances (back, forward, chevrons)
-    // belong to Icons.AutoMirrored.
-    val icon = when (type) {
-        DirectionType.Straight -> Icons.Default.ArrowUpward
-        DirectionType.Left -> Icons.Default.TurnLeft
-        DirectionType.Right -> Icons.Default.TurnRight
-        DirectionType.Destination -> Icons.Default.LocationOn
-    }
+    val icon = type.icon()
 
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
-            .background(KozmosColors.primitivesColorsBackground0)
-            .border(1.dp, KozmosColors.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
+            .background(KozmosThemeTokens.primitivesColorsBackground0)
+            .border(1.dp, KozmosThemeTokens.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
             .padding(KozmosDimensions.primitivesLayoutSpacing150),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -65,13 +101,13 @@ fun KozmosDirectionStep(
             modifier = Modifier
                 .size(KozmosDimensions.primitivesLayoutSizing500)
                 .clip(CircleShape)
-                .background(KozmosColors.primitivesColorsTheme500.copy(alpha = 0.1f)),
+                .background(KozmosThemeTokens.primitivesColorsTheme500.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = KozmosColors.primitivesColorsTheme500,
+                tint = KozmosThemeTokens.primitivesColorsTheme500,
                 modifier = Modifier.size(KozmosDimensions.primitivesLayoutSizing300)
             )
         }
@@ -82,13 +118,13 @@ fun KozmosDirectionStep(
             Text(
                 text = instruction,
                 style = MaterialTheme.typography.titleMedium,
-                color = KozmosColors.primitivesColorsForeground100
+                color = KozmosThemeTokens.primitivesColorsForeground100
             )
             if (distance != null || duration != null) {
                 Text(
                     text = "${distance ?: ""} ${if (duration != null) "• $duration" else ""}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = KozmosColors.primitivesColorsForeground500
+                    color = KozmosThemeTokens.primitivesColorsForeground500
                 )
             }
         }

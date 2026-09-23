@@ -1,4 +1,5 @@
-import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as MenuStories from "./Menu.stories";
 import { PlatformSnippets } from "../PlatformSnippets";
 
@@ -20,9 +21,31 @@ Displays the Menu interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Menu } from "@kozmos/react"
-
-<Menu />
+import { useState } from "react";
+import {
+  Menu,
+  MenuTrigger,
+  MenuContent,
+  MenuItem,
+  Button,
+} from "@kozmos/react";
+export function Example() {
+  const [sort, setSort] = useState("Nearby");
+  return (
+    <>
+      <Menu>
+        <MenuTrigger asChild>
+          <Button>Sort places</Button>
+        </MenuTrigger>
+        <MenuContent>
+          <MenuItem onSelect={() => setSort("Nearby")}>Nearby</MenuItem>
+          <MenuItem onSelect={() => setSort("Name")}>Name</MenuItem>
+        </MenuContent>
+      </Menu>
+      <output>Sort: {sort}</output>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
-import { chromium, webkit } from "playwright";
+import { chromium, firefox, webkit } from "playwright";
 
 /** Bundle built public package entry points, never a React source alias. */
 export async function buildReactFixture(entry) {
@@ -42,12 +42,18 @@ export async function buildReactFixture(entry) {
   };
 }
 
-export function launchFixtureBrowser() {
-  const browserType =
-    process.env.ADAPTIVE_BROWSER === "webkit" ? webkit : chromium;
-  return browserType.launch({
-    channel: process.env.ADAPTIVE_BROWSER === "chrome" ? "chrome" : undefined,
+export async function launchFixtureBrowser() {
+  const requested = process.env.ADAPTIVE_BROWSER ?? "chromium";
+  const engines = { chromium, chrome: chromium, firefox, webkit };
+  if (!Object.hasOwn(engines, requested))
+    throw new Error(`Unsupported ADAPTIVE_BROWSER: ${requested}`);
+  const browser = await engines[requested].launch({
+    channel: requested === "chrome" ? "chrome" : undefined,
   });
+  console.log(
+    `Browser: ${requested} (${browser.browserType().name()} ${browser.version()})`,
+  );
+  return browser;
 }
 
 export async function settleLayout(page) {

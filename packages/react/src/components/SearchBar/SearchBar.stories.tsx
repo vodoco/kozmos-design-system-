@@ -29,7 +29,7 @@ export const FloatingOverlay: Story = {
   render: () => {
     const [val, setVal] = useState("");
     return (
-      <div className="relative w-full min-w-[320px] md:min-w-[800px] h-[500px] bg-slate-100 rounded-panel overflow-hidden border">
+      <div className="relative w-full min-w-0 md:min-w-[800px] h-[500px] bg-muted rounded-panel overflow-hidden border">
         <span className="absolute inset-0 flex items-center justify-center text-muted-foreground font-mono">
           Map rendering simulation
         </span>

@@ -1,4 +1,5 @@
-import { Meta, Canvas, Controls } from "@storybook/blocks";
+import { Meta, Canvas } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as Stories from "./BrowseCategoriesPanel.stories";
 
 <Meta of={Stories} />
@@ -11,3 +12,7 @@ last row reachable on mobile.
 
 <Canvas of={Stories.Default} />
 <Controls />
+
+## A category's colours
+
+`tint` returns a `CategoryTint` per category — `{ accent, fill, onFill }` — and each tile wears it; leave it out for the theme's colour.

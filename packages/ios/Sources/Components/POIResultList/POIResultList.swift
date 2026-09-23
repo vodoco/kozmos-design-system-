@@ -24,6 +24,7 @@ public struct KozmosPOIResultList<EmptyStateContent: View>: View {
     private let resultCountLabel: String
     private let selectedPoiId: String?
     private let featuredLabel: String
+    private let currentFloorId: String?
     private let onSelect: (String) -> Void
     private let emptyState: EmptyStateContent
 
@@ -33,6 +34,7 @@ public struct KozmosPOIResultList<EmptyStateContent: View>: View {
         label: String = "Points of interest",
         selectedPoiId: String? = nil,
         featuredLabel: String = "Featured",
+        currentFloorId: String? = nil,
         onSelect: @escaping (String) -> Void,
         @ViewBuilder emptyState: () -> EmptyStateContent
     ) {
@@ -41,6 +43,7 @@ public struct KozmosPOIResultList<EmptyStateContent: View>: View {
         self.label = label
         self.selectedPoiId = selectedPoiId
         self.featuredLabel = featuredLabel
+        self.currentFloorId = currentFloorId
         self.onSelect = onSelect
         self.emptyState = emptyState()
     }
@@ -64,7 +67,7 @@ public struct KozmosPOIResultList<EmptyStateContent: View>: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
                             .strokeBorder(
-                                KozmosColors.primitivesColorsForeground300,
+                                KozmosColors.semanticsBorderSubtle,
                                 style: StrokeStyle(lineWidth: 1, dash: [4, 4])
                             )
                     )
@@ -75,6 +78,7 @@ public struct KozmosPOIResultList<EmptyStateContent: View>: View {
                             poi: item.poi,
                             result: item.result.selecting(selectedPoiId),
                             featuredLabel: featuredLabel,
+                    currentFloorId: currentFloorId,
                             onSelect: onSelect
                         )
                     }

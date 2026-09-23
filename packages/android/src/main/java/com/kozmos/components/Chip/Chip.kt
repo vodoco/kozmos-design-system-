@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,7 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.tokens.KozmosDimensions
 
 enum class ChipVariant {
@@ -151,38 +152,40 @@ private data class ChipMetrics(
     val fontSize: androidx.compose.ui.unit.TextUnit
 )
 
+@Composable
+@ReadOnlyComposable
 private fun chipColors(variant: ChipVariant, selected: Boolean): ChipColors {
     if (selected) {
         return when (variant) {
             ChipVariant.Destructive -> ChipColors(
-                container = KozmosColors.componentsPrimaryButtonsDangerButtonBackgroundIdle,
-                content = KozmosColors.componentsPrimaryButtonsDangerButtonForegroundContentIdle,
-                border = KozmosColors.componentsPrimaryButtonsDangerButtonBackgroundIdle
+                container = KozmosThemeTokens.componentsPrimaryButtonsDangerButtonBackgroundIdle,
+                content = KozmosThemeTokens.componentsPrimaryButtonsDangerButtonForegroundContentIdle,
+                border = KozmosThemeTokens.componentsPrimaryButtonsDangerButtonBackgroundIdle
             )
             ChipVariant.Neutral,
             ChipVariant.Brand -> ChipColors(
-                container = KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle,
-                content = KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle,
-                border = KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle
+                container = KozmosThemeTokens.componentsPrimaryButtonsThemedButtonBackgroundIdle,
+                content = KozmosThemeTokens.componentsPrimaryButtonsThemedButtonForegroundContentIdle,
+                border = KozmosThemeTokens.componentsPrimaryButtonsThemedButtonBackgroundIdle
             )
         }
     }
 
     return when (variant) {
         ChipVariant.Neutral -> ChipColors(
-            container = KozmosColors.primitivesColorsBackground0,
-            content = KozmosColors.primitivesColorsForeground100,
-            border = KozmosColors.primitivesColorsBackground200
+            container = KozmosThemeTokens.primitivesColorsBackground0,
+            content = KozmosThemeTokens.primitivesColorsForeground100,
+            border = KozmosThemeTokens.primitivesColorsBackground200
         )
         ChipVariant.Brand -> ChipColors(
-            container = KozmosColors.primitivesColorsTheme0,
-            content = KozmosColors.componentsSecondaryButtonsThemedButtonForegroundContentIdle,
-            border = KozmosColors.primitivesColorsTheme200
+            container = KozmosThemeTokens.primitivesColorsTheme0,
+            content = KozmosThemeTokens.componentsSecondaryButtonsThemedButtonForegroundContentIdle,
+            border = KozmosThemeTokens.primitivesColorsTheme200
         )
         ChipVariant.Destructive -> ChipColors(
-            container = KozmosColors.primitivesColorsEmotionalDanger0,
-            content = KozmosColors.componentsSecondaryButtonsDangerButtonForegroundContentIdle,
-            border = KozmosColors.primitivesColorsEmotionalDanger200
+            container = KozmosThemeTokens.primitivesColorsEmotionalDanger0,
+            content = KozmosThemeTokens.componentsSecondaryButtonsDangerButtonForegroundContentIdle,
+            border = KozmosThemeTokens.primitivesColorsEmotionalDanger200
         )
     }
 }

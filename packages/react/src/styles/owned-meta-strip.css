@@ -1,0 +1,54 @@
+@kozmos-owned {
+  .kozmos-meta-strip {
+    @apply border-y border-border bg-background;
+    position: relative;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    min-block-size: 4rem;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    margin: 0;
+    padding: 0;
+  }
+  .kozmos-meta-strip:focus-visible {
+    @apply outline outline-2 outline-ring;
+    outline-offset: -2px;
+  }
+  .kozmos-meta-item {
+    display: flex;
+    flex: 1 0 8rem;
+    min-inline-size: min-content;
+    flex-direction: column-reverse;
+    align-items: center;
+    justify-content: center;
+    gap: 0.125rem;
+    padding: 0.75rem 1rem;
+    overflow-wrap: normal;
+  }
+  .kozmos-meta-item + .kozmos-meta-item {
+    @apply border-s border-border;
+  }
+  .kozmos-meta-label {
+    @apply text-xs text-muted-foreground;
+    text-align: center;
+  }
+  .kozmos-meta-label-hidden {
+    @apply sr-only;
+  }
+  .kozmos-meta-value {
+    @apply text-base font-medium text-foreground;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin: 0;
+    text-align: start;
+  }
+  .kozmos-meta-icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+  }
+}

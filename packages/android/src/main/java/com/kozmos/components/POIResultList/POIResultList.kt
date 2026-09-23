@@ -1,6 +1,5 @@
 package com.kozmos.components.poiresultlist
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,8 +19,9 @@ import androidx.compose.ui.unit.dp
 import com.kozmos.components.poiresultcard.KozmosPOIResultCard
 import com.kozmos.contracts.KozmosPOIPresentation
 import com.kozmos.contracts.KozmosPOIResultPresentation
-import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.tokens.KozmosThemeTokens
+import com.kozmos.components.surface.kozmosDashedEdge
 
 /** One row of a POI result list, pairing a POI with its result metadata. */
 data class KozmosPOIResultListItem(
@@ -49,7 +49,9 @@ fun KozmosPOIResultList(
     label: String = "Points of interest",
     selectedPoiId: String? = null,
     featuredLabel: String = "Featured",
-    emptyState: (@Composable () -> Unit)? = null
+    emptyState: (@Composable () -> Unit)? = null,
+    /** The floor the map shows: a result on it carries a dot before its floor. */
+    currentFloorId: String? = null
 ) {
     Column(
         modifier = modifier
@@ -69,11 +71,15 @@ fun KozmosPOIResultList(
         )
 
         if (items.isEmpty()) {
+            // Dashed, in the container edge's role, themed, as React's
+            // (border-dashed border-border) and SwiftUI's are; it was a solid
+            // foreground/300 edge until 2026-09-22.
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .kozmosDashedEdge(KozmosThemeTokens.semanticsBorderSubtle, KozmosDimensions.semanticsRadiusPanel),
                 shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusPanel),
-                color = KozmosColors.primitivesColorsBackground100.copy(alpha = 0.4f),
-                border = BorderStroke(1.dp, KozmosColors.primitivesColorsForeground300)
+                color = KozmosThemeTokens.primitivesColorsBackground100.copy(alpha = 0.4f)
             ) {
                 Box(
                     modifier = Modifier.padding(KozmosDimensions.primitivesLayoutSpacing300),
@@ -85,6 +91,7 @@ fun KozmosPOIResultList(
         } else {
             items.forEach { item ->
                 KozmosPOIResultCard(
+                    currentFloorId = currentFloorId,
                     poi = item.poi,
                     result = item.result.selecting(selectedPoiId),
                     onSelect = onSelect,

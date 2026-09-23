@@ -191,7 +191,7 @@ fun KozmosMultiSelect(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(KozmosThemeTokens.primitivesColorsBackground0, fieldShape)
-                        .border(1.dp, KozmosThemeTokens.primitivesColorsForeground500, fieldShape)
+                        .border(1.dp, KozmosThemeTokens.semanticsBorderInput, fieldShape)
                         .padding(KozmosDimensions.primitivesLayoutSpacing150)
                 )
             } else {

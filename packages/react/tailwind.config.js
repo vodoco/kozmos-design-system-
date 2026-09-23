@@ -1,16 +1,20 @@
 /** @type {import('tailwindcss').Config} */
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const plugin = require("tailwindcss/plugin");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { withTokenAlpha } = require("./postcss/token-alpha.cjs");
 
 module.exports = {
-  content: ["./src/**/*.{js,ts,jsx,tsx}"],
+  // Keep utility overrides available during migration, including utilities
+  // now consumed by @apply recipes instead of JSX class strings.
+  content: ["./src/**/*.{js,ts,jsx,tsx,css}"],
   darkMode: [
     "variant",
     '@scope (:scope[data-theme="dark"]) to ([data-kozmos-root]) { & }',
   ],
   theme: {
     extend: {
-      colors: {
+      colors: withTokenAlpha({
         // Primitive / Brand Colors
         brand: {
           500: "var(--primitives-colors-theme-500)",
@@ -67,18 +71,30 @@ module.exports = {
         destructive: {
           DEFAULT: "var(--primitives-colors-emotional-danger-600)",
           foreground: "var(--primitives-colors-foreground-1000)",
+          // The emotion as text or a glyph on a page, card or sheet: DEFAULT is the
+          // fill, one step lighter, and fails 4.5:1 as text on the greys.
+          text: "var(--semantics-emotion-danger-text)",
         },
         success: {
           DEFAULT: "var(--primitives-colors-emotional-success-800)",
           foreground: "var(--primitives-colors-foreground-1000)",
+          // The emotion as text or a glyph on a page, card or sheet: DEFAULT is the
+          // fill, one step lighter, and fails 4.5:1 as text on the greys.
+          text: "var(--semantics-emotion-success-text)",
         },
         warning: {
           DEFAULT: "var(--primitives-colors-emotional-alert-800)",
           foreground: "var(--primitives-colors-foreground-1000)",
+          // The emotion as text or a glyph on a page, card or sheet: DEFAULT is the
+          // fill, one step lighter, and fails 4.5:1 as text on the greys.
+          text: "var(--semantics-emotion-alert-text)",
         },
         info: {
           DEFAULT: "var(--primitives-colors-emotional-info-700)",
           foreground: "var(--primitives-colors-foreground-1000)",
+          // The emotion as text or a glyph on a page, card or sheet: DEFAULT is the
+          // fill, one step lighter, and fails 4.5:1 as text on the greys.
+          text: "var(--semantics-emotion-informative-text)",
         },
         // Border roles. `border` is the container edge, `border-input` the
         // boundary of a control; both live in Semantics.Border in
@@ -87,6 +103,13 @@ module.exports = {
         border: "var(--semantics-border-subtle)",
         input: "var(--semantics-border-input)",
         ring: "var(--primitives-colors-theme-600)",
+      }),
+      // A bare `border` is the container edge, as `border` above says: the
+      // role. Until 2026-09-22 it was Tailwind's own gray-200 (#e5e7eb), in
+      // the dark as in the light, on every border the package left bare —
+      // Dialog, Popover, Toast, Menu, the listbox, the tables.
+      borderColor: {
+        DEFAULT: "var(--semantics-border-subtle)",
       },
       borderRadius: {
         sm: "var(--primitives-radius-sm)",
@@ -231,7 +254,8 @@ module.exports = {
           position: "relative", // Ensure pseudo-elements align
           "backdrop-filter": "var(--glass-filter)",
           "-webkit-backdrop-filter": "var(--glass-filter)",
-          "background-color": "rgba(255, 255, 255, var(--glass-opacity))", // Fallback/Light
+          "background-color":
+            "rgba(var(--kozmos-glass-rgb), var(--glass-opacity))",
           "background-image": "var(--glass-noise-image, none)",
           border: "1px solid rgba(255, 255, 255, var(--glass-bevel-opacity))",
           "will-change": "backdrop-filter, transform",
@@ -255,11 +279,6 @@ module.exports = {
         ".glass > *": {
           position: "relative",
           "z-index": "2", // Ensure content is above surface texture
-        },
-        '@scope (:scope[data-theme="dark"]) to ([data-kozmos-root])': {
-          ".glass": {
-            "background-color": "rgba(0, 0, 0, var(--glass-opacity))",
-          },
         },
         ".glass-spotlight": {
           position: "relative",

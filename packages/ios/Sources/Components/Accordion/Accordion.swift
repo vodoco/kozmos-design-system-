@@ -46,7 +46,7 @@ public struct KozmosAccordionTrigger: View {
             .padding(.vertical, KozmosDimensions.primitivesLayoutSpacing200)
         }
         .buttonStyle(PlainButtonStyle())
-        Divider().background(KozmosColors.primitivesColorsBackground300)
+        Divider().overlay(KozmosColors.semanticsBorderSubtle)
     }
 }
 

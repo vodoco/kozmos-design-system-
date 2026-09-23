@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { SegmentedControl } from "./SegmentedControl";
@@ -10,6 +10,19 @@ const items = [
 ];
 
 describe("SegmentedControl", () => {
+  it("reveals the focused segment and keeps disabled overflowing content keyboard reachable", () => {
+    const { rerender } = render(<SegmentedControl items={items} />);
+    const last = screen.getByRole("radio", { name: "Three" });
+    const scroll = vi.fn();
+    last.scrollIntoView = scroll;
+    fireEvent.focus(last);
+    expect(scroll).toHaveBeenCalledWith({
+      block: "nearest",
+      inline: "nearest",
+    });
+    rerender(<SegmentedControl items={items} disabled />);
+    expect(screen.getByRole("group")).toHaveAttribute("tabindex", "0");
+  });
   it("renders items as a single-choice segmented group", () => {
     render(<SegmentedControl defaultValue="one" items={items} />);
 

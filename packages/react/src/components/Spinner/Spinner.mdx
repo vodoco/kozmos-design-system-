@@ -1,4 +1,5 @@
-import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as SpinnerStories from "./Spinner.stories";
 import { PlatformSnippets } from "../PlatformSnippets";
 
@@ -20,9 +21,14 @@ Displays the Spinner interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Spinner } from "@kozmos/react"
-
-<Spinner />
+import { Spinner } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Spinner />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

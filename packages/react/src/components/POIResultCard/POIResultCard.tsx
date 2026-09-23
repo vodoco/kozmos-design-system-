@@ -3,7 +3,7 @@ import type {
   POIPresentation,
   POIResultPresentation,
 } from "@kozmos/product-contracts";
-import { Clock3, MapPin, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { cn } from "../../utils";
 import { useKozmosAnalytics } from "../../utils/analytics";
 
@@ -20,6 +20,8 @@ export interface POIResultCardProps extends Omit<
   onSelect: (poiId: string) => void;
   featuredLabel?: string;
   selectionLabel?: string;
+  /** The floor the map shows: a result on it carries a dot before its floor. */
+  currentFloorId?: string;
 }
 
 const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
@@ -31,6 +33,7 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
       onSelect,
       featuredLabel = "Featured",
       selectionLabel,
+      currentFloorId,
       id = getPOIResultDomId(poi.id),
       ...props
     },
@@ -42,6 +45,8 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
     const locationLabel = [poi.floorLabel, poi.buildingLabel]
       .filter(Boolean)
       .join(" · ");
+    const onCurrentFloor =
+      currentFloorId !== undefined && result.floorId === currentFloorId;
 
     const handleSelect = () => {
       if (!available) return;
@@ -57,13 +62,14 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
       <article
         ref={ref}
         className={cn(
-          "relative rounded-container border bg-card text-card-foreground shadow-raised transition-shadow",
+          "relative rounded-control border bg-card text-card-foreground transition-shadow",
           result.selected
             ? "border-primary ring-2 ring-primary/20"
             : "border-border",
           result.featured && "mt-3 border-warning",
           className,
         )}
+        data-current-floor={onCurrentFloor || undefined}
         data-featured={result.featured || undefined}
         data-poi-id={poi.id}
         data-selected={result.selected || undefined}
@@ -81,17 +87,13 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
           aria-describedby={!available ? unavailableId : undefined}
           aria-label={selectionLabel}
           aria-pressed={result.selected}
-          className="grid min-h-24 w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-[inherit] p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          className="grid min-h-20 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-[inherit] px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           disabled={!available}
           onClick={handleSelect}
           type="button"
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-pill bg-primary text-sm font-bold text-primary-foreground">
-            {result.resultIndex}
-          </span>
-
           <span className="min-w-0">
-            <span className="block truncate text-base font-semibold text-foreground">
+            <span className="block truncate text-lg font-normal leading-tight text-foreground">
               {poi.name}
             </span>
             {poi.categoryLabel && (
@@ -99,8 +101,13 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
                 {poi.categoryLabel}
               </span>
             )}
-            <span className="mt-1 flex min-w-0 items-center gap-1 text-sm text-muted-foreground">
-              <MapPin aria-hidden="true" className="h-4 w-4 shrink-0" />
+            <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
+              {onCurrentFloor && (
+                <span
+                  aria-hidden="true"
+                  className="h-1.5 w-1.5 shrink-0 rounded-pill bg-primary"
+                />
+              )}
               <span className="truncate">{locationLabel}</span>
             </span>
             {poi.availabilityLabel && (
@@ -108,7 +115,7 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
                 className={cn(
                   "mt-1 block text-xs font-semibold",
                   poi.availability === "open"
-                    ? "text-success"
+                    ? "text-success-text"
                     : "text-muted-foreground",
                 )}
               >
@@ -117,24 +124,16 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
             )}
           </span>
 
-          <span className="flex min-w-16 flex-col items-end gap-2">
-            {poi.logo ? (
+          <span className="flex shrink-0 flex-col items-end gap-2">
+            {poi.logo && (
               <img
                 alt={poi.logo.alt}
-                className="h-10 w-10 rounded-control border border-border object-contain"
+                className="h-12 w-12 rounded-control border border-border object-contain"
                 src={poi.logo.src}
               />
-            ) : (
-              <span
-                aria-hidden="true"
-                className="flex h-10 w-10 items-center justify-center rounded-control bg-muted text-sm font-bold text-muted-foreground"
-              >
-                {poi.name.slice(0, 1).toUpperCase()}
-              </span>
             )}
             {result.travelEstimate && (
-              <span className="flex items-center gap-1 whitespace-nowrap text-xs font-medium text-foreground">
-                <Clock3 aria-hidden="true" className="h-3.5 w-3.5" />
+              <span className="whitespace-nowrap text-sm text-foreground">
                 {result.travelEstimate.durationLabel}
               </span>
             )}

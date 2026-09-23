@@ -23,7 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kozmos.components.KozmosEmotion
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 enum class KozmosTagVariant {
     Default,
@@ -49,16 +49,16 @@ fun KozmosTag(
     val emotionOnSurface = emotion?.onSurface
     val emotionText = emotion?.text
     val backgroundColor = when (variant) {
-        KozmosTagVariant.Default -> KozmosColors.primitivesColorsTheme500
-        KozmosTagVariant.Secondary -> KozmosColors.primitivesColorsBackground100
-        KozmosTagVariant.Destructive -> KozmosColors.semanticsDataRed
+        KozmosTagVariant.Default -> KozmosThemeTokens.primitivesColorsTheme500
+        KozmosTagVariant.Secondary -> KozmosThemeTokens.primitivesColorsBackground100
+        KozmosTagVariant.Destructive -> KozmosThemeTokens.semanticsDataRed
         KozmosTagVariant.Outline -> Color.Transparent
     }
     val foregroundColor = when (variant) {
         KozmosTagVariant.Default,
-        KozmosTagVariant.Destructive -> KozmosColors.primitivesColorsBackground0
+        KozmosTagVariant.Destructive -> KozmosThemeTokens.primitivesColorsBackground0
         KozmosTagVariant.Secondary,
-        KozmosTagVariant.Outline -> KozmosColors.primitivesColorsForeground900
+        KozmosTagVariant.Outline -> KozmosThemeTokens.primitivesColorsForeground900
     }
     val resolvedBackground = when {
         emotion == null -> backgroundColor
@@ -73,7 +73,7 @@ fun KozmosTag(
     val borderedModifier = if (variant == KozmosTagVariant.Outline) {
         Modifier.border(
             width = 1.dp,
-            color = emotionText ?: KozmosColors.primitivesColorsBackground200,
+            color = emotionText ?: KozmosThemeTokens.primitivesColorsBackground200,
             shape = shape
         )
     } else {

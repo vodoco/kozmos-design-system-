@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 enum class SegmentedControlSize {
     Sm, Default, Lg
@@ -49,10 +49,10 @@ fun KozmosSegmentedControl(
             .then(if (fullWidth) Modifier.fillMaxWidth() else Modifier)
             .heightIn(min = metrics.containerHeight)
             .alpha(if (enabled) 1f else 0.5f)
-            .border(1.dp, KozmosColors.primitivesColorsBackground200, containerShape),
+            .border(1.dp, KozmosThemeTokens.primitivesColorsBackground200, containerShape),
         shape = containerShape,
-        color = KozmosColors.primitivesColorsBackground100,
-        contentColor = KozmosColors.primitivesColorsForeground500
+        color = KozmosThemeTokens.primitivesColorsBackground100,
+        contentColor = KozmosThemeTokens.primitivesColorsForeground500
     ) {
         Row(
             modifier = Modifier.padding(4.dp),
@@ -73,7 +73,7 @@ fun KozmosSegmentedControl(
                     .clip(RoundedCornerShape(12.dp))
                     .background(
                         if (selected) {
-                            KozmosColors.primitivesColorsBackground0
+                            KozmosThemeTokens.primitivesColorsBackground0
                         } else {
                             Color.Transparent
                         }
@@ -88,9 +88,9 @@ fun KozmosSegmentedControl(
                         text = label,
                         modifier = Modifier.padding(horizontal = metrics.horizontalPadding),
                         color = if (selected) {
-                            KozmosColors.primitivesColorsForeground0
+                            KozmosThemeTokens.primitivesColorsForeground0
                         } else {
-                            KozmosColors.primitivesColorsForeground500
+                            KozmosThemeTokens.primitivesColorsForeground500
                         },
                         fontSize = metrics.fontSize,
                         fontWeight = FontWeight.Medium,

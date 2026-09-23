@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "../../utils";
+import { scrollHorizontalWithKeyboard } from "../../utils/keyboard-scroll";
 
 /**
  * A row of small facts about one thing, each a label and a value.
@@ -23,15 +24,19 @@ import { cn } from "../../utils";
 const MetaStrip = React.forwardRef<
   HTMLDListElement,
   React.HTMLAttributes<HTMLDListElement>
->(({ className, children, ...props }, ref) => (
+>(({ className, children, onKeyDown, ...props }, ref) => (
   <dl
     ref={ref}
+    tabIndex={0}
+    onKeyDown={(event) => {
+      onKeyDown?.(event);
+      scrollHorizontalWithKeyboard(event);
+    }}
     className={cn(
       // The source strip is wider than the card that holds it, so it scrolls
       // rather than wraps: a fact tile that has wrapped to a second row reads
       // as a different kind of thing.
-      "m-0 flex h-16 items-stretch overflow-x-auto overscroll-x-contain border-y border-border bg-background p-0",
-      "divide-x divide-border",
+      "kozmos-reset kozmos-meta-strip",
       className,
     )}
     data-slot="meta-strip"
@@ -59,20 +64,23 @@ const MetaStripItem = React.forwardRef<HTMLDivElement, MetaStripItemProps>(
         // `dt` must come before its `dd` for the pair to be read as a pair, and
         // the label is drawn under the value — so the DOM order is the accessible
         // one and `flex-col-reverse` does the drawing.
-        "flex min-w-32 shrink-0 flex-col-reverse items-center justify-center gap-0.5 px-4",
+        "kozmos-reset kozmos-meta-item",
         className,
       )}
       data-slot="meta-strip-item"
       {...props}
     >
       <dt
-        className={cn("text-xs text-muted-foreground", !showLabel && "sr-only")}
+        className={cn(
+          "kozmos-meta-label",
+          !showLabel && "kozmos-meta-label-hidden",
+        )}
       >
         {label}
       </dt>
-      <dd className="m-0 flex items-center gap-1 text-base font-medium text-foreground">
+      <dd className="kozmos-meta-value">
         {icon ? (
-          <span aria-hidden="true" className="flex shrink-0 items-center">
+          <span aria-hidden="true" className="kozmos-meta-icon">
             {icon}
           </span>
         ) : null}

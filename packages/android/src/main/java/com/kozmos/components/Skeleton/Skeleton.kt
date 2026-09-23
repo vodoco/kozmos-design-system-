@@ -20,7 +20,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 fun Modifier.shimmer(): Modifier = composed {
     val transition = rememberInfiniteTransition(label = "shimmer")
@@ -38,9 +38,9 @@ fun Modifier.shimmer(): Modifier = composed {
     )
     
     val shimmerColors = listOf(
-        KozmosColors.primitivesColorsBackground300.copy(alpha = 0.6f),
-        KozmosColors.primitivesColorsBackground300.copy(alpha = 0.2f),
-        KozmosColors.primitivesColorsBackground300.copy(alpha = 0.6f),
+        KozmosThemeTokens.primitivesColorsBackground300.copy(alpha = 0.6f),
+        KozmosThemeTokens.primitivesColorsBackground300.copy(alpha = 0.2f),
+        KozmosThemeTokens.primitivesColorsBackground300.copy(alpha = 0.6f),
     )
     
     val brush = Brush.linearGradient(
@@ -58,7 +58,7 @@ fun KozmosSkeleton(
 ) {
     Box(
         modifier = modifier
-            .background(KozmosColors.primitivesColorsBackground100, RoundedCornerShape(KozmosDimensions.semanticsRadiusMarker))
+            .background(KozmosThemeTokens.primitivesColorsBackground100, RoundedCornerShape(KozmosDimensions.semanticsRadiusMarker))
             .shimmer()
     )
 }

@@ -6,7 +6,7 @@ import com.figma.code.connect.FigmaConnect
 import com.figma.code.connect.FigmaProperty
 import com.figma.code.connect.FigmaType
 
-@FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=606-4596")
+@FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=613-4791")
 class KozmosBackdropConnect {
     @FigmaProperty(FigmaType.Enum, "Visibility")
     val visible: Boolean = Figma.mapping(

@@ -59,6 +59,7 @@ export default defineConfig(async () => {
       },
       dts({
         insertTypesEntry: true,
+        rollupTypes: true,
         // The Code Connect files are type-checked (they are in tsconfig's
         // include since 2026-09-14) but they are not part of the package: each
         // one describes a Figma mapping, not an export. Without this the dts

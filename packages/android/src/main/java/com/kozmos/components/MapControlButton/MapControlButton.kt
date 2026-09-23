@@ -17,6 +17,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,7 +27,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.tokens.KozmosDimensions
 
 enum class KozmosMapControlButtonPresentation {
@@ -96,11 +97,13 @@ internal data class KozmosMapControlButtonAppearance(
     }
 }
 
+@Composable
+@ReadOnlyComposable
 private fun KozmosMapControlButtonAppearance.Tone.color() = when (this) {
-    KozmosMapControlButtonAppearance.Tone.Ink -> KozmosColors.primitivesColorsForeground100
-    KozmosMapControlButtonAppearance.Tone.Muted -> KozmosColors.primitivesColorsForeground400
-    KozmosMapControlButtonAppearance.Tone.Theme -> KozmosColors.primitivesColorsTheme600
-    KozmosMapControlButtonAppearance.Tone.OnFill -> KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle
+    KozmosMapControlButtonAppearance.Tone.Ink -> KozmosThemeTokens.primitivesColorsForeground100
+    KozmosMapControlButtonAppearance.Tone.Muted -> KozmosThemeTokens.primitivesColorsForeground400
+    KozmosMapControlButtonAppearance.Tone.Theme -> KozmosThemeTokens.primitivesColorsTheme600
+    KozmosMapControlButtonAppearance.Tone.OnFill -> KozmosThemeTokens.componentsPrimaryButtonsThemedButtonForegroundContentIdle
 }
 
 /**
@@ -127,9 +130,9 @@ fun KozmosMapControlButton(
     val appearance = KozmosMapControlButtonAppearance.resolve(pressed, emphasis)
     val borderColor by animateColorAsState(
         targetValue = if (appearance.edge == KozmosMapControlButtonAppearance.Edge.Theme) {
-            KozmosColors.primitivesColorsTheme600
+            KozmosThemeTokens.primitivesColorsTheme600
         } else {
-            KozmosColors.primitivesColorsForeground300
+            KozmosThemeTokens.primitivesColorsForeground300
         },
         label = "MapControlButtonBorder"
     )
@@ -152,9 +155,9 @@ fun KozmosMapControlButton(
         enabled = enabled,
         shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
         color = if (appearance.surface == KozmosMapControlButtonAppearance.Surface.Filled) {
-            KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle
+            KozmosThemeTokens.componentsPrimaryButtonsThemedButtonBackgroundIdle
         } else {
-            KozmosColors.primitivesColorsBackground0.copy(alpha = 0.9f)
+            KozmosThemeTokens.primitivesColorsBackground0.copy(alpha = 0.9f)
         },
         contentColor = appearance.label.color(),
         border = BorderStroke(1.dp, borderColor),

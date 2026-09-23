@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -194,6 +195,12 @@ const files = {
   reactCounter: "packages/react/src/components/Counter/Counter.tsx",
   reactCounterFigma: "packages/react/src/components/Counter/Counter.figma.tsx",
   reactBadge: "packages/react/src/components/Badge/Badge.tsx",
+  reactCategoryTile:
+    "packages/react/src/components/CategoryTile/CategoryTile.tsx",
+  reactCategoryField:
+    "packages/react/src/components/CategoryField/CategoryField.tsx",
+  reactLocationPin: "packages/react/src/components/LocationPin/LocationPin.tsx",
+  reactPOIDetailCss: "packages/react/src/styles/owned-poi-detail.css",
   reactBadgeFigma: "packages/react/src/components/Badge/Badge.figma.tsx",
   reactCardFigma: "packages/react/src/components/Card/Card.figma.tsx",
   reactList: "packages/react/src/components/List/List.tsx",
@@ -301,6 +308,14 @@ const files = {
   iosIcon: "packages/ios/Sources/Components/Icon/Icon.swift",
   iosIconFigma: "packages/ios/Sources/Components/Icon/Icon.figma.swift",
   iosIconButton: "packages/ios/Sources/Components/IconButton/IconButton.swift",
+  iosCategoryTile:
+    "packages/ios/Sources/Components/CategoryTile/CategoryTile.swift",
+  iosCategoryField:
+    "packages/ios/Sources/Components/CategoryField/CategoryField.swift",
+  iosLocationPin:
+    "packages/ios/Sources/Components/LocationPin/LocationPin.swift",
+  iosPOIDetailPanel:
+    "packages/ios/Sources/Components/POIDetailPanel/POIDetailPanel.swift",
   iosCounter: "packages/ios/Sources/Components/Counter/Counter.swift",
   iosCounterFigma:
     "packages/ios/Sources/Components/Counter/Counter.figma.swift",
@@ -395,6 +410,14 @@ const files = {
     "packages/android/src/main/java/com/kozmos/components/IconButton/IconButton.kt",
   androidCounter:
     "packages/android/src/main/java/com/kozmos/components/Counter/Counter.kt",
+  androidCategoryTile:
+    "packages/android/src/main/java/com/kozmos/components/CategoryTile/CategoryTile.kt",
+  androidCategoryField:
+    "packages/android/src/main/java/com/kozmos/components/CategoryField/CategoryField.kt",
+  androidLocationPin:
+    "packages/android/src/main/java/com/kozmos/components/LocationPin/LocationPin.kt",
+  androidPOIDetailPanel:
+    "packages/android/src/main/java/com/kozmos/components/POIDetailPanel/POIDetailPanel.kt",
   androidCounterFigma:
     "packages/android/src/main/java/com/kozmos/components/Counter/Counter.figma.kt",
   androidNavigationItem:
@@ -521,6 +544,10 @@ const figmaFoundationsPayload = JSON.parse(source.figmaFoundationsPayload);
 const {
   button,
   iconButton,
+  categoryTile,
+  categoryField,
+  locationPin,
+  poiDetailPanel,
   counter,
   badge,
   checkbox,
@@ -741,26 +768,52 @@ assertNotContains(
 assertContains(
   files.reactButton,
   source.reactButton,
-  /default:\s*["']h-11 px-4 py-2["']/,
-  "44px default Button class",
+  /default:\s*["']kozmos-button-size-default["']/,
+  "owned default Button recipe",
 );
 assertContains(
   files.reactButton,
   source.reactButton,
-  /sm:\s*["']h-11 rounded-control px-3["']/,
-  "44px small Button class",
+  /sm:\s*["']kozmos-button-size-sm["']/,
+  "owned small Button recipe",
 );
 assertContains(
   files.reactButton,
   source.reactButton,
-  /icon:\s*["']h-11 w-11["']/,
-  "44px icon Button class",
+  /icon:\s*["']kozmos-button-size-icon["']/,
+  "owned icon Button recipe",
 );
+const ownedCssPath = "packages/react/src/styles/owned-components.css";
+const ownedCss = read(ownedCssPath);
+for (const [size, classes] of [
+  ["default", "h-11 px-4 py-2"],
+  ["sm", "h-11 rounded-control px-3"],
+  ["icon", "h-11 w-11"],
+]) {
+  assertContains(
+    ownedCssPath,
+    ownedCss,
+    new RegExp(`\\.kozmos-button-size-${size}\\s*\\{\\s*@apply ${classes};`),
+    `44px ${size} Button recipe`,
+  );
+}
 assertContains(
   files.reactIconButton,
   source.reactIconButton,
   "h-11 w-11 px-0",
   "44px IconButton root class",
+);
+assertContains(
+  files.reactIconButton,
+  source.reactIconButton,
+  'if (size === "lg") return "h-12 w-12 px-0',
+  "48px IconButton large size",
+);
+assertContains(
+  files.androidIconButton,
+  source.androidIconButton,
+  "modifier.size(if (size == KozmosIconButtonSize.Lg) 48.dp else 44.dp)",
+  "Android IconButton 44dp, 48dp for the large size",
 );
 assertContains(
   files.reactCounter,
@@ -903,19 +956,28 @@ assertContains(
 assertContains(
   files.reactInput,
   source.reactInput,
+  "kozmos-reset kozmos-input",
+  "React Input owned recipe",
+);
+const ownedInput = ownedCss.match(/\.kozmos-input\s*\{([^}]*)\}/)?.[1] ?? "";
+assertContains(
+  ownedCssPath,
+  ownedInput,
   "h-11",
   "React Input 44px field height",
 );
 assertContains(
-  files.reactInput,
-  source.reactInput,
+  ownedCssPath,
+  ownedInput,
   "rounded-control",
   "React Input radius class uses the Control role",
 );
+// The control boundary's role, which aliases foreground/500; the field read
+// the primitive itself until 2026-09-22 (scripts/check-border-parity.mjs).
 assertContains(
-  files.reactInput,
-  source.reactInput,
-  "--primitives-colors-foreground-500",
+  ownedCssPath,
+  ownedInput,
+  "border border-input",
   "React Input neutral border token",
 );
 assertContains(
@@ -945,7 +1007,7 @@ assertContains(
 assertContains(
   files.reactSlider,
   source.reactSlider,
-  "border-[color:var(--primitives-colors-foreground-500)] bg-secondary",
+  "border border-input bg-secondary",
   "React Slider inactive track boundary",
 );
 assertContains(
@@ -1698,6 +1760,94 @@ assertContains(
   "PopupPositionProvider",
   "Android Tooltip measured popup positioning",
 );
+// Every Code Connect file pinned to a node must be listed in its platform's
+// linked config. The configs are explicit file lists, not globs: a file left
+// off is never validated by the dry runs and never sent by publish, and nothing
+// says so. Backdrop on all three platforms and React's Icon sat outside them
+// from the start, found only when the 2026-09-21 publish did not name them.
+{
+  const unlisted = [];
+  for (const { config, sourceRoot, packageRoot, extension } of [
+    {
+      config: files.figmaLinked,
+      sourceRoot: "packages/react/src",
+      packageRoot: "packages/react",
+      extension: ".figma.tsx",
+    },
+    {
+      config: files.iosFigmaLinked,
+      sourceRoot: "packages/ios/Sources",
+      packageRoot: "packages/ios",
+      extension: ".figma.swift",
+    },
+    {
+      config: files.androidFigmaLinked,
+      sourceRoot: "packages/android/src",
+      packageRoot: "packages/android",
+      extension: ".figma.kt",
+    },
+  ]) {
+    const listed = new Set();
+    for (const includePath of JSON.parse(read(config)).codeConnect.include) {
+      const candidates = [
+        path.join(path.dirname(config), includePath),
+        includePath,
+        path.join(packageRoot, includePath),
+      ].map((candidate) => path.normalize(candidate));
+      const found = candidates.find((candidate) =>
+        fs.existsSync(path.join(root, candidate)),
+      );
+      if (!found)
+        unlisted.push(`${config} lists ${includePath}, which does not exist`);
+      else listed.add(found);
+    }
+    for (const filePath of listFilesRecursive(sourceRoot, (candidate) =>
+      candidate.endsWith(extension),
+    )) {
+      const placeholder =
+        /node-id=TBD|nodeId\s*=\s*["']TBD["']|node-id%3DTBD/i.test(
+          read(filePath),
+        );
+      if (!placeholder && !listed.has(path.normalize(filePath))) {
+        unlisted.push(`${config} does not list ${filePath}`);
+      }
+    }
+  }
+  if (unlisted.length > 0) {
+    fail(
+      `The linked Code Connect configs and the files disagree (an unlisted file is never validated or published):\n  ${unlisted.join("\n  ")}`,
+    );
+  }
+}
+// Dev Mode shows each snippet's import line. Without importPaths the React
+// parser prints the mapping file's own relative import ("./CategoryField"),
+// which no consumer can use, and SwiftUI snippets print no import at all.
+{
+  const reactPackage = JSON.parse(read("packages/react/package.json")).name;
+  for (const config of [
+    files.figmaLinked,
+    "packages/react/figma.config.json",
+  ]) {
+    const mapped = JSON.parse(read(config)).codeConnect.importPaths?.[
+      "src/components/*"
+    ];
+    if (mapped !== reactPackage) {
+      fail(
+        `${config}: React snippets must import from ${reactPackage} (importPaths "src/components/*"), not ${mapped ?? "their relative path"}`,
+      );
+    }
+  }
+  const swiftLibrary = read("packages/ios/Package.swift").match(
+    /\.library\(\s*name:\s*"([^"]+)"/,
+  )?.[1];
+  const swiftImport = JSON.parse(read(files.iosFigmaLinked)).codeConnect
+    .importPaths?.["Sources/Components/"];
+  if (!swiftLibrary || swiftImport !== `import ${swiftLibrary}`) {
+    fail(
+      `${files.iosFigmaLinked}: SwiftUI snippets must carry "import ${swiftLibrary}" (importPaths "Sources/Components/"), not ${swiftImport ?? "none"}`,
+    );
+  }
+}
 assertContains(
   files.figmaLinked,
   source.figmaLinked,
@@ -1829,6 +1979,412 @@ assertContains(
   "Vue IconButton wraps React IconButton",
 );
 
+// CategoryField: the search field's form once a category is chosen — the
+// contract's numbers on every platform and in the importer.
+{
+  const field = categoryField.content;
+  const twips = (px) => px / 4;
+  assertContains(
+    files.reactCategoryField,
+    source.reactCategoryField,
+    `flex h-${twips(field.height)} min-w-0 items-center`,
+    `React CategoryField ${field.height} tall`,
+  );
+  assertContains(
+    files.reactCategoryField,
+    source.reactCategoryField,
+    `flex h-${twips(field.iconSize)} w-${twips(field.iconSize)} shrink-0`,
+    `React CategoryField icon at ${field.iconSize}`,
+  );
+  assertContains(
+    files.reactCategoryField,
+    source.reactCategoryField,
+    `text-[${field.labelFontSize}px] font-${field.labelWeight}`,
+    `React CategoryField label ${field.labelFontSize} ${field.labelWeight}`,
+  );
+  assertContains(
+    files.reactCategoryField,
+    source.reactCategoryField,
+    `h-[${field.pillHeight}px] min-w-[${field.pillHeight}px]`,
+    `React CategoryField pill ${field.pillHeight}`,
+  );
+  assertContains(
+    files.reactCategoryField,
+    source.reactCategoryField,
+    `flex h-${twips(field.clearSize)} w-${twips(field.clearSize)} shrink-0`,
+    `React CategoryField clear ${field.clearSize}`,
+  );
+  assertContains(
+    files.reactCategoryField,
+    source.reactCategoryField,
+    `${Math.round(field.washOpacity * 100)}%, transparent`,
+    `React CategoryField wash at ${field.washOpacity}`,
+  );
+  for (const [name, value] of [
+    ["height", field.height],
+    ["iconSize", field.iconSize],
+    ["pillHeight", field.pillHeight],
+    ["clearSize", field.clearSize],
+  ]) {
+    assertContains(
+      files.iosCategoryField,
+      source.iosCategoryField,
+      `static var ${name}: CGFloat { ${value} }`,
+      `iOS CategoryField ${name} ${value}`,
+    );
+  }
+  assertContains(
+    files.iosCategoryField,
+    source.iosCategoryField,
+    `.font(.system(size: ${field.labelFontSize}, weight: .${field.labelWeight}))`,
+    `iOS CategoryField label ${field.labelFontSize} ${field.labelWeight}`,
+  );
+  assertContains(
+    files.iosCategoryField,
+    source.iosCategoryField,
+    `.background(tint.accent.opacity(${field.washOpacity}))`,
+    `iOS CategoryField wash at ${field.washOpacity}`,
+  );
+  assertContains(
+    files.androidCategoryField,
+    source.androidCategoryField,
+    `.height(${field.height}.dp)`,
+    `Android CategoryField ${field.height} tall`,
+  );
+  assertContains(
+    files.androidCategoryField,
+    source.androidCategoryField,
+    `Modifier.size(${field.iconSize}.dp)`,
+    `Android CategoryField icon at ${field.iconSize}`,
+  );
+  assertContains(
+    files.androidCategoryField,
+    source.androidCategoryField,
+    new RegExp(
+      `fontSize = ${field.labelFontSize}\\.sp,\\s*fontWeight = FontWeight\\.SemiBold`,
+    ),
+    `Android CategoryField label ${field.labelFontSize} semibold`,
+  );
+  assertContains(
+    files.androidCategoryField,
+    source.androidCategoryField,
+    `minWidth = ${field.pillHeight}.dp, minHeight = ${field.pillHeight}.dp`,
+    `Android CategoryField pill ${field.pillHeight}`,
+  );
+  assertContains(
+    files.androidCategoryField,
+    source.androidCategoryField,
+    `.size(${field.clearSize}.dp)`,
+    `Android CategoryField clear ${field.clearSize}`,
+  );
+  assertContains(
+    files.androidCategoryField,
+    source.androidCategoryField,
+    `alpha = ${field.washOpacity}f`,
+    `Android CategoryField wash at ${field.washOpacity}`,
+  );
+  for (const [name, value] of [
+    ["HEIGHT", field.height],
+    ["ICON_SIZE", field.iconSize],
+    ["PILL_HEIGHT", field.pillHeight],
+    ["CLEAR_SIZE", field.clearSize],
+    ["LABEL_FONT_SIZE", field.labelFontSize],
+    ["LABEL_LINE_HEIGHT", field.labelLineHeight],
+  ]) {
+    assertContains(
+      files.figma,
+      source.figma,
+      `const CATEGORY_FIELD_${name} = ${value};`,
+      `Figma CategoryField ${name} ${value}`,
+    );
+  }
+  // A bound paint's own opacity is not relied on (the live file lost three
+  // of four on 2026-09-21), so the wash is a layer of its own at the
+  // contract's opacity.
+  assertContains(
+    files.figma,
+    source.figma,
+    `const CATEGORY_FIELD_WASH_OPACITY = ${field.washOpacity};`,
+    `Figma CategoryField wash at ${field.washOpacity}`,
+  );
+  assertContains(
+    files.figma,
+    source.figma,
+    /name: "Tint Wash",\s*token: tint\.accent,\s*opacity: CATEGORY_FIELD_WASH_OPACITY,/,
+    "Figma CategoryField wash is a layer at that opacity",
+  );
+
+  // Ruled 2026-09-21: the label and the clear's cross in foreground/0; the
+  // icon decorative, hidden from assistive technology.
+  if (
+    field.labelColor === "foreground/0" &&
+    field.clearColor === "foreground/0"
+  ) {
+    assertContains(
+      files.reactCategoryField,
+      source.reactCategoryField,
+      "rounded-control border pl-3 pr-0.5 text-foreground",
+      "React CategoryField label and clear in the foreground",
+    );
+    assertNotContains(
+      files.reactCategoryField,
+      source.reactCategoryField,
+      /color: "var\(--kozmos-category-tint\)",\s*borderColor/,
+      "React CategoryField's text inheriting the category colour",
+    );
+    assertContains(
+      files.iosCategoryField,
+      source.iosCategoryField,
+      `.font(.system(size: ${field.labelFontSize}, weight: .${field.labelWeight}))\n                .foregroundColor(KozmosColors.primitivesColorsForeground0)`,
+      "iOS CategoryField label in foreground/0",
+    );
+    assertContains(
+      files.iosCategoryField,
+      source.iosCategoryField,
+      /Image\(systemName: "xmark"\)\s*\.font\([^)]*\)\)\s*\.foregroundColor\(KozmosColors\.primitivesColorsForeground0\)/,
+      "iOS CategoryField clear in foreground/0",
+    );
+    assertContains(
+      files.androidCategoryField,
+      source.androidCategoryField,
+      "color = KozmosThemeTokens.primitivesColorsForeground0,",
+      "Android CategoryField label in foreground/0, themed",
+    );
+    assertContains(
+      files.androidCategoryField,
+      source.androidCategoryField,
+      "tint = KozmosThemeTokens.primitivesColorsForeground0",
+      "Android CategoryField clear in foreground/0, themed",
+    );
+    assertContains(
+      files.figma,
+      source.figma,
+      'const CATEGORY_FIELD_INK = { name: "Colors/foreground/0", fallback: "#000000" };',
+      "Figma CategoryField ink is foreground/0",
+    );
+    assertContains(
+      files.figma,
+      source.figma,
+      /colorToken: CATEGORY_FIELD_INK\.name,[\s\S]{0,4000}?iconName: "x-close",\s*token: CATEGORY_FIELD_INK,/,
+      "Figma CategoryField label and cross take that ink",
+    );
+  }
+  // Ruled 2026-09-21: the clear's circle to see in a 44 target to hit, as
+  // the search bar's; the trailing padding gives back the 6 the target adds
+  // on each side, so the circle stays 8 from the edge.
+  if (field.clearHitArea) {
+    const hit = field.clearHitArea;
+    const inset = (field.clearHitArea - field.clearSize) / 2;
+    assertContains(
+      files.reactCategoryField,
+      source.reactCategoryField,
+      `group flex h-${twips(hit)} w-${twips(hit)} shrink-0`,
+      `React CategoryField clear target ${hit}`,
+    );
+    assertContains(
+      files.reactCategoryField,
+      source.reactCategoryField,
+      `pl-3 pr-${twips(8 - inset)} `,
+      `React CategoryField trailing padding ${8 - inset}`,
+    );
+    assertContains(
+      files.iosCategoryField,
+      source.iosCategoryField,
+      `static var clearHitArea: CGFloat { ${hit} }`,
+      `iOS CategoryField clearHitArea ${hit}`,
+    );
+    assertContains(
+      files.iosCategoryField,
+      source.iosCategoryField,
+      /\.frame\(width: Self\.clearSize, height: Self\.clearSize\)\s*\.frame\(width: Self\.clearHitArea, height: Self\.clearHitArea\)\s*\.contentShape\(Rectangle\(\)\)/,
+      "iOS CategoryField clear circle inside its target",
+    );
+    assertContains(
+      files.iosCategoryField,
+      source.iosCategoryField,
+      ".padding(.trailing, KozmosDimensions.primitivesLayoutSpacing25)",
+      `iOS CategoryField trailing padding ${8 - inset}`,
+    );
+    assertContains(
+      files.androidCategoryField,
+      source.androidCategoryField,
+      new RegExp(`\\.size\\(${hit}\\.dp\\)\\s*\\.clickable\\(`),
+      `Android CategoryField clear target ${hit}`,
+    );
+    assertContains(
+      files.androidCategoryField,
+      source.androidCategoryField,
+      "end = KozmosDimensions.primitivesLayoutSpacing25",
+      `Android CategoryField trailing padding ${8 - inset}`,
+    );
+    assertNotContains(
+      files.androidCategoryField,
+      source.androidCategoryField,
+      "Spacer(modifier = Modifier.weight(1f))",
+      "Android CategoryField spacer weighted against the name, which floated the clear inward",
+    );
+  }
+
+  if (field.iconDecorative) {
+    assertContains(
+      files.reactCategoryField,
+      source.reactCategoryField,
+      /<span\s+aria-hidden="true"\s+className="flex h-7 w-7/,
+      "React CategoryField icon hidden",
+    );
+    assertContains(
+      files.iosCategoryField,
+      source.iosCategoryField,
+      /\.foregroundColor\(tint\.accent\)\s*\.accessibilityHidden\(true\)/,
+      "iOS CategoryField icon hidden",
+    );
+    assertContains(
+      files.androidCategoryField,
+      source.androidCategoryField,
+      "Modifier.size(28.dp).clearAndSetSemantics {}",
+      "Android CategoryField icon hidden",
+    );
+  }
+}
+
+// CategoryTile's icon is decorative on every platform and in Figma.
+if (categoryTile.content.iconDecorative) {
+  assertContains(
+    files.reactCategoryTile,
+    source.reactCategoryTile,
+    /<span\s+aria-hidden="true"\s+className=\{cn\(\s*"relative flex h-16 w-16/,
+    "React CategoryTile square hidden",
+  );
+  assertContains(
+    files.iosCategoryTile,
+    source.iosCategoryTile,
+    /\.offset\(x: 4, y: -4\)\s*\}\s*\}\s*\.accessibilityHidden\(true\)/,
+    "iOS CategoryTile square hidden",
+  );
+  assertContains(
+    files.androidCategoryTile,
+    source.androidCategoryTile,
+    "primitivesLayoutSizing300).clearAndSetSemantics {}",
+    "Android CategoryTile icon hidden",
+  );
+  assertOccurrenceCount(
+    files.figma,
+    source.figma,
+    /^ {4}markDecorativeIcon\(icon\);$/gm,
+    2,
+    "Figma marks the tile's and the field's icon decorative",
+  );
+}
+
+// The curated icons: the registry, the plugin's definitions and the catalog
+// agree, name for name and key for key, so a painter never asks the Icons
+// page for a symbol Curated Icons cannot import.
+{
+  const registry = read("packages/icons/src/registry.ts");
+  const namesBlock = registry.slice(
+    registry.indexOf("export const kozmosIconNames = ["),
+    registry.indexOf("] as const"),
+  );
+  const names = [...namesBlock.matchAll(/^\s+"([a-z0-9-]+)",$/gm)].map(
+    (m) => m[1],
+  );
+  const start = source.figma.indexOf("const KOSMOS_ICON_DEFINITIONS = [");
+  const block = source.figma.slice(start, source.figma.indexOf("\n];", start));
+  // Entry by entry: a taxonomy symbol has no component key, and a pattern
+  // spanning entries would pair its name with the next entry's key.
+  const definitions = new Map(
+    block
+      .split(/\n {2}\{\n/)
+      .slice(1)
+      .map((entry) => {
+        const field = (key, pattern) =>
+          (entry.match(new RegExp(`^ {4}${key}: "(${pattern})",$`, "m")) ||
+            [])[1];
+        return [
+          field("name", "[a-z0-9-]+"),
+          {
+            componentKey: field("componentKey", "[0-9a-f]+"),
+            source: field("source", "[a-z]+"),
+          },
+        ];
+      }),
+  );
+  const catalog = JSON.parse(read("docs/figma-pointr-icon-catalog.json"));
+  const items = Array.isArray(catalog)
+    ? catalog
+    : catalog.icons || Object.values(catalog);
+  const keyByName = new Map(
+    items.map((item) => [item.name, item.componentKey]),
+  );
+  // The taxonomy's symbols: the art the plugin draws them from, and the
+  // registry's own record that they are the taxonomy's.
+  const svgStart = source.figma.indexOf("const TAXONOMY_ICON_SVGS = {");
+  const drawn = new Set(
+    [
+      ...source.figma
+        .slice(svgStart, source.figma.indexOf("\n};", svgStart))
+        .matchAll(/^ {2}"([a-z0-9-]+)":(?:$| ')/gm),
+    ].map((m) => m[1]),
+  );
+  const taxonomyInRegistry = new Set(
+    [
+      ...registry.matchAll(
+        /name: "([a-z0-9-]+)",\s+figmaName: "[^"]+",\s+source: "taxonomy",/g,
+      ),
+    ].map((m) => m[1]),
+  );
+  for (const name of names) {
+    const definition = definitions.get(name);
+    if (!definition) {
+      fail(
+        `figma/foundations-importer/code.js: curated icon "${name}" is in the registry but has no KOSMOS_ICON_DEFINITIONS entry`,
+      );
+    } else if (definition.source === "taxonomy") {
+      if (definition.componentKey || !drawn.has(name)) {
+        fail(
+          `figma/foundations-importer/code.js: taxonomy symbol "${name}" needs its SVG in TAXONOMY_ICON_SVGS and no component key`,
+        );
+      }
+      if (!taxonomyInRegistry.has(name)) {
+        fail(
+          `packages/icons/src/registry.ts: "${name}" is a taxonomy symbol in the plugin, and its definition does not say source: "taxonomy"`,
+        );
+      }
+    } else if (definition.componentKey !== keyByName.get(name)) {
+      fail(
+        `figma/foundations-importer/code.js: "${name}" carries a component key the catalog does not`,
+      );
+    }
+  }
+  for (const name of drawn) {
+    if (!definitions.has(name) || definitions.get(name).source !== "taxonomy") {
+      fail(
+        `figma/foundations-importer/code.js: TAXONOMY_ICON_SVGS draws "${name}", which no taxonomy definition names`,
+      );
+    }
+  }
+  // And the art itself: React's symbols and the importer's, both generated
+  // from the SVGs the taxonomy published, which the package keeps.
+  try {
+    execFileSync(
+      process.execPath,
+      [path.join(root, "scripts/build-taxonomy-icons.mjs"), "--check"],
+      { cwd: root, stdio: "pipe" },
+    );
+  } catch (error) {
+    fail(
+      String((error.stderr && error.stderr.toString()) || error.message).trim(),
+    );
+  }
+  for (const name of definitions.keys()) {
+    if (!names.includes(name)) {
+      fail(
+        `figma/foundations-importer/code.js: "${name}" is defined but packages/icons/src/registry.ts does not name it`,
+      );
+    }
+  }
+}
+
 // Figma generator parity.
 for (const tokenName of [
   "Button/height/small",
@@ -1850,11 +2406,17 @@ for (const tokenName of [
   "Select/trigger/height",
   "Slider/height/default",
 ]) {
+  // The large icon button is the one size above the touch target: 48, the
+  // prototype's Filters and AI search beside a 44 field (2026-09-21).
+  const expected =
+    tokenName === "IconButton/size/large"
+      ? contract.components.iconButton.sizes.large.width
+      : target;
   assertContains(
     files.figma,
     source.figma,
-    tokenValuePattern(tokenName, target),
-    `${tokenName} token at ${target}px`,
+    tokenValuePattern(tokenName, expected),
+    `${tokenName} token at ${expected}px`,
   );
 }
 assertContains(
@@ -3031,6 +3593,12 @@ assertContains(
 assertContains(
   files.reactLabel,
   source.reactLabel,
+  "kozmos-reset kozmos-label",
+  "React Label owned recipe",
+);
+assertContains(
+  ownedCssPath,
+  ownedCss.match(/\.kozmos-label\s*\{([^}]*)\}/)?.[1] ?? "",
   "text-sm font-medium",
   "React Label typography",
 );
@@ -3136,21 +3704,35 @@ assertNotContains(
 assertContains(
   files.reactHeading,
   source.reactHeading,
-  "level: {",
-  "React Heading level variants",
+  'size={level === null ? "base" : sizes[level]}',
+  "React Heading level scale selection",
 );
 assertContains(
   files.reactHeading,
   source.reactHeading,
-  "cva('font-bold'",
-  "React Heading uses bold base typography",
+  'weight="bold"',
+  "React Heading uses owned bold typography",
 );
 assertContains(
   files.reactHeading,
   source.reactHeading,
-  "1: 'text-4xl'",
+  "1: '4xl'",
   "React Heading H1 maps to 4xl",
 );
+for (const [level, size] of [
+  [2, "3xl"],
+  [3, "2xl"],
+  [4, "xl"],
+  [5, "lg"],
+  [6, "base"],
+]) {
+  assertContains(
+    files.reactHeading,
+    source.reactHeading,
+    `${level}: "${size}"`,
+    `React Heading H${level} maps to ${size}`,
+  );
+}
 for (const tokenName of [
   "Text/font-size/xs",
   "Text/line-height/xs",
@@ -3199,13 +3781,13 @@ assertNotContains(
 assertContains(
   files.reactText,
   source.reactText,
-  "'4xl': 'text-4xl'",
+  "'4xl': 'kozmos-text-4xl'",
   "React Text 4xl size",
 );
 assertContains(
   files.reactText,
   source.reactText,
-  "destructive: 'text-destructive'",
+  "destructive: 'kozmos-text-destructive'",
   "React Text destructive tone",
 );
 assertContains(
@@ -6130,9 +6712,18 @@ assertContains(
   "showSteppers = true",
   "React NumberInput exposes optional steppers",
 );
+const ownedNativeFieldsPath =
+  "packages/react/src/styles/owned-native-fields.css";
+const ownedNativeFields = read(ownedNativeFieldsPath);
 assertContains(
   files.reactNumberInput,
   source.reactNumberInput,
+  '"kozmos-number-input"',
+  "React NumberInput selects its owned field recipe",
+);
+assertContains(
+  ownedNativeFieldsPath,
+  ownedNativeFields.match(/\.kozmos-number-input\s*\{([^}]*)\}/)?.[1] ?? "",
   "min-w-0 flex-1",
   "React NumberInput center field flexes between fixed steppers",
 );
@@ -6151,6 +6742,12 @@ assertContains(
 assertContains(
   files.reactPasswordInput,
   source.reactPasswordInput,
+  "kozmos-field-action kozmos-password-toggle",
+  "React PasswordInput selects its owned toggle recipe",
+);
+assertContains(
+  ownedNativeFieldsPath,
+  ownedNativeFields.match(/\.kozmos-field-action\s*\{([^}]*)\}/)?.[1] ?? "",
   "h-11 w-11",
   "React PasswordInput visibility toggle keeps 44px target",
 );
@@ -6259,14 +6856,14 @@ assertContains(
 assertContains(
   files.reactNumberInput,
   source.reactNumberInput,
-  "const fieldToneClass = cn(",
-  "React NumberInput separates validation field tone from readable value text",
-);
-assertNotContains(
-  files.reactNumberInput,
-  source.reactNumberInput,
   "inputVariants({ status: resolvedStatus })",
-  "React NumberInput value text inheriting validation text colors",
+  "React NumberInput selects validation border/focus recipes",
+);
+assertContains(
+  ownedNativeFieldsPath,
+  ownedNativeFields.match(/\.kozmos-number-input\s*\{([^}]*)\}/)?.[1] ?? "",
+  "text-foreground",
+  "React NumberInput preserves readable value text separately from validation tone",
 );
 assertNotContains(
   files.iosNumberInput,
@@ -9089,8 +9686,8 @@ assertAllVariants(
 assertContains(
   files.iosIconButton,
   source.iosIconButton,
-  ".frame(width: 44, height: 44)",
-  "iOS IconButton 44px frame",
+  ".frame(width: size == .lg ? 48 : 44, height: size == .lg ? 48 : 44)",
+  "iOS IconButton 44px frame, 48 for the large size",
 );
 assertContains(
   files.iosIconButton,
@@ -9098,6 +9695,222 @@ assertContains(
   ".tint(foregroundColor)",
   "iOS IconButton loading indicator foreground tint",
 );
+
+// CategoryTile: the count is the system's counter, brand tone, at the icon
+// square's top-right, the contract's overhang beyond its top and right edges.
+{
+  const overhang = categoryTile.content.counterOverhang;
+  const tone = categoryTile.content.counterTone;
+  assertContains(
+    files.reactCategoryTile,
+    source.reactCategoryTile,
+    // An absolute offset counts from inside the square's 1px border.
+    new RegExp(
+      `<Counter\\s+className="absolute -right-\\[${overhang + 1}px\\] -top-\\[${overhang + 1}px\\]"[\\s\\S]{0,240}?tone="${tone}"`,
+    ),
+    `React CategoryTile counter at the square's top-right, ${overhang} beyond its edges, ${tone} tone`,
+  );
+  assertContains(
+    files.iosCategoryTile,
+    source.iosCategoryTile,
+    `KozmosCounter("\\(count)", tone: .${tone}, fill: tint?.fill)`,
+    `iOS CategoryTile counter, ${tone} tone, the tint as its fill`,
+  );
+  assertContains(
+    files.iosCategoryTile,
+    source.iosCategoryTile,
+    `.offset(x: ${overhang}, y: -${overhang})`,
+    `iOS CategoryTile counter ${overhang} beyond the square's edges`,
+  );
+  assertContains(
+    files.androidCategoryTile,
+    source.androidCategoryTile,
+    `tone = CounterTone.${tone[0].toUpperCase()}${tone.slice(1)}`,
+    `Android CategoryTile counter, ${tone} tone`,
+  );
+  assertContains(
+    files.androidCategoryTile,
+    source.androidCategoryTile,
+    `.offset(x = ${overhang}.dp, y = (-${overhang}).dp)`,
+    `Android CategoryTile counter ${overhang} beyond the square's edges`,
+  );
+  for (const [file, content] of [
+    [files.reactCategoryTile, source.reactCategoryTile],
+    [files.iosCategoryTile, source.iosCategoryTile],
+    [files.androidCategoryTile, source.androidCategoryTile],
+  ]) {
+    if (
+      /resultCountLabel\s*[?!]?\.let\s*\{\s*resultCountLabel|text-muted-foreground|KozmosTypography\.caption\b/.test(
+        content,
+      )
+    ) {
+      fail(
+        `${file}: draws resultCountLabel as a caption; it is the spoken form only`,
+      );
+    }
+  }
+  // The tint: the icon and the counter's fill take it on each platform.
+  if (categoryTile.content.tint) {
+    assertContains(
+      files.iosCategoryTile,
+      source.iosCategoryTile,
+      ".foregroundColor(tint?.accent ?? KozmosColors.primitivesColorsTheme500)",
+      "iOS CategoryTile icon in the tint",
+    );
+    assertContains(
+      files.reactCategoryTile,
+      source.reactCategoryTile,
+      "backgroundColor: tint.fill, color: tint.onFill",
+      "React CategoryTile counter in the tint",
+    );
+    assertContains(
+      files.reactCategoryTile,
+      source.reactCategoryTile,
+      '"--kozmos-category-tint": tint.accent',
+      "React CategoryTile tint variable",
+    );
+    assertContains(
+      files.androidCategoryTile,
+      source.androidCategoryTile,
+      "LocalContentColor provides (tint?.accent ?: KozmosThemeTokens.primitivesColorsTheme500)",
+      "Android CategoryTile icon in the tint",
+    );
+    assertContains(
+      files.androidCategoryTile,
+      source.androidCategoryTile,
+      "fill = tint?.fill",
+      "Android CategoryTile counter in the tint",
+    );
+  }
+}
+
+// Counter: an inked fill — the fill and its ink together — on each platform.
+if (counter.fill) {
+  assertContains(
+    files.iosCounter,
+    source.iosCounter,
+    "fill?.fill ?? emotion?.surface ?? backgroundColor",
+    "iOS Counter fill",
+  );
+  assertContains(
+    files.iosCounter,
+    source.iosCounter,
+    "fill?.ink ?? emotion?.onSurface ?? foregroundColor",
+    "iOS Counter ink",
+  );
+  assertContains(
+    files.androidCounter,
+    source.androidCounter,
+    "fill?.fill ?: emotion?.surface ?: containerColor",
+    "Android Counter fill",
+  );
+  assertContains(
+    files.androidCounter,
+    source.androidCounter,
+    "fill?.ink ?: emotion?.onSurface ?: contentColor",
+    "Android Counter ink",
+  );
+}
+
+// LocationPin: a tint for the marker, over the variant's colour; featured still wins.
+if (locationPin.content.tint) {
+  assertContains(
+    files.iosLocationPin,
+    source.iosLocationPin,
+    /if featured \{ return KozmosColors\.primitivesColorsEmotionalAlert500 \}\s+if let tint \{ return tint\.fill\.fill \}/,
+    "iOS LocationPin tint after featured",
+  );
+  assertContains(
+    files.reactLocationPin,
+    source.reactLocationPin,
+    "tint && !featured",
+    "React LocationPin tint unless featured",
+  );
+  assertContains(
+    files.androidLocationPin,
+    source.androidLocationPin,
+    /featured -> KozmosThemeTokens\.primitivesColorsEmotionalAlert500\s+tint != null -> tint\.fill\.fill/,
+    "Android LocationPin tint after featured",
+  );
+}
+
+// LocationPin off the floor: a hollow ring on the background, the number in
+// foreground/0, not dimmed (ruled 2026-09-21).
+if (locationPin.content.offFloorNumberColor === "foreground/0") {
+  assertContains(
+    files.iosLocationPin,
+    source.iosLocationPin,
+    "offFloor ? KozmosColors.primitivesColorsForeground0 : (tint?.fill.ink",
+    "iOS LocationPin off-floor number in foreground/0",
+  );
+  assertContains(
+    files.androidLocationPin,
+    source.androidLocationPin,
+    "if (offFloor) KozmosThemeTokens.primitivesColorsForeground0 else (tint?.fill?.ink",
+    "Android LocationPin off-floor number in foreground/0",
+  );
+  assertContains(
+    files.reactLocationPin,
+    source.reactLocationPin,
+    'offFloor ? "fill-background" : "fill-current"',
+    "React LocationPin solid on the floor, hollow off it",
+  );
+  assertContains(
+    files.reactLocationPin,
+    source.reactLocationPin,
+    'offFloor ? "text-foreground" : inkClasses[variant]',
+    "React LocationPin off-floor number in the foreground",
+  );
+  assertNotContains(
+    files.reactLocationPin,
+    source.reactLocationPin,
+    'offFloor && "opacity-50"',
+    "React LocationPin dimming off the floor",
+  );
+  assertContains(
+    files.figma,
+    source.figma,
+    /const LOCATION_PIN_OFF_FLOOR_INK = \{\s*name: "Colors\/foreground\/0",/,
+    "Figma LocationPin off-floor ink is foreground/0",
+  );
+  assertContains(
+    files.figma,
+    source.figma,
+    "colorToken: offFloor ? LOCATION_PIN_OFF_FLOOR_INK.name : ink.name,",
+    "Figma LocationPin off-floor number takes that ink",
+  );
+}
+
+// POIDetailPanel: in a sheet, no surface of its own.
+if (
+  poiDetailPanel.content.sheetSurface ===
+  "none; in a sheet the panel paints no surface, border or shadow of its own and sits on the sheet's"
+) {
+  assertContains(
+    files.iosPOIDetailPanel,
+    source.iosPOIDetailPanel,
+    ".background(presentation == .sheet ? Color.clear : KozmosColors.primitivesColorsBackground0)",
+    "iOS POIDetailPanel sheet surface none",
+  );
+  assertContains(
+    files.reactPOIDetailCss,
+    source.reactPOIDetailCss,
+    /\.kozmos-poi-detail\[data-presentation="sheet"\] \{\s+@apply rounded-t-control;\s+background: transparent;\s+border: 0;/,
+    "React POIDetailPanel sheet surface none",
+  );
+  assertContains(
+    files.androidPOIDetailPanel,
+    source.androidPOIDetailPanel,
+    "color = if (presentation == KozmosPOIDetailPanelPresentation.Sheet) Color.Transparent else KozmosThemeTokens.primitivesColorsBackground0",
+    "Android POIDetailPanel sheet surface none",
+  );
+  assertContains(
+    files.androidPOIDetailPanel,
+    source.androidPOIDetailPanel,
+    "KozmosPOIDetailPanelPresentation.Sheet -> 0.dp",
+    "Android POIDetailPanel sheet shadow none",
+  );
+}
 
 assertAllVariants(
   files.iosCounter,
@@ -9497,8 +10310,8 @@ assertAllVariants(
 assertContains(
   files.androidIconButton,
   source.androidIconButton,
-  "modifier.size(44.dp)",
-  "Android IconButton 44dp frame",
+  "modifier.size(if (size == KozmosIconButtonSize.Lg) 48.dp else 44.dp)",
+  "Android IconButton 44dp frame, 48 for the large size",
 );
 assertContains(
   files.androidIconButton,
@@ -10103,7 +10916,6 @@ assertContains(
 // it as a padding class, and for a day it said 4 while Figma said 12. These
 // assertions are the only thing that ties the two spellings together.
 for (const [key, needle, label] of [
-  ["reactListbox", "bg-popover p-3", "Listbox"],
   ["reactCombobox", "bg-popover p-3", "Combobox"],
   ["reactMultiSelect", "bg-popover p-3", "MultiSelect"],
   ["reactMenu", "bg-popover p-3", "Menu"],
@@ -10116,6 +10928,19 @@ for (const [key, needle, label] of [
     `${label} pads its popover to the concentric inset (12)`,
   );
 }
+const ownedSelectionPath = "packages/react/src/styles/owned-selection.css";
+assertContains(
+  files.reactListbox,
+  source.reactListbox,
+  "kozmos-listbox",
+  "Listbox selects its owned recipe",
+);
+assertContains(
+  ownedSelectionPath,
+  read(ownedSelectionPath).match(/\.kozmos-listbox\s*\{([^}]*)\}/)?.[1] ?? "",
+  "bg-popover p-3",
+  "Listbox preserves its concentric inset (12)",
+);
 for (const token of [
   "Menu/padding",
   "Combobox/listbox/padding",
@@ -10144,7 +10969,7 @@ assertContains(
 assertContains(
   files.reactFileUpload,
   source.reactFileUpload,
-  "mt-3 grid gap-2",
+  "mt-3 grid min-w-0 grid-cols-1 gap-2",
   "FileUpload list sits 12 under the dropzone on the web",
 );
 assertContains(
@@ -10279,7 +11104,7 @@ assertContains(
     if (fn) handlers.add(fn[1]);
   }
   for (const m of plugin.matchAll(
-    /^    "update-[a-z-]+": ([A-Za-z0-9_]+),$/gm,
+    /^ {4}"update-[a-z-]+": ([A-Za-z0-9_]+),$/gm,
   )) {
     handlers.add(m[1]);
   }

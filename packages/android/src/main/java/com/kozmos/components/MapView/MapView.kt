@@ -12,7 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosMapView(
@@ -22,14 +22,14 @@ fun KozmosMapView(
     Box(
         modifier = modifier
             .defaultMinSize(minHeight = 400.dp)
-            .background(KozmosColors.primitivesColorsBackground100)
+            .background(KozmosThemeTokens.primitivesColorsBackground100)
             .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
-            .border(1.dp, KozmosColors.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
+            .border(1.dp, KozmosThemeTokens.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(KozmosColors.primitivesColorsBackground300.copy(alpha = 0.1f))
+                .background(KozmosThemeTokens.primitivesColorsBackground300.copy(alpha = 0.1f))
         )
         content()
     }

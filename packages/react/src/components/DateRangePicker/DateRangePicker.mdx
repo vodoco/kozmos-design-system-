@@ -5,6 +5,10 @@ import * as DateRangePickerStories from './DateRangePicker.stories';
 
 # DateRangePicker
 
+The range adapts to its container width rather than the screen width: narrow
+modules stack the individually labelled fields. The group heading names the range.
+Each date's bounds respect both the sibling date and the caller's `min`/`max`.
+
 A paired start and end date field for selecting a period.
 
 ## Usage
@@ -35,24 +39,36 @@ import { PlatformSnippets } from '../PlatformSnippets';
 
 <PlatformSnippets
   react={`
-import { DateRangePicker } from '@kozmos/react';
-
-<DateRangePicker
-  label="Reporting period"
-  startLabel="From"
-  endLabel="To"
-  min="2020-01-01"
-  max="2030-12-31"
-  onRangeChange={(range) => setPeriod(range)}
-/>
-
-// Controlled
-<DateRangePicker
-  label="Stay"
-  value={{ start: "2026-08-01", end: "2026-08-14" }}
-  onValueChange={setStay}
-  helperText="Check-in and check-out"
-/>
+import { useState } from "react";
+import { DateRangePicker, type DateRangeValue } from "@kozmos/react";
+export function Example() {
+  const [period, setPeriod] = useState<DateRangeValue>({ start: "", end: "" });
+  const [stay, setStay] = useState<DateRangeValue>({
+    start: "2026-08-01",
+    end: "2026-08-14",
+  });
+  return (
+    <>
+      <DateRangePicker
+        label="Reporting period"
+        startLabel="From"
+        endLabel="To"
+        min="2020-01-01"
+        max="2030-12-31"
+        onRangeChange={setPeriod}
+      />
+      <output>
+        Period: {period.start} – {period.end}
+      </output>
+      <DateRangePicker
+        label="Stay"
+        value={stay}
+        onValueChange={setStay}
+        helperText="Check-in and check-out"
+      />
+    </>
+  );
+}
   `}
   vue={`
 <script setup>

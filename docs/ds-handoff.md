@@ -7,6 +7,124 @@ rendered build on 2026-09-17 by the command shown beside it, unless marked "last
 
 ## 0 · Start here
 
+**Taxonomy integration, 2026-09-18:** read `poi-taxonomy-display-2026-09-18.md`
+for the pinned 10.12.0 property/value icon adapter, ordering, null/false/zero rules,
+dark-mode asset handling, and upstream schema/color conflicts. The adapter is an
+example, not a validated live SDK parser. Rating and opening-hours object schemas
+remain undefined by that taxonomy. No push/merge/npm.
+
+**POI follow-up review, 2026-09-18:** read
+`poi-reference-review-2026-09-18.md` for fixes, verification and self-service
+editing instructions. Eleven examples now include retail, fitness, parking and
+the full-field catalogue. Gallery state/geometry, failed logos and selection
+scroll have dedicated regression coverage. Use the current report's evidence,
+not historical counts below. Real assets, SDK adapter and device acceptance
+remain separate requirements. No push/merge/npm.
+
+**SDK screenshot examples, 2026-09-18:** read
+poi-reference-examples-2026-09-18.md. Restaurant/entrance references now use
+one richer POIDetailPanel, additive detail contracts and explicit optional
+book/call capabilities. The initial seven stories cover normal, sparse, map-shell and failure
+states. The screenshots do not provide real media or gesture specifications;
+no real map, routing or external actions are claimed. Remaining venue fixtures
+were completed in the follow-up above; real SDK integration is still next. No push/merge/npm.
+
+**Installed-product continuation, 2026-09-18:** read
+`installed-product-pilot-2026-09-18.md`. The existing MapScale Review app is now
+checked from isolated installed tarballs, with strict library checks, its 680
+geometry checks and offline signed-out browser coverage. This found an obsolete
+`Button asChild` use, incompatible Lucide/React types, and typography being
+overridden by scoped CSS. Links use `buttonVariants`, the product's Lucide pin
+matches Kozmos, preflight has zero specificity and Text/Heading use owned CSS.
+No product-specific CSS patch. This is **not authenticated product acceptance**;
+the end-user search-to-routing module is not in this checkout and still needs an
+identified repository/adapter and controlled test environment. No push/merge/npm.
+
+**Executable React recipes, 2026-09-18:** read
+`snippet-validation-2026-09-18.md` for the next release-gate slice. All 82 displayed
+React recipes now compile unchanged against installed tarballs on React 18 and 19,
+with strict NodeNext and library checking enabled. The gate is part of
+`packages:install:check` in CI; `docs:snippets:compile` runs the same gate locally.
+Negative controls verify missing exports, invalid props and undeclared state fail.
+This supersedes earlier claims that no Docs snippets compile, **only for React**.
+The 80 Vue and 162 native snippets remain uncompiled references; 17 component Docs
+pages have no PlatformSnippets recipe. Neither compilation nor this inventory
+establishes platform parity, runtime correctness or production readiness. No push,
+merge or npm publish.
+
+**Responsive/Docs recheck, 2026-09-18:** read
+`production-readiness-recheck-2026-09-18.md` first, then
+`public-catalogue-guide-2026-09-18.md`. This supersedes older preview/test counts
+below. The public catalogue no longer depends on the private Vue harness; code
+tabs are styled and support limitations explicit. The recheck repairs narrow
+Navbar action loss, the blank MapSearch example, POI overlap, Docs overflow/live
+preview gaps, marker IDs/reduced motion, and the audit gate's async coverage gap.
+Navbar now grows beyond its 64px minimum instead of hiding essential actions.
+React has 436 passing tests; all 99 Docs pages fit 320/1280px and all 164 snippet
+section/viewport checks are required. Publishing remains blocked on the explicit
+manual, product, platform and release gates in the new report. Shared main stays
+untouched; no push/merge/npm publication is part of this work.
+
+**npm foundations continuation, 2026-09-18:** read `npm-foundations-2026-09-18.md`
+first. The three package declaration-format problems are resolved (`44712b0`); the tarball
+gate now enforces zero and checks strict ESM/CJS Node consumers on React 18/19.
+Token opacity now compiles (zero inert slash-class uses), and DatePicker,
+DateRangePicker and TimePicker are complete owned-CSS compositions. React has
+430 passing tests across 111 files; the 944-case story scan and 336 cross-engine
+interaction audits pass. The unchanged 48-case manual-review queue is not a pass.
+The CSS batches are `3d577e5` and `767b3be`; the latter fixes a legacy initializer
+overwriting owned transforms, caught by final visual inspection. The independent
+6006 preview runs `767b3be`. The current guide includes restart/build precautions.
+This supersedes older statements that those three problems remain. CSS migration
+and manual/product acceptance are still release work; nothing published or pushed.
+
+**Overnight quality pass, 2026-09-18:** read
+`overnight-quality-pass-2026-09-18.md` first. Olcay asked for another extensive pass
+and local commits while away. Select's previously exposed modal accessibility
+blocker is fixed with explicit inert-state ownership (`598b0b8`); emotional button
+contrast is repaired in canonical tokens and native copies (`10cbfb8`). The wider
+continuation covers accessibility, keyboard scrolling, responsive layouts and
+all 236 React stories. Storybook's source/built-provider context split is corrected
+(`a2cefbe`); manual-review findings led to range-label, warning-contrast and POI
+description fixes (`bbeddcf`). React now has 425 passing tests. The guide records the final verification state and exact
+maintenance commands. Older continuation notes below are historical, not the
+current release verdict. Shared main is untouched; no overnight push/merge/npm.
+
+**Screenshot audit continuation, 2026-09-17:** read
+`storybook-screenshot-audit-2026-09-17.md` first for the newest local batch on
+`astra/browser-compatibility`. Fixes cover active option contrast, selection ARIA
+and read-only/focus behavior, empty-result semantics, Listbox scrolling, native
+upload activation/long filenames, truthful Label examples and responsive/themed
+Storybook. React: 409 tests/108 files; screenshot matrix: 108 cases across three
+engines. The hardened accessibility smoke now FAILS for Select's
+`aria-hidden-focus` condition, previously suppressed. **Not release-ready; do not
+waive this gate.** The guide records source paths, exact commands, migration notes,
+unfixed debt and the next implementation order. No push, merge or npm publication.
+
+**Component-owned CSS continuation, 2026-09-17:** Olcay approved the recommendation
+to replace mandatory native scope (ruling 26). The first slice migrates Input,
+Textarea, Button, Popover, FieldWrapper, Label, PasswordInput and NumberInput;
+token definitions/keyframes are
+outside scope. Read `component-owned-css-2026-09-17.md` for the source map, migration,
+verification and outstanding work. The original form gate is retained, not waived.
+Only these slices are migrated; the whole library is not ready for npm. Button's
+non-functional `asChild` declaration is now removed: use native buttons for actions
+and links for navigation. Input/Textarea/PasswordInput/NumberInput accessibility
+descriptions and invalid-state merging are fixed. React Storybook is served from
+the separate verification worktree on port 6006; the guide explains safe rebuilds.
+
+**Earlier browser compatibility investigation, 2026-09-17:** release safeguards were pushed
+in PR #54 (not merged). The separate local `astra/browser-compatibility` branch is
+based on merged foundations `040f53d`, worktree `/private/tmp/kozmos-browser-compat.uqPMBD`.
+Read `browser-compatibility-2026-09-17.md`: actual packaged Input/Textarea controls
+fail scoped styling on the installed WebKit 26.0. Earlier geometry/theme tests did
+not cover them. At investigation commit `f8eb957` the added gate deliberately failed;
+the implementation continuation above addresses that failure.
+Chromium 145 and Firefox 146 pass the form fixture; the launcher now really selects
+Firefox and rejects unknown names. Minimum-engine certification remains release
+work; ruling 26 supersedes the earlier pending architecture choice. The baseline
+investigation itself changed no production styles.
+
 **Agent switch, 2026-09-17.** Development moved from Claude Code to ChatGPT Astra at `a02a008`.
 Whoever picks the work up next reads `docs/agent-switch-2026-09-17.md` first: its §1 to §5 hand the
 work to Astra, §6 is the handback Astra leaves before switching back, and §7 is what Claude checks on
@@ -156,9 +274,9 @@ build id, and a comment is not worth a re-stamp.
 - ~~`docs/figma-library-manifest.json` four weeks stale~~ — regenerated in #28, which also made the
   manifest and payload generators write Prettier-formatted output, so a regeneration is a
   content-only diff instead of 3,331 reflowed lines.
-- **Ruled, not yet built:** `tokens:raw:check` at 35 raw colours and 7 raw radii. Twenty-nine of the
-  colours are the same `bg-white/70` on three map cards and clear the moment the **glass** surface
-  role lands (§5.13).
+- **Ruled, then built (20 September):** `tokens:raw:check` stood at 35 raw colours and 7 raw radii;
+  the three map cards' `bg-white/70` cleared when the **glass** surface role landed (§5.13) — 20
+  colours remain, the baseline lowered to hold them.
 - **Ruled, not yet built:** the 18 floating-point values. Noise from a Figma export, not decisions.
   The type-scale ruling (§5.11) rounds `11.008…` and `13.008…` and adds 12 and 15 in the same pass. `Primitives.Typography.font.size` is read by no platform, and the
   `letterSpacing` and `line.height` scales are unused.
@@ -352,7 +470,9 @@ informative · alert`, reading `Components.{Primary,Secondary,Tertiary} Buttons`
 12. **The neutral ramp keeps both names** — `background.N` ascending for surfaces, `foreground.N`
     descending for ink, as today. The product maps to these at its own boundary; nothing is renamed.
 13. **A glass surface role is added** — composed from the `Semantics.Effect.glass` values that
-    already exist. It clears 29 of the 35 raw colours the ratchet counts.
+    already exist. It clears 29 of the 35 raw colours the ratchet counts. _Built on 20 September
+    on all three platforms: [glass-surface-2026-09-20.md](glass-surface-2026-09-20.md); the ratchet
+    stands at 20._
 14. **`Brand` (Readex Pro) stays, scoped with `unicode-range`** — the product is 93.8% Readex Pro,
     so the role matches what it sets. A declared system stack takes CJK, which the face does not
     cover, instead of whatever each browser picks.
@@ -390,6 +510,20 @@ informative · alert`, reading `Components.{Primary,Secondary,Tertiary} Buttons`
     and representative POI/routing flows before beta. See `prepublish-architecture-review-2026-09-17.md`.
     This authorizes implementation, not publication, credentials, pushes or merges. The numerical
     React thresholds are implementation choices for validation, not a universal native policy.
+
+25. **Proceed with release safeguards first**, then browser/WebView compatibility,
+    native adaptive parity and a real Pointr consumer proof before a prerelease
+    (2026-09-17). This authorizes local implementation, not credentials, account-plan
+    changes, repository visibility changes or publication. The browser minimums have
+    not been chosen by this ruling; Olcay has been asked for the Pointr support range.
+
+26. **Proceed with the component-owned CSS recommendation**, after another extensive
+    audit: precompiled namespaced recipes, provider-owned tokens and local resets,
+    without mandatory native scope. Prove a representative slice before migrating
+    the remaining components. Preserve customer compatibility rather than silently
+    raising browser minimums; exact minimums and device certification remain open.
+    Leave source/migration/verification instructions for independent maintenance.
+    This authorizes implementation, not a new push, merge or npm publication.
 
 ## 6 · Open — waiting on Olcay
 
@@ -614,7 +748,7 @@ outline button, a destructive shade, colour scopes for text, strokes and icons, 
 dashboard's v9 library publishes only `listItem`, and ~228 PDS / Pointr bindings still pointing at
 the unpublished "Primitive Tokens" collection.
 
-## 10 · The log, 2026-09-13 to 2026-09-17
+## 10 · The log, 2026-09-13 to 2026-09-20
 
 ### 2026-09-13
 
@@ -952,6 +1086,294 @@ native CSS `@scope` browser/WebView policy remains an unresolved release gate. P
 safeguards, CSS/type debt and motion/a11y policy must still be closed before production.
 No shared-main change, remote push, release change, credential use or publication occurred.
 
+### 2026-09-17 · Component-owned CSS first slice (Astra)
+
+Ruling 26 approved the recommended architecture after the `f8eb957` investigation.
+`astra/browser-compatibility` now migrates Input, Textarea, Button, Popover,
+FieldWrapper and Label to owned recipes and moves theme token definitions and
+namespaced animations outside native scope. Remaining components are not migrated.
+`component-owned-css-2026-09-17.md` is the maintenance/migration guide and evidence log.
+
+The original ten WebKit failures now pass. The first slice is also tested after
+removing all native scope rules. The audit reproduced and fixed description-ID/
+invalid-state accessibility merging and empty-error/helper linkage. It recorded
+Button's unsupported `asChild` API as a separate pre-release defect, not silently
+implemented with an incomplete polymorphic contract. Raw-value checks now read CSS
+recipes: moving styles must not hide debt. Inert references are 59/39/25; raw colours
+remain 35/7 and raw radii 7/6. Three dead references were removed without claiming
+their previously missing hover/placeholder visuals had been implemented.
+
+Local verification: all package builds; 387 React tests/106 files; six build tests;
+two browser-selection tests; 46 original + 13 form + two owned-CSS modes per engine
+in Chromium, Firefox and WebKit; React 18/19 packed installs and README samples;
+Storybook build and the contract/token/debt/snippet/variant checks. The guide states
+limits and exact commands. PR #54's safeguards CI is green except the plan-blocked
+Chromatic UI comparison; it is still open. This work is local, not pushed or published.
+
+### 2026-09-17 · Composed fields and honest Button contract (Astra)
+
+Olcay requested proceeding rather than another general pass, and a running Storybook.
+Continued ruling 26 with PasswordInput/NumberInput's complete owned-CSS migration.
+The RTL password-toggle defect and eight accessibility merge failures were reproduced
+first, then fixed. A controlled NumberInput stepping test also failed (display changed
+before parent acceptance); native stepping now proposes a value and restores the
+controlled display before notifying the parent. Uncontrolled behavior is retained.
+
+Implementation choice under the delegated recommendation: remove Button's unsupported
+`asChild` declaration rather than promise a partly implemented polymorphic API. Native
+Button props/ref/form semantics are unchanged; navigation uses Link or `buttonVariants`
+on an anchor/router link. No repository consumer used the removed prop. Three negative
+declaration assertions failed before removal and now pass against packed installs on
+React 18 and 19. Radix trigger `asChild` is unchanged. See the React README for migration.
+
+Verified: React build and lint; 400 tests / 107 files; six CSS-build tests; full and
+scope-stripped owned styles, original form regression and all 46 prior browser checks
+in Chromium/Firefox/WebKit; tarball install/type checks; Storybook production build;
+contract, debt, snippet and variant checks. Existing declaration/variant/visual debts
+are not waived. Native/device, live Figma and remote CI were not run for this batch.
+Storybook's separate preview checkout is `/private/tmp/kozmos-owned-css-verify.dV1etM`
+on port 6006; stop that server before rebuilding it. The guide contains exact commands,
+source files and new RTL story IDs. No push, merge or publication, and no shared-main change.
+
+Next: continue remaining field/overlay families, then remove legacy native scope entirely.
+Real browser floors, physical adaptive devices, native parity, map-adapter consumer proof,
+full accessibility/visual review and package/release gates still precede production.
+
+### 2026-09-18 to 2026-09-19 · From the catalogue to a real Pointr host (Astra)
+
+Astra's remaining batches never reached `main`. They sit on `astra/browser-compatibility`
+in the worktree `/private/tmp/kozmos-browser-compat.uqPMBD`, 33 commits past `origin/main`,
+unpushed: one public catalogue with platform reference tabs, the web POI reference examples
+and their taxonomy-driven display, the native POI card brought up to them, and finally
+`apps/PointrPlayground` — a real PointrKit 10.3.0 host on Design-QA with Kozmos-owned UI,
+a browse-only milestone. Each batch has a dated report; `docs/README.md` lists them. The
+handback to Claude Code is `claude-code-handoff-2026-09-19.md`, whose §8 names seven native
+findings and whose §10 orders four passes. On `main`, Astra merged #53 and opened #54, which
+is for review only. Nothing reached npm.
+
+### 2026-09-19 · Pointr iOS Pass 1 (Claude Code)
+
+Branch `claude/pointr-browse-repairs`, cut from Astra's at `663cde1` in the same worktree,
+unpushed. Findings A–D measured and fixed; the measurements are in
+`pointr-ios-pass1-2026-09-19.md`. Two of the fixes are the shared shell's, not the host's:
+it now saturates opposing insets at the map's size as React's `resolveMapInsets` does, and
+lays its top bar and controls out in the map beside a floating panel instead of under it.
+The native gallery was rebuilt to React's contract. Two rules held: every new test was run
+against the code it was written for and failed there first; every "fixed" was read from a
+3× simulator screenshot, not from a passing test. E, F, G and Passes 2–4 are not started.
+Five decisions wait on Olcay, listed in the report.
+
+### 2026-09-19 · Pointr iOS Pass 2 (Claude Code)
+
+Item E, `pointr-ios-pass2-2026-09-19.md`. Every one of Design-QA's 1,196 places was read
+through the SDK before a line of mapping was written: no ratings, prices on a sentinel, seven
+empty day schedules each, hours typed into two CMS keys, 269 places with Website and Call
+buttons, six taxonomy properties among forty CMS keys. The web's taxonomy adapter now runs
+natively over the same pinned 10.12.0 projection, generated for iOS by a script CI keeps
+fresh; the SDK's buttons become contact actions the host opens, or a message when the device
+cannot; hours are the venue's text and say so. Structured hours are not rendered: PointrKit
+documents no day order. 31 tests in the app; Dunkin', Boston AMERICA! and a Terminal E lounge
+checked live. Next: routing (Pass 3), and the six upstream findings for Pointr.
+
+### 2026-09-19 · Pointr iOS Pass 3 (Claude Code)
+
+Routing, `afa7bdf`, reported in `pointr-ios-pass3-2026-09-19.md`; the session handoff is
+`claude-code-handoff-2026-09-19-pass3.md`. Go on the card opens a starting-point picker over the building's
+places; the SDK calculates a normal and an accessible route, synchronously, in 15–77 ms; the
+preview offers them as Quickest and Step-free with the routes' own time and distance; the
+directions are stepped by hand, the map following each step's level and position. Measured
+live: Dunkin' to Airport Shuttles, 200 m and 213 s in both modes, 4 steps against 10, the
+elevator on both, the floor pill following the level change, Finish returning to the card.
+Two findings: the directions arrived in Arabic until the SDK was asked for the app's language
+(withdrawn 2026-09-20: the iPhone simulator's own first language, not a Cloud default); and the
+four Kozmos direction arrows have no transition form, so an elevator
+or a walkway keeps the SDK's words under a straight arrow — a design-system gap, not a host
+patch. 41 tests in the app. Next: the pass's leftovers, then F, G and Pass 4.
+
+### 2026-09-20 · Pointr iOS: Pass 3's leftovers closed (Claude Code)
+
+`pointr-ios-pass3-closure-2026-09-20.md`, commits `65ddd1c`, `25629b3`, `cf75072`. The marker on the current
+step is PointrKit's next-portal marker, read through MapLibre's public style API: one point
+feature at the next transition's node, its icon named after the kind (`wf-custom-transition`,
+`wf-lift-down`), no public API to it. No live no-route case: all 38 `Do Not Route` values on the
+site are the string "false" and Silver Line routes. Readiness measured on eight launches, 240–330
+ms after the building loads; the not-ready state now offers Try again and retries by itself when
+readiness arrives, no route keeps "Choose another starting point". A new XCUITest drives the
+routing flow on any simulator — the iPad included, which the desktop tool cannot — and attaches
+each panel's screenshot and accessibility tree. VoiceOver got each step as three loose elements
+with the arrow reading "Up" or "Remove Map Pin"; a step is now one element, the summary's icon
+silent, the current step selected and announced. Withdrawn: Pass 3's "Design-QA answers in
+Arabic" — the iPhone simulator's first language is Arabic, the iPad asked for nothing got English.
+Also found: the building at launch varies (item G), two "Airport Shuttles" on one floor. Next: F,
+G, Pass 4.
+
+### 2026-09-20 · Design system pass (Claude Code)
+
+Olcay redirected the work to the design system — "and if anything is missing, not to make the
+app most functional" — with three examples. `design-system-pass-2026-09-20.md`, commits
+`77b2ae7`, `04ca91a`, `400e097`, `bd4d3c8` and the docs commit. The card's name and its quick buttons now share one row on iOS, the web and
+Android, the name wrapping to three lines at most: before, iOS and the web stacked the buttons
+under a long name and Android cut it to one line. A long name is a shared fixture, in the
+Storybook example and the native playground; the change is measured by a pixel-reading iOS
+test, the browser suite's new header check (six failures on the old stylesheet, none on the new)
+and an Android golden. The open level switcher names every level beside its short label, the
+current one filled, trailing-aligned to the pill. Folded phones: Olcay chose the iPhone Fold
+first; Xcode 26.6 has no device type, runtime or fold API for it, so the recommendation is to
+bring the web shell's hinge-region model to the iOS and Compose shells ahead of the SDKs. F, G
+and Pass 4 wait. Then Olcay named the reference for the screen states: the prototype at
+`agentic-search-zeta.vercel.app`, over the older Figma boards. It was read through the DOM and
+recorded in `pointr-prototype-screen-states-2026-09-20.md`: every state measured, mapped onto
+Kozmos parts, five decisions (circular quick buttons, labels-only level list, Readex Pro, four
+route modes on 132px cards, the step-free toggle's home) and the missing parts — a manoeuvre
+card, a progress rail, an itinerary list, a gradient-ring AI search button, a pulsing location
+marker. Olcay ruled the same afternoon: the 16px squares stay; system fonts per platform (already
+the code's state — Readex Pro is only the unused brand token and the Figma text styles); no
+wayfinding modes and no preview step, so the QA app's Go now opens the picker and the directions
+follow at once (`6527d7a`, 40 app tests, the flow test green); the level list's form still his.
+Audited the same evening at Olcay's request: the owned-CSS gate, skipped after the card's
+stylesheet changed, run and green on three engines; the header test rewritten to tell one, two
+and three lines apart (14.5, 39.5, 64.5 points at 320pt); the preview's unused estimate presenter
+removed; the search bar's magnifier silenced and its clear button labelled on iOS, the Android
+label aligned; the hidden pill taken out of VoiceOver's tree while the level list is open; the
+operator's guide written (`kozmos-pointr-operators-guide-2026-09-20.md`).
+
+### 2026-09-20 · The navigation parts (Claude Code)
+
+On its own recommendation after the audit: the prototype's three navigation parts built on iOS,
+React and Android — `navigation-parts-2026-09-20.md`, commits `3f360e2`, `e3353b7`, `e43941b`,
+`bef76c9`, `536cdc1`, `f82f3fe`, `9783145` and the docs commit. A manoeuvre card over the map
+that opens into the itinerary and is as tall as it up to a cap; an itinerary list with the
+current step emphasised; a route progress rail whose disc travels by ground covered; and the
+route summary's additive navigation layout — the destination with End, the stats on one row, the
+rail. The QA app's directions and the fixture playground moved onto them; the Storybook has an
+Examples/Navigation composition. Measured everywhere: the iOS render tests caught the rail's stack
+centred a dot to the right and the open card taking its whole allowance (a `Layout` now proposes
+the cap and takes the child's size); the new three-engine browser check caught the open card and
+its itinerary sharing one landmark name, fixed on all three platforms. Gates: package 81/94/96,
+CI step 52, app 39 and the flow test, react 507, `test:navigation` 20 × 3, Paparazzi verified.
+Still open: the transition arrows, the rail's untokenised geometry, the card's translucency, the
+QA sheet's detent while navigating, the level list's form. F, G and Pass 4 still wait.
+Ruled the same evening: the rail's numbers stay; a glass surface role (§5.13) is built now on all
+three platforms and the card and the summary take it; a compact detent in the shell; each
+platform's own transition icons; the button-height finding withdrawn (44 everywhere by contract); the level list as built. The
+branch was pushed to origin. Next: the glass role, the transition arrows, the search sheet.
+
+### 2026-09-20 · The glass surface role (Claude Code)
+
+§5.13 built — `glass-surface-2026-09-20.md`, commits `60cca79`, `cae0b91`, `c72a06d`, `bfb035c`
+and the docs commit. `Semantics.Effect.glass` reaches iOS and Android as `KozmosEffects`, emitted
+by the tokens build; the web's `.kozmos-surface-glass` reads the token's variables and is switched
+off only while transparency is reduced; iOS composes the tint over the system's thin material;
+Compose draws the tint and the edge, having no backdrop blur. The manoeuvre card and the route
+summary are on the role on all three platforms, and the three web map cards too: the raw-colour
+ratchet drops from 32 to 20. Two findings: the system's Liquid Glass renders black in a hosted
+snapshot, so the material composition stays the role on every iOS version and Liquid Glass is a
+decision; and the scoped legacy preflight beat the role's edge on every engine until the element
+carried `kozmos-reset`. `tokens:glass:check` holds the token, its emission, the rule and the
+consumers together; the owned-CSS suite measures the role in both themes.
+Then, on Olcay's answers: solid is the default and glass an option — a surface style on all three
+platforms (`04bce5a`, `480471f`, `e6898e3`), the QA app and the examples asking for glass, the
+three web map cards solid by default; the shell's sheet and the Button's glass variant next.
+
+### 2026-09-20 · The map shell's sheet (Claude Code)
+
+`map-shell-sheet-2026-09-20.md`, commits `20575a0`, `72009db`, `ccf33ed` and the docs commit. The
+sheet fits its content — a content detent on iOS through the capped layout, `panelSizing` on the
+web from the content's scroll height, by construction on Android — and takes the surface style,
+solid by default, on all three shells; the QA app's directions sheet rests fitted and on glass, as
+the prototype's. Measured on each platform; the capped layout was clamped to its cap when a
+render test showed a fixed-height child overrunning it. The Button's glass variant next, then the
+transition arrows and the search sheet.
+
+### 2026-09-20 · The Button's glass variant (Claude Code)
+
+`glass-surface-2026-09-20.md` §7, commits `5d9c980`, `1f10259`, `45b35b5` and the docs commit.
+The Button's and IconButton's glass variant is the glass surface on all three platforms — the
+token's tint, blur and edge in place of white at 16 % and the design config's slider numbers —
+with the other variants' pixels untouched (the 18.4 baselines still match) and the last raw
+palette class gone from the owned CSS. Measured on each platform. Next: the transition arrows,
+then the search sheet.
+
+### 2026-09-20 · Directions for transitions (Claude Code)
+
+`transition-arrows-2026-09-20.md`, commits `7c9e9ea`, `1e9f856`, `6c69f60` and the docs commit.
+`DirectionType` gains ten cases — a level change by lift, escalator or stairs, up or down, or
+unnamed; a same-level transition; turning back — on all three platforms, each drawing what its own
+icon set has: SF Symbols and lucide have no lift or escalator (probed), so the web and iOS show the
+direction of travel and the words carry the means; Material has all three and the words carry the
+direction. The QA app maps the SDK's message types and the taxonomy's transition subtypes onto
+them; "Take Elevator down" finally carries a down arrow. Measured on each platform. Next: the
+prototype's search sheet.
+
+### 2026-09-20 · The search sheet (Claude Code)
+
+`search-sheet-2026-09-20.md`, commits `757f1ce`, `486b216`, `0623479`, `bdf97e9`, `1b5090e` and
+the docs commit. On Olcay's four answers: the category tile, the result row and the search field
+take the prototype's geometry on tokens — a 64 icon square, an 80-tall row with a dot on the map's
+floor, a 44 field with a 24 clear circle — and the two parts the system lacked are built: the
+location marker's halo (18, 48, 64) and the AI search button, a 66 ring whose gradient runs
+through the theme's own ramp, the first gradient made of tokens. All three platforms, each
+measured; the iOS render tests each failed once against a mutated part. The QA app's search row
+has the AI search beside the field and the dot on results. That closes the five stages Olcay
+ordered on the 20th: the glass surface as a style, the sheet, the Button's glass, the transition
+arrows, the search sheet.
+
+### 2026-09-20 · The initial sheet, driven and built (Claude Code)
+
+`pointr-prototype-initial-sheet-2026-09-20.md` (commit `dcb9c9d`, with
+`scripts/measure-prototype-sheet.cjs`) and `initial-sheet-2026-09-20.md`. Olcay asked for the
+prototype's initial bottom sheet analysed with its interactions: it was driven in a real browser
+and its React state read after every step — three detents at 20 / 54 / 94 % of the frame, the
+whole sheet dragging, the content scrolling only at full, a nearest-by-distance snap, the field's
+focus opening the sheet, a tile keeping the detent, a place card at half with a Go-fitted minimum
+and the search sheet's place remembered. On his four rulings the three shells were re-based to
+those numbers, drag anywhere with the scroll handoff, and an anchored peek the content marks; the
+QA app's sheet was recomposed on Kozmos parts with the taxonomy's aviation quick-access tiles
+(vendored, 10.12.0) searching by words as a stand-in for a type the SDK does not expose. Measured
+on each platform; the web sheet driven on three engines and by touch on chromium; the QA app's
+sheet driven by a UI test.
+
+### 2026-09-21 · The category state, the ring, the motion tokens (Claude Code)
+
+**The handoff for the next chat is [claude-code-handoff-2026-09-21.md](claude-code-handoff-2026-09-21.md).**
+
+`initial-sheet-2026-09-20.md`, its later sections. Olcay's screenshots of the QA app, one after
+another: the tiles' squares dropping beside a two-line label (the grid now aligns its cells at the
+top); the AI ring as a thick collar (the prototype re-measured — a 48 circle with a 2.5 band, the
+"66 outer" a wrong first reading — and its rainbow made of the data-colour tokens, turning 3.6 s a
+turn); the map inset from the status bar and the sheet cut above the home indicator (the three
+shells run edge to edge, the chrome and the sheet's content keeping the safe areas, the keyboard's
+region still respected); the row's forms switching instantly (the system had no motion tokens —
+`Semantics.Motion` gains three durations and two easings, the prototype's curves, emitted natively,
+with `KozmosTransitions` on each platform, the shells' snaps on them and the iOS shell's rise on a
+host-set detent — keyed on the detent, not the height, so a measurement lands at once); and the
+chosen category
+(`taxonomy.json`'s `alsoKnownAs` lists are the search words, derived by
+`sync-ios-quick-access.mjs`; the prototype's 48-tall field in the category's colour is
+`CategoryField` on all three; the map shows the category's places alone). Every one measured, most
+made to fail first.
+
+Later that day, Olcay's tile rulings: a tile's count draws as the system's `Counter` at the icon
+square's top-right (4 beyond its edges, on all three, named in the contract) and a tile without a
+place leaves the grid (the QA app counts the loaded venue in one pass; 9 of 18 tiles remained
+with 306 places); the Filters button is gone, the AI companion is to take filtering. On-device
+Apple Intelligence was checked, not built: the Foundation Models framework runs here but reports
+Apple Intelligence not enabled on this Mac, the taxonomy has no vegan type, and the venue's places
+carry almost no tags or keywords. Then the colours: `CategoryTile` and `LocationPin` take a tint
+and `Counter` a fill on all three, the QA app's tiles wear their categories' colours and a chosen
+category's places take the SDK's round marker in the taxonomy's colour (the SDK draws no view of
+ours; the tile's data yellow and the marker's yellow differ, a token decision for Olcay); the POI
+panel paints no surface of its own in a sheet on any platform; the session's places are the
+site's. `initial-sheet-2026-09-20.md`, its last sections, have the numbers and the decisions.
+
+The audit Olcay asked for the same day found ten things and fixed them: digits on a fill went
+black in dark mode and white fails contrast on half the taxonomy's colours (a fill now comes with
+its ink, `KozmosInkedFill` / `CategoryTint.onFill`); the tiles wore the chart palette (the
+taxonomy's eight quick-access colours, measured from the published sprite atlas, are
+`Semantics.Category.{Accent,Fill,OnFill}`, the eight pairs held to 4.5:1 by the contrast check);
+the web panel never had its tint callback; the SDK's markers were measured three ways and none is kept — the per-place style painted room fills black, so the map shows a category's places through `poisToShow` alone; a selected tinted tile's stroke, the POI panel's inset blocks on the
+sheet, stories, notes and the contract followed.
+
 ## 11 · The work now: the SDK's components, rebuilt as examples
 
 Olcay's instruction, 2026-09-14:
@@ -1110,3 +1532,252 @@ Straight from the scan, so an example that needs one of these will stop at the s
 | An in-surface status message         | Core          | the eight parts; the map toggle's "Calculating…" |
 
 Everything verified by running it; nothing here is recalled.
+
+## 12 · The Figma drift, 2026-09-21 (evening)
+
+Olcay's order for the open items: the Figma drift first. The importer had not changed since the
+14th (`604730c`). Four commits on `claude/pointr-browse-repairs` — `c9a2f31`, `184ad22`,
+`6006614`, `8c50b97` — bring it to the parts: the manifests regenerated (the glass, motion and
+category tokens in the payload); a `Tint` axis, Theme and the taxonomy's eight, on
+CategoryTile (27), LocationPin (135) and the new CategoryField (9), each variant binding
+`Category/Accent`, `/Fill` and `/OnFill`; the tile on the 20th's geometry with the system's
+Counter nested at its corner and `Show Count`; the panel's grid of eight live tiles in the
+aviation quick access's colours; the POI panel surfaceless in a sheet; IconButton large 48;
+DirectionStep's fourteen cases as curated icons; the new AISearchButton with a conic gradient
+bound to the six data colours; the library's typed glyphs drawn from the Icons page; arrow-up,
+arrow-down, flip-backward and stars-01 curated. `scripts/lib/figma-plugin-harness.mjs` stands in
+for the Plugin API and `pnpm figma:painters:check` measures the painters (135 assertions; 70 red
+on the old plugin). Code Connect on all three platforms follows; its dry runs parse and report
+only the properties the live file lacks until Olcay runs the importer
+(`docs/figma-drift-2026-09-21.md` §4). Rulings the same evening: the personal tiles leave the
+grid while empty; the icon button's large size stays 48; the iPhone 17 Pro simulator is English.
+
+The same night's audit, on Olcay's ask, found two defects and fixed them: the icon helper fell
+back to `search-md` for every caller (now only for the two data slots; symbols fall back to
+their typed glyph), and the plugin's curated definitions lacked the registry's thirteen owned
+outlines (now generated from the registry, held to the catalog by the contract check). The
+last typed glyphs — the floor selector's steppers, the map controls, the submit, the swap
+(switch-vertical-01 curated) — draw icons; CategoryField has a contract entry asserted on
+every platform; CI runs the painter and compatibility checks. One decision for Olcay: the
+field's 32 clear has no 44 hit area on any platform, unlike the search bar's clear beside it
+(ruled the same night: a 44 target around the 32 circle, `701f919`).
+
+Olcay's first audit in Figma the same night reported the Button family's icons failing 3:1.
+Read over REST: the icons were plain black with the right token in their plugin data, and an
+Update deciding by the label would have skipped them. The plugin's re-tint now follows the
+paint (`414ba00`); the check proves the repair. His file is otherwise untouched by the new
+build: the Icons page holds 38, every set is on `dd9f78a05cc0`, the two new sets are absent —
+the run is still ahead.
+
+Olcay ran the importer on the 21st and pasted a second full audit at 14:58. It carried no
+build; its typography rule dated it before `fc3e915`. Update All Core had stalled at the Tree
+block: each Tree row searched the pages in order for its icons, through the whole Components
+page, 28.7 million node visits for 1,044 lookups; icons are now read from Icons first and kept,
+506 visits (`50ba616`, which also shows the build in the panel and the report). The dark-mode
+icon failures on Button, IconButton and Badge were unbound black glyphs that the re-tint check
+of `414ba00` passed because their colour matched the light fallback (`3b1d226`). The 319
+layout-sizing refusals of an earlier run were HUG on leaves and FILL before an append or under
+a frame without auto layout, in ten painters (`07a28e7`). Over REST, CategoryField's bound
+12 % wash kept its opacity while CategoryTile's and DirectionStep's lost theirs, so `e070cef`'s
+"Figma drops a bound paint's opacity" was wrong as stated; the washes stay layers and the audit
+now composites them (`c28921a`). CategoryField and AISearchButton are pinned in Code Connect
+(`9edcbe1`). What the audit still flags is design: the category colours on light surfaces and
+the off-floor pin number, and React's pin inks its number for a fill it does not draw — numbers
+and recommendations in `docs/figma-drift-2026-09-21.md` §9. Olcay took all four the same night
+(`ce6e807`): CategoryField's name and clear, and the off-floor pin number, in
+`Colors/foreground/0` on every platform and in Figma; the category icons decorative, hidden
+from assistive technology, and reported by the audit as advisories; React's pin solid, hollow
+off the floor. The contract records each and its check holds every platform to it. The run
+for build `ed50a03a1912`, nineteen sets, is in §9. He then took the clear's 44 target too
+(`701f919`): a 32 circle in a 44 button on all three platforms, the trailing padding 2 so the
+circle stays 8 from the edge; Compose's clear, which a weighted spacer had floated inward, now
+sits at the edge, as on React and iOS.
+
+Late on the 21st Olcay said to publish Code Connect, and it went out on all three platforms from
+`claude/pointr-browse-repairs`, in three rounds (numbers in `docs/figma-drift-2026-09-21.md` §9).
+Reading the first round back found what no dry run had: Backdrop's mappings on all three
+platforms and React's Icon had never been in the linked configs, which are lists, so they had
+never been validated or sent while the manifest counted them linked; and every React snippet
+imported the mapping file's relative path (`from "./CategoryField"`) while no SwiftUI snippet
+imported anything. The configs now list the four (`a534276`) and map the imports to
+`@kozmos/react` and `import Kozmos` (`ef1b68b`), and the contract check refuses either gap
+again. `pnpm figma:connect:readback` (`98cb9de`) reads Dev Mode back through Figma desktop's
+Dev Mode MCP server: after the second round, 95 linked nodes on each platform, every one
+showing a snippet. Publish again only from this branch or from `main` after the merge; a
+publish from `main` before it would put back older mappings and drop the imports. After the
+third round, 23 of SwiftUI's 95 nodes read back clean before Figma's daily limit for the Dev
+Mode server refused the rest; the readback now stops at that refusal, and the remaining pass
+waits for the limit to reset.
+
+Olcay's Audit Library at 19:00 ran on `ed50a03a1912` with one set, Button, painted on it; the
+other 95 still carried this morning's builds, so most warnings were the old drawing again. Two
+were plugin defects. `c28921a` had bound every paint at opacity 1 on the premise that a bound
+colour carries its own alpha; rendered over REST, it does not show — Backdrop's scrim at paint
+opacity 0.502 draws 128/255, and Button's Glass, bound at 1, drew as an opaque near-white pill,
+1.03 against its label in Dark. The token's alpha rides on the paint again, and Surface QA's
+Slider spec names its Type axis, the missing instance on each panel (`aa876ce`, build
+`314962f54832`). The painter check (224) fails exactly those five on the old build. Button needs
+its Update again with the other eighteen.
+
+Olcay's Audit Library at 20:38 ran on `314962f54832` with two sets updated on it, Button and
+Badge: Glass draws translucent (over REST, paint opacity 0.102 and rendered alpha 49, like
+IconButton's), Badge's dark icons pass, and Surface QA draws 64 of 64. The five warnings are
+the four sets not yet updated, and rendered over REST two are worse than the audit read:
+DirectionStep's discs are solid under a glyph of their colour, so no glyph shows in any type,
+and the nine Selected CategoryTiles are white under an opaque tint with the icon unseen, which
+the audit measured on the white because it read a node's first fill only. Replayed without
+Figma — the old painter, then this build's over the same node, then the audit with the
+payload's tokens — the old drawing reproduces the live audit failure for failure and the Update
+reads clean. The audit now reads every fill a node stacks, holds every set's text to a style
+(FileUpload's 32 browse labels had none, and FileUpload was off the rule's list of 43), and
+measures Glass on purpose (`45e4b0f`, `5639895`, build `53ac76afe679`, no painter changes); the
+painter check (242) audits all 185 variants of the four sets in both modes. The seventeen
+remaining Updates are the run (drift §9).
+
+At 21:36, after that audit's FileUpload warning and the panel's next step, Apply Text Styles ran
+on the live file and restyled every text it could guess a style for: it writes a literal size and
+leading before attaching the style, so 4,957 texts in 46 sets lost their size and leading
+variables, and its guess set 656 of the pickers' 12/16 readouts at 14/20. The file's typography
+had not changed all day before that (11,186 bound fields at 14:58, 19:00 and 20:38), so the
+drift doc's earlier line crediting Apply Text Styles with the 14:58 typography warning was wrong
+and is corrected. Apply Text Styles now styles only unstyled text and binds its sizes back, its
+guess agrees with every styled text as the painters left them, and the audit and the panel name
+the set's Update (`bd4afde`, build `01f3be6891dc`, no painter changes; the painter check is 261).
+The repair is Olcay's: the version from before 21:36, or the two update sequences (drift §9).
+
+Update All Core then ran on `01f3be6891dc` after the version from before 21:36 was restored: it
+finished 66 Core sets and every text is bound and sized as at 20:55 again, but it stopped in
+TreeItem, the largest set (216 variants), with Figma's renderer at 100 % and no save for over
+ten minutes until Figma was quit, while the panel still read NavigationItem. The update paths had
+no yield inside a set, and the bulk buttons stayed enabled during a run with no guard in the
+plugin. A long set now reports each variant and phase and yields, the bulk buttons are disabled
+while busy, the plugin refuses a second run, and a run's result names its slowest sets
+(`b1d7702`, build `1001317b6546`, painters unchanged; the painter check is 267). Left: Update All
+Product / SDK, then the Tree block one set at a time (drift §9).
+
+On the 22nd the audit of 06:58 read no warning and 54 advisories, as forecast, and REST
+confirmed the typography and the washes; but `pnpm figma:verify` failed on five cut names in
+BrowseCategoriesPanel, whose grid of live tiles reached the file that morning. The tile's label
+was a fixed one-line box in the live runtime though the painter asked for two lines; the
+Product / SDK run had updated the panel before CategoryTile, whose Update reset the panel's
+counts to 12; and every tile shows a bus, the aviation quick access's icons not being on the
+Icons page. Fixed in `fc1adcc` (build `7241e855b611`): the label's order with a read-back, the
+run order with `SETS_THAT_OVERRIDE_INSIDE` and a note after an Update, ratios below a threshold
+rounded down, Dialog's and Drawer's footer widths measured, and a slot's stroke given room; the
+painter check is 290. The Tree block needs no Update: replayed, it draws as the build. Left: the
+run in drift §9, the panel's icons and two smaller decisions (handoff §7).
+
+Olcay's run of 08:10 confirmed the tile's two lines and the panel's counts in the live file, but
+DynamicIsland's slots still read 26: not the fit, as `fc1adcc` said, but the runtime growing a
+frame whose padding and stroke outgrow it — each slot had 12 above and below and its stroke
+before the fit cut the padding, and a fixed frame never shrinks back. Then Olcay's three rulings,
+as recommended (`1221183`, `b6830f4`, build `6fdc2ffbc635`; drift §9, the last two sections):
+the browse tiles carry the taxonomy's own quick-access symbols, vendored as the SVGs the
+taxonomy publishes and generated into `@kozmos/icons` and the Icons page by
+`pnpm icons:taxonomy:build`; DynamicIsland's "•" is the default icon, and the island is drawn as
+React and Compose draw it (240×44, 360×160 at 32, a 56 circle, where it was 240×48, 360×180 and
+64×48); the panel's title, which no platform draws, is hidden with its property kept, and its
+search sits in a header over a rule as on every platform. On the way: Curated Icons → Update
+drew every icon's source again under a new id, orphaning the tint of every icon slot in the file
+but four sets' — it keeps them now; the contract check could pair an icon with its neighbour's
+key; the check's scan of writes inside nested instances missed two shapes of write; and the
+typography rule, red on this branch since `a38e24a`, read `KozmosTypography.font(.callout)` as a
+bare style (`36d04e8`). The painter check is 346. Left: the run in drift §9, and four
+cross-platform differences for Olcay (handoff §7).
+
+That afternoon Olcay ruled the four differences as recommended (`21f508b`, build
+`c35a625c8160`). SwiftUI's island is React's and Compose's, a 240×44 capsule and a 56 circle.
+The browse grid's rows are 12 apart on every platform: the prototype, measured again, is a CSS
+grid with `row-gap` 12px and `column-gap` 8px, and React, Compose and Figma had 8. The panel's
+rule and its empty state's edge are the border role on SwiftUI and Compose, as on React and in
+Figma — the prototype draws every rule in one light grey, and the natives drew a near-black text
+colour, Compose's in its light value whatever the theme — and Compose's empty state is dashed as
+the others are. Each change has a test that fails on the old code: three island tests and two
+colour reads on iOS, a Paparazzi test whose goldens, recorded on both, show the rows 4dp further
+apart and the rule in the role in light and dark, a component test on Chromium and WebKit, and
+the painter check. The hand-swapped symbol stays as it is. Ruling them turned up the same edge
+fault library-wide on the native side — 31 lines in 17 SwiftUI components and 42 in 19 Compose
+ones draw an edge in a foreground primitive, and the border check never reads the components
+(handoff §7).
+
+Then, on Olcay's word, every edge into its role. A scan that reads each native edge call across
+its lines found 94 out of their roles — 42 in 26 SwiftUI files, 52 in 30 Compose ones — and the
+web had its own two: every bare `border` drew Tailwind's gray-200 in both themes, because the
+package's scoped reset never took the role as its default, and four control edges read
+`foreground/500` by its primitive. Container edges and dividers are Border/Subtle now, control
+boundaries Border/Input, a bare React border is Subtle, and Compose reads the roles and its
+Surface through the theme, where they were light in the dark. The cards React puts on the
+Surface are on the native one; the empty and status boxes are dashed everywhere; five marks
+keep a named primitive, the stepper's pending ring among them at the plugin's foreground/500,
+which React now draws too in place of a 1.2:1 muted ring. `pnpm tokens:border:check` holds the
+components on all three platforms (95 failures on the tree before), and the new tests — two on
+iOS, a Paparazzi snapshot recorded on the old code and the new, a component test on Chromium
+and WebKit — each fail on the old code. What it left is in handoff §7: Compose's dark mode
+beyond the edges, the WayfindingCard and routing fields' style, the cards' missing `surface`.
+
+Then those five, on Olcay's word, each as recommended. Compose follows the theme: the token
+build generates `KozmosThemeTokens` for all 453 colours of both palettes — it was written by
+hand and wrapped 82 — the 272 component reads of the light palette moved onto it, and
+`pnpm tokens:theme:check` holds them (73 failures on the tree before). On the way four more
+faults came up and were fixed. iOS's colour parser read eight hex digits alpha first and could
+not read `rgba()`, so the scrim drew nothing on Dialog and Drawer and the transparency tokens
+drew faint blues; the build now converts every value and throws on one it cannot write. The
+Backdrop dimmed with a primitive that turns light in dark mode on both natives; it is the scrim
+role. SwiftUI's island set the whole window dark; it scopes its own content, and Compose's reads
+the dark palette as it does. The packages' copies of the token build had drifted —
+`KozmosDesignTokens.kt` lacked the category palette, both `colors.xml` kept the emotional button
+colours from before `10cbfb8` — so one script copies every native output, CI holds them to the
+build, and the Figma sync uses the script. WayfindingInputRow on both natives is React's row,
+measured: the rail, two borderless raised fields in background/50 (muted at half as it reads on
+the card; opaque, because a platform shadow shows through a translucent fill), the swap
+floating at their end; React's own rail squeezed its ring to 10 × 8.2 and is fixed. The routing
+fields take the control radius on React too, as the radius rule says of a control, and the
+standard focus ring, as FeedbackCard's comment box now does — both were `rounded-panel` with
+`ring-0`; Compose's were Material's, 56 high, and are React's 40 with React's wash, rail and
+actions on both natives. FeedbackCard, RoutingInputGroup and SaveLocationCard take `surface` on
+both natives. The steppers are 32 circles with the plugin's rings — 2 current, 1 pending — on all
+three platforms. Each change has a test that fails on the old code. What it left — the group's
+container radius, React's island in dark mode, the native comment box, glass shadows on Compose,
+fixed fills under inks that flip — is in handoff §7.
+
+The same evening Olcay took the five decisions those left, each as recommended (`022f961`, plugin
+build `b3257790f931`). The four cards that float over the map — RouteSummary, RoutingInputGroup,
+SaveLocationCard, FeedbackCard — are the panel role, 24, on every platform; React drew the `2xl`
+primitive and Figma the container. The island is black with its content in the dark theme
+everywhere: React nests a dark provider, Figma's set takes the Kozmos collections' Dark mode on
+`Surface/0` (it bound `Colors/foreground/1000`, white in the Kozmos light ramp). The native
+comment box is washed, as React's is, through one internal washed field per native shared with the
+route points. The stepper's accent is React's primary pair on every platform, which also puts a
+readable ink on the completed step in the dark; Figma's grey completed ring and faded connector
+went with it. Compose Code Connect was republished with its light-only snippets themed, and the
+theme check now lets a Code Connect file read the one-theme palette only for a colour both themes
+share. Each change has a test that fails on the old code, and nine painter assertions fail on the
+previous build. Two findings: over REST a bound paint in this file renders its stored colour, not
+its variable's, so a REST render cannot confirm a binding; and the branch's first CI runs (PR #56)
+fail five checks `main` passes — handoff §8.
+
+On the afternoon of the 22nd the handoff for the next chat was written:
+[claude-code-handoff-2026-09-22.md](claude-code-handoff-2026-09-22.md). Writing it turned up two
+things. The live Figma file had been written at 09:47:15Z by a Curated Icons → Update that drew
+all 56 icon sources anew, although its sync keeps a source whose main component carries the
+definition's key; the tints laid through the old sources are gone from 2,325 of the library's
+2,415 icons, in 52 sets. No audit, `figma:verify` or CI step reads icon paints; the new
+`scripts/figma-rest/icon-tints.mjs` does. Olcay's run on `b3257790f931` therefore takes Update All
+Core and Update All Product / SDK after the icon sync (`figma-drift-2026-09-21.md` §9, the last
+section). And CI's steps after the story audit, never run on the branch, were run locally: one
+was red, the governance check, because `STATUS.md` had not been regenerated for the branch's new
+components; it is, and the check no longer counts Compose's `Motion` folder as a component. The
+session's Figma read tools are kept in `scripts/figma-rest/`.
+
+On the evening of the 22nd Olcay's run on `b3257790f931` was made, with the icon sync last: every
+set carries the build, but the sync drew the 56 sources anew once more and orphaned the tints the
+Updates had just laid, 2,310 of 2,416 icons. The sync's keep fails in the live runtime although
+REST reads the stored keys on the sources; it is fixed in the next build, after Olcay's second
+pass — Update All Core, then Update All Product / SDK, without the icon sync
+(`figma-drift-2026-09-21.md` §9, the last section). As recommended the same evening: the emotion
+text roles went one step darker, so status text holds 4.5:1 on every neutral surface in both
+themes; the natives' stepper labels took React's; and the React bundle was measured, 62.8 % core
+components and 29.0 % Product / SDK, so the split gets its own PR after #56. The worktree moved
+off `/private/tmp` to `/Volumes/4TB Depo/development/K/kozmos-design-system-pointr`, and
+`QAConfig.json`, reported lost that morning, turned out never to have been: the check had read a
+wrong path. The handoff of the 22nd, §0a, has each of these.

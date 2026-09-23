@@ -1,5 +1,6 @@
 
-import { Canvas, Meta, Story, Controls, Source } from '@storybook/blocks';
+import { Canvas, Meta, Story, Source } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as BadgeStories from './Badge.stories';
 import { PlatformSnippets } from '../PlatformSnippets';
 
@@ -29,11 +30,18 @@ Displays compact metadata, status, or categorization. Opt-in counts are rendered
 
 <PlatformSnippets
     react={`
-import { Badge, Counter } from "@kozmos/react"
-
-<Badge variant="outline">Badge</Badge>
-<Badge variant="secondary" counter={2} showCounter>New</Badge>
-<Counter>2</Counter>
+import { Badge, Counter } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Badge variant="outline">Badge</Badge>
+      <Badge variant="secondary" counter={2} showCounter>
+        New
+      </Badge>
+      <Counter>2</Counter>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

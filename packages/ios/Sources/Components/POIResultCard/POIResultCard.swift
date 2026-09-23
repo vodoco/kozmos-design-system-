@@ -27,6 +27,8 @@ public struct KozmosPOIResultCard: View {
     private let result: KozmosPOIResultPresentation
     private let featuredLabel: String
     private let selectionLabel: String?
+    /// The floor the map shows: a result on it carries a dot before its floor.
+    private let currentFloorId: String?
     private let onSelect: (String) -> Void
 
     public init(
@@ -34,14 +36,18 @@ public struct KozmosPOIResultCard: View {
         result: KozmosPOIResultPresentation,
         featuredLabel: String = "Featured",
         selectionLabel: String? = nil,
+        currentFloorId: String? = nil,
         onSelect: @escaping (String) -> Void
     ) {
         self.poi = poi
         self.result = result
         self.featuredLabel = featuredLabel
         self.selectionLabel = selectionLabel
+        self.currentFloorId = currentFloorId
         self.onSelect = onSelect
     }
+
+    var onCurrentFloor: Bool { currentFloorId != nil && result.floorId == currentFloorId }
 
     private var available: Bool { result.isAvailable }
 
@@ -108,17 +114,9 @@ public struct KozmosPOIResultCard: View {
 
             Button(action: handleSelect) {
                 HStack(alignment: .center, spacing: KozmosDimensions.primitivesLayoutSpacing150) {
-                    Text("\(result.resultIndex)")
-                        .font(.subheadline.weight(.bold))
-                        .foregroundColor(KozmosColors.componentsPrimaryButtonsThemedButtonForegroundContentIdle)
-                        .frame(width: 32, height: 32)
-                        .background(KozmosColors.componentsPrimaryButtonsThemedButtonBackgroundIdle)
-                        .clipShape(Circle())
-                        .accessibilityHidden(true)
-
                     VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing25) {
                         Text(poi.name)
-                            .font(.body.weight(.semibold))
+                            .font(KozmosTypography.body)
                             .foregroundColor(KozmosColors.primitivesColorsForeground100)
                             .lineLimit(1)
 
@@ -129,10 +127,14 @@ public struct KozmosPOIResultCard: View {
                                 .lineLimit(1)
                         }
 
-                        HStack(spacing: KozmosDimensions.primitivesLayoutSpacing50) {
-                            Image(systemName: "mappin.and.ellipse")
-                                .font(KozmosTypography.footnote)
-                                .accessibilityHidden(true)
+                        HStack(spacing: KozmosDimensions.primitivesLayoutSpacing75) {
+                            // A dot before the floor when it is the one the map shows.
+                            if onCurrentFloor {
+                                Circle()
+                                    .fill(KozmosColors.primitivesColorsTheme500)
+                                    .frame(width: KozmosDimensions.primitivesLayoutSpacing75, height: KozmosDimensions.primitivesLayoutSpacing75)
+                                    .accessibilityHidden(true)
+                            }
                             Text(poi.locationLabel)
                                 .font(KozmosTypography.subheadline)
                                 .lineLimit(1)
@@ -155,19 +157,16 @@ public struct KozmosPOIResultCard: View {
                         logo
 
                         if let travelEstimate = result.travelEstimate {
-                            HStack(spacing: KozmosDimensions.primitivesLayoutSpacing50) {
-                                Image(systemName: "clock")
-                                    .font(KozmosTypography.caption2)
-                                    .accessibilityHidden(true)
-                                Text(travelEstimate.durationLabel)
-                                    .font(.caption.weight(.medium))
-                            }
-                            .foregroundColor(KozmosColors.primitivesColorsForeground100)
+                            Text(travelEstimate.durationLabel)
+                                .font(KozmosTypography.subheadline)
+                                .foregroundColor(KozmosColors.primitivesColorsForeground100)
                         }
                     }
                 }
-                .frame(minHeight: 96)
-                .padding(KozmosDimensions.primitivesLayoutSpacing200)
+                // 80 tall: the prototype's row.
+                .frame(minHeight: KozmosDimensions.primitivesLayoutSizing1000 - KozmosDimensions.primitivesLayoutSpacing150 * 2)
+                .padding(.horizontal, KozmosDimensions.primitivesLayoutSpacing200)
+                .padding(.vertical, KozmosDimensions.primitivesLayoutSpacing150)
                 // The row has no fill of its own, so without an explicit hit
                 // shape only the text and the logo are tappable and the gaps
                 // between them swallow taps.
@@ -178,7 +177,7 @@ public struct KozmosPOIResultCard: View {
             .opacity(available ? 1 : 0.6)
 
             if !available, let unavailableReason = result.unavailableReason {
-                Divider().overlay(KozmosColors.primitivesColorsForeground300)
+                Divider().overlay(KozmosColors.semanticsBorderSubtle)
 
                 Text(unavailableReason)
                     .font(KozmosTypography.caption)
@@ -188,13 +187,13 @@ public struct KozmosPOIResultCard: View {
             }
         }
         .background(KozmosColors.primitivesColorsBackground0)
-        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusPanel, style: .continuous)
+            RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous)
                 .stroke(
                     result.selected
                         ? KozmosColors.primitivesColorsTheme500
-                        : KozmosColors.primitivesColorsForeground300,
+                        : KozmosColors.semanticsBorderSubtle,
                     lineWidth: result.selected ? 2 : 1
                 )
         )
@@ -209,6 +208,7 @@ public struct KozmosPOIResultCard: View {
         .accessibilityIdentifier(kozmosPOIResultIdentifier(poi.id))
     }
 
+    /// The logo when there is one, 48 at radius Control; nothing otherwise.
     @ViewBuilder
     private var logo: some View {
         if let logo = poi.logo, let url = URL(string: logo.src) {
@@ -217,25 +217,15 @@ public struct KozmosPOIResultCard: View {
             } placeholder: {
                 KozmosColors.primitivesColorsBackground100
             }
-            .frame(width: 40, height: 40)
+            .frame(width: KozmosDimensions.primitivesLayoutSizing600, height: KozmosDimensions.primitivesLayoutSizing600)
             .clipShape(
                 RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous)
-                    .stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1)
+                    .stroke(KozmosColors.semanticsBorderSubtle, lineWidth: 1)
             )
             .accessibilityLabel(logo.alt)
-        } else {
-            Text(poi.logoFallbackInitial)
-                .font(.subheadline.weight(.bold))
-                .foregroundColor(KozmosColors.primitivesColorsForeground500)
-                .frame(width: 40, height: 40)
-                .background(KozmosColors.primitivesColorsBackground100)
-                .clipShape(
-                    RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl, style: .continuous)
-                )
-                .accessibilityHidden(true)
         }
     }
 }

@@ -1,0 +1,87 @@
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
+import * as ManoeuvreCardStories from "./ManoeuvreCard.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={ManoeuvreCardStories} />
+
+# ManoeuvreCard
+
+The current manoeuvre, floating over the map during navigation: its arrow, the instruction, how far and how long, and a grab bar that opens the full itinerary in its place. The card owns the toggle and what assistive technology hears of it; the itinerary it opens into is the caller's, so the card never decides what a route is made of.
+
+Open, the card is as tall as the itinerary up to a cap (320 by default), past which the itinerary scrolls: a long route must not cover the map. The closed card is one button that reads the instruction, then the detail; the grab bar is silent then, and becomes the way to close the card once it is open.
+
+<Canvas>
+  <Story of={ManoeuvreCardStories.Closed} />
+</Canvas>
+
+<Canvas>
+  <Story of={ManoeuvreCardStories.Open} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { Itinerary, ManoeuvreCard } from "@kozmos/react";
+import { useState } from "react";
+
+export function Example() {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <ManoeuvreCard
+      type="left"
+      instruction="Turn left onto the concourse"
+      detail="58 m · Second Floor"
+      expanded={expanded}
+      onToggle={() => setExpanded((open) => !open)}
+    >
+      <Itinerary
+        origin="Dunkin'"
+        steps={[{ id: "1", instruction: "Turn left onto the concourse", type: "left", current: true }]}
+        destination="Airport Shuttles"
+      />
+    </ManoeuvreCard>
+  );
+}
+    `}
+    swift={`
+import SwiftUI
+
+@State private var expanded = false
+
+KozmosManoeuvreCard(
+    type: .left,
+    instruction: "Turn left onto the concourse",
+    detail: "58 m · Second Floor",
+    isExpanded: expanded,
+    onToggle: { expanded.toggle() }
+) {
+    KozmosItinerary(
+        origin: "Dunkin'",
+        steps: [KozmosItineraryStep(id: "1", instruction: "Turn left onto the concourse", type: .left, isCurrent: true)],
+        destination: "Airport Shuttles")
+}
+`}
+    kotlin={`
+var expanded by remember { mutableStateOf(false) }
+
+KozmosManoeuvreCard(
+    type = DirectionType.Left,
+    instruction = "Turn left onto the concourse",
+    detail = "58 m · Second Floor",
+    expanded = expanded,
+    onToggle = { expanded = !expanded }
+) {
+    KozmosItinerary(
+        origin = "Dunkin'",
+        steps = listOf(KozmosItineraryStep("1", "Turn left onto the concourse", DirectionType.Left, isCurrent = true)),
+        destination = "Airport Shuttles"
+    )
+}
+    `}
+/>

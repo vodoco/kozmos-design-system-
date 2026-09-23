@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { NumberInput } from "./NumberInput";
+import { ThemeProvider } from "../ThemeProvider";
 
 const meta = {
   title: "Components/NumberInput",
@@ -90,4 +91,28 @@ export const WithoutSteppers: Story = {
       />
     </div>
   ),
+};
+
+export const RightToLeft: Story = {
+  render: function RightToLeftStory(_args, { globals }) {
+    return (
+      <ThemeProvider
+        dir="rtl"
+        theme={globals.theme === "dark" ? "dark" : "light"}
+      >
+        <div style={{ width: 220 }}>
+          <NumberInput
+            label="Floors"
+            defaultValue={3}
+            status="warning"
+            helperText="Narrow RTL field"
+          />
+        </div>
+      </ThemeProvider>
+    );
+  },
+};
+
+export const ReadOnly: Story = {
+  args: { label: "Floors", value: 3, readOnly: true },
 };

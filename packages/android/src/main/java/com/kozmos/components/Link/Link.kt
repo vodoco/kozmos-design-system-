@@ -6,7 +6,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosLink(
@@ -16,7 +16,7 @@ fun KozmosLink(
 ) {
     Text(
         text = text,
-        color = KozmosColors.primitivesColorsTheme500,
+        color = KozmosThemeTokens.primitivesColorsTheme500,
         textDecoration = TextDecoration.Underline,
         modifier = modifier.clickable { onClick() }
     )

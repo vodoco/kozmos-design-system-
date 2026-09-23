@@ -1,27 +1,23 @@
 import React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "../../utils";
+import { cn, mergeAriaIds } from "../../utils";
 import { FieldWrapper } from "../FieldWrapper";
 
 export type InputStatus = "default" | "error" | "warning" | "success";
 
-export const inputVariants = cva(
-  "flex h-11 w-full rounded-control border border-[color:var(--primitives-colors-foreground-500)] bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-[color:var(--primitives-colors-foreground-400)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:placeholder:text-muted-foreground disabled:opacity-100",
-  {
-    variants: {
-      status: {
-        default: "",
-        error:
-          "border-destructive text-destructive focus-visible:ring-destructive",
-        warning: "border-warning text-warning focus-visible:ring-warning",
-        success: "border-success text-success focus-visible:ring-success",
-      },
-      error: {
-        true: "border-destructive text-destructive focus-visible:ring-destructive",
-      },
+export const inputVariants = cva("kozmos-reset kozmos-input", {
+  variants: {
+    status: {
+      default: "",
+      error: "kozmos-input-error",
+      warning: "kozmos-input-warning",
+      success: "kozmos-input-success",
+    },
+    error: {
+      true: "kozmos-input-error",
     },
   },
-);
+});
 
 export interface InputProps
   extends
@@ -44,6 +40,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       label,
       status = "default",
       wrapperClassName,
+      "aria-describedby": callerDescribedBy,
+      "aria-invalid": callerInvalid,
       ...props
     },
     ref,
@@ -79,8 +77,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           id={inputId}
           className={cn(inputVariants({ status: resolvedStatus }), className)}
           ref={ref}
-          aria-invalid={isInvalid || undefined}
-          aria-describedby={describedBy}
+          aria-invalid={isInvalid ? true : callerInvalid}
+          aria-describedby={mergeAriaIds(callerDescribedBy, describedBy)}
           {...props}
         />
       </FieldWrapper>

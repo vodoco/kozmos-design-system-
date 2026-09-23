@@ -19,11 +19,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosStepper(
@@ -48,10 +49,16 @@ fun KozmosStepper(
                     modifier = Modifier
                         .size(KozmosDimensions.primitivesLayoutSizing400)
                         .clip(CircleShape)
-                        .background(if (isCompleted) KozmosColors.primitivesColorsTheme500 else Color.Transparent)
+                        // React's primary pair: theme/600 with foreground/1000
+                        // on it, the current number in ink. It was theme/500
+                        // with background/0: black on the blue in the dark.
+                        .background(if (isCompleted) KozmosThemeTokens.primitivesColorsTheme600 else Color.Transparent)
+                        // 2 for the current and completed steps, 1 for a
+                        // pending one, as the plugin paints them and React
+                        // draws them. Every step was 2 until 2026-09-22.
                         .border(
-                            width = KozmosDimensions.primitivesLayoutSpacing25,
-                            color = if (isCompleted || isCurrent) KozmosColors.primitivesColorsTheme500 else KozmosColors.primitivesColorsForeground300,
+                            width = if (isCompleted || isCurrent) KozmosDimensions.primitivesLayoutSpacing25 else 1.dp,
+                            color = if (isCompleted || isCurrent) KozmosThemeTokens.primitivesColorsTheme600 else KozmosThemeTokens.primitivesColorsForeground500,
                             shape = CircleShape
                         ),
                     contentAlignment = Alignment.Center
@@ -60,22 +67,27 @@ fun KozmosStepper(
                         Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = null,
-                            tint = KozmosColors.primitivesColorsBackground0,
+                            tint = KozmosThemeTokens.primitivesColorsForeground1000,
                             modifier = Modifier.size(KozmosDimensions.primitivesLayoutSizing200)
                         )
                     } else {
                         Text(
                             text = (index + 1).toString(),
                             style = MaterialTheme.typography.labelMedium,
-                            color = if (isCurrent) KozmosColors.primitivesColorsTheme500 else KozmosColors.primitivesColorsForeground500
+                            color = if (isCurrent) KozmosThemeTokens.primitivesColorsForeground0 else KozmosThemeTokens.primitivesColorsForeground400
                         )
                     }
                 }
                 
+                // React's label: the current step's in the foreground at medium
+                // weight, every other in the muted foreground, foreground/400
+                // (4.8:1 even on a sheet's grey). It was foreground/100 and /500
+                // until 2026-09-22.
                 Text(
                     text = step,
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (isCurrent) KozmosColors.primitivesColorsForeground100 else KozmosColors.primitivesColorsForeground500
+                    fontWeight = if (isCurrent) FontWeight.Medium else FontWeight.Normal,
+                    color = if (isCurrent) KozmosThemeTokens.primitivesColorsForeground0 else KozmosThemeTokens.primitivesColorsForeground400
                 )
             }
             
@@ -84,7 +96,7 @@ fun KozmosStepper(
                     modifier = Modifier
                         .weight(1f)
                         .height(KozmosDimensions.primitivesLayoutSpacing25)
-                        .background(if (index < currentStep) KozmosColors.primitivesColorsTheme500 else KozmosColors.primitivesColorsBackground300)
+                        .background(if (index < currentStep) KozmosThemeTokens.primitivesColorsTheme600 else KozmosThemeTokens.semanticsBorderSubtle)
                 )
             }
         }

@@ -176,6 +176,10 @@ export function designConfigTokens(
     "--radius-2xl": "calc(var(--primitives-radius-2xl) * var(--roundness))",
     "--radius-full": "calc(var(--primitives-radius-full) * var(--roundness))",
     "--glass-opacity": enabled && !motionReduced ? 0.7 : 1,
+    // The glass surface role reads Semantics.Effect.glass itself; these two
+    // exist only to switch it off, so a value is set solely when it is.
+    "--kozmos-surface-glass-opacity": enabled ? "initial" : 1,
+    "--kozmos-surface-glass-blur": enabled ? "initial" : "0px",
     "--glass-blur": `${enabled ? config.glass.refraction / 2 + config.glass.frost / 5 : 0}px`,
     "--glass-scale":
       enabled && !motionReduced

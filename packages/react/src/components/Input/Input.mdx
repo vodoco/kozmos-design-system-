@@ -22,10 +22,15 @@ import { PlatformSnippets } from '../PlatformSnippets';
 
 <PlatformSnippets
   react={`
-import { Input } from '@kozmos/react';
-
-<Input placeholder="Enter your email" />
-<Input type="password" placeholder="Password" />
+import { Input } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Input label="Email" type="email" placeholder="Enter your email" />
+      <Input label="Password" type="password" placeholder="Password" />
+    </>
+  );
+}
   `}
   vue={`
 <script setup>

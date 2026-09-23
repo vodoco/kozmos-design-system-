@@ -6,6 +6,26 @@ import { ColorPicker } from "./ColorPicker";
 afterEach(cleanup);
 
 describe("ColorPicker", () => {
+  it("keeps popup state on the toggle, not the textbox, and merges descriptions", () => {
+    render(
+      <>
+        <p id="hint">Brand guidance</p>
+        <ColorPicker
+          label="Color"
+          error="Choose a color"
+          aria-invalid={false}
+          aria-describedby="hint"
+        />
+      </>,
+    );
+    const input = screen.getByRole("textbox", { name: "Color" });
+    expect(input).not.toHaveAttribute("aria-expanded");
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(input).toHaveAccessibleDescription("Brand guidance Choose a color");
+    expect(
+      screen.getByRole("button", { name: "Show color picker" }),
+    ).toHaveAttribute("aria-expanded", "false");
+  });
   it("renders an editable hex field with a label", () => {
     render(<ColorPicker label="Brand color" defaultValue="#135bec" />);
 

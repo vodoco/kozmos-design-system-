@@ -1,18 +1,30 @@
 import React from "react";
-import type { POIAction, POIPresentation } from "@kozmos/product-contracts";
+import type {
+  POIAction,
+  POIDetailsPresentation,
+  POIPresentation,
+  POISupplementaryAction,
+} from "@kozmos/product-contracts";
+import { Navigation, X } from "lucide-react";
 import {
   Bookmark,
+  CalendarCheck01,
   Heart,
-  MapPin,
-  Navigation,
-  Share2,
-  ShoppingBag,
-  X,
-} from "lucide-react";
+  Phone,
+  Share01,
+  ShoppingBag02,
+} from "@kozmos/icons";
 import { cn } from "../../utils";
+import { scrollHorizontalWithKeyboard } from "../../utils/keyboard-scroll";
 import { Button } from "../Button";
 import { IconButton } from "../IconButton";
+import { Heading } from "../Heading";
 import { POIMediaGallery } from "../POIMediaGallery";
+import {
+  POIDetailAttribute,
+  POIDetailContent,
+  POIDetailSummaryStrip,
+} from "./POIDetailContent";
 
 export interface POIActionState {
   disabled?: boolean;
@@ -27,41 +39,102 @@ export interface POIDetailPanelProps extends Omit<
   "onAction"
 > {
   poi: POIPresentation;
+  /** Additive details; basic POI consumers do not need category-specific fields. */
+  details?: POIDetailsPresentation;
   actionLabels: Readonly<Record<POIAction, string>>;
+  /** Accessible name for the horizontally scrollable action group. */
+  actionsLabel?: string;
   actionStates?: Partial<Record<POIAction, POIActionState>>;
   onAction: (action: POIAction, poiId: string) => void;
+  /** Supplementary capabilities do not widen the required action label record. */
+  onSupplementaryAction?: (
+    action: POISupplementaryAction,
+    poiId: string,
+  ) => void;
+  supplementaryActionStates?: Partial<
+    Record<POISupplementaryAction, POIActionState>
+  >;
   onClose?: () => void;
   closeLabel?: string;
   mediaLabel?: string;
   mediaPositionLabel?: (current: number, total: number) => string;
+  mediaPreviousLabel?: string;
+  mediaNextLabel?: string;
+  mediaUnavailableLabel?: string;
+  mediaControlsLabel?: string;
   accessRestrictionsHeading?: string;
   servicesHeading?: string;
+  readMoreLabel?: string;
+  readLessLabel?: string;
+  tagsLabel?: string;
   presentation?: "inline" | "sheet" | "panel";
   titleLevel?: 2 | 3;
 }
 
-const actionIcons: Record<POIAction, React.ReactNode> = {
-  navigate: <Navigation className="h-4 w-4" />,
-  favourite: <Heart className="h-4 w-4" />,
-  bookmark: <Bookmark className="h-4 w-4" />,
-  share: <Share2 className="h-4 w-4" />,
-  order: <ShoppingBag className="h-4 w-4" />,
+const actionIcons = {
+  navigate: Navigation,
+  favourite: Heart,
+  bookmark: Bookmark,
+  share: Share01,
+  order: ShoppingBag02,
 };
+const supplementaryIcons = { book: CalendarCheck01, call: Phone };
+const isToggle = (action: POIAction) =>
+  action === "favourite" || action === "bookmark";
+
+function ActionMessage({ state }: { state?: POIActionState }) {
+  if (!state?.message) return null;
+  return (
+    <p
+      className="kozmos-poi-action-message"
+      role={state.messageTone === "error" ? "alert" : "status"}
+    >
+      {state.message}
+    </p>
+  );
+}
+
+function POILogo({ logo }: { logo: NonNullable<POIPresentation["logo"]> }) {
+  const [failed, setFailed] = React.useState(false);
+  if (failed) return null;
+  return (
+    <img
+      alt={logo.alt}
+      className="kozmos-reset kozmos-poi-logo"
+      src={logo.src}
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
+const useLayoutEffect =
+  typeof window === "undefined" ? React.useEffect : React.useLayoutEffect;
 
 const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
   (
     {
       className,
       poi,
+      details,
       actionLabels,
+      actionsLabel = "Place actions",
       actionStates = {},
       onAction,
+      onSupplementaryAction,
+      supplementaryActionStates = {},
       onClose,
       closeLabel = "Close details",
       mediaLabel = `${poi.name} photos`,
       mediaPositionLabel = (current, total) => `Image ${current} of ${total}`,
+      mediaPreviousLabel = "Previous image",
+      mediaNextLabel = "Next image",
+      mediaUnavailableLabel = "Image unavailable",
+      mediaControlsLabel,
       accessRestrictionsHeading = "Access restrictions",
       servicesHeading = "Service options",
+      readMoreLabel = "Read more",
+      readLessLabel = "Read less",
+      tagsLabel = "Tags",
       presentation = "inline",
       titleLevel = 2,
       ...props
@@ -69,168 +142,255 @@ const POIDetailPanel = React.forwardRef<HTMLElement, POIDetailPanelProps>(
     ref,
   ) => {
     const titleId = React.useId();
-    const Title = `h${titleLevel}` as "h2" | "h3";
+    const root = React.useRef<HTMLElement>(null);
+    React.useImperativeHandle(ref, () => root.current!, []);
+    useLayoutEffect(() => {
+      // Preserve scroll through resize/content refresh, but a different place
+      // starts at its identity. Focus remains the responsibility of the host.
+      if (root.current) root.current.scrollTop = 0;
+    }, [poi.id]);
     const locationLabel = [poi.floorLabel, poi.buildingLabel]
       .filter(Boolean)
-      .join(" · ");
-
+      .join(" / ");
+    const actions = poi.actions.filter((action) => !isToggle(action));
+    const SectionHeading = titleLevel === 2 ? "h3" : "h4";
+    const hasRestriction =
+      poi.accessRestrictions !== undefined &&
+      poi.accessRestrictions !== "none" &&
+      Boolean(poi.accessRestrictionsLabel);
+    const hasBody =
+      hasRestriction ||
+      poi.media.length > 0 ||
+      Boolean(poi.services?.length) ||
+      Boolean(
+        details?.groups?.some((group) => group.items.length > 0) ||
+        details?.openingHours ||
+        details?.description?.preview ||
+        details?.tags?.length,
+      );
     return (
       <article
-        ref={ref}
+        ref={root}
         aria-labelledby={titleId}
-        className={cn(
-          "flex min-w-0 flex-col bg-background text-foreground",
-          presentation === "inline" &&
-            "rounded-container border border-border shadow-overlay",
-          presentation === "sheet" && "rounded-t-container",
-          presentation === "panel" &&
-            "rounded-container border border-border shadow-overlay",
-          className,
-        )}
+        className={cn("kozmos-reset kozmos-poi-detail", className)}
         data-presentation={presentation}
         {...props}
       >
-        <header className="flex items-start gap-3 border-b border-border p-4">
-          {poi.logo ? (
-            <img
-              alt={poi.logo.alt}
-              className="h-12 w-12 shrink-0 rounded-control border border-border object-contain"
-              src={poi.logo.src}
-            />
-          ) : (
-            <span
-              aria-hidden="true"
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control bg-muted text-base font-bold text-muted-foreground"
-            >
-              {poi.name.slice(0, 1).toUpperCase()}
-            </span>
-          )}
-
-          <div className="min-w-0 flex-1">
-            <Title
-              className="truncate text-xl font-semibold tracking-tight"
+        <header className="kozmos-poi-header">
+          <div className="kozmos-poi-identity">
+            {poi.logo && <POILogo key={poi.logo.src} logo={poi.logo} />}
+            <Heading
+              level={titleLevel}
+              className="kozmos-poi-title"
               id={titleId}
             >
               {poi.name}
-            </Title>
-            <p className="mt-1 flex min-w-0 items-center gap-1 text-sm text-muted-foreground">
-              <MapPin aria-hidden="true" className="h-4 w-4 shrink-0" />
-              <span className="truncate">{locationLabel}</span>
-            </p>
-            {poi.availabilityLabel && (
-              <p
-                className={cn(
-                  "mt-1 text-xs font-semibold",
-                  poi.availability === "open"
-                    ? "text-success"
-                    : "text-muted-foreground",
-                )}
+            </Heading>
+          </div>
+          <div className="kozmos-poi-header-actions">
+            {poi.actions.filter(isToggle).map((action) => {
+              const Icon = actionIcons[action];
+              const state = actionStates[action];
+              return (
+                <IconButton
+                  key={action}
+                  variant={state?.pressed ? "default" : "outline"}
+                  emotion={state?.pressed ? "themed" : "neutral"}
+                  aria-label={actionLabels[action]}
+                  aria-pressed={state?.pressed ?? false}
+                  disabled={state?.disabled}
+                  isLoading={state?.loading}
+                  onClick={() => onAction(action, poi.id)}
+                  type="button"
+                >
+                  <Icon aria-hidden="true" size={20} />
+                </IconButton>
+              );
+            })}
+            {onClose && (
+              <IconButton
+                variant="outline"
+                emotion="neutral"
+                aria-label={closeLabel}
+                onClick={onClose}
+                type="button"
               >
-                <span className="sr-only">Availability: </span>
-                {poi.availabilityLabel}
-              </p>
+                <X aria-hidden="true" size={20} />
+              </IconButton>
             )}
           </div>
-
-          {onClose && (
-            <IconButton aria-label={closeLabel} onClick={onClose} type="button">
-              <X aria-hidden="true" className="h-5 w-5" />
-            </IconButton>
-          )}
         </header>
-
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
-          {poi.description && (
-            <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
-              {poi.description}
+        <div className="kozmos-poi-location">
+          {locationLabel && <p>{locationLabel}</p>}
+          {poi.availabilityLabel && (
+            <p
+              className="kozmos-poi-availability"
+              data-availability={poi.availability ?? "unknown"}
+            >
+              {poi.availabilityLabel}
             </p>
           )}
-
-          {poi.actions.length > 0 && (
-            <div className="mb-4 flex flex-wrap gap-2">
-              {poi.actions.map((action) => {
-                const state = actionStates[action];
-                return (
-                  <Button
-                    aria-pressed={
-                      action === "favourite" || action === "bookmark"
-                        ? state?.pressed
-                        : undefined
-                    }
-                    className="gap-2"
-                    disabled={state?.disabled}
-                    isLoading={state?.loading}
-                    key={action}
-                    onClick={() => onAction(action, poi.id)}
-                    type="button"
-                    variant={action === "navigate" ? "default" : "outline"}
-                  >
-                    <span aria-hidden="true" className="flex items-center">
-                      {actionIcons[action]}
-                    </span>
+        </div>
+        {poi.description && (
+          <p className="kozmos-poi-intro">{poi.description}</p>
+        )}
+        {(actions.length > 0 ||
+          Boolean(details?.supplementaryActions?.length)) && (
+          <div
+            key={poi.id}
+            className="kozmos-poi-actions"
+            role="group"
+            aria-label={actionsLabel}
+            tabIndex={0}
+            onKeyDown={scrollHorizontalWithKeyboard}
+            onFocusCapture={(event) => {
+              if (event.target === event.currentTarget) return;
+              const target = event.target.getBoundingClientRect();
+              const viewport = event.currentTarget.getBoundingClientRect();
+              // Reveal the focused control and its ring within this strip only.
+              // scrollIntoView would also move the panel/page ancestors.
+              const delta =
+                target.left < viewport.left
+                  ? target.left - viewport.left - 4
+                  : target.right > viewport.right
+                    ? target.right - viewport.right + 4
+                    : 0;
+              if (delta)
+                event.currentTarget.scrollBy({ left: delta, behavior: "auto" });
+            }}
+          >
+            {actions.map((action) => {
+              const Icon = actionIcons[action];
+              const state = actionStates[action];
+              const estimate =
+                action === "navigate" ? details?.travelEstimate : undefined;
+              return (
+                <Button
+                  key={action}
+                  className={cn(
+                    "kozmos-poi-action",
+                    action === "navigate" && "kozmos-poi-action-primary",
+                  )}
+                  data-has-estimate={Boolean(estimate) || undefined}
+                  disabled={state?.disabled}
+                  isLoading={state?.loading}
+                  onClick={() => onAction(action, poi.id)}
+                  type="button"
+                  variant={action === "navigate" ? "default" : "outline"}
+                  emotion={action === "navigate" ? "themed" : "neutral"}
+                  aria-label={
+                    estimate
+                      ? [
+                          actionLabels[action],
+                          estimate.durationLabel,
+                          estimate.distanceLabel,
+                        ]
+                          .filter(Boolean)
+                          .join(" ")
+                      : undefined
+                  }
+                >
+                  <Icon
+                    aria-hidden="true"
+                    size={action === "navigate" ? 24 : 20}
+                  />
+                  <span>
                     {actionLabels[action]}
-                  </Button>
-                );
-              })}
-            </div>
-          )}
-
-          {poi.actions.map((action) => {
-            const state = actionStates[action];
-            if (!state?.message) return null;
-            return (
-              <p
-                className={cn(
-                  "mb-3 rounded-control bg-muted px-3 py-2 text-sm",
-                  state.messageTone === "error" && "text-destructive",
-                )}
-                key={`${action}-message`}
-                role={state.messageTone === "error" ? "alert" : "status"}
-              >
-                {state.message}
-              </p>
-            );
-          })}
-
-          {poi.accessRestrictions !== undefined &&
-            poi.accessRestrictions !== "none" &&
-            poi.accessRestrictionsLabel && (
-              <section
-                aria-label={accessRestrictionsHeading}
-                className="mb-4 rounded-control border border-border bg-muted/40 px-3 py-2 text-sm"
-              >
-                {poi.accessRestrictionsLabel}
+                    {estimate && (
+                      <small className="kozmos-poi-estimate">
+                        {" "}
+                        {[estimate.durationLabel, estimate.distanceLabel]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </small>
+                    )}
+                  </span>
+                </Button>
+              );
+            })}
+            {details?.supplementaryActions?.map(({ action, label }) => {
+              const Icon = supplementaryIcons[action];
+              const state = supplementaryActionStates[action];
+              return (
+                <Button
+                  key={action}
+                  className="kozmos-poi-action"
+                  variant="outline"
+                  emotion="neutral"
+                  type="button"
+                  disabled={!onSupplementaryAction || state?.disabled}
+                  isLoading={state?.loading}
+                  onClick={() => onSupplementaryAction?.(action, poi.id)}
+                >
+                  <Icon aria-hidden="true" size={18} />
+                  {label}
+                </Button>
+              );
+            })}
+          </div>
+        )}
+        {poi.actions.map((action) => (
+          <ActionMessage key={action} state={actionStates[action]} />
+        ))}
+        {details?.supplementaryActions?.map(({ action }) => (
+          <ActionMessage
+            key={action}
+            state={supplementaryActionStates[action]}
+          />
+        ))}
+        {details && <POIDetailSummaryStrip details={details} />}
+        {hasBody && (
+          <div className="kozmos-poi-body">
+            {poi.accessRestrictions !== undefined &&
+              poi.accessRestrictions !== "none" &&
+              poi.accessRestrictionsLabel && (
+                <section
+                  aria-label={accessRestrictionsHeading}
+                  className="kozmos-reset kozmos-poi-restrictions"
+                >
+                  {poi.accessRestrictionsLabel}
+                </section>
+              )}
+            <POIMediaGallery
+              key={`media-${poi.id}`}
+              label={mediaLabel}
+              media={poi.media}
+              positionLabel={mediaPositionLabel}
+              previousLabel={mediaPreviousLabel}
+              nextLabel={mediaNextLabel}
+              unavailableLabel={mediaUnavailableLabel}
+              controlsLabel={mediaControlsLabel}
+            />
+            {Boolean(poi.services?.length) && (
+              <section aria-label={servicesHeading}>
+                <SectionHeading className="kozmos-poi-section-heading">
+                  {servicesHeading}
+                </SectionHeading>
+                <ul className="kozmos-poi-chips">
+                  {poi.services!.map((service) => (
+                    <li className="kozmos-reset" key={service.id}>
+                      <POIDetailAttribute item={service} />
+                    </li>
+                  ))}
+                </ul>
               </section>
             )}
-
-          <POIMediaGallery
-            className="mb-4"
-            label={mediaLabel}
-            media={poi.media}
-            positionLabel={mediaPositionLabel}
-          />
-
-          {poi.services && poi.services.length > 0 && (
-            <section aria-label={servicesHeading}>
-              <h3 className="mb-2 text-sm font-semibold">{servicesHeading}</h3>
-              <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
-                {poi.services.map((service) => (
-                  <li
-                    className="rounded-pill border border-border bg-background px-3 py-2 text-sm"
-                    key={service.id}
-                  >
-                    {service.label}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-        </div>
+            {details && (
+              <POIDetailContent
+                key={poi.id}
+                details={details}
+                titleLevel={titleLevel}
+                readMoreLabel={readMoreLabel}
+                readLessLabel={readLessLabel}
+                tagsLabel={tagsLabel}
+              />
+            )}
+          </div>
+        )}
       </article>
     );
   },
 );
 
 POIDetailPanel.displayName = "POIDetailPanel";
-
 export { POIDetailPanel };

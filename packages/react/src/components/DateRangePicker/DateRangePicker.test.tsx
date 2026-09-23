@@ -4,6 +4,18 @@ import { describe, expect, it, vi } from "vitest";
 import { DateRangePicker } from "./DateRangePicker";
 
 describe("DateRangePicker", () => {
+  it("names the range as a group without double-labelling its start input", () => {
+    render(<DateRangePicker label="Stay" required />);
+    expect(screen.getByRole("group", { name: "Stay" })).toBeInTheDocument();
+    const start = screen.getByLabelText("Start date") as HTMLInputElement;
+    const end = screen.getByLabelText("End date") as HTMLInputElement;
+    expect(start.labels).toHaveLength(1);
+    expect(end.labels).toHaveLength(1);
+    expect(start).toHaveAccessibleName("Start date");
+    expect(end).toHaveAccessibleName("End date");
+    expect(start).toBeRequired();
+    expect(end).toBeRequired();
+  });
   it("emits a range as either date changes", () => {
     const handleValueChange = vi.fn();
 

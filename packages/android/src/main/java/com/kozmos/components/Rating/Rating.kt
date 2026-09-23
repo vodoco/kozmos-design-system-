@@ -15,7 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosRating(
@@ -33,7 +33,7 @@ fun KozmosRating(
             Icon(
                 imageVector = if (isFilled) Icons.Filled.Star else Icons.Outlined.Star,
                 contentDescription = null,
-                tint = if (isFilled) KozmosColors.primitivesColorsEmotionalAlert600 else KozmosColors.primitivesColorsForeground400,
+                tint = if (isFilled) KozmosThemeTokens.primitivesColorsEmotionalAlert600 else KozmosThemeTokens.primitivesColorsForeground400,
                 modifier = Modifier
                     .size(KozmosDimensions.primitivesLayoutSizing400)
                     .padding(KozmosDimensions.primitivesLayoutSpacing25)

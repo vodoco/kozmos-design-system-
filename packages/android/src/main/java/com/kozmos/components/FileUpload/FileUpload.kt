@@ -37,7 +37,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosFileUpload(
@@ -61,17 +61,17 @@ fun KozmosFileUpload(
             modifier = modifier
                 .fillMaxWidth()
                 .padding(KozmosDimensions.primitivesLayoutSpacing100)
-                .border(1.dp, KozmosColors.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
+                .border(1.dp, KozmosThemeTokens.primitivesColorsBackground300, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
                 .padding(KozmosDimensions.primitivesLayoutSpacing150),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.UploadFile, contentDescription = null, tint = KozmosColors.primitivesColorsTheme500)
+            Icon(Icons.Default.UploadFile, contentDescription = null, tint = KozmosThemeTokens.primitivesColorsTheme500)
             Spacer(modifier = Modifier.width(KozmosDimensions.primitivesLayoutSpacing100))
             Text(
                 text = fileName!!,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodyMedium,
-                color = KozmosColors.primitivesColorsForeground100
+                color = KozmosThemeTokens.primitivesColorsForeground100
             )
             IconButton(onClick = { fileName = null }) {
                 Icon(Icons.Default.Close, contentDescription = "Remove")
@@ -85,7 +85,7 @@ fun KozmosFileUpload(
                 .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
                 .border(
                     width = 2.dp,
-                    color = KozmosColors.primitivesColorsBackground300,
+                    color = KozmosThemeTokens.primitivesColorsBackground300,
                     shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl)
                     // Note: Dashed border support in Compose often requires custom Canvas drawing
                     // We'll stick to solid for now or implement custom modifier later if needed
@@ -98,13 +98,13 @@ fun KozmosFileUpload(
                 Icons.Default.UploadFile, 
                 contentDescription = null, 
                 modifier = Modifier.size(KozmosDimensions.primitivesLayoutSizing400),
-                tint = KozmosColors.primitivesColorsForeground500
+                tint = KozmosThemeTokens.primitivesColorsForeground500
             )
             Spacer(modifier = Modifier.height(KozmosDimensions.primitivesLayoutSpacing100))
             Text(
                 text = "Tap to upload file",
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                color = KozmosColors.primitivesColorsForeground500
+                color = KozmosThemeTokens.primitivesColorsForeground500
             )
         }
     }

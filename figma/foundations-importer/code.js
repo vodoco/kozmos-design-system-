@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "dd9f78a05cc0";
+const PLUGIN_BUILD = "b3257790f931";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -292,7 +292,44 @@ const LIST_DENSITIES = ["Default", "Compact"];
 const TABLE_DENSITIES = ["Default", "Compact"];
 // Product / SDK lane. These compose Core primitives and stay domain-specific;
 // see docs/figma-core-gap-audit.md for why they are not promoted into Core.
-const DIRECTION_STEP_TYPES = ["Straight", "Left", "Right", "Destination"];
+// The fourteen cases of 2026-09-20, the same on every platform: the four
+// turns, the six level changes by lift, escalator and stairs, a plain level
+// change, a transition between buildings, and turning back.
+const DIRECTION_STEP_TYPES = [
+  "Straight",
+  "Left",
+  "Right",
+  "Destination",
+  "LiftUp",
+  "LiftDown",
+  "EscalatorUp",
+  "EscalatorDown",
+  "StairsUp",
+  "StairsDown",
+  "LevelUp",
+  "LevelDown",
+  "Transition",
+  "TurnBack",
+];
+// Each case's symbol from the Pointr Icon Library, as the React draws
+// Lucide's and the native parts their own sets: ups share an arrow up, downs
+// an arrow down, as the code's ArrowUpFromLine and ArrowDownToLine do.
+const DIRECTION_STEP_ICONS = {
+  Straight: "arrow-up",
+  Left: "arrow-left",
+  Right: "arrow-right",
+  Destination: "marker-pin-01",
+  LiftUp: "arrow-up",
+  LiftDown: "arrow-down",
+  EscalatorUp: "arrow-up",
+  EscalatorDown: "arrow-down",
+  StairsUp: "arrow-up",
+  StairsDown: "arrow-down",
+  LevelUp: "arrow-up",
+  LevelDown: "arrow-down",
+  Transition: "arrow-right",
+  TurnBack: "flip-backward",
+};
 const FLOOR_SELECTOR_VARIANTS = [
   "VerticalList",
   "HorizontalList",
@@ -311,6 +348,7 @@ const LOCATION_PIN_SIZES = ["Sm", "Md", "Lg"];
 const LOCATION_PIN_SIZE_DIAMETERS = { Sm: 24, Md: 32, Lg: 40 };
 const POI_CARD_CONTENT = ["Basic", "Media", "Full"];
 const WAYFINDING_CARD_CONTENT = ["Basic", "Titled"];
+const DIRECTION_STEP_ICON_SIZE = 24;
 const ADAPTIVE_MAP_SHELL_PANEL_PLACEMENTS = ["Start", "End"];
 const MAP_CONTROL_BUTTON_PRESENTATIONS = ["IconOnly", "Labelled"];
 
@@ -343,6 +381,79 @@ const MAP_OVERLAY_WIDTH_SIZES = {
 const POI_DETAIL_PANEL_PRESENTATIONS = ["Inline", "Sheet", "Panel"];
 const BROWSE_CATEGORIES_PANEL_CONTENT = ["Basic", "Search", "Empty"];
 const CATEGORY_TILE_STATES = ["Default", "Selected", "Disabled"];
+// The taxonomy's eight quick-access colours, as `Semantics.Category` carries
+// them, and the theme's own for a part with no category: the Tint axis on
+// CategoryTile, LocationPin and CategoryField. A tint is three variables —
+// the accent for the icon and the strokes, the fill for a count pill or a
+// marker, and the ink that reads on that fill (`pnpm tokens:contrast:check`
+// holds each pair to 4.5:1, which is why blue's fill is darker than its
+// accent). The order is the sprite atlas's.
+const CATEGORY_TINTS = [
+  "Theme",
+  "Yellow",
+  "Orange",
+  "Turquoise",
+  "Red",
+  "Blue",
+  "Navy",
+  "Green",
+  "Pink",
+];
+// Fallbacks for a file whose foundations predate the category tokens; the
+// values are `packages/tokens/src/tokens-light.json` Semantics.Category, the
+// same in both themes.
+const CATEGORY_TINT_FALLBACKS = {
+  Yellow: { accent: "#F9AC17", fill: "#F9AC17", onFill: "#17191C" },
+  Orange: { accent: "#E5801A", fill: "#E5801A", onFill: "#17191C" },
+  Turquoise: { accent: "#37A4A4", fill: "#37A4A4", onFill: "#17191C" },
+  Red: { accent: "#D92626", fill: "#D92626", onFill: "#FFFFFF" },
+  Blue: { accent: "#2080DF", fill: "#1E77CF", onFill: "#FFFFFF" },
+  Navy: { accent: "#4D4DB2", fill: "#4D4DB2", onFill: "#FFFFFF" },
+  Green: { accent: "#339933", fill: "#339933", onFill: "#17191C" },
+  Pink: { accent: "#B24DB2", fill: "#B24DB2", onFill: "#FFFFFF" },
+};
+// CategoryTile's geometry: the prototype's, measured, and the contract's
+// (`components.categoryTile`) — a 64 square at the control radius, a 24 icon,
+// an 11/14 caption of two lines, the counter 4 beyond the square's edges.
+// The width is four across at gap 8 in a 376 grid.
+const CATEGORY_TILE_WIDTH = 88;
+const CATEGORY_TILE_PADDING = 4;
+const CATEGORY_TILE_GAP = 6;
+const CATEGORY_TILE_SQUARE = 64;
+const CATEGORY_TILE_ICON_SIZE = 24;
+const CATEGORY_TILE_COUNTER_OVERHANG = 4;
+const CATEGORY_TILE_LABEL_FONT_SIZE = 11;
+const CATEGORY_TILE_LABEL_LINE_HEIGHT = 14;
+/** The symbol a fresh tile carries, from the Pointr Icon Library. */
+const CATEGORY_TILE_DEFAULT_ICON = "bus";
+// CategoryField's geometry, the prototype's measured (search-sheet stage,
+// 2026-09-20): 48 tall, a 28 icon, a 15/20 label, a 22 count pill, a 32 clear.
+const CATEGORY_FIELD_WIDTH = 320;
+const CATEGORY_FIELD_HEIGHT = 48;
+const CATEGORY_FIELD_ICON_SIZE = 28;
+const CATEGORY_FIELD_PILL_HEIGHT = 22;
+const CATEGORY_FIELD_CLEAR_SIZE = 32;
+const CATEGORY_FIELD_LABEL_FONT_SIZE = 15;
+const CATEGORY_FIELD_LABEL_LINE_HEIGHT = 20;
+// The field's text and its clear's cross: the foreground, not the category.
+const CATEGORY_FIELD_INK = { name: "Colors/foreground/0", fallback: "#000000" };
+// An off-floor pin's number, on the white disc.
+const LOCATION_PIN_OFF_FLOOR_INK = {
+  name: "Colors/foreground/0",
+  fallback: "#000000",
+};
+const CATEGORY_FIELD_WASH_OPACITY = 0.12;
+/** The symbol a fresh field carries, from the Pointr Icon Library. */
+const CATEGORY_FIELD_DEFAULT_ICON = "bus";
+// AISearchButton, the prototype's, measured twice: a 48 circle whose ring is
+// a band 2.5 wide around a 43 disc, with a 16 icon.
+const AI_SEARCH_BUTTON_STATES = ["Default", "Disabled"];
+const AI_SEARCH_BUTTON_SIZE = 48;
+const AI_SEARCH_BUTTON_DISC_SIZE = 43;
+const AI_SEARCH_BUTTON_RING_BAND = 2.5;
+const AI_SEARCH_BUTTON_ICON_SIZE = 16;
+/** The sparkles, from the Pointr Icon Library. */
+const AI_SEARCH_BUTTON_ICON = "stars-01";
 const POI_MEDIA_GALLERY_CONTENT = ["Single", "Multiple", "Empty"];
 const POI_RESULT_CARD_STATES = [
   "Default",
@@ -378,10 +489,15 @@ const USER_LOCATION_MARKER_HEADINGS = ["Hidden", "Visible"];
 // Platform / form-factor lane. These validate on a specific device surface
 // before any Core promotion is considered.
 const DYNAMIC_ISLAND_STATES = ["Compact", "Expanded", "Minimal"];
+// The React component's geometry, which Compose draws too: a 240×44 pill, a
+// 360×160 card at 32, and a 56 circle — its borderRadius of 100 clamps to half
+// the height. It was 240×48, 360×180 and 64×48 at 24 here until 2026-09-22,
+// with no note of why. SwiftUI draws them so too since the same day; it drew
+// the pill 36 high and as wide as its container, and the circle at 48.
 const DYNAMIC_ISLAND_GEOMETRY = {
-  Compact: { width: 240, height: 48, radius: 24 },
-  Expanded: { width: 360, height: 180, radius: 32 },
-  Minimal: { width: 64, height: 48, radius: 24 },
+  Compact: { width: 240, height: 44, radius: 22 },
+  Expanded: { width: 360, height: 160, radius: 32 },
+  Minimal: { width: 56, height: 56, radius: 28 },
 };
 const FEEDBACK_CARD_STATES = ["Default", "Submitting", "Success"];
 const MAP_VIEW_CONTENT = ["Empty", "Overlay"];
@@ -732,9 +848,11 @@ const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
   Stack: 520,
   List: 360,
   Table: 520,
+  AISearchButton: 260,
   AdaptiveMapShell: 520,
   BrowseCategoriesPanel: 460,
-  CategoryTile: 260,
+  CategoryField: 260,
+  CategoryTile: 420,
   DirectionStep: 260,
   DynamicIsland: 320,
   FeedbackCard: 360,
@@ -752,7 +870,7 @@ const COMPONENT_PAGE_LAYOUT_MIN_HEIGHTS = {
   RoutingInputGroup: 320,
   SaveLocationCard: 300,
   UserLocationMarker: 260,
-  LocationPin: 320,
+  LocationPin: 3000,
   MapView: 520,
   POICard: 620,
   WayfindingCard: 420,
@@ -857,8 +975,10 @@ const COMPONENT_PAGE_LAYOUT_SECTIONS = [
     // domain-neutral and designers can see the boundary on the page.
     title: "Product / SDK",
     components: [
+      "AISearchButton",
       "AdaptiveMapShell",
       "BrowseCategoriesPanel",
+      "CategoryField",
       "CategoryTile",
       "DirectionStep",
       "FloorSelector",
@@ -1064,7 +1184,7 @@ const SURFACE_QA_COMPONENT_GROUPS = [
         },
         {
           componentSetName: "Slider",
-          variantName: "State=Default, Status=Default",
+          variantName: "State=Default, Status=Default, Type=Single",
           text: { "Label Text": "Zoom" },
         },
       ],
@@ -1256,15 +1376,67 @@ const COMPONENT_DOCS = [
     ],
     api: [
       "Content covers the panel with and without search, plus its empty state.",
-      "Panel Label Text maps to BrowseCategoriesPanel.label.",
+      "Panel Label Text maps to BrowseCategoriesPanel.label, the panel's accessible name; no platform draws it, so its layer is hidden.",
       "Category Tile Slots map to categories rendered through CategoryTile.",
-      "onSelect and renderIcon are behaviour with no visual slot.",
+      "renderIcon draws each tile's Icon, the category's taxonomy symbol here; onSelect is behaviour with no visual slot.",
     ],
     properties: ["Content: Basic, Search, Empty", "Panel Label Text"],
     accessibility: [
       "Empty replaces the grid, so assistive technology never reads an empty list.",
       "The panel needs an accessible name via label so it reads as one region.",
       "Category selection state belongs to CategoryTile, not to the panel.",
+    ],
+  },
+  {
+    componentName: "AISearchButton",
+    componentSetName: "AISearchButton",
+    category: "Product / SDK",
+    summary:
+      "AISearchButton is the search row's AI search: a 48 circle with a gradient ring that turns.",
+    usage: [
+      "Use beside the search field, 48 to its 44, as the prototype does.",
+      "The ring turns in the product; keep it at rest in a static design.",
+      "Disabled dims the whole button; the ring keeps its colours.",
+    ],
+    api: [
+      "State maps to disabled.",
+      "Icon maps to the 16 symbol in the theme's colour.",
+      "label is what assistive technology hears and draws nothing.",
+    ],
+    properties: ["State: Default, Disabled", "Icon"],
+    accessibility: [
+      "The button shows an icon alone; label names it for assistive technology.",
+      "The turn honours reduced motion in the product; nothing here moves.",
+    ],
+  },
+  {
+    componentName: "CategoryField",
+    componentSetName: "CategoryField",
+    category: "Product / SDK",
+    summary:
+      "CategoryField is the search field's form once a quick-access category is chosen; it takes the field's place in the search row.",
+    usage: [
+      "Use in place of the search field while a category filters the results.",
+      "Use Theme for a field with no category colour; the eight tints are the taxonomy's quick-access colours.",
+      "Clear returns the row to the search field; product code owns the query.",
+    ],
+    api: [
+      "Tint maps to tint (accent, fill, onFill).",
+      "Label Text maps to label; Count Text to count; Show Count to count being set.",
+      "Icon maps to icon, drawn at 28 in the accent.",
+      "clearLabel, onClear and countLabel are product code.",
+    ],
+    properties: [
+      "Tint: Theme, Yellow, Orange, Turquoise, Red, Blue, Navy, Green, Pink",
+      "Label Text",
+      "Count Text",
+      "Show Count",
+      "Icon",
+    ],
+    accessibility: [
+      "The field is a group named by the label and the count's spoken form; the clear is a button named clearLabel.",
+      "The clear is a 32 circle to see in a 44 target to hit, as the search bar's; the target is code's, the library draws the circle.",
+      "The name and the clear's cross are in the foreground; the icon, the border and the wash carry the colour, which is decorative: the label carries the category's name.",
     ],
   },
   {
@@ -1529,14 +1701,14 @@ const COMPONENT_DOCS = [
       "DynamicIsland models the iOS bezel pill in its compact, expanded, and minimal states.",
     usage: [
       "Use Compact for the two-slot leading and trailing presentation.",
-      "Use Expanded for the full activity view, Minimal for the collapsed dot.",
+      "Use Expanded for the full activity view, Minimal for the collapsed circle that holds one glyph.",
       "Treat it as a device surface, not a Core component.",
     ],
     api: [
       "State maps to DynamicIsland.islandState (compact, expanded, minimal).",
       "Compact Leading and Trailing Slots map to compactLeading and compactTrailing.",
       "Expanded Content Slot maps to expandedContent.",
-      "Minimal Content Slot maps to minimalContent.",
+      "Minimal Content Slot maps to minimalContent; it holds the default icon for the product's glyph.",
     ],
     properties: ["State: Compact, Expanded, Minimal"],
     accessibility: [
@@ -3705,7 +3877,32 @@ const COMPONENT_DOCS = [
 const FOCUS_VISIBLE_PROPERTY_NAME = "Focus Visible";
 const DEFAULT_ICON_COMPONENT_NAME = "Icon / Slot Default";
 const ICON_PAGE_NAME = "Icons";
+const UTILITIES_PAGE_NAME = "Utilities";
 const DEFAULT_CURATED_ICON_NAME = "search-md";
+// <generated by scripts/build-taxonomy-icons.mjs>
+// The taxonomy's quick-access symbols at 10.12.0, squared to 24 and drawn
+// in black for Curated Icons → Update to place on the Icons page. Edit
+// scripts/build-taxonomy-icons.mjs and re-run it; never this block.
+const TAXONOMY_ICON_VERSION = "10.12.0";
+const TAXONOMY_ICON_SVGS = {
+  "taxonomy-entrance-exit":
+    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-6.4 -6.4 76.8 76.8" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M29.8667 8.53333V0H64V64H29.8667V55.4667H38.4H40.1067H55.4667V8.53333H40.1067H38.4H29.8667ZM29.8667 13.6533L48.2133 32L29.8667 50.3467V36.2667H0V27.7333H29.8667V13.6533Z" fill="#000000"/></svg>',
+  "taxonomy-service-space-office":
+    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-7.5 -13 90 90" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M28.9519 8.29291C29.7185 4.55813 27.3123 0.909009 23.5776 0.142369C19.8428 -0.624272 16.1936 1.78188 15.427 5.51666C14.6604 9.25144 17.0665 12.9006 20.8013 13.6672C24.5361 14.4338 28.1852 12.0277 28.9519 8.29291ZM34.541 25.2898L34.3693 22.3745C33.9403 18.7559 31.3849 15.8572 28.0404 14.8107C27.7138 14.7082 27.3706 14.9132 27.2514 15.2398L23.8545 23.4209L23.0822 18.6009H23.5804C23.9069 18.6009 24.1644 18.3435 24.1644 18.036V16.2863C24.1644 15.9788 23.9069 15.7213 23.5804 15.7213H20.7508C20.4242 15.7213 20.1668 15.9788 20.1668 16.2863V18.036C20.1668 18.3459 20.4242 18.6009 20.7508 18.6009H21.249L20.4767 23.4209L17.0798 15.2398C16.9606 14.9132 16.6174 14.7082 16.2908 14.8107C12.9463 15.8572 10.4076 18.7559 9.96184 22.3745L9.68771 27.1587H32.9272C33.3396 26.4388 33.8878 25.8047 34.5386 25.2898H34.541ZM63.6661 6.86325C63.6661 10.6535 60.5935 13.7261 56.8032 13.7261C53.0129 13.7261 49.9403 10.6535 49.9403 6.86325C49.9403 3.07298 53.0129 0.000356771 56.8032 0.000356771C60.5935 0.000356771 63.6661 3.07298 63.6661 6.86325ZM74.4361 23.8167C74.2096 23.4782 68.7484 15.514 56.8032 15.514C49.8855 15.514 46.8629 19.8453 44.6555 23.0086C44.3385 23.4639 44.0214 23.9192 43.6949 24.3554C42.298 26.2338 39.1323 27.1635 38.0429 27.359C36.3623 27.6498 35.2348 29.2445 35.5256 30.9275C35.8165 32.608 37.4112 33.726 39.0942 33.4447C39.7449 33.3327 45.5351 32.229 48.6483 28.0407C48.8881 27.7189 49.1205 27.3877 49.3537 27.0555L49.4469 26.9227L49.3754 36.8631L45.466 46.7057C45.3087 47.099 45.2276 47.5209 45.2229 47.9453L45.1275 60.5387C45.1132 62.4339 46.6364 63.9809 48.5315 63.9952C50.4481 64.031 51.9737 62.4863 51.988 60.5912L52.0786 48.6413L55.9761 38.8273H57.423L57.6352 60.6079C57.6566 62.4887 59.1894 63.9976 61.0654 63.9976H61.106C63.0011 63.9762 64.5195 62.4219 64.4957 60.5292L64.2335 37.5091L64.212 34.6056C64.4528 35.204 64.8723 35.7355 65.4659 36.0955C65.9665 36.4006 66.5171 36.5437 67.063 36.5437C68.1071 36.5437 69.125 36.0145 69.7066 35.0562L74.5076 27.1373C75.1297 26.1122 75.1011 24.8179 74.4337 23.8214L74.4361 23.8167ZM64.429 31.8524C64.3336 32.0073 64.2621 32.1718 64.1977 32.3363L64.1334 23.2398C65.9069 24.0646 67.2084 25.0681 68.0571 25.8667L64.429 31.8524ZM32.0547 30.4007C32.0547 30.7606 32.0714 31.1396 32.1405 31.5163C32.7054 34.7749 35.6041 37.0562 38.8627 36.9179V62.267C38.8627 63.2276 38.0904 64 37.1297 64H7.2014C6.2598 64 5.48746 63.2276 5.48746 62.267V35.2207H2.41715C1.07985 35.2207 0 34.1599 0 32.8202C0 31.4805 1.07985 30.4007 2.41715 30.4007H32.0547ZM31.1846 41.7474L31.5183 40.8631H31.5088C31.6494 40.4936 31.5612 40.0907 31.2823 39.8118C31.0034 39.5329 30.6006 39.4471 30.2311 39.5854L29.3467 39.9191C28.4957 40.2409 27.7376 40.7296 27.0964 41.3732L25.0464 43.4232L21.8593 42.7939C22.0571 42.484 22.0213 42.0669 21.752 41.7975L20.9248 40.9727C20.6221 40.67 20.0953 40.67 19.7949 40.9727L18.6149 42.1527L14.9177 41.4232C14.4886 41.3398 14.0428 41.4733 13.7306 41.7856L13.2228 42.2957C13.0989 42.4173 13.0417 42.5937 13.0703 42.7653C13.0965 42.9369 13.2061 43.0847 13.3611 43.1634L16.4791 44.7391C16.4075 44.8702 16.3384 45.0037 16.2764 45.1395C16.1 45.521 16.1763 45.962 16.4719 46.2552C16.7675 46.5484 17.2037 46.627 17.5851 46.4506C17.9475 46.2838 18.3074 46.0788 18.6555 45.838L21.373 47.2134L17.8307 51.1347L14.0047 50.1407C13.7425 50.0716 13.4612 50.1479 13.2729 50.3386L12.8605 50.7533C12.7365 50.8773 12.6793 51.0489 12.7008 51.2229C12.7246 51.397 12.8223 51.5471 12.9749 51.6377L16.3575 53.6306L16.3122 53.8046C16.2383 54.0859 16.317 54.3719 16.522 54.5769C16.727 54.7795 17.0154 54.8582 17.2943 54.7867L17.4683 54.7414L19.4612 58.124C19.5518 58.2742 19.7043 58.3743 19.8783 58.3957C19.9022 58.4005 19.926 58.4005 19.9498 58.4005C20.1 58.4005 20.243 58.3433 20.3479 58.236L20.7627 57.8212C20.9534 57.6305 21.0273 57.3493 20.9606 57.0894L19.9665 53.2658L23.8878 49.7236L25.2633 52.4411C25.0249 52.7915 24.8175 53.149 24.6507 53.5114C24.4766 53.8928 24.5529 54.329 24.8485 54.6246C25.1441 54.9202 25.5827 54.9989 25.9641 54.8225C26.1 54.7605 26.2335 54.6913 26.3646 54.6198L27.9403 57.7354C28.0189 57.8928 28.1667 58 28.3384 58.0286C28.51 58.0549 28.684 58 28.808 57.8761L29.3181 57.3659C29.6304 57.0537 29.7662 56.6103 29.6804 56.1788L28.951 52.4816L30.131 51.2992C30.4409 50.987 30.4432 50.4816 30.131 50.1693L29.3062 49.3422C29.0368 49.0728 28.6196 49.037 28.3098 49.2349L27.6804 46.0478L29.7305 43.9977C30.3741 43.3565 30.8628 42.5984 31.1846 41.7474Z" fill="#000000"/></svg>',
+  "taxonomy-security-space":
+    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-6.4 -6.4 76.8 76.8" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M20.5264 59.0986L19.2354 61.0146L17.1982 64H15V36.084C15.0002 32.1309 18.207 28.924 22.1602 28.9238H41.1201L20.5264 59.0986ZM43.3594 64H21.8984L23.7334 61.3174H43.3594V64ZM45.1885 29.8594C47.3796 31.0916 48.8866 33.3868 48.8867 36.084V64H44.6504V42.418H43.3594V57.4443H26.376L45.1885 29.8594ZM45.1885 29.8594C45.184 29.8568 45.1793 29.8541 45.1748 29.8516H45.1953L45.1885 29.8594ZM43.3594 11.8799L42.1455 12.082H42.3916C42.9966 13.4736 43.3593 14.9862 43.3594 16.5996C43.3594 22.9129 38.2566 28.0166 31.9434 28.0166C25.6302 28.0165 20.5273 22.8926 20.5273 16.5996C20.5274 16.2673 20.5432 15.9377 20.5723 15.6113H16.1895L19.2354 10.4688H43.3594V11.8799ZM25.8721 1.99707L43.3594 4.61914V7.20117H19.2363V0L25.8721 1.99707Z" fill="#000000"/></svg>',
+  "taxonomy-transportation-space-boarding-gate":
+    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-6.4 -26.9 76.8 76.8" fill="none"><path d="M40.7316 4.76461L50.233 0.932471C51.8336 0.286066 53.8754 -0.0131934 55.8953 0.000445525C59.394 0.0237412 62.8266 0.926698 63.785 2.16585C65.2968 4.1202 58.4368 6.91488 55.7077 8.00988L20.5112 22.3368C19.3429 22.8126 18.0561 22.9725 16.7686 22.9975C14.8907 23.0337 13.0106 22.685 11.4926 21.7988L0 15.0373L1.29719 14.4036L10.7966 16.7255L27.4941 10.1113L7.61462 3.10584L14.414 0.637493L40.7316 4.76461Z" fill="#000000"/></svg>',
+  "taxonomy-amenity-space-desk":
+    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-6.4 -6.4 76.8 76.8" fill="none"><path d="M45.25 37.5C24.4881 37.5 13.4613 37.5 0 37.5V41.25H4C4 42.961 4 60.6351 4 60.25V64H7.75V60.25H45.25V64H49C49 63.2807 49 40.3429 49 41.25H52.75V37.5C52.3334 37.5 44.8442 37.5 45.25 37.5Z" fill="#000000"/><path d="M19 26.25C23.1421 26.25 26.5 22.8921 26.5 18.75C26.5 14.6079 23.1421 11.25 19 11.25C14.8579 11.25 11.5 14.6079 11.5 18.75C11.5 22.8921 14.8579 26.25 19 26.25Z" fill="#000000"/><path d="M47.125 0C37.8196 0 30.25 7.56962 30.25 16.875C30.25 20.1544 31.2131 23.324 33.0443 26.0963L31.4219 32.5781L37.9039 30.9557C40.676 32.7869 43.8456 33.75 47.125 33.75C56.4304 33.75 64 26.1804 64 16.875C64 7.56962 56.4304 0 47.125 0ZM49 26.25H45.25V15H49V26.25ZM49 11.25H45.25V7.5H49V11.25Z" fill="#000000"/><path d="M19 26.25C14.1178 26.25 9.994 29.3944 8.441 33.75H29.559C28.006 29.3944 23.8822 26.25 19 26.25Z" fill="#000000"/></svg>',
+  "taxonomy-parking-space":
+    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-7 -6.5 78 78" fill="none"><path d="M22.1048 30.186H33.0652C34.6823 30.186 36.2395 30.0662 37.7368 29.8266C39.2341 29.5871 40.5518 29.1379 41.6897 28.4791C42.8277 27.7603 43.7261 26.7721 44.3849 25.5144C45.1036 24.2566 45.463 22.6096 45.463 20.5732C45.463 18.5368 45.1036 16.8898 44.3849 15.632C43.7261 14.3743 42.8277 13.416 41.6897 12.7572C40.5518 12.0385 39.2341 11.5593 37.7368 11.3198C36.2395 11.0802 34.6823 10.9604 33.0652 10.9604H22.1048V30.186ZM8 0H36.9283C40.9411 0 44.355 0.59893 47.1699 1.79679C49.9849 2.93475 52.2608 4.46202 53.9977 6.37859C55.7945 8.29517 57.0822 10.4813 57.8608 12.9369C58.6993 15.3925 59.1186 17.9379 59.1186 20.5732C59.1186 23.1486 58.6993 25.694 57.8608 28.2095C57.0822 30.6651 55.7945 32.8512 53.9977 34.7678C52.2608 36.6844 49.9849 38.2416 47.1699 39.4395C44.355 40.5774 40.9411 41.1464 36.9283 41.1464H22.1048V64.1453H8V0Z" fill="#000000"/></svg>',
+  "taxonomy-food-beverage-space":
+    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-7 -6.5 78 78" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M55.8005 3.52253V24.2529H55.8586V64.1594H50.3189V40.8881C46.659 39.7789 43.9956 36.3835 43.9956 32.3625V15.0663C43.9956 9.65554 46.4011 4.52535 50.5607 1.06545C52.6437 -0.666109 55.8005 0.81394 55.8005 3.52253ZM29.2628 0.568909H30.372C32.8194 0.568909 34.8025 2.55198 34.8025 4.99938V17.9716C34.8025 23.7692 30.3462 28.5189 24.6711 28.9962V64.1594H19.1314V28.9962C13.4595 28.5189 9 23.7692 9 17.9716V4.99938C9 2.55198 10.9831 0.568909 13.4272 0.568909H14.5365V17.9716C14.5365 20.706 16.5196 22.9728 19.1282 23.4178V0.568909H24.6679V23.4178C27.2765 22.9696 29.2628 20.706 29.2628 17.9716V0.568909Z" fill="#000000"/></svg>',
+  "taxonomy-retail-space":
+    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-6.4 -6.4 76.8 76.8" fill="none"><path d="M48.1094 12H52.1094C52.1094 5.382 46.7274 0 40.1094 0C37.9234 0 35.8774 0.598 34.1094 1.624C32.3414 0.598 30.2954 0 28.1094 0C21.4914 0 16.1094 5.382 16.1094 12H20.1094C20.1094 7.588 23.6974 4 28.1094 4C29.0454 4 29.9294 4.192 30.7654 4.488C29.1074 6.546 28.1094 9.158 28.1094 12H32.1094C32.1094 9.99 32.8794 8.172 34.1094 6.764C35.3394 8.17 36.1094 9.988 36.1094 12H40.1094C40.1094 9.158 39.1114 6.546 37.4534 4.488C38.2894 4.192 39.1734 4 40.1094 4C44.5214 4 48.1094 7.588 48.1094 12Z" fill="#000000"/><path d="M4.10938 64H36.1094L36.1294 63.68L40.1094 16H8.10937L4.10938 64Z" fill="#000000"/><path d="M48.1101 16H44.1101L40.3301 61.26L48.1101 55.04V16Z" fill="#000000"/><path d="M52.1094 55.04L59.8894 61.26L56.1094 16H52.1094V55.04Z" fill="#000000"/><path d="M43.3105 63.9986H56.9105L50.1105 58.5586L43.3105 63.9986Z" fill="#000000"/></svg>',
+};
+// </generated by scripts/build-taxonomy-icons.mjs>
 const KOSMOS_ICON_DEFINITIONS = [
   {
     name: "activity",
@@ -3729,6 +3926,14 @@ const KOSMOS_ICON_DEFINITIONS = [
     description: "Triangular warning alert.",
   },
   {
+    name: "arrow-down",
+    figmaName: "arrow-down",
+    category: "Arrows",
+    componentKey: "71dd309b283331f2f7e8f0a81ac5d271f8261a1e",
+    description:
+      "Directional arrow down: a level, lift, escalator or stairs down in a direction step.",
+  },
+  {
     name: "arrow-left",
     figmaName: "arrow-left",
     category: "Arrows",
@@ -3743,9 +3948,17 @@ const KOSMOS_ICON_DEFINITIONS = [
     description: "Directional arrow right.",
   },
   {
+    name: "arrow-up",
+    figmaName: "arrow-up",
+    category: "Arrows",
+    componentKey: "1f94e79365ed691bc3a1366877306673b59fe4ac",
+    description:
+      "Directional arrow up: straight on, or a level, lift, escalator or stairs up in a direction step.",
+  },
+  {
     name: "bell-01",
     figmaName: "bell-01",
-    category: "General",
+    category: "Alerts & feedback",
     componentKey: "3deb23e1ab8a78324a4272df2d048baa50205f39",
     description: "Notification bell.",
   },
@@ -3834,6 +4047,13 @@ const KOSMOS_ICON_DEFINITIONS = [
     description: "Edit action.",
   },
   {
+    name: "flip-backward",
+    figmaName: "flip-backward",
+    category: "Arrows",
+    componentKey: "7ab448945c2c0d2fb297f5af60f2c1db22f90934",
+    description: "Turn back: the direction step that reverses.",
+  },
+  {
     name: "home-line",
     figmaName: "home-line",
     category: "General",
@@ -3843,7 +4063,7 @@ const KOSMOS_ICON_DEFINITIONS = [
   {
     name: "info-circle",
     figmaName: "info-circle",
-    category: "Alerts & feedback",
+    category: "General",
     componentKey: "2bd38fbeca52d383efd64031e70c330c21f1b609",
     description: "Informational message.",
   },
@@ -3932,6 +4152,20 @@ const KOSMOS_ICON_DEFINITIONS = [
     description: "Settings.",
   },
   {
+    name: "stars-01",
+    figmaName: "stars-01",
+    category: "Weather",
+    componentKey: "680106b4a77489c9753dffe6f193683c0940f477",
+    description: "Sparkles: the AI search.",
+  },
+  {
+    name: "switch-vertical-01",
+    figmaName: "switch-vertical-01",
+    category: "Arrows",
+    componentKey: "c04e199fb5878cb19a545a1e8603a894183ed853",
+    description: "Swap the origin and the destination.",
+  },
+  {
     name: "trash-01",
     figmaName: "trash-01",
     category: "General",
@@ -3972,6 +4206,162 @@ const KOSMOS_ICON_DEFINITIONS = [
     category: "General",
     componentKey: "6c340143b2eb690526e4b6d2c04c6a0a0c03a369",
     description: "Close or dismiss.",
+  },
+  {
+    name: "bookmark",
+    figmaName: "bookmark",
+    category: "General",
+    componentKey: "dbe2f0b1fdf585a1bbbda2f68f0a6394d0635f32",
+    description: "Save for later.",
+  },
+  {
+    name: "calendar-check-01",
+    figmaName: "calendar-check-01",
+    category: "Time",
+    componentKey: "7aad0937de475371115a3b50268e80708d7fec7e",
+    description: "A booked or confirmed date.",
+  },
+  {
+    name: "clock-plus",
+    figmaName: "clock-plus",
+    category: "Time",
+    componentKey: "2bf27d3b826ddaf1357624f9ce4307eca5fc1ca9",
+    description: "Added or extended time, such as a wait.",
+  },
+  {
+    name: "eye",
+    figmaName: "eye",
+    category: "General",
+    componentKey: "603f88cb20da15763ca714a7abb6a0dfc1a4335f",
+    description: "Show or preview.",
+  },
+  {
+    name: "feather",
+    figmaName: "feather",
+    category: "Editor",
+    componentKey: "e44fa9b00228bd94dd6d50466efdddc562b296a7",
+    description: "Compose or write.",
+  },
+  {
+    name: "globe-02",
+    figmaName: "globe-02",
+    category: "Maps & travel",
+    componentKey: "1a81617deeeebf17aba2e2ce9b4fa6579f15736d",
+    description: "A website or the wider web.",
+  },
+  {
+    name: "heart",
+    figmaName: "heart",
+    category: "General",
+    componentKey: "948471806ab3c9b78457c71b416caa975fefd9ee",
+    description: "Favourite.",
+  },
+  {
+    name: "layout-alt-02",
+    figmaName: "layout-alt-02",
+    category: "Layout",
+    componentKey: "5b50f2a76860e5306d2796100a8557c94f628591",
+    description: "A menu or listing laid out in sections.",
+  },
+  {
+    name: "loading-01",
+    figmaName: "loading-01",
+    category: "General",
+    componentKey: "ff1e3d55a7a4f9e6c1738816a85395fe7cf399d4",
+    description: "Work in progress.",
+  },
+  {
+    name: "mail-01",
+    figmaName: "mail-01",
+    category: "Communication",
+    componentKey: "5402327e95bbf34225b021d68efa7911435a9194",
+    description: "Email.",
+  },
+  {
+    name: "phone",
+    figmaName: "phone",
+    category: "Communication",
+    componentKey: "037a30997a778ca6775e488f70c2557a860fcf16",
+    description: "Call.",
+  },
+  {
+    name: "share-01",
+    figmaName: "share-01",
+    category: "General",
+    componentKey: "7d782f8eac64798a17cf169483fa586ac3b22fef",
+    description: "Share.",
+  },
+  {
+    name: "shopping-bag-02",
+    figmaName: "shopping-bag-02",
+    category: "Finance & eCommerce",
+    componentKey: "b2fc5c9bd985d3424e2491074f67e4263bed394f",
+    description: "Order or shop.",
+  },
+  // The taxonomy's quick-access symbols: drawn from TAXONOMY_ICON_SVGS, since
+  // the Pointr Icon Library does not carry them. figmaName is the published
+  // name without the colour it is published in.
+  {
+    name: "taxonomy-amenity-space-desk",
+    figmaName: "amenity-space_desk",
+    category: "Taxonomy",
+    source: "taxonomy",
+    description:
+      "Customer Service: the quick-access symbol for amenity-space / desk.",
+  },
+  {
+    name: "taxonomy-entrance-exit",
+    figmaName: "entrance-exit",
+    category: "Taxonomy",
+    source: "taxonomy",
+    description:
+      "Entrances & Exits: the quick-access symbol for entrance-exit.",
+  },
+  {
+    name: "taxonomy-food-beverage-space",
+    figmaName: "food-beverage-space",
+    category: "Taxonomy",
+    source: "taxonomy",
+    description: "Dining: the quick-access symbol for food-beverage-space.",
+  },
+  {
+    name: "taxonomy-parking-space",
+    figmaName: "parking-space",
+    category: "Taxonomy",
+    source: "taxonomy",
+    description:
+      "Parking & Ground Transport: the quick-access symbol for parking-space.",
+  },
+  {
+    name: "taxonomy-retail-space",
+    figmaName: "retail-space",
+    category: "Taxonomy",
+    source: "taxonomy",
+    description: "Shopping: the quick-access symbol for retail-space.",
+  },
+  {
+    name: "taxonomy-security-space",
+    figmaName: "security-space",
+    category: "Taxonomy",
+    source: "taxonomy",
+    description:
+      "Security & Immigration: the quick-access symbol for security-space.",
+  },
+  {
+    name: "taxonomy-service-space-office",
+    figmaName: "service-space_office",
+    category: "Taxonomy",
+    source: "taxonomy",
+    description:
+      "Check-in & Baggage: the quick-access symbol for service-space / office.",
+  },
+  {
+    name: "taxonomy-transportation-space-boarding-gate",
+    figmaName: "transportation-space_boarding-gate",
+    category: "Taxonomy",
+    source: "taxonomy",
+    description:
+      "Gates: the quick-access symbol for transportation-space / boarding-gate.",
   },
 ];
 const COMPONENT_COLLECTION_NAME = "Kozmos Components";
@@ -4055,7 +4445,10 @@ const COMPONENT_FLOAT_TOKENS = [
   { name: "Button/spinner/size", value: 14, scopes: ["WIDTH_HEIGHT"] },
   { name: "IconButton/size/small", value: 44, scopes: ["WIDTH_HEIGHT"] },
   { name: "IconButton/size/default", value: 44, scopes: ["WIDTH_HEIGHT"] },
-  { name: "IconButton/size/large", value: 44, scopes: ["WIDTH_HEIGHT"] },
+  // The large size is 48: the prototype's Filters and AI search beside a 44
+  // field (`components.iconButton.sizes.large`, 2026-09-21); small and
+  // default stay at the 44 touch target.
+  { name: "IconButton/size/large", value: 48, scopes: ["WIDTH_HEIGHT"] },
   { name: "IconButton/icon/size/small", value: 14, scopes: ["WIDTH_HEIGHT"] },
   {
     name: "IconButton/icon/size/default",
@@ -4830,6 +5223,66 @@ const COMPONENT_FLOAT_TOKENS = [
   },
   { name: "LocationPin/label/font-size", value: 12, scopes: ["FONT_SIZE"] },
   { name: "LocationPin/label/line-height", value: 16, scopes: ["LINE_HEIGHT"] },
+  {
+    name: "CategoryTile/square/size",
+    value: CATEGORY_TILE_SQUARE,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "CategoryTile/icon/size",
+    value: CATEGORY_TILE_ICON_SIZE,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "CategoryTile/label/font-size",
+    value: CATEGORY_TILE_LABEL_FONT_SIZE,
+    scopes: ["FONT_SIZE"],
+  },
+  {
+    name: "CategoryTile/label/line-height",
+    value: CATEGORY_TILE_LABEL_LINE_HEIGHT,
+    scopes: ["LINE_HEIGHT"],
+  },
+  {
+    name: "CategoryField/height",
+    value: CATEGORY_FIELD_HEIGHT,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "CategoryField/icon/size",
+    value: CATEGORY_FIELD_ICON_SIZE,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "CategoryField/pill/height",
+    value: CATEGORY_FIELD_PILL_HEIGHT,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "CategoryField/clear/size",
+    value: CATEGORY_FIELD_CLEAR_SIZE,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "CategoryField/label/font-size",
+    value: CATEGORY_FIELD_LABEL_FONT_SIZE,
+    scopes: ["FONT_SIZE"],
+  },
+  {
+    name: "CategoryField/label/line-height",
+    value: CATEGORY_FIELD_LABEL_LINE_HEIGHT,
+    scopes: ["LINE_HEIGHT"],
+  },
+  {
+    name: "AISearchButton/size",
+    value: AI_SEARCH_BUTTON_SIZE,
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  {
+    name: "AISearchButton/icon/size",
+    value: AI_SEARCH_BUTTON_ICON_SIZE,
+    scopes: ["WIDTH_HEIGHT"],
+  },
   { name: "MapView/width/default", value: 480, scopes: ["WIDTH_HEIGHT"] },
   { name: "MapView/height/default", value: 320, scopes: ["WIDTH_HEIGHT"] },
   {
@@ -8186,11 +8639,19 @@ function postResultToUi(message) {
   figma.ui.postMessage(message);
 }
 
-figma.ui.onmessage = async (message) => {
+async function handlePluginMessage(message) {
   resetLayoutSizingFailures();
 
   try {
     configureFontConfig(message && message.fontConfig);
+
+    // The panel asks once it has loaded, and shows the answer in its header:
+    // Figma can keep an older import running, and every result is only
+    // evidence about the build that produced it.
+    if (message.type === "ui-ready") {
+      figma.ui.postMessage({ type: "plugin-build", build: PLUGIN_BUILD });
+      return;
+    }
 
     if (message.type === "inspect") {
       postResultToUi({
@@ -9389,7 +9850,111 @@ figma.ui.onmessage = async (message) => {
       stack: error instanceof Error ? error.stack : undefined,
     });
   }
+}
+
+// One run at a time. The panel sends one action and waits for its result, but
+// it left the two bulk buttons enabled during a run, and a run yields between
+// sets and now inside long ones: a second press started a second sequence
+// alongside the first, sharing its flags (2026-09-21). A press during a run is
+// refused with a notice, which leaves the panel waiting on the run it started.
+let activePluginRun = null;
+
+figma.ui.onmessage = async (message) => {
+  const type = message && message.type;
+  const exclusive = type !== "ui-ready" && type !== "close";
+  if (exclusive && activePluginRun) {
+    figma.notify(
+      `Kozmos DS: "${activePluginRun}" is still running. Wait for it to finish, then try again.`,
+    );
+    return;
+  }
+  if (exclusive) activePluginRun = type;
+  try {
+    await handlePluginMessage(message);
+  } finally {
+    if (exclusive) activePluginRun = null;
+  }
 };
+
+// Where a bulk run is, for the progress a long set reports.
+let sequenceProgress = null;
+let lastSetProgressAt = 0;
+
+/**
+ * The sets that set overrides inside another set's instances, by that set.
+ * An Update draws a set's layers anew, under new ids, and Figma keeps an
+ * override against the id of the layer it changes, so every override that
+ * reached inside the updated set reads its default again. On 2026-09-22
+ * Update All Product / SDK ran BrowseCategoriesPanel, then CategoryTile, and
+ * all eight of the panel's tiles read the Counter's default 12: each tile's
+ * count was an override on the Counter layer CategoryTile had just replaced.
+ * CategoryTile in turn inks its Counter's digits for its tint, inside Counter.
+ * A bulk run lists a set after the sets it reaches into, and an Update that
+ * leaves one of these behind says which to update next.
+ */
+const SETS_THAT_OVERRIDE_INSIDE = {
+  Counter: ["CategoryTile"],
+  CategoryTile: ["BrowseCategoriesPanel"],
+};
+
+/** The sets an Update of `names` leaves behind, in the order to run them. */
+function setsToUpdateAfter(names) {
+  const reached = new Set();
+  const visit = (name) => {
+    for (const dependent of SETS_THAT_OVERRIDE_INSIDE[name] || []) {
+      if (reached.has(dependent)) continue;
+      reached.add(dependent);
+      visit(dependent);
+    }
+  };
+  names.forEach(visit);
+  return CORE_UPDATE_SEQUENCE.concat(PRODUCT_SDK_UPDATE_SEQUENCE)
+    .map(([name]) => name)
+    .filter((name) => reached.has(name) && !names.includes(name));
+}
+
+function updateNextWarning(updated, covered) {
+  const next = setsToUpdateAfter(updated).filter(
+    (name) => !covered.includes(name),
+  );
+  if (next.length === 0) return null;
+  const productOnly = next.every((name) =>
+    PRODUCT_SDK_UPDATE_SEQUENCE.some(([entry]) => entry === name),
+  );
+  return (
+    `Next, update ${next.join(", then ")}: ${next.length === 1 ? "it sets" : "each sets"} overrides inside a set this drew anew, under new layer ids, and those read their defaults until ${next.length === 1 ? "it is" : "each is"} updated.` +
+    (productOnly ? " Update All Product / SDK runs them in this order." : "")
+  );
+}
+
+/** After a single Update: a bulk run orders these and says so at its end. */
+function noteSetsToUpdateNext(name, stats) {
+  if (sequenceProgress || !stats || !stats.updated) return;
+  const warning = updateNextWarning([name], []);
+  if (!warning) return;
+  if (!Array.isArray(stats.warnings)) stats.warnings = [];
+  stats.warnings.push(warning);
+}
+
+// A long set paints for minutes, and until the plugin yields Figma neither
+// redraws the panel nor saves the file: on 2026-09-21 the panel sat on
+// "Updating NavigationItem" while the file had reached SearchBar, and TreeItem
+// ran for over ten minutes without a save before Figma was quit. A set reports
+// where it is and yields, at most a few times a second, and at every phase.
+async function reportSetProgress(setName, detail, force) {
+  const now = Date.now();
+  if (!force && now - lastSetProgressAt < 250) return;
+  lastSetProgressAt = now;
+  const where = sequenceProgress
+    ? `${sequenceProgress.index} of ${sequenceProgress.total} · `
+    : "";
+  postAuditProgress(
+    sequenceProgress ? sequenceProgress.index : 1,
+    `Updating ${setName}`,
+    `${where}${detail}`,
+  );
+  await yieldToFigma();
+}
 
 function postAuditProgress(step, title, detail) {
   postResultToUi({
@@ -9483,14 +10048,18 @@ const CORE_UPDATE_SEQUENCE = [
   ["Timeline", updateTimelineComponent],
 ];
 
-// Every Product / SDK and platform set, in picker order. These share the
-// productSdkSlot / productSdkControlButton / productSdkText helpers, so a change
-// to any of them makes all of these stale at once — which is exactly the
-// situation that makes updating them one at a time tedious.
+// Every Product / SDK and platform set, in picker order, except that a set
+// runs after any set it sets overrides inside (SETS_THAT_OVERRIDE_INSIDE):
+// CategoryTile before BrowseCategoriesPanel. These share the productSdkSlot /
+// productSdkControlButton / productSdkText helpers, so a change to any of them
+// makes all of these stale at once — which is exactly the situation that makes
+// updating them one at a time tedious.
 const PRODUCT_SDK_UPDATE_SEQUENCE = [
+  ["AISearchButton", updateAISearchButtonComponent],
   ["AdaptiveMapShell", updateAdaptiveMapShellComponent],
-  ["BrowseCategoriesPanel", updateBrowseCategoriesPanelComponent],
   ["CategoryTile", updateCategoryTileComponent],
+  ["BrowseCategoriesPanel", updateBrowseCategoriesPanelComponent],
+  ["CategoryField", updateCategoryFieldComponent],
   ["DirectionStep", updateDirectionStepComponent],
   ["FloorSelector", updateFloorSelectorComponent],
   ["LocationPin", updateLocationPinComponent],
@@ -9551,6 +10120,19 @@ function markComponentSetCompleted(page, name) {
   }
 }
 
+// The three slowest sets of a run, so a long one is named with its time.
+function slowestSetsText(perComponent) {
+  const timed = perComponent
+    .filter((record) => typeof record.seconds === "number")
+    .sort((a, b) => b.seconds - a.seconds)
+    .slice(0, 3)
+    .filter((record) => record.seconds > 0);
+  if (timed.length === 0) return "";
+  return ` Slowest: ${timed
+    .map((record) => `${record.name} ${record.seconds} s`)
+    .join(", ")}.`;
+}
+
 async function runUpdateSequence(sequence, kindLabel) {
   const stats = {
     updatedComponents: 0,
@@ -9562,6 +10144,7 @@ async function runUpdateSequence(sequence, kindLabel) {
   };
 
   suppressAutoReorganize = true;
+  const updatedNames = [];
 
   // Read the completion stamps once, before anything is touched. A run that
   // died partway used to start again from the first set, redo everything it had
@@ -9604,6 +10187,8 @@ async function runUpdateSequence(sequence, kindLabel) {
         `Updating ${name}`,
         `${index + 1} of ${sequence.length}`,
       );
+      sequenceProgress = { index: index + 1, total: sequence.length };
+      const startedAt = Date.now();
 
       try {
         const result = await entry[1]();
@@ -9611,9 +10196,15 @@ async function runUpdateSequence(sequence, kindLabel) {
         // updated:false, and stamping that as finished would make the next run
         // skip a set it never touched.
         if (result.updated) markComponentSetCompleted(page, name);
-        const record = { name, variants: result.variants || 0 };
-        if (result.updated) stats.updatedComponents += 1;
-        else stats.skipped.push(name);
+        const record = {
+          name,
+          variants: result.variants || 0,
+          seconds: Math.round((Date.now() - startedAt) / 1000),
+        };
+        if (result.updated) {
+          stats.updatedComponents += 1;
+          updatedNames.push(name);
+        } else stats.skipped.push(name);
         if (Array.isArray(result.warnings) && result.warnings.length > 0) {
           record.warnings = result.warnings;
           for (const warning of result.warnings) {
@@ -9625,16 +10216,26 @@ async function runUpdateSequence(sequence, kindLabel) {
         // One failing set must not strand the rest of the sequence.
         const message = error instanceof Error ? error.message : String(error);
         stats.failures.push(`${name}: ${message}`);
-        stats.perComponent.push({ name, failed: message });
+        stats.perComponent.push({
+          name,
+          failed: message,
+          seconds: Math.round((Date.now() - startedAt) / 1000),
+        });
       }
 
       await yieldToFigma();
     }
   } finally {
     suppressAutoReorganize = false;
+    sequenceProgress = null;
   }
 
   stats.layout = await reorganizeComponentsPage();
+  const leftBehind = updateNextWarning(
+    updatedNames,
+    sequence.map(([name]) => name),
+  );
+  if (leftBehind) stats.warnings.push(leftBehind);
   stats.message =
     `Updated ${stats.updatedComponents} of ${sequence.length} ${kindLabel} in place, then reorganized once.` +
     (stats.alreadyCurrent.length > 0
@@ -9643,7 +10244,8 @@ async function runUpdateSequence(sequence, kindLabel) {
     (stats.failures.length > 0 ? ` ${stats.failures.length} failed.` : "") +
     (stats.skipped.length > 0
       ? ` ${stats.skipped.length} not present and skipped.`
-      : "");
+      : "") +
+    slowestSetsText(stats.perComponent);
   return stats;
 }
 
@@ -9709,6 +10311,12 @@ function additionalComponentActionHandlers() {
     "build-category-tile": buildCategoryTileComponent,
     "update-category-tile": updateCategoryTileComponent,
     "rebuild-category-tile": rebuildCategoryTileComponent,
+    "build-category-field": buildCategoryFieldComponent,
+    "update-category-field": updateCategoryFieldComponent,
+    "rebuild-category-field": rebuildCategoryFieldComponent,
+    "build-ai-search-button": buildAISearchButtonComponent,
+    "update-ai-search-button": updateAISearchButtonComponent,
+    "rebuild-ai-search-button": rebuildAISearchButtonComponent,
     "build-poi-media-gallery": buildPOIMediaGalleryComponent,
     "update-poi-media-gallery": updatePOIMediaGalleryComponent,
     "rebuild-poi-media-gallery": rebuildPOIMediaGalleryComponent,
@@ -13292,6 +13900,15 @@ function createSurfaceQaText(
   return text;
 }
 
+// A node, and what it holds, in the Dark mode of every Kozmos collection: the
+// Figma form of a subtree with a theme of its own.
+async function applyKozmosDarkMode(node, stats) {
+  const collections = (
+    await figma.variables.getLocalVariableCollectionsAsync()
+  ).filter((collection) => collection.name.startsWith("Kozmos "));
+  applySurfaceQaVariableMode(node, collections, "Dark", stats);
+}
+
 function applySurfaceQaVariableMode(node, collections, modeName, stats) {
   if (!node || !node.setExplicitVariableModeForCollection) return;
 
@@ -14428,6 +15045,9 @@ async function auditLibrary() {
   );
   const audit = {
     generatedAt: new Date().toISOString(),
+    // The build that wrote this report: a pasted audit is only evidence about
+    // the code that produced it, and Figma can keep running an older import.
+    pluginBuild: PLUGIN_BUILD,
     fileName: figma.root.name,
     pages: [],
     variables: auditVariables(collections, variables),
@@ -14458,7 +15078,7 @@ async function auditLibrary() {
   audit.typography = typography;
   if (typography.issueCount > 0) {
     audit.warnings.push(
-      `Typography: ${typography.issueCount} font config issue(s) found. Run Apply Text Styles, then update any component sets that still report stale generated text.${formatTypographyIssueDetails(typography)}`,
+      `Typography: ${typography.issueCount} font config issue(s) found. Update the component sets named below (never Rebuild); Apply Text Styles styles only text that has no style.${formatTypographyIssueDetails(typography)}`,
     );
   }
   recordAuditTiming(performance, "typography", phaseStartedAt, {
@@ -14477,9 +15097,15 @@ async function auditLibrary() {
         : 0,
   });
 
+  if (icons.missingCount > 0) {
+    audit.warnings.push(
+      `${icons.missingCount} icon source(s) missing from the Icons page (${icons.missing.slice(0, 4).join(", ")}${icons.missingCount > 4 ? ", …" : ""}). Run Curated Icons → Update.`,
+    );
+  }
+
   if (icons.issueCount > 0) {
     audit.warnings.push(
-      `${icons.issueCount} icon source component issue(s) found. Run Update Icons to refresh source sizing and constraints.`,
+      `${icons.issueCount} icon source component issue(s) found. Run Curated Icons → Update to refresh source sizing and constraints.`,
     );
   }
 
@@ -15269,11 +15895,7 @@ function auditSurfaceQaPanelContrast(panel, variableContext) {
 }
 
 function surfaceQaPanelBackground(panel, variableContext, modeName) {
-  const fill = solidPaintToRgba(
-    firstVisibleSolidPaint(panel.fills),
-    variableContext,
-    modeName,
-  );
+  const fill = visibleSolidPaintsToRgba(panel.fills, variableContext, modeName);
 
   if (fill) return compositeColor(fill, { r: 1, g: 1, b: 1, a: 1 });
 
@@ -15318,15 +15940,22 @@ function surfaceQaExpectedInstanceCount() {
 }
 
 function auditIconSourceComponent(component, iconName) {
-  const source = directChildNamed(component, "Pointr Source");
+  const taxonomy = isTaxonomyIconDefinition(
+    KOSMOS_ICON_DEFINITIONS.find((definition) => definition.name === iconName),
+  );
+  const source = directChildNamed(
+    component,
+    taxonomy ? "Taxonomy Source" : "Pointr Source",
+  );
   const issues = [];
 
-  if (!source || source.type !== "INSTANCE") {
+  if (!source || source.type !== (taxonomy ? "FRAME" : "INSTANCE")) {
     issues.push({
       icon: iconName,
       kind: "missing-source",
-      message:
-        "Icon source component is missing a direct Pointr Source instance.",
+      message: taxonomy
+        ? "Icon source component is missing a direct Taxonomy Source frame."
+        : "Icon source component is missing a direct Pointr Source instance.",
     });
     return {
       childType: source ? source.type : null,
@@ -15335,6 +15964,23 @@ function auditIconSourceComponent(component, iconName) {
       height: null,
       issues,
     };
+  }
+
+  // A taxonomy symbol is its filled shapes; a frame with none draws nothing.
+  if (
+    taxonomy &&
+    !source.findOne(
+      (node) =>
+        node.type === "VECTOR" &&
+        Array.isArray(node.fills) &&
+        Boolean(firstVisibleSolidPaint(node.fills)),
+    )
+  ) {
+    issues.push({
+      icon: iconName,
+      kind: "missing-source",
+      message: "Taxonomy Source draws no filled shape.",
+    });
   }
 
   const constraints = source.constraints || {};
@@ -15616,23 +16262,15 @@ function auditComponentSet(
     );
   }
 
-  if (
-    shouldAuditTypographyBindings(record.name) &&
-    boundVariableFields.textNodesWithoutTextStyle > 0
-  ) {
+  // Every set's text carries a shared text style, whichever set it is: a list
+  // of the sets to hold to it fell behind the painters, and FileUpload's 32
+  // browse labels, detached from their style on c7d1d88351a7, drew no warning
+  // in any audit because FileUpload was not on it (2026-09-21). A second rule
+  // here, for text with neither a style nor bound typography, could only fire
+  // alongside this one and said the same thing twice.
+  if (boundVariableFields.textNodesWithoutTextStyle > 0) {
     record.warnings.push(
-      `${boundVariableFields.textNodesWithoutTextStyle} text node(s) are missing Figma text styles. Run Apply Text Styles or the component updater to attach the shared typography styles.`,
-    );
-  }
-
-  if (
-    shouldAuditTypographyBindings(record.name) &&
-    boundVariableFields.textNodes > 0 &&
-    boundVariableFields.typographyFieldCount === 0 &&
-    boundVariableFields.textStyleNodes < boundVariableFields.textNodes
-  ) {
-    record.warnings.push(
-      `${boundVariableFields.textNodes - boundVariableFields.textStyleNodes} text node(s) are missing typography token bindings or Figma text styles.`,
+      `${boundVariableFields.textNodesWithoutTextStyle} text node(s) are missing Figma text styles. Update this set (never Rebuild) to attach its text styles and bind their sizes.`,
     );
   }
 
@@ -16020,6 +16658,16 @@ function auditComponentSet(
     );
   }
 
+  if (record.contrast.decorativeBelowThree > 0) {
+    const shortfallDetails = formatContrastFailureDetails(
+      record.contrast.decorativeShortfalls,
+      "decorative",
+    );
+    record.advisories.push(
+      `${record.contrast.decorativeBelowThree} decorative icon pair(s) sit below 3:1. The text beside each names what it shows, so WCAG 1.4.11 does not ask 3:1 of them; keep the icon hidden from assistive technology in code.${shortfallDetails ? ` Details: ${shortfallDetails}` : ""}`,
+    );
+  }
+
   if (iconSlotIntegrity.maskWrappedSlots > 0) {
     record.warnings.push(
       `${iconSlotIntegrity.maskWrappedSlots} generated Icon slot(s) still use the legacy mask wrapper. Run the component updater to migrate them to direct instance-swap slots.`,
@@ -16146,56 +16794,6 @@ function shouldRequireDisabledState(name) {
       "SearchBar",
       "Select",
       "Slider",
-    ].indexOf(name) !== -1
-  );
-}
-
-function shouldAuditTypographyBindings(name) {
-  return (
-    [
-      "Link",
-      "Box",
-      "Container",
-      "Breadcrumb",
-      "Pagination",
-      "Accordion",
-      "Button",
-      "ToggleButton",
-      "SplitButton",
-      "Counter",
-      "Badge",
-      "Tag",
-      "Chip",
-      "SegmentedControl",
-      "Card",
-      "List",
-      "TreeParentItem",
-      "TreeChildItem",
-      "TreeItem",
-      "Tree",
-      "Table",
-      "Timeline",
-      "BottomNavigation",
-      "NavigationItem",
-      "Navbar",
-      "Sidebar",
-      "Tabs",
-      "Tooltip",
-      "Checkbox",
-      "Radio",
-      "Switch",
-      "Input",
-      "PasswordInput",
-      "Combobox",
-      "MultiSelect",
-      "Listbox",
-      "Textarea",
-      "Search",
-      "SearchBar",
-      "Select",
-      "Slider",
-      "Avatar",
-      "Alert",
     ].indexOf(name) !== -1
   );
 }
@@ -16360,6 +16958,19 @@ function expectedVariantAxesForComponentSetName(name) {
   if (canonicalName === "CategoryTile") {
     return {
       State: CATEGORY_TILE_STATES,
+      Tint: CATEGORY_TINTS,
+    };
+  }
+
+  if (canonicalName === "CategoryField") {
+    return {
+      Tint: CATEGORY_TINTS,
+    };
+  }
+
+  if (canonicalName === "AISearchButton") {
+    return {
+      State: AI_SEARCH_BUTTON_STATES,
     };
   }
 
@@ -16445,6 +17056,7 @@ function expectedVariantAxesForComponentSetName(name) {
     return {
       State: LOCATION_PIN_STATES,
       Size: LOCATION_PIN_SIZES,
+      Tint: CATEGORY_TINTS,
     };
   }
 
@@ -19393,6 +20005,14 @@ function formatCompositionIssueDetails(issues) {
   return visible.join("; ");
 }
 
+/**
+ * A ratio below its threshold, to two decimals, rounded down: rounded to the
+ * nearest, CategoryTile's turquoise symbol at 2.996 printed "ratio 3 < 3".
+ */
+function ratioBelowThreshold(ratio) {
+  return Math.floor(ratio * 100) / 100;
+}
+
 function formatContrastFailureDetails(failures, kind) {
   if (!Array.isArray(failures) || failures.length === 0) return "";
 
@@ -20016,6 +20636,10 @@ function createContrastAuditResult() {
     modesAudited: [],
     byMode: [],
     failures: [],
+    // Icons marked decorative: measured and reported, never a failure.
+    decorativePairs: 0,
+    decorativeBelowThree: 0,
+    decorativeShortfalls: [],
   };
 }
 
@@ -20077,6 +20701,16 @@ function mergeContrastModeResult(result, modeResult) {
     if (result.failures.length >= 12) break;
     result.failures.push(failure);
   }
+
+  result.decorativePairs = Math.max(
+    result.decorativePairs,
+    modeResult.decorativePairs,
+  );
+  result.decorativeBelowThree += modeResult.decorativeBelowThree;
+  for (const shortfall of modeResult.decorativeShortfalls) {
+    if (result.decorativeShortfalls.length >= 12) break;
+    result.decorativeShortfalls.push(shortfall);
+  }
 }
 
 function auditComponentContrastForMode(
@@ -20134,14 +20768,16 @@ function auditComponentContrastForMode(
       parseEmptyStateVariantName(component.name) ||
       parseSegmentedControlVariantName(component.name) ||
       {};
-    if (props.variant === "Glass") {
-      result.surfaceDependent = true;
-      continue;
-    }
-
+    // A Glass variant is measured like any other, on Surface/0 in each mode;
+    // Surface QA puts it on the other surfaces. The skip for Glass that stood
+    // here never ran: the Label parser above claims every name with a
+    // "State=Default" first, so no Button reached it with its variant, and
+    // measuring Glass on Surface/0 is what caught ed50a03a1912's opaque Glass
+    // at 1.03 (2026-09-21). It is gone, so an order change above cannot drop
+    // Glass from the audit.
     const isDisabled = props.state === "Disabled";
-    const bgPaint = solidPaintToRgba(
-      firstVisibleSolidPaint(component.fills),
+    const bgPaint = visibleSolidPaintsToRgba(
+      component.fills,
       variableContext,
       modeName,
     );
@@ -20171,6 +20807,19 @@ function auditNodeContrast(
 ) {
   if (node && node.visible === false) return;
   if (isGeneratedNestedComponentInstance(node)) return;
+
+  if (isGeneratedDirectIconSlot(node) && isDecorativeIcon(node)) {
+    auditDecorativeIconPaints(
+      node,
+      background,
+      isDisabled,
+      result,
+      variableContext,
+      ownerName,
+      modeName,
+    );
+    return;
+  }
 
   if (isGeneratedDirectIconSlot(node)) {
     auditActualIconSlotPaints(
@@ -20351,8 +21000,8 @@ function auditNodeContrast(
   }
 
   if (node.type === "TEXT") {
-    const paint = solidPaintToRgba(
-      firstVisibleSolidPaint(node.fills),
+    const paint = visibleSolidPaintsToRgba(
+      node.fills,
       variableContext,
       modeName,
     );
@@ -20382,13 +21031,13 @@ function auditNodeContrast(
     }
   } else if (isLikelyNonTextIndicator(node)) {
     const paints = [];
-    const fill = solidPaintToRgba(
-      firstVisibleSolidPaint(node.fills),
+    const fill = visibleSolidPaintsToRgba(
+      node.fills,
       variableContext,
       modeName,
     );
-    const stroke = solidPaintToRgba(
-      firstVisibleSolidPaint(node.strokes),
+    const stroke = visibleSolidPaintsToRgba(
+      node.strokes,
       variableContext,
       modeName,
     );
@@ -20430,13 +21079,38 @@ function auditNodeContrast(
 }
 
 function contrastChildBackground(node, background, variableContext, modeName) {
-  const fill = solidPaintToRgba(
-    firstVisibleSolidPaint(node.fills),
-    variableContext,
-    modeName,
-  );
+  const fill = visibleSolidPaintsToRgba(node.fills, variableContext, modeName);
+  let childBackground = fill ? compositeColor(fill, background) : background;
 
-  return fill ? compositeColor(fill, background) : background;
+  // A translucent wash is a layer of its own at the back of the frame, its
+  // paint at full strength and its strength on the layer: what the content
+  // sits on is the frame's fill with the wash over it, at the paint's alpha
+  // times the layer's opacity.
+  for (const child of node.children || []) {
+    if (!isTranslucentTokenLayer(child) || child.visible === false) continue;
+    const wash = visibleSolidPaintsToRgba(
+      child.fills,
+      variableContext,
+      modeName,
+    );
+    if (!wash) continue;
+    const layerOpacity = typeof child.opacity === "number" ? child.opacity : 1;
+    childBackground = compositeColor(
+      Object.assign({}, wash, { a: wash.a * layerOpacity }),
+      childBackground,
+    );
+  }
+
+  return childBackground;
+}
+
+function isTranslucentTokenLayer(node) {
+  return Boolean(
+    node &&
+    node.getSharedPluginData &&
+    node.getSharedPluginData(RUN_NAMESPACE, "role") ===
+      "translucent-token-layer",
+  );
 }
 
 function isGeneratedCheckboxControl(node) {
@@ -20591,11 +21265,7 @@ function auditSegmentedControlSegmentPaints(
   ownerName,
   modeName,
 ) {
-  const fill = solidPaintToRgba(
-    firstVisibleSolidPaint(node.fills),
-    variableContext,
-    modeName,
-  );
+  const fill = visibleSolidPaintsToRgba(node.fills, variableContext, modeName);
   const nextBackground = fill ? compositeColor(fill, background) : background;
 
   if (node.children) {
@@ -20622,11 +21292,7 @@ function auditGeneratedFilledChildSurfacePaints(
   ownerName,
   modeName,
 ) {
-  const fill = solidPaintToRgba(
-    firstVisibleSolidPaint(node.fills),
-    variableContext,
-    modeName,
-  );
+  const fill = visibleSolidPaintsToRgba(node.fills, variableContext, modeName);
   const nextBackground = fill ? compositeColor(fill, background) : background;
   const unavailable =
     node.getSharedPluginData &&
@@ -20657,13 +21323,9 @@ function auditCheckboxControlPaints(
   ownerName,
   modeName,
 ) {
-  const fill = solidPaintToRgba(
-    firstVisibleSolidPaint(node.fills),
-    variableContext,
-    modeName,
-  );
-  const stroke = solidPaintToRgba(
-    firstVisibleSolidPaint(node.strokes),
+  const fill = visibleSolidPaintsToRgba(node.fills, variableContext, modeName);
+  const stroke = visibleSolidPaintsToRgba(
+    node.strokes,
     variableContext,
     modeName,
   );
@@ -20757,13 +21419,9 @@ function auditSliderTrackPaints(
   ownerName,
   modeName,
 ) {
-  const fill = solidPaintToRgba(
-    firstVisibleSolidPaint(node.fills),
-    variableContext,
-    modeName,
-  );
-  const stroke = solidPaintToRgba(
-    firstVisibleSolidPaint(node.strokes),
+  const fill = visibleSolidPaintsToRgba(node.fills, variableContext, modeName);
+  const stroke = visibleSolidPaintsToRgba(
+    node.strokes,
     variableContext,
     modeName,
   );
@@ -20806,13 +21464,9 @@ function auditSliderThumbPaints(
   ownerName,
   modeName,
 ) {
-  const fill = solidPaintToRgba(
-    firstVisibleSolidPaint(node.fills),
-    variableContext,
-    modeName,
-  );
-  const stroke = solidPaintToRgba(
-    firstVisibleSolidPaint(node.strokes),
+  const fill = visibleSolidPaintsToRgba(node.fills, variableContext, modeName);
+  const stroke = visibleSolidPaintsToRgba(
+    node.strokes,
     variableContext,
     modeName,
   );
@@ -20855,13 +21509,9 @@ function auditCardActionPaints(
   ownerName,
   modeName,
 ) {
-  const fill = solidPaintToRgba(
-    firstVisibleSolidPaint(node.fills),
-    variableContext,
-    modeName,
-  );
-  const stroke = solidPaintToRgba(
-    firstVisibleSolidPaint(node.strokes),
+  const fill = visibleSolidPaintsToRgba(node.fills, variableContext, modeName);
+  const stroke = visibleSolidPaintsToRgba(
+    node.strokes,
     variableContext,
     modeName,
   );
@@ -20904,13 +21554,9 @@ function auditInputFieldPaints(
   ownerName,
   modeName,
 ) {
-  const fill = solidPaintToRgba(
-    firstVisibleSolidPaint(node.fills),
-    variableContext,
-    modeName,
-  );
-  const stroke = solidPaintToRgba(
-    firstVisibleSolidPaint(node.strokes),
+  const fill = visibleSolidPaintsToRgba(node.fills, variableContext, modeName);
+  const stroke = visibleSolidPaintsToRgba(
+    node.strokes,
     variableContext,
     modeName,
   );
@@ -20963,13 +21609,13 @@ function auditActualIconSlotPaints(
   modeName,
 ) {
   function walk(current) {
-    const fill = solidPaintToRgba(
-      firstVisibleSolidPaint(current.fills),
+    const fill = visibleSolidPaintsToRgba(
+      current.fills,
       variableContext,
       modeName,
     );
-    const stroke = solidPaintToRgba(
-      firstVisibleSolidPaint(current.strokes),
+    const stroke = visibleSolidPaintsToRgba(
+      current.strokes,
       variableContext,
       modeName,
     );
@@ -20998,6 +21644,77 @@ function auditActualIconSlotPaints(
       );
     }
 
+    if (current.children) {
+      for (const child of current.children) walk(child);
+    }
+  }
+
+  walk(node);
+}
+
+/**
+ * An icon is decorative when the text beside it names what it shows: the
+ * category tile's and the category field's symbol, the category's label
+ * under or beside it. WCAG 1.4.11 asks 3:1 of graphics needed to understand
+ * the content, not of these, so the audit measures them apart and reports a
+ * shortfall as an advisory. The painters mark them (`markDecorativeIcon`),
+ * matching the code, where each is hidden from assistive technology.
+ */
+const DECORATIVE_ICON_KEY = "decorative";
+
+function markDecorativeIcon(icon) {
+  try {
+    icon.setSharedPluginData(
+      RUN_NAMESPACE,
+      DECORATIVE_ICON_KEY,
+      "label-names-it",
+    );
+  } catch (_error) {
+    // Plugin data is unavailable on some older plugin runtimes.
+  }
+}
+
+function isDecorativeIcon(node) {
+  return Boolean(
+    node &&
+    node.getSharedPluginData &&
+    node.getSharedPluginData(RUN_NAMESPACE, DECORATIVE_ICON_KEY),
+  );
+}
+
+function auditDecorativeIconPaints(
+  node,
+  background,
+  isDisabled,
+  result,
+  variableContext,
+  ownerName,
+  modeName,
+) {
+  function walk(current) {
+    for (const paints of [current.fills, current.strokes]) {
+      const paint = visibleSolidPaintsToRgba(paints, variableContext, modeName);
+      if (!paint) continue;
+      const ratio = contrastRatio(
+        compositeColor(paint, background),
+        background,
+      );
+      result.decorativePairs += 1;
+      if (!isDisabled && ratio < 3) {
+        result.decorativeBelowThree += 1;
+        if (result.decorativeShortfalls.length < 12) {
+          result.decorativeShortfalls.push({
+            mode: modeName,
+            node: ownerName
+              ? `${ownerName} / ${current.name || current.type}`
+              : current.name || current.type,
+            kind: "decorative",
+            ratio: ratioBelowThreshold(ratio),
+            required: 3,
+          });
+        }
+      }
+    }
     if (current.children) {
       for (const child of current.children) walk(child);
     }
@@ -21108,7 +21825,7 @@ function addContrastFailure(
       ? `${ownerName} / ${node.name || node.type}`
       : node.name || node.type,
     kind,
-    ratio: Math.round(ratio * 100) / 100,
+    ratio: ratioBelowThreshold(ratio),
     required,
   });
 }
@@ -21129,11 +21846,48 @@ function solidPaintToRgba(paint, variableContext, modeName) {
   const boundColor = resolveBoundPaintColor(paint, variableContext, modeName);
   const color = boundColor || paint.color;
   if (!color) return null;
+  // Alpha is the paint's opacity, not the variable's: that is what the file
+  // draws (see paintFromVariable), measured on 2026-09-21.
   return {
     r: color.r,
     g: color.g,
     b: color.b,
     a: paint.opacity === undefined ? 1 : paint.opacity,
+  };
+}
+
+// A node's visible solid paints read as the one colour they draw. Figma paints
+// the array bottom to top, so a second fill covers the first: CategoryTile's
+// Selected square on c7d1d88351a7 is white under an opaque tint, and reading
+// only the first fill measured its icon on white (1.92) where the render shows
+// the icon drawn on its own colour, unseen (REST render, 2026-09-21). One
+// paint reads as solidPaintToRgba reads it; no solid paint reads null.
+function visibleSolidPaintsToRgba(paints, variableContext, modeName) {
+  if (!Array.isArray(paints)) return null;
+  let stack = null;
+  for (const paint of paints) {
+    if (!paint || paint.visible === false || paint.type !== "SOLID") continue;
+    const color = solidPaintToRgba(paint, variableContext, modeName);
+    if (!color) continue;
+    stack = stack ? colorOver(color, stack) : color;
+  }
+  return stack;
+}
+
+// One colour over another, both with alpha: what the pair draws, before the
+// surface under both is known.
+function colorOver(top, bottom) {
+  const topAlpha = top.a === undefined ? 1 : top.a;
+  const bottomAlpha = bottom.a === undefined ? 1 : bottom.a;
+  const alpha = topAlpha + bottomAlpha * (1 - topAlpha);
+  if (alpha <= 0) return { r: top.r, g: top.g, b: top.b, a: 0 };
+  const mix = (t, b) =>
+    (t * topAlpha + b * bottomAlpha * (1 - topAlpha)) / alpha;
+  return {
+    r: mix(top.r, bottom.r),
+    g: mix(top.g, bottom.g),
+    b: mix(top.b, bottom.b),
+    a: alpha,
   };
 }
 
@@ -21448,43 +22202,6 @@ function auditBoundVariableFields(root) {
     }
   }
 
-  function hasTextStyle(node) {
-    const directStyleId = node.textStyleId;
-    if (
-      typeof directStyleId === "string" &&
-      directStyleId.length > 0 &&
-      directStyleId !== figma.mixed
-    ) {
-      return true;
-    }
-
-    if (
-      node.getRangeTextStyleId &&
-      typeof node.characters === "string" &&
-      node.characters.length > 0
-    ) {
-      try {
-        const rangeStyleId = node.getRangeTextStyleId(
-          0,
-          node.characters.length,
-        );
-        return (
-          typeof rangeStyleId === "string" &&
-          rangeStyleId.length > 0 &&
-          rangeStyleId !== figma.mixed
-        );
-      } catch (_error) {
-        return false;
-      }
-    }
-
-    return (
-      typeof directStyleId === "string" &&
-      directStyleId.length > 0 &&
-      directStyleId !== figma.mixed
-    );
-  }
-
   function walk(node) {
     if (isGeneratedNestedComponentInstance(node)) return;
 
@@ -21494,7 +22211,7 @@ function auditBoundVariableFields(root) {
 
     if (node.type === "TEXT") {
       usage.textNodes += 1;
-      if (hasTextStyle(node)) {
+      if (textNodeHasTextStyle(node)) {
         usage.textStyleNodes += 1;
       } else {
         usage.textNodesWithoutTextStyle += 1;
@@ -22523,6 +23240,24 @@ function addComponentTextStyleSpecs(specs, fonts) {
     16,
     "Typography contract for default Kozmos counters.",
   );
+  addTextStyleSpec(
+    specs,
+    "categoryTileLabel",
+    "CategoryTile / Label",
+    fonts.regular,
+    CATEGORY_TILE_LABEL_FONT_SIZE,
+    CATEGORY_TILE_LABEL_LINE_HEIGHT,
+    "Typography contract for a category tile's caption: 11/14, two lines at most.",
+  );
+  addTextStyleSpec(
+    specs,
+    "categoryFieldLabel",
+    "CategoryField / Label",
+    fonts.medium,
+    CATEGORY_FIELD_LABEL_FONT_SIZE,
+    CATEGORY_FIELD_LABEL_LINE_HEIGHT,
+    "Typography contract for the chosen category's name in the search row: 15/20 semibold.",
+  );
   addTextStyleSpec(specs, "cardTitle", "Card / Title", fonts.medium, 24, 24);
   addTextStyleSpec(
     specs,
@@ -22872,12 +23607,93 @@ async function applyTextStyleToNodeAsync(text, key, stats) {
   return applied;
 }
 
+// Whether a text node carries a text style: its own, or one style across its
+// whole range. Shared by the audit's count and by Apply Text Styles, which
+// leaves styled text alone.
+function textNodeHasTextStyle(node) {
+  const directStyleId = node.textStyleId;
+  if (
+    typeof directStyleId === "string" &&
+    directStyleId.length > 0 &&
+    directStyleId !== figma.mixed
+  ) {
+    return true;
+  }
+
+  if (
+    node.getRangeTextStyleId &&
+    typeof node.characters === "string" &&
+    node.characters.length > 0
+  ) {
+    try {
+      const rangeStyleId = node.getRangeTextStyleId(0, node.characters.length);
+      return (
+        typeof rangeStyleId === "string" &&
+        rangeStyleId.length > 0 &&
+        rangeStyleId !== figma.mixed
+      );
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  return false;
+}
+
+// The variables a text's size and leading are bound to, by field. A literal
+// write to either drops its binding in Figma, and applying a style writes them.
+function typographyVariableBindings(text) {
+  const bindings = {};
+  const bound = text && text.boundVariables;
+  for (const field of ["fontSize", "lineHeight"]) {
+    const value = bound && bound[field];
+    const aliases = (Array.isArray(value) ? value : [value]).filter(
+      (alias) => alias && alias.id,
+    );
+    const ids = aliases
+      .map((alias) => alias.id)
+      .filter((id, index, all) => all.indexOf(id) === index);
+    // One variable across the node binds back whole; mixed ranges do not.
+    if (ids.length === 1) bindings[field] = ids[0];
+  }
+  return bindings;
+}
+
+async function restoreTypographyVariableBindings(text, bindings, stats) {
+  for (const field of Object.keys(bindings)) {
+    try {
+      const variable = await figma.variables.getVariableByIdAsync(
+        bindings[field],
+      );
+      if (!variable) {
+        incrementStat(stats, "typographyBindingsLost");
+        pushUniqueWarning(
+          stats,
+          `typography-binding-missing:${bindings[field]}`,
+          `A text's ${field} was bound to a variable the file no longer has (${bindings[field]}); it keeps the style's value.`,
+        );
+        continue;
+      }
+      text.setBoundVariable(field, variable);
+      incrementStat(stats, "typographyBindingsKept");
+    } catch (error) {
+      incrementStat(stats, "typographyBindingsLost");
+      pushUniqueWarning(
+        stats,
+        `typography-binding:${field}`,
+        `Could not bind a text's ${field} back to its variable (${messageFor(error)}).`,
+      );
+    }
+  }
+}
+
 async function applyTextStylesToComponentLibrary() {
   const stats = {
     updated: false,
     componentSetsVisited: 0,
     textNodesVisited: 0,
     textNodesStyled: 0,
+    textNodesAlreadyStyled: 0,
     textNodesSkippedInInstances: 0,
     textNodesUnmatched: 0,
     warnings: [],
@@ -22903,8 +23719,21 @@ async function applyTextStylesToComponentLibrary() {
         continue;
       }
 
+      // A styled text carries the style its painter chose, which a guess
+      // from the node's name can miss, and restyling writes its size and
+      // leading, dropping their variables: run on the live file on
+      // 2026-09-21, this unbound 4,957 texts in 46 sets and set 656 of the
+      // pickers' 12/16 texts at 14/20. Only text without a style is styled
+      // here, and its bindings are put back; an Update restyles a whole set.
+      if (textNodeHasTextStyle(text)) {
+        stats.textNodesAlreadyStyled += 1;
+        continue;
+      }
+
       const key = inferTextStyleKeyForComponentText(text, componentSet);
+      const bindings = typographyVariableBindings(text);
       if (key && (await applyTextStyleToNodeAsync(text, key, stats))) {
+        await restoreTypographyVariableBindings(text, bindings, stats);
         stats.textNodesStyled += 1;
       } else {
         stats.textNodesUnmatched += 1;
@@ -22918,7 +23747,7 @@ async function applyTextStylesToComponentLibrary() {
   }
 
   stats.updated = true;
-  stats.message = `Applied text styles to ${stats.textNodesStyled} component text node(s).`;
+  stats.message = `Applied text styles to ${stats.textNodesStyled} component text node(s) that had none; ${stats.textNodesAlreadyStyled} styled node(s) left as drawn.`;
   return stats;
 }
 
@@ -23133,7 +23962,40 @@ function inferTextStyleKeyForComponentText(text, componentSet) {
     setName === "Slider"
   ) {
     if (textName === "Optional Text") return "fieldMeta";
-    return textName === "Label Text" ? "fieldLabel" : "fieldText";
+    // The field painters draw every label-like text with
+    // applyFieldLabelTypography: a range's Start and End labels, the
+    // calendar's month titles, the required mark inside the label, and
+    // FileUpload's browse action (semibold in the code; Medium is the
+    // importer's nearest weight). The guess follows the painters, so the
+    // audit reports a real drift rather than 160 false ones (2026-09-21).
+    if (
+      /Label Text$/.test(textName) ||
+      /Month Text$/.test(textName) ||
+      textName === "Required Mark" ||
+      textName === "Browse Text"
+    ) {
+      return "fieldLabel";
+    }
+    // The small readouts the painters draw with the 12/16 meta style: the
+    // calendar's weekdays, FileUpload's description and file meta, and
+    // ColorPicker's channel, alpha, mode and hex values. Guessed as field
+    // text, 656 of them were restyled at 14/20 in the live file (2026-09-21).
+    if (
+      textName === "Weekday Text" ||
+      (setName === "FileUpload" &&
+        (textName === "Description Text" ||
+          /^File Meta Text( \d+)?$/.test(textName))) ||
+      (setName === "ColorPicker" &&
+        (/ Value Text$/.test(textName) ||
+          textName === "Alpha Unit Text" ||
+          textName === "Mode Text" ||
+          (textName === "Value Text" &&
+            Boolean(text.parent) &&
+            text.parent.name === "ColorPicker Hex Field")))
+    ) {
+      return "fieldMeta";
+    }
+    return "fieldText";
   }
 
   return null;
@@ -30916,6 +31778,7 @@ async function buildCounterComponent() {
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Counter");
   applyComponentSetDescription(componentSet, "Counter", false, [
     "Kozmos Counter component set generated from React Counter API.",
+    "fill maps to Counter.fill, a host's inked fill: CategoryTile and CategoryField put a category's on their nested instance as an override, the fill on the pill and its ink on the digits, since no one ink reads on every fill.",
     "Tone maps to Counter.tone.",
     "Size maps to Counter.size.",
     "Counter Text maps to Counter children in Code Connect.",
@@ -30974,6 +31837,7 @@ async function updateCounterComponent() {
   existing.setSharedPluginData(RUN_NAMESPACE, "component", "Counter");
   applyComponentSetDescription(existing, "Counter", true, [
     "Kozmos Counter component set generated from React Counter API.",
+    "fill maps to Counter.fill, a host's inked fill: CategoryTile and CategoryField put a category's on their nested instance as an override, the fill on the pill and its ink on the digits, since no one ink reads on every fill.",
     "Tone maps to Counter.tone.",
     "Size maps to Counter.size.",
     "Counter Text maps to Counter children in Code Connect.",
@@ -31028,6 +31892,7 @@ async function updateCounterComponent() {
     "2",
     stats,
   );
+  noteSetsToUpdateNext("Counter", stats);
   return stats;
 }
 
@@ -36072,6 +36937,7 @@ async function updatePlannedMatrixComponent(config) {
   // set was gone before the first replacement could be appended.
   const pendingRemoval = [];
   const existingChildren = Array.from(existing.children || []);
+  const variantTotal = existingChildren.length;
   for (const child of existingChildren) {
     if (child.type !== "COMPONENT") continue;
 
@@ -36105,6 +36971,11 @@ async function updatePlannedMatrixComponent(config) {
     }
 
     seenKeys[key] = true;
+    await reportSetProgress(
+      config.componentSetName,
+      `variant ${stats.variantsUpdated + 1} of ${variantTotal}`,
+      stats.variantsUpdated === 0,
+    );
     await config.updateVariant(child, {
       props,
       variableByName,
@@ -36118,6 +36989,11 @@ async function updatePlannedMatrixComponent(config) {
     const key = config.keyForProps(props);
     if (seenKeys[key]) continue;
 
+    await reportSetProgress(
+      config.componentSetName,
+      `new variant ${stats.variantsCreated + 1}`,
+      stats.variantsCreated === 0,
+    );
     const component = await config.createVariant({
       props,
       variableByName,
@@ -36148,18 +37024,26 @@ async function updatePlannedMatrixComponent(config) {
   stats.updated = true;
   stats.componentSetId = existing.id;
   stats.urlNodeId = nodeIdForUrl(existing.id);
+  await reportSetProgress(config.componentSetName, "variant properties", true);
   normalizeComponentSetVariantProperties(
     existing,
     expectedVariantAxesForComponentSetName(existing.name),
     stats,
   );
+  await reportSetProgress(
+    config.componentSetName,
+    "component properties",
+    true,
+  );
   await config.configureProperties(existing, stats, variableByName);
   reportUnboundComponentProperties(existing, stats);
+  await reportSetProgress(config.componentSetName, "maintenance", true);
   runGeneratedComponentPostUpdateMaintenance(
     existing,
     config.componentName,
     stats,
   );
+  await reportSetProgress(config.componentSetName, "layout", true);
   await reorganizeAfterGeneratedComponentMutation(stats);
   await runGeneratedComponentPostLayoutMaintenance({
     componentName: config.componentName,
@@ -36552,12 +37436,7 @@ function parseMetaStripVariantName(name) {
   return { label: values.Label, icon: values.Icon };
 }
 
-async function createMetaStripVariant({
-  props,
-  variableByName,
-  fonts,
-  stats,
-}) {
+async function createMetaStripVariant({ props, variableByName, fonts, stats }) {
   const component = figma.createComponent();
   await updateMetaStripVariant(component, {
     props,
@@ -38700,6 +39579,14 @@ async function updateBottomNavigationVariant(
       stats,
     });
     component.appendChild(item);
+    // Each item shares the bar's width. FILL needs the item inside the bar's
+    // auto layout, so it is set after the append; before it, Figma refused it.
+    setLayoutSizingHorizontal(item, "FILL");
+    try {
+      item.layoutGrow = 1;
+    } catch (_error) {
+      // layoutGrow is unavailable on older plugin runtimes.
+    }
   }
 }
 
@@ -39058,7 +39945,9 @@ async function createNavigationItemLeadingIconFrame({
   );
   icon.name = "Leading Icon";
   frame.appendChild(icon);
-  setHugChildSizing(icon);
+  // An icon instance is sized, not hugged: HUG takes only an auto-layout frame
+  // or text, and Figma refused it 240 times across NavigationItem's rows.
+  setFixedChildSizing(icon);
   return frame;
 }
 
@@ -39147,7 +40036,7 @@ async function createNavigationItemTrailingSlot({
   );
   icon.name = "Trailing Icon";
   slot.appendChild(icon);
-  setHugChildSizing(icon);
+  setFixedChildSizing(icon);
   return slot;
 }
 
@@ -40553,9 +41442,11 @@ async function updateSearchBarVariant(
     ),
   ];
   text.textAlignVertical = "CENTER";
+  // FILL needs the text inside the bar's auto layout first; set before the
+  // append, Figma refused it and the text kept its creation width.
+  component.appendChild(text);
   setHorizontalFillTextSizing(text);
   setTextAutoResize(text, "TRUNCATE");
-  component.appendChild(text);
 
   if (filled) {
     const clearIcon = await createFixedIconInstance(
@@ -41577,15 +42468,14 @@ function appendScrollAreaScrollbar({
     vertical ? metrics.height - 32 : 6,
   );
   track.cornerRadius = KOZMOS_RADIUS.pill;
-  track.fills = [
-    paintFromVariableWithOpacity(
-      "Colors/foreground/500",
-      "#747B8B",
-      0.32,
-      variableByName,
-      stats,
-    ),
-  ];
+  setTranslucentTokenPaint(
+    track,
+    "fills",
+    { name: "Colors/foreground/500", fallback: "#747B8B" },
+    0.32,
+    variableByName,
+    stats,
+  );
   track.strokes = [];
   track.setSharedPluginData(RUN_NAMESPACE, "kind", "scrollarea-scrollbar");
   component.appendChild(track);
@@ -41888,12 +42778,6 @@ async function createBottomNavigationItem({
   item.fills = [];
   item.strokes = [];
   item.setSharedPluginData(RUN_NAMESPACE, "kind", "bottom-navigation-item");
-  setLayoutSizingHorizontal(item, "FILL");
-  try {
-    item.layoutGrow = 1;
-  } catch (_error) {
-    // layoutGrow is unavailable on older plugin runtimes.
-  }
 
   const foreground = active ? "Colors/theme/600" : "Colors/foreground/400";
   const foregroundFallback = active ? "#1051E8" : "#5D626F";
@@ -43141,13 +44025,60 @@ async function productSdkText({
   return text;
 }
 
+/**
+ * At most `lines` lines, then an ellipsis — the `line-clamp-2`,
+ * `.lineLimit(2)` and `maxLines = 2` of the three platforms — for a text
+ * already in its auto-layout parent.
+ *
+ * Figma decides the order, and no document says it. Read over REST on
+ * 2026-09-22, CategoryTile's label — set to auto height, then to truncate, then
+ * to two lines, inside a try — was a fixed box one line high with no line
+ * limit: somewhere in that order Figma fixed the box and dropped the limit, the
+ * try kept quiet, and every long category name in BrowseCategoriesPanel was cut
+ * at one line. The Tree and navigation labels — set to truncate, then to HUG
+ * vertically — hold auto height with a limit of 1. So: truncation, then HUG,
+ * then the limit; and the result is read back, so a runtime that orders these
+ * some other way says so in the log instead of in the render.
+ */
+function clampTextLines(text, lines, context, stats) {
+  let failure = "";
+  try {
+    text.textTruncation = "ENDING";
+    setLayoutSizingVertical(text, "HUG");
+    if (text.textAutoResize !== "HEIGHT") text.textAutoResize = "HEIGHT";
+    text.maxLines = lines;
+  } catch (error) {
+    failure = `; ${messageFor(error)}`;
+  }
+  if (
+    text.textAutoResize !== "HEIGHT" ||
+    text.textTruncation !== "ENDING" ||
+    text.maxLines !== lines
+  ) {
+    stats.warnings.push(
+      `${context}: ${text.name} did not take ${lines} lines (textAutoResize ${text.textAutoResize}, textTruncation ${text.textTruncation}, maxLines ${text.maxLines}${failure}); a long one is cut at one line.`,
+    );
+  }
+}
+
 // --- DirectionStep ---------------------------------------------------------
 
+// Typed fallbacks for a file without the curated icons.
 const DIRECTION_STEP_GLYPHS = {
   Straight: "↑",
   Left: "←",
   Right: "→",
   Destination: "◉",
+  LiftUp: "↑",
+  LiftDown: "↓",
+  EscalatorUp: "↑",
+  EscalatorDown: "↓",
+  StairsUp: "↑",
+  StairsDown: "↓",
+  LevelUp: "↑",
+  LevelDown: "↓",
+  Transition: "→",
+  TurnBack: "↩",
 };
 
 async function createDirectionStepVariant(args) {
@@ -43192,29 +44123,54 @@ async function updateDirectionStepVariant(
   badge.counterAxisAlignItems = "CENTER";
   badge.resizeWithoutConstraints(40, 40);
   badge.cornerRadius = 20;
-  badge.fills = [
-    paintFromVariable("Colors/theme/100", "#CAD9FC", variableByName, stats),
-  ];
+  // The React's `bg-primary/10` behind a `text-primary` symbol: the disc is a
+  // wash layer of its own, so the icon on it stays at full strength.
+  badge.fills = [];
   badge.strokes = [];
-
-  // The turn glyph is intentionally text, not an auto-mirroring icon: a left
-  // turn stays a physical left turn in RTL locales.
-  const glyph = await productSdkText({
-    name: "Direction Glyph",
-    characters: DIRECTION_STEP_GLYPHS[value] || DIRECTION_STEP_GLYPHS.Straight,
-    styleKey: "badgeLabel",
-    fonts,
-    bold: true,
-    fontSize: 18,
-    lineHeight: 24,
-    colorToken: "Colors/theme/700",
-    colorFallback: "#0D44C2",
+  insertTranslucentTokenLayer(badge, {
+    name: "Direction Wash",
+    token: { name: "Colors/theme/500", fallback: "#135BEC" },
+    opacity: 0.1,
+    shape: "ellipse",
     variableByName,
     stats,
   });
-  glyph.textAlignHorizontal = "CENTER";
-  glyph.textAutoResize = "WIDTH_AND_HEIGHT";
-  badge.appendChild(glyph);
+
+  // The symbol is a real icon from the Pointr Icon Library, 24 in the theme's
+  // colour, as the React draws Lucide's; an instance does not mirror, so a
+  // left turn stays a physical left turn in RTL locales. A file without the
+  // curated icons gets the typed glyph.
+  const symbolToken = { name: "Colors/theme/500", fallback: "#135BEC" };
+  const symbol = await productSdkIconInstance({
+    iconName: DIRECTION_STEP_ICONS[value] || DIRECTION_STEP_ICONS.Straight,
+    token: symbolToken,
+    size: DIRECTION_STEP_ICON_SIZE,
+    sizeToken: null,
+    variableByName,
+    stats,
+    owner: "DirectionStep",
+  });
+  if (symbol) {
+    badge.appendChild(symbol);
+  } else {
+    const glyph = await productSdkText({
+      name: "Direction Glyph",
+      characters:
+        DIRECTION_STEP_GLYPHS[value] || DIRECTION_STEP_GLYPHS.Straight,
+      styleKey: "badgeLabel",
+      fonts,
+      bold: true,
+      fontSize: 18,
+      lineHeight: 24,
+      colorToken: symbolToken.name,
+      colorFallback: symbolToken.fallback,
+      variableByName,
+      stats,
+    });
+    glyph.textAlignHorizontal = "CENTER";
+    glyph.textAutoResize = "WIDTH_AND_HEIGHT";
+    badge.appendChild(glyph);
+  }
   appendWithSizing(component, badge, "FIXED", "FIXED");
 
   const copy = figma.createFrame();
@@ -43329,6 +44285,7 @@ function configureDirectionStepProperties(componentSet, stats) {
 
 const DIRECTION_STEP_DESCRIPTION = [
   "Kozmos DirectionStep generated from the React DirectionStep API.",
+  "Type maps to type: the four turns, the six level changes by lift, escalator and stairs, a level change, a transition between buildings, and turning back — each a 24 icon from the Icons page in the theme's colour on a 40 disc at 10 %.",
   "Type maps to DirectionStep.type (straight, left, right, destination).",
   "Instruction Text maps to DirectionStep.instruction.",
   "Distance Text maps to DirectionStep.distance.",
@@ -43427,6 +44384,7 @@ async function updateFloorSelectorVariant(
     const up = await floorSelectorStepperGlyph(
       "Stepper Up",
       "↑",
+      "chevron-up",
       fonts,
       variableByName,
       stats,
@@ -43500,6 +44458,7 @@ async function updateFloorSelectorVariant(
     const down = await floorSelectorStepperGlyph(
       "Stepper Down",
       "↓",
+      "chevron-down",
       fonts,
       variableByName,
       stats,
@@ -43511,6 +44470,7 @@ async function updateFloorSelectorVariant(
 async function floorSelectorStepperGlyph(
   name,
   glyph,
+  iconName,
   fonts,
   variableByName,
   stats,
@@ -43527,22 +44487,39 @@ async function floorSelectorStepperGlyph(
   frame.fills = [];
   frame.strokes = [];
 
-  const text = await productSdkText({
-    name: `${name} Glyph`,
-    characters: glyph,
-    styleKey: "controlLabel",
-    fonts,
-    bold: true,
-    fontSize: 14,
-    lineHeight: 20,
-    colorToken: "Colors/foreground/400",
-    colorFallback: "#5D626F",
+  // The chevron from the Icons page, as the React draws Lucide's; the typed
+  // arrow for a file without the curated icons.
+  const symbolToken = { name: "Colors/foreground/400", fallback: "#5D626F" };
+  const symbol = await productSdkIconInstance({
+    iconName,
+    token: symbolToken,
+    size: 16,
+    sizeToken: null,
     variableByName,
     stats,
+    owner: "FloorSelector",
   });
-  text.textAlignHorizontal = "CENTER";
-  text.textAutoResize = "WIDTH_AND_HEIGHT";
-  frame.appendChild(text);
+  if (symbol) {
+    symbol.name = `${name} Icon`;
+    frame.appendChild(symbol);
+  } else {
+    const text = await productSdkText({
+      name: `${name} Glyph`,
+      characters: glyph,
+      styleKey: "controlLabel",
+      fonts,
+      bold: true,
+      fontSize: 14,
+      lineHeight: 20,
+      colorToken: symbolToken.name,
+      colorFallback: symbolToken.fallback,
+      variableByName,
+      stats,
+    });
+    text.textAlignHorizontal = "CENTER";
+    text.textAutoResize = "WIDTH_AND_HEIGHT";
+    frame.appendChild(text);
+  }
   setLayoutSizingHorizontal(frame, "FIXED");
   setLayoutSizingVertical(frame, "FIXED");
   return frame;
@@ -43634,14 +44611,16 @@ function locationPinVariantCombinations() {
   const combinations = [];
   for (const state of LOCATION_PIN_STATES) {
     for (const size of LOCATION_PIN_SIZES) {
-      combinations.push({ state, size });
+      for (const tint of CATEGORY_TINTS) {
+        combinations.push({ state, size, tint });
+      }
     }
   }
   return combinations;
 }
 
 function locationPinVariantKey(props) {
-  return `${props.state}/${props.size}`;
+  return `${props.state}/${props.size}/${props.tint}`;
 }
 
 function parseLocationPinVariantName(name) {
@@ -43652,7 +44631,12 @@ function parseLocationPinVariantName(name) {
   ) {
     return null;
   }
-  return { state: values.State, size: values.Size };
+  // A pin from before the Tint axis (2026-09-21) is named by state and size
+  // alone. It is the theme's, and Update renames it in place, so the fifteen
+  // original variants keep their node IDs.
+  const tint = values.Tint === undefined ? "Theme" : values.Tint;
+  if (CATEGORY_TINTS.indexOf(tint) === -1) return null;
+  return { state: values.State, size: values.Size, tint };
 }
 
 function layoutLocationPinVariants(componentSet) {
@@ -43662,8 +44646,11 @@ function layoutLocationPinVariants(componentSet) {
     if (child.type !== "COMPONENT") continue;
     const props = parseLocationPinVariantName(child.name);
     if (!props) continue;
+    // One State × Size block per tint, stacked: the theme's first.
     child.x = LOCATION_PIN_STATES.indexOf(props.state) * 160;
-    child.y = LOCATION_PIN_SIZES.indexOf(props.size) * 110;
+    child.y =
+      CATEGORY_TINTS.indexOf(props.tint) * (LOCATION_PIN_SIZES.length * 110) +
+      LOCATION_PIN_SIZES.indexOf(props.size) * 110;
   }
 
   resizeComponentSetToContainChildren(componentSet);
@@ -43685,8 +44672,19 @@ async function updateLocationPinVariant(
   // selection is never carried by colour alone.
   const diameter = selected ? base + 8 : base;
   const palette = locationPinPalette(props.state);
+  // A category's colours over the variant's: its fill is the marker (the
+  // ring's stroke off the floor), its ink the number; a featured pin keeps
+  // the alert colour.
+  const tint = categoryTintTokens(props.tint);
+  const marked = Boolean(tint.fill) && props.state !== "Featured";
+  const markerFill = marked
+    ? { fill: tint.fill.name, fallback: tint.fill.fallback }
+    : palette;
+  const ink = marked
+    ? tint.onFill
+    : { name: "Colors/foreground/1000", fallback: "#FFFFFF" };
 
-  component.name = `State=${props.state}, Size=${props.size}`;
+  component.name = `State=${props.state}, Size=${props.size}, Tint=${props.tint}`;
   component.layoutMode = "VERTICAL";
   component.primaryAxisSizingMode = "AUTO";
   component.counterAxisSizingMode = "AUTO";
@@ -43729,15 +44727,20 @@ async function updateLocationPinVariant(
           stats,
         )
       : paintFromVariable(
-          palette.fill,
-          palette.fallback,
+          markerFill.fill,
+          markerFill.fallback,
           variableByName,
           stats,
         ),
   ];
   marker.strokes = [
     offFloor
-      ? paintFromVariable(palette.fill, palette.fallback, variableByName, stats)
+      ? paintFromVariable(
+          markerFill.fill,
+          markerFill.fallback,
+          variableByName,
+          stats,
+        )
       : paintFromVariable(
           "Colors/foreground/1000",
           "#FFFFFF",
@@ -43756,8 +44759,13 @@ async function updateLocationPinVariant(
     bold: true,
     fontSize: Math.round(diameter * 0.44),
     lineHeight: Math.round(diameter * 0.62),
-    colorToken: offFloor ? palette.fill : "Colors/foreground/1000",
-    colorFallback: offFloor ? palette.fallback : "#FFFFFF",
+    // Off the floor the number sits on the white disc in the foreground; the
+    // ring keeps the marker colour, so the state stays shape and colour. The
+    // tint's fill on white failed 4.5:1 for six tints (Olcay, 2026-09-21).
+    colorToken: offFloor ? LOCATION_PIN_OFF_FLOOR_INK.name : ink.name,
+    colorFallback: offFloor
+      ? LOCATION_PIN_OFF_FLOOR_INK.fallback
+      : ink.fallback,
     variableByName,
     stats,
   });
@@ -43819,6 +44827,7 @@ const LOCATION_PIN_DESCRIPTION = [
   "Kozmos LocationPin generated from the React LocationPin API.",
   "State maps to the selected, featured, offFloor, and disabled props.",
   "Size maps to LocationPin.size (sm, md, lg).",
+  "Tint maps to tint: Theme is a pin without one; the eight are Semantics.Category, the taxonomy's quick-access colours. A tint's fill is the marker and its ink the number; a featured pin keeps the alert colour.",
   "Label Text maps to LocationPin.label or externalLabel.",
   "Number Text maps to LocationPin.number.",
   "Off-floor pins use an outline treatment so state is not colour-only.",
@@ -44605,10 +45614,15 @@ function productSdkVariantRoot(component, componentName, variantName, options) {
   return component;
 }
 
-/** Neutral placeholder for content a renderer or the product owns. */
+/**
+ * Neutral placeholder for content a renderer or the product owns: a label
+ * naming the region, or, where the product puts a single glyph, the default
+ * icon (`icon: { size }`) for a designer to swap.
+ */
 async function productSdkSlot({
   name,
   label,
+  icon,
   width,
   height,
   fonts,
@@ -44618,12 +45632,16 @@ async function productSdkSlot({
   parentRadius = KOZMOS_RADIUS.container,
   inset = PRODUCT_SDK_CARD_INSET,
 }) {
+  // No padding until the content is measured. A frame is never smaller than
+  // its padding and its stroke: a 24 slot given 12 above and below, then its
+  // stroke, became 26, and stayed 26 when the fit cut that padding to 3 —
+  // DynamicIsland's three slots read 26 in a 24 box in the live file
+  // (figma:verify, 2026-09-22).
   const slot = productSdkFrame(name, {
     primarySizing: "FIXED",
     counterSizing: "FIXED",
     primaryAlign: "CENTER",
     counterAlign: "CENTER",
-    padding: 12,
     width,
     height,
   });
@@ -44655,23 +45673,59 @@ async function productSdkSlot({
   ];
   slot.strokeWeight = 1;
 
-  const text = await productSdkText({
-    name: name + " Text",
-    characters: label,
-    styleKey: "cardDescription",
-    fonts,
-    bold: false,
-    fontSize: 12,
-    lineHeight: 16,
-    colorToken: "Colors/foreground/400",
-    colorFallback: "#5D626F",
-    variableByName,
-    stats,
-    width: Math.max(24, width - 24),
-  });
-  text.textAlignHorizontal = "CENTER";
-  await fitProductSdkSlotLabel(slot, text, width, height, stats);
-  appendWithSizing(slot, text, "FILL", null);
+  if (icon) {
+    // An icon instance, where a typed "•" could only be retyped: the library
+    // restyles it and the designer swaps it for the product's glyph.
+    const source = await resolveDefaultIconSourceComponent(
+      variableByName,
+      stats,
+    );
+    const glyph = createIconSlotInstance(
+      source,
+      "Colors/foreground/400",
+      "#5D626F",
+      variableByName,
+      stats,
+      icon.size,
+    );
+    scaleIconStrokes(glyph, icon.size);
+    // Centred, with the 1px stroke drawn inside the frame on every side.
+    const across = Math.max(0, Math.floor((width - 2 - icon.size) / 2));
+    const down = Math.max(0, Math.floor((height - 2 - icon.size) / 2));
+    slot.paddingLeft = across;
+    slot.paddingRight = across;
+    slot.paddingTop = down;
+    slot.paddingBottom = down;
+    appendWithSizing(slot, glyph, "FIXED", "FIXED");
+  } else {
+    const text = await productSdkText({
+      name: name + " Text",
+      characters: label,
+      styleKey: "cardDescription",
+      fonts,
+      bold: false,
+      fontSize: 12,
+      lineHeight: 16,
+      colorToken: "Colors/foreground/400",
+      colorFallback: "#5D626F",
+      variableByName,
+      stats,
+      width: Math.max(24, width - 24),
+    });
+    text.textAlignHorizontal = "CENTER";
+    await fitProductSdkSlotLabel(slot, text, width, height, stats);
+    appendWithSizing(slot, text, "FILL", null);
+  }
+
+  // Read back rather than trusted: the runtime grows a frame its padding and
+  // stroke outgrow, and says nothing.
+  if (slot.width !== width || slot.height !== height) {
+    pushUniqueWarning(
+      stats,
+      "slot-size:" + name,
+      `${name} is ${slot.width}×${slot.height} where it was drawn at ${width}×${height}: its padding and stroke do not fit inside it.`,
+    );
+  }
   return slot;
 }
 
@@ -44715,10 +45769,13 @@ async function fitProductSdkSlotLabel(slot, text, width, height, stats) {
     );
   }
 
-  // A 24px-tall slot has no room for 12px above and below either.
+  // A 24px-tall slot has no room for 12px above and below either, and its
+  // stroke costs a pixel at the top and the bottom as it does at each side:
+  // every slot in the live file lays its stroke out (strokesIncludedInLayout,
+  // which no painter sets — the runtime's default).
   const vertical = Math.max(
     0,
-    Math.min(padding, Math.floor((height - size.height) / 2)),
+    Math.min(padding, Math.floor((height - 2 - size.height) / 2)),
   );
   slot.paddingLeft = padding;
   slot.paddingRight = padding;
@@ -44740,6 +45797,7 @@ async function fitProductSdkSlotLabel(slot, text, width, height, stats) {
 async function productSdkControlButton({
   name,
   glyph,
+  iconName,
   label,
   pressed,
   fonts,
@@ -44779,23 +45837,46 @@ async function productSdkControlButton({
   ];
   button.strokeWeight = 1;
 
-  const glyphText = await productSdkText({
-    name: name + " Glyph",
-    characters: glyph,
-    styleKey: "badgeLabel",
-    fonts,
-    bold: true,
-    fontSize: 16,
-    lineHeight: 20,
-    colorToken: pressed ? "Colors/theme/700" : "Colors/foreground/0",
-    colorFallback: pressed ? "#0D44C2" : "#000000",
-    variableByName,
-    stats,
-    width: 20,
-  });
-  glyphText.textAlignHorizontal = "CENTER";
-  glyphText.textAutoResize = "WIDTH_AND_HEIGHT";
-  button.appendChild(glyphText);
+  // A real symbol from the Pointr Icon Library when the caller names one and
+  // the file has it — the typed glyph otherwise, so a file without the
+  // curated set still shows a mark. Every glyph the library once typed
+  // (×, ‹, ›, →, ☆, ✎, ◎, ⇅, +, −, ◈, ◌) has a curated icon now.
+  const symbolToken = pressed
+    ? { name: "Colors/theme/700", fallback: "#0D44C2" }
+    : { name: "Colors/foreground/0", fallback: "#000000" };
+  const symbol = iconName
+    ? await productSdkIconInstance({
+        iconName,
+        token: symbolToken,
+        size: 16,
+        sizeToken: null,
+        variableByName,
+        stats,
+        owner: name,
+      })
+    : null;
+  if (symbol) {
+    symbol.name = name + " Icon";
+    button.appendChild(symbol);
+  } else {
+    const glyphText = await productSdkText({
+      name: name + " Glyph",
+      characters: glyph,
+      styleKey: "badgeLabel",
+      fonts,
+      bold: true,
+      fontSize: 16,
+      lineHeight: 20,
+      colorToken: symbolToken.name,
+      colorFallback: symbolToken.fallback,
+      variableByName,
+      stats,
+      width: 20,
+    });
+    glyphText.textAlignHorizontal = "CENTER";
+    glyphText.textAutoResize = "WIDTH_AND_HEIGHT";
+    button.appendChild(glyphText);
+  }
 
   if (labelled) {
     const labelText = await productSdkText({
@@ -44860,6 +45941,7 @@ async function productSdkPanelHeader({
     const close = await productSdkControlButton({
       name: "Close Slot",
       glyph: closeGlyph,
+      iconName: "x-close",
       fonts,
       variableByName,
       stats,
@@ -45331,9 +46413,9 @@ async function rebuildMapControlButtonComponent() {
 // --- MapControlsGroup ------------------------------------------------------
 
 const MAP_CONTROLS_GROUP_BUTTONS = [
-  { name: "Zoom In Button", glyph: "+" },
-  { name: "Zoom Out Button", glyph: "−" },
-  { name: "Compass Button", glyph: "◈" },
+  { name: "Zoom In Button", glyph: "+", iconName: "plus" },
+  { name: "Zoom Out Button", glyph: "−", iconName: "minus" },
+  { name: "Compass Button", glyph: "◈", iconName: "compass-01" },
 ];
 
 async function createMapControlsGroupVariant(args) {
@@ -45376,6 +46458,7 @@ async function updateMapControlsGroupVariant(
     const button = await productSdkControlButton({
       name: spec.name,
       glyph: spec.glyph,
+      iconName: spec.iconName,
       fonts,
       variableByName,
       stats,
@@ -45388,6 +46471,7 @@ async function updateMapControlsGroupVariant(
   const location = await productSdkControlButton({
     name: "My Location Button",
     glyph: "◎",
+    iconName: "navigation-pointer-01",
     label: labelled ? "My location" : null,
     fonts,
     variableByName,
@@ -45583,6 +46667,11 @@ const POI_DETAIL_PANEL_ACTION_GLYPHS = {
   Save: "☆",
   Share: "↗",
 };
+const POI_DETAIL_PANEL_ACTION_ICONS = {
+  Navigate: "navigation-pointer-01",
+  Save: "bookmark",
+  Share: "share-01",
+};
 
 async function createPOIDetailPanelVariant(args) {
   const component = figma.createComponent();
@@ -45617,37 +46706,17 @@ async function updatePOIDetailPanelVariant(
   // Sheet is anchored to the bottom edge, so only its top corners round and it
   // carries a grabber. Inline sits in the document flow with no elevation
   // affordance at all. Panel is the free-standing docked card.
-  if (value === "Sheet") {
+  // In a sheet the panel paints no surface, border or shadow of its own: it
+  // sits on the sheet's grey, which draws the handle (2026-09-21,
+  // `components.poiDetailPanel.content.sheetSurface`). Only its top corners
+  // round, at the control radius, as `rounded-t-control` does.
+  const sheet = value === "Sheet";
+  if (sheet) {
+    component.fills = [];
+    component.strokes = [];
     component.cornerRadius = KOZMOS_RADIUS.none;
-    component.topLeftRadius = KOZMOS_RADIUS.container;
-    component.topRightRadius = KOZMOS_RADIUS.container;
-
-    const grabber = productSdkFrame("Grabber", {
-      primarySizing: "FIXED",
-      counterSizing: "FIXED",
-      width: 40,
-      height: 4,
-    });
-    grabber.cornerRadius = 2;
-    grabber.fills = [
-      paintFromVariable(
-        "Colors/background/200",
-        "#C7CAD1",
-        variableByName,
-        stats,
-      ),
-    ];
-    const grabberRow = productSdkFrame("Grabber Row", {
-      direction: "horizontal",
-      primarySizing: "FIXED",
-      counterSizing: "FIXED",
-      primaryAlign: "CENTER",
-      counterAlign: "CENTER",
-      width: contentWidth,
-      height: 12,
-    });
-    grabberRow.appendChild(grabber);
-    appendWithSizing(component, grabberRow, "FILL", "FIXED");
+    component.topLeftRadius = KOZMOS_RADIUS.control;
+    component.topRightRadius = KOZMOS_RADIUS.control;
   } else if (value === "Inline") {
     component.strokes = [];
     component.cornerRadius = KOZMOS_RADIUS.none;
@@ -45689,6 +46758,14 @@ async function updatePOIDetailPanelVariant(
     variableByName,
     stats,
   });
+  // On the sheet's own grey an inset block is white instead of muted.
+  const sheetInset = paintFromVariable(
+    "Colors/background/0",
+    "#FFFFFF",
+    variableByName,
+    stats,
+  );
+  if (sheet) media.fills = [sheetInset];
   appendWithSizing(component, media, "FILL", "FIXED");
 
   const description = await productSdkText({
@@ -45719,6 +46796,7 @@ async function updatePOIDetailPanelVariant(
     stats,
     muted: true,
   });
+  if (sheet) services.fills = [clonePaint(sheetInset)];
   appendWithSizing(component, services, "FILL", "FIXED");
 
   const actions = productSdkFrame("Actions Slot", {
@@ -45733,6 +46811,7 @@ async function updatePOIDetailPanelVariant(
     const action = await productSdkControlButton({
       name: actionLabel + " Action",
       glyph: POI_DETAIL_PANEL_ACTION_GLYPHS[actionLabel],
+      iconName: POI_DETAIL_PANEL_ACTION_ICONS[actionLabel],
       label: actionLabel,
       fonts,
       variableByName,
@@ -45773,7 +46852,7 @@ const POI_DETAIL_PANEL_DESCRIPTION = [
   "Title Text maps to poi.name, Subtitle Text to the category, floor, and availability labels.",
   "Description Text maps to poi.description.",
   "Actions Slot maps to poi.actions with actionLabels; actionStates stay product state.",
-  "Sheet rounds only its top corners and shows a grabber; Inline has no surface chrome.",
+  "Sheet paints no surface, border or shadow of its own — it sits on the sheet's grey, which draws the handle — rounds only its top corners at the control radius, and its inset blocks (media, services) go white; Inline has no surface chrome.",
 ];
 
 async function buildPOIDetailPanelComponent() {
@@ -45839,7 +46918,13 @@ async function updateBrowseCategoriesPanelVariant(
   { value, variableByName, fonts, stats },
 ) {
   const width = 380;
-  const contentWidth = width - 32;
+  // Inside the surface's 1px stroke, which the runtime lays out.
+  const innerWidth = width - 2;
+  const contentWidth = innerWidth - 32;
+  // Laid out as React lays it out, and SwiftUI and Compose after it: the
+  // search in a header padded 16 over a 1px rule (border-b p-4), then the grid
+  // or the empty state padded 16 (p-4). Until 2026-09-22 the search sat 12
+  // above the grid, with no rule, under a title no platform draws.
   productSdkVariantRoot(
     component,
     "BrowseCategoriesPanel",
@@ -45847,14 +46932,17 @@ async function updateBrowseCategoriesPanelVariant(
     {
       primarySizing: "AUTO",
       counterSizing: "FIXED",
-      spacing: 12,
-      padding: 16,
       width,
       height: 360,
     },
   );
   productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
 
+  // The label names the panel and is not drawn: React gives it to the section
+  // as aria-label, SwiftUI as .accessibilityLabel, Compose as a
+  // contentDescription. The layer stays, hidden, because Panel Label Text —
+  // Code Connect's `label` — must reference a layer to publish, as Avatar's
+  // hidden Alt Text does.
   const heading = await productSdkText({
     name: "Panel Label Text",
     characters: "Browse categories",
@@ -45870,8 +46958,19 @@ async function updateBrowseCategoriesPanelVariant(
     width: contentWidth,
   });
   appendWithSizing(component, heading, "FILL", null);
+  heading.visible = false;
 
   if (value === "Search") {
+    const header = productSdkFrame("Search Header", {
+      direction: "horizontal",
+      primarySizing: "FIXED",
+      counterSizing: "AUTO",
+      counterAlign: "CENTER",
+      spacing: 8,
+      padding: 16,
+      width: innerWidth,
+      height: 76,
+    });
     const search = await productSdkSlot({
       name: "Search Slot",
       label: "Search slot",
@@ -45881,9 +46980,29 @@ async function updateBrowseCategoriesPanelVariant(
       variableByName,
       stats,
       muted: true,
+      inset: 16 + 1,
     });
-    appendWithSizing(component, search, "FILL", "FIXED");
+    appendWithSizing(header, search, "FILL", "FIXED");
+    appendWithSizing(component, header, "FILL", "HUG");
+
+    // React's border-b: the container edge's role, Border/Subtle.
+    const rule = figma.createRectangle();
+    rule.name = "Divider";
+    rule.resizeWithoutConstraints(innerWidth, 1);
+    rule.fills = [
+      paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
+    ];
+    appendWithSizing(component, rule, "FILL", "FIXED");
   }
+
+  const content = productSdkFrame("Content", {
+    primarySizing: "AUTO",
+    counterSizing: "FIXED",
+    padding: 16,
+    width: innerWidth,
+    height: 252,
+  });
+  appendWithSizing(component, content, "FILL", "HUG");
 
   if (value === "Empty") {
     // The empty state replaces the grid rather than sitting beside it, so a
@@ -45901,47 +47020,218 @@ async function updateBrowseCategoriesPanelVariant(
       stats,
       muted: true,
     });
-    appendWithSizing(component, empty, "FILL", "FIXED");
+    appendWithSizing(content, empty, "FILL", "FIXED");
     return;
   }
 
+  // The grid is the prototype's: four across 8 apart and rows 12 apart
+  // (row-gap 12px, column-gap 8px, measured on 2026-09-22), as React, SwiftUI
+  // and Compose draw it; the rows were 8 apart here until then. Each tile is a
+  // live CategoryTile in its category's colour — the taxonomy's aviation quick
+  // access (10.12.0), one of each of the eight colours — with its count.
   const grid = productSdkFrame("Category Grid", {
     primarySizing: "AUTO",
     counterSizing: "FIXED",
-    spacing: 8,
+    spacing: 12,
     width: contentWidth,
-    height: 180,
+    height: 220,
   });
-
   for (let rowIndex = 0; rowIndex < 2; rowIndex += 1) {
     const row = productSdkFrame("Category Row " + (rowIndex + 1), {
       direction: "horizontal",
       primarySizing: "FIXED",
-      counterSizing: "FIXED",
+      counterSizing: "AUTO",
       spacing: 8,
       width: contentWidth,
-      height: 84,
+      height: 106,
     });
-
-    for (let columnIndex = 0; columnIndex < 3; columnIndex += 1) {
-      const tile = await productSdkSlot({
-        name: "Category Tile Slot",
-        label: "Tile",
-        width: 106,
-        height: 84,
-        fonts,
+    for (let columnIndex = 0; columnIndex < 4; columnIndex += 1) {
+      const index = rowIndex * 4 + columnIndex;
+      const tile = await browseCategoriesPanelTile(
+        index,
         variableByName,
         stats,
-      });
-      appendWithSizing(row, tile, "FILL", "FIXED");
+      );
+      appendWithSizing(
+        row,
+        tile,
+        "FILL",
+        tile.type === "INSTANCE" ? null : "FIXED",
+      );
     }
-
-    appendWithSizing(grid, row, "FILL", "FIXED");
+    appendWithSizing(grid, row, "FILL", "HUG");
   }
-
-  appendWithSizing(component, grid, "FILL", "HUG");
+  appendWithSizing(content, grid, "FILL", "HUG");
 }
 
+/**
+ * The aviation quick access at 10.12.0, in the sprite's colours, each with the
+ * symbol the taxonomy publishes for it (its iconUrl).
+ */
+const BROWSE_CATEGORIES_PANEL_TILES = [
+  {
+    label: "Entrances & Exits",
+    tint: "Green",
+    count: "6",
+    icon: "taxonomy-entrance-exit",
+  },
+  {
+    label: "Check-in & Baggage",
+    tint: "Turquoise",
+    count: "14",
+    icon: "taxonomy-service-space-office",
+  },
+  {
+    label: "Security & Immigration",
+    tint: "Red",
+    count: "5",
+    icon: "taxonomy-security-space",
+  },
+  {
+    label: "Gates",
+    tint: "Yellow",
+    count: "88",
+    icon: "taxonomy-transportation-space-boarding-gate",
+  },
+  {
+    label: "Customer Service",
+    tint: "Blue",
+    count: "9",
+    icon: "taxonomy-amenity-space-desk",
+  },
+  {
+    label: "Parking & Ground Transport",
+    tint: "Navy",
+    count: "22",
+    icon: "taxonomy-parking-space",
+  },
+  {
+    label: "Dining",
+    tint: "Orange",
+    count: "37",
+    icon: "taxonomy-food-beverage-space",
+  },
+  {
+    label: "Shopping",
+    tint: "Pink",
+    count: "41",
+    icon: "taxonomy-retail-space",
+  },
+];
+
+/**
+ * One tile of the browse grid: a live CategoryTile instance in its category's
+ * tint, its label and count set, exposed so the panel's designer reaches the
+ * tile's own properties; a placeholder when CategoryTile has not been built.
+ */
+async function browseCategoriesPanelTile(index, variableByName, stats) {
+  const spec = BROWSE_CATEGORIES_PANEL_TILES[index];
+  const name = "Category Tile " + (index + 1);
+  const created = await createNestedComponentInstance({
+    componentSetName: "CategoryTile",
+    variantProperties: { State: "Default", Tint: spec.tint },
+    name,
+    stats,
+  });
+  if (!created) {
+    return createMissingNestedComponentNode(
+      name,
+      "Build CategoryTile before updating BrowseCategoriesPanel.",
+      stats,
+    );
+  }
+  const tile = created.instance;
+  setInstanceTextProperty(
+    tile,
+    created.componentSet,
+    "Label Text",
+    spec.label,
+    stats,
+  );
+  markNestedComponentInstance(tile, "CategoryTile", "browse-category-tile");
+  // The count lives on the tile's nested Counter, whose text is the Counter's
+  // own property; an override on that node is how an instance carries it.
+  const digits = tile.findOne(
+    (node) => node.type === "TEXT" && node.name === "Counter Text",
+  );
+  if (digits) {
+    try {
+      digits.characters = spec.count;
+    } catch (error) {
+      stats.warnings.push(
+        `${name}: could not set its count (${messageFor(error)}).`,
+      );
+    }
+  }
+  await setBrowseCategoriesPanelTileIcon(
+    tile,
+    created.componentSet,
+    spec,
+    name,
+    variableByName,
+    stats,
+  );
+  try {
+    tile.isExposedInstance = true;
+  } catch (_error) {
+    // An older runtime keeps the tile's properties on the tile alone.
+  }
+  return tile;
+}
+
+/**
+ * The tile's Icon set to its category's taxonomy symbol, in its accent — what
+ * renderIcon draws for it in the product.
+ *
+ * The swap brings in the symbol with its own black: the tile's tint was an
+ * override on the outline it replaced, keyed by that outline's layers, and a
+ * filled symbol has other layers. So the accent is laid on again here, on the
+ * swapped instance. A symbol swapped in by hand takes no tint for the same
+ * reason, and is recoloured by hand.
+ */
+async function setBrowseCategoriesPanelTileIcon(
+  tile,
+  componentSet,
+  spec,
+  name,
+  variableByName,
+  stats,
+) {
+  const symbol = await findKozmosIconSourceComponent(spec.icon);
+  if (!symbol) {
+    pushUniqueWarning(
+      stats,
+      "panel-tile-icon:" + spec.icon,
+      `${name}: its symbol ${kozmosIconComponentName(spec.icon)} is not on the Icons page, so it keeps the tile's default icon. Run Curated Icons → Update, then Update BrowseCategoriesPanel.`,
+    );
+    return;
+  }
+  if (!setInstanceSwapProperty(tile, componentSet, "Icon", symbol.id, stats)) {
+    return;
+  }
+  // The layer the Icon property drives, whatever the swap made of its name.
+  const icon =
+    tile.findOne(
+      (node) =>
+        node.type === "INSTANCE" &&
+        node.componentPropertyReferences &&
+        typeof node.componentPropertyReferences.mainComponent === "string" &&
+        node.componentPropertyReferences.mainComponent.split("#")[0] === "Icon",
+    ) ||
+    tile.findOne((node) => node.type === "INSTANCE" && node.name === "Icon");
+  if (!icon) {
+    stats.warnings.push(`${name}: no Icon layer to tint after the swap.`);
+    return;
+  }
+  const accent = categoryTintTokens(spec.tint).accent;
+  applyIconColorOverrides(
+    icon,
+    accent.name,
+    accent.fallback,
+    variableByName,
+    stats,
+  );
+}
 function configureBrowseCategoriesPanelProperties(componentSet, stats) {
   configureNamedTextProperty(
     componentSet,
@@ -45954,8 +47244,10 @@ function configureBrowseCategoriesPanelProperties(componentSet, stats) {
 
 const BROWSE_CATEGORIES_PANEL_DESCRIPTION = [
   "Kozmos BrowseCategoriesPanel generated from the React BrowseCategoriesPanel API.",
+  "The grid is four live CategoryTile instances across, 8 apart, its rows 12 apart as the prototype's are, each in its category's Tint with its label, count and symbol — the aviation quick access at 10.12.0; tint maps to the panel's tint callback and renderIcon to each tile's Icon, the category's taxonomy symbol in its accent.",
   "Content covers the panel with and without the search slot, plus its empty state.",
-  "Panel Label Text maps to BrowseCategoriesPanel.label.",
+  "Panel Label Text maps to BrowseCategoriesPanel.label, the panel's accessible name: no platform draws it, so its layer is hidden.",
+  "Search puts the search slot in a header padded 16 over a 1px Border/Subtle rule, as React's border-b p-4 does.",
   "Category Tile Slots map to categories rendered through CategoryTile.",
   "Empty replaces the grid rather than sitting beside it, matching the React component.",
 ];
@@ -46004,133 +47296,1007 @@ async function rebuildBrowseCategoriesPanelComponent() {
 
 // --- CategoryTile ----------------------------------------------------------
 
+// --- AISearchButton --------------------------------------------------------
+
+/**
+ * The ring's colours, in the order the owned CSS runs them: a conic gradient
+ * of the six data colours, red back to red, that turns in the product and
+ * rests here.
+ */
+const AI_SEARCH_BUTTON_RING_STOPS = [
+  { name: "Data/Red", fallback: "#DC2626" },
+  { name: "Data/Yellow", fallback: "#D97706" },
+  { name: "Colors/emotional/success/500", fallback: "#28CC7A" },
+  { name: "Data/Teal", fallback: "#0D9488" },
+  { name: "Data/Blue", fallback: "#2563EB" },
+  { name: "Data/Purple", fallback: "#9333EA" },
+  { name: "Data/Red", fallback: "#DC2626" },
+];
+
+/** An angular gradient whose stops bind to variables where the file has them. */
+function angularGradientFromVariables(stops, variableByName, stats) {
+  const gradientStops = stops.map((stop, index) => {
+    const color = parseColor(stop.fallback);
+    const entry = {
+      position: index / (stops.length - 1),
+      color: { r: color.r, g: color.g, b: color.b, a: 1 },
+    };
+    const variable = variableByName.get(stop.name);
+    if (variable) {
+      entry.boundVariables = {
+        color: { type: "VARIABLE_ALIAS", id: variable.id },
+      };
+    } else {
+      stats.warnings.push(
+        `Missing variable "${stop.name}", used ${stop.fallback}.`,
+      );
+    }
+    return entry;
+  });
+  return {
+    type: "GRADIENT_ANGULAR",
+    gradientTransform: [
+      [1, 0, 0],
+      [0, 1, 0],
+    ],
+    gradientStops,
+  };
+}
+
+async function createAISearchButtonVariant(args) {
+  const component = figma.createComponent();
+  await updateAISearchButtonVariant(component, args);
+  return component;
+}
+
+function parseAISearchButtonVariantName(name) {
+  return productSdkVariantValues(name, "State", AI_SEARCH_BUTTON_STATES);
+}
+
+async function updateAISearchButtonVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const disabled = value === "Disabled";
+  // The prototype's, measured twice: a 48 circle whose gradient gradientRing is a
+  // band two and a half wide around a 43 disc, with a 16 icon in the theme's
+  // colour.
+  productSdkVariantRoot(component, "AISearchButton", `State=${value}`, {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "FIXED",
+    primaryAlign: "CENTER",
+    counterAlign: "CENTER",
+    width: AI_SEARCH_BUTTON_SIZE,
+    height: AI_SEARCH_BUTTON_SIZE,
+  });
+  component.cornerRadius = KOZMOS_RADIUS.pill;
+  component.fills = [];
+  component.strokes = [];
+  component.opacity = disabled ? 0.5 : 1;
+  markControlSurface(component);
+  bindSizeVariables(
+    component,
+    "AISearchButton/size",
+    "AISearchButton/size",
+    variableByName,
+    stats,
+  );
+
+  const gradientRing = figma.createEllipse();
+  gradientRing.name = "Ring";
+  gradientRing.resize(AI_SEARCH_BUTTON_SIZE, AI_SEARCH_BUTTON_SIZE);
+  const gradient = angularGradientFromVariables(
+    AI_SEARCH_BUTTON_RING_STOPS,
+    variableByName,
+    stats,
+  );
+  try {
+    gradientRing.fills = [gradient];
+  } catch (_error) {
+    // A runtime that refuses bound stops takes the plain colours.
+    gradientRing.fills = [
+      Object.assign({}, gradient, {
+        gradientStops: gradient.gradientStops.map((stop) => ({
+          position: stop.position,
+          color: stop.color,
+        })),
+      }),
+    ];
+    stats.warnings.push(
+      "AISearchButton: the gradientRing's stops could not bind to variables; plain colours used.",
+    );
+  }
+  gradientRing.strokes = [];
+  component.appendChild(gradientRing);
+  gradientRing.layoutPositioning = "ABSOLUTE";
+  gradientRing.constraints = { horizontal: "STRETCH", vertical: "STRETCH" };
+  gradientRing.x = 0;
+  gradientRing.y = 0;
+
+  const disc = figma.createEllipse();
+  disc.name = "Disc";
+  disc.resize(AI_SEARCH_BUTTON_DISC_SIZE, AI_SEARCH_BUTTON_DISC_SIZE);
+  disc.fills = [
+    paintFromVariable("Colors/background/0", "#FFFFFF", variableByName, stats),
+  ];
+  disc.strokes = [];
+  component.appendChild(disc);
+  disc.layoutPositioning = "ABSOLUTE";
+  disc.constraints = { horizontal: "CENTER", vertical: "CENTER" };
+  disc.x = AI_SEARCH_BUTTON_RING_BAND;
+  disc.y = AI_SEARCH_BUTTON_RING_BAND;
+
+  const icon = await productSdkIconInstance({
+    iconName: AI_SEARCH_BUTTON_ICON,
+    token: { name: "Colors/theme/500", fallback: "#135BEC" },
+    size: AI_SEARCH_BUTTON_ICON_SIZE,
+    sizeToken: "AISearchButton/icon/size",
+    variableByName,
+    stats,
+    owner: "AISearchButton",
+  });
+  if (icon) appendWithSizing(component, icon, "FIXED", "FIXED");
+}
+
+async function configureAISearchButtonProperties(componentSet, stats) {
+  const iconSourceComponents = await findKozmosIconSourceComponents();
+  const preferredValues = iconPreferredValues(iconSourceComponents);
+  const defaultIcon =
+    (await findKozmosIconSourceComponent(AI_SEARCH_BUTTON_ICON)) ||
+    (await findKozmosIconSourceComponent(DEFAULT_CURATED_ICON_NAME));
+  const iconProperty = defaultIcon
+    ? ensureInstanceSwapProperty(
+        componentSet,
+        "Icon",
+        defaultIcon.id,
+        stats,
+        preferredValues,
+      )
+    : null;
+  if (!iconProperty) return;
+  for (const child of componentSet.children) {
+    if (child.type !== "COMPONENT") continue;
+    const icon = directChildNamed(child, "Icon");
+    if (icon && icon.type === "INSTANCE") {
+      bindInstanceSwapProperty(icon, iconProperty, stats);
+    }
+  }
+}
+
+const AI_SEARCH_BUTTON_DESCRIPTION = [
+  "Kozmos AISearchButton generated from the React AISearchButton API — the search row's AI search, the prototype's.",
+  "State maps to disabled; a disabled button is at 50 %.",
+  "A 48 circle: the ring is a band 2.5 wide around a 43 disc, a conic gradient of the six data colours (red, yellow, success, teal, blue, purple, red) that turns in the product — 3.6 s a turn, still under reduced motion — and rests here; the icon is 16 in the theme's colour.",
+  "Icon swaps from the Icons page; label is what assistive technology hears and draws nothing.",
+];
+
+async function buildAISearchButtonComponent() {
+  return buildSingleAxisComponent({
+    componentName: "AISearchButton",
+    componentSetName: "AISearchButton",
+    axisName: "State",
+    values: AI_SEARCH_BUTTON_STATES,
+    x: 80,
+    y: 14900,
+    xStep: 120,
+    createVariant: createAISearchButtonVariant,
+    configureProperties: configureAISearchButtonProperties,
+    autoReorganize: true,
+    description: AI_SEARCH_BUTTON_DESCRIPTION,
+  });
+}
+
+async function updateAISearchButtonComponent() {
+  return updateSingleAxisComponent({
+    componentName: "AISearchButton",
+    componentSetName: "AISearchButton",
+    axisName: "State",
+    values: AI_SEARCH_BUTTON_STATES,
+    xStep: 120,
+    createVariant: createAISearchButtonVariant,
+    updateVariant: updateAISearchButtonVariant,
+    parseVariantName: parseAISearchButtonVariantName,
+    configureProperties: configureAISearchButtonProperties,
+    autoReorganize: true,
+    description: AI_SEARCH_BUTTON_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildAISearchButtonComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "AISearchButton",
+    componentSetName: "AISearchButton",
+    build: buildAISearchButtonComponent,
+  });
+}
+
+// --- CategoryField ---------------------------------------------------------
+
+/**
+ * The field's tint. Theme is the field with no category: the theme's 500 for
+ * the accent and the themed button's fill and ink for the count pill — the
+ * React, SwiftUI and Compose defaults.
+ */
+function categoryFieldTintTokens(tint) {
+  if (CATEGORY_TINT_FALLBACKS[tint]) return categoryTintTokens(tint);
+  return {
+    accent: { name: "Colors/theme/500", fallback: "#135BEC" },
+    fill: {
+      name: "Primary Buttons/themed/button/background/idle",
+      fallback: "#0D44C2",
+    },
+    onFill: {
+      name: "Primary Buttons/themed/button/foreground/content/idle",
+      fallback: "#FFFFFF",
+    },
+  };
+}
+
+async function createCategoryFieldVariant(args) {
+  const component = figma.createComponent();
+  await updateCategoryFieldVariant(component, args);
+  return component;
+}
+
+function parseCategoryFieldVariantName(name) {
+  return productSdkVariantValues(name, "Tint", CATEGORY_TINTS);
+}
+
+async function updateCategoryFieldVariant(
+  component,
+  { value, variableByName, fonts, stats },
+) {
+  const tint = categoryFieldTintTokens(value);
+  // The prototype's, measured: 48 tall at the control radius, the colour at
+  // 12 % behind a 1 border of it, the icon at 28, the name at 15 semibold, a
+  // 22 count pill filled with the colour, a 32 clear at the trailing edge.
+  productSdkVariantRoot(component, "CategoryField", `Tint=${value}`, {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "FIXED",
+    primaryAlign: "MIN",
+    counterAlign: "CENTER",
+    spacing: 8,
+    paddingLeft: 12,
+    paddingRight: 8,
+    paddingTop: 0,
+    paddingBottom: 0,
+    width: CATEGORY_FIELD_WIDTH,
+    height: CATEGORY_FIELD_HEIGHT,
+  });
+  component.cornerRadius = KOZMOS_RADIUS.control;
+  component.fills = [];
+  insertTranslucentTokenLayer(component, {
+    name: "Tint Wash",
+    token: tint.accent,
+    opacity: CATEGORY_FIELD_WASH_OPACITY,
+    cornerRadius: KOZMOS_RADIUS.control,
+    variableByName,
+    stats,
+  });
+  component.strokes = [tokenPaint(tint.accent, variableByName, stats)];
+  component.strokeWeight = 1;
+  component.strokeAlign = "INSIDE";
+  bindFloatVariable(
+    component,
+    "height",
+    "CategoryField/height",
+    variableByName,
+    stats,
+  );
+
+  const icon = await productSdkIconInstance({
+    iconName: CATEGORY_FIELD_DEFAULT_ICON,
+    fallbackToDefault: true,
+    token: tint.accent,
+    size: CATEGORY_FIELD_ICON_SIZE,
+    sizeToken: "CategoryField/icon/size",
+    variableByName,
+    stats,
+    owner: "CategoryField",
+  });
+  if (icon) {
+    markDecorativeIcon(icon);
+    appendWithSizing(component, icon, "FIXED", "FIXED");
+  }
+
+  const label = await productSdkText({
+    name: "Label Text",
+    characters: "Gates",
+    styleKey: "categoryFieldLabel",
+    fonts,
+    bold: true,
+    fontSize: CATEGORY_FIELD_LABEL_FONT_SIZE,
+    lineHeight: CATEGORY_FIELD_LABEL_LINE_HEIGHT,
+    // The label in the foreground, as the tile's: the category colour on its
+    // own 12 % wash failed 4.5:1 for seven tints (Olcay, 2026-09-21).
+    colorToken: CATEGORY_FIELD_INK.name,
+    colorFallback: CATEGORY_FIELD_INK.fallback,
+    variableByName,
+    stats,
+    width: 160,
+  });
+  bindFloatVariable(
+    label,
+    "fontSize",
+    "CategoryField/label/font-size",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    label,
+    "lineHeight",
+    "CategoryField/label/line-height",
+    variableByName,
+    stats,
+  );
+  appendWithSizing(component, label, "FILL", null);
+
+  // The count: a 22 pill filled with the colour, its digits in the ink.
+  const pill = productSdkFrame("Count Pill", {
+    direction: "horizontal",
+    primarySizing: "AUTO",
+    counterSizing: "FIXED",
+    primaryAlign: "CENTER",
+    counterAlign: "CENTER",
+    paddingLeft: 6,
+    paddingRight: 6,
+    width: CATEGORY_FIELD_PILL_HEIGHT,
+    height: CATEGORY_FIELD_PILL_HEIGHT,
+  });
+  pill.cornerRadius = KOZMOS_RADIUS.pill;
+  pill.fills = [tokenPaint(tint.fill, variableByName, stats)];
+  try {
+    pill.minWidth = CATEGORY_FIELD_PILL_HEIGHT;
+  } catch (_error) {
+    // A runtime without min sizes lets the digits set the width.
+  }
+  bindFloatVariable(
+    pill,
+    "height",
+    "CategoryField/pill/height",
+    variableByName,
+    stats,
+  );
+  const count = await productSdkText({
+    name: "Count Text",
+    characters: "12",
+    styleKey: "counterDefault",
+    fonts,
+    bold: true,
+    fontSize: 12,
+    lineHeight: 16,
+    colorToken: tint.onFill.name,
+    colorFallback: tint.onFill.fallback,
+    variableByName,
+    stats,
+  });
+  count.textAlignHorizontal = "CENTER";
+  count.textAutoResize = "WIDTH_AND_HEIGHT";
+  pill.appendChild(count);
+  appendWithSizing(component, pill, "HUG", "FIXED");
+
+  // The clear: a 32 circle with no fill, its cross in the foreground — a
+  // control's glyph, so it is held to 3:1, unlike the decorative icon.
+  const clear = productSdkFrame("Clear Button", {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "FIXED",
+    primaryAlign: "CENTER",
+    counterAlign: "CENTER",
+    width: CATEGORY_FIELD_CLEAR_SIZE,
+    height: CATEGORY_FIELD_CLEAR_SIZE,
+  });
+  clear.cornerRadius = KOZMOS_RADIUS.pill;
+  markControlSurface(clear);
+  bindSizeVariables(
+    clear,
+    "CategoryField/clear/size",
+    "CategoryField/clear/size",
+    variableByName,
+    stats,
+  );
+  const cross = await productSdkIconInstance({
+    iconName: "x-close",
+    token: CATEGORY_FIELD_INK,
+    size: 16,
+    sizeToken: null,
+    variableByName,
+    stats,
+    owner: "CategoryField",
+  });
+  if (cross) {
+    cross.name = "Clear Icon";
+    clear.appendChild(cross);
+  }
+  appendWithSizing(component, clear, "FIXED", "FIXED");
+}
+
+async function configureCategoryFieldProperties(componentSet, stats) {
+  configureNamedTextProperty(
+    componentSet,
+    "Label Text",
+    "Label Text",
+    "Gates",
+    stats,
+  );
+  configureNamedTextProperty(
+    componentSet,
+    "Count Text",
+    "Count Text",
+    "12",
+    stats,
+  );
+
+  // Show Count maps to count being set; off hides the pill.
+  const showCount = ensureBooleanProperty(
+    componentSet,
+    "Show Count",
+    true,
+    stats,
+  );
+  // The chosen category's own symbol is offered too, as on CategoryTile.
+  const iconSourceComponents = await findKozmosIconSourceComponents({
+    withTaxonomy: true,
+  });
+  const preferredValues = iconPreferredValues(iconSourceComponents);
+  const defaultIcon =
+    (await findKozmosIconSourceComponent(CATEGORY_FIELD_DEFAULT_ICON)) ||
+    (await findKozmosIconSourceComponent(DEFAULT_CURATED_ICON_NAME));
+  const iconProperty = defaultIcon
+    ? ensureInstanceSwapProperty(
+        componentSet,
+        "Icon",
+        defaultIcon.id,
+        stats,
+        preferredValues,
+      )
+    : null;
+
+  for (const child of componentSet.children) {
+    if (child.type !== "COMPONENT") continue;
+    const pill = directChildNamed(child, "Count Pill");
+    if (pill && showCount) {
+      pill.componentPropertyReferences = Object.assign(
+        {},
+        pill.componentPropertyReferences || {},
+        { visible: showCount },
+      );
+    }
+    const icon = directChildNamed(child, "Icon");
+    if (icon && icon.type === "INSTANCE" && iconProperty) {
+      bindInstanceSwapProperty(icon, iconProperty, stats);
+    }
+  }
+}
+
+const CATEGORY_FIELD_DESCRIPTION = [
+  "Kozmos CategoryField generated from the React CategoryField API — the search field's form once a quick-access category is chosen; it takes the field's place in the search row.",
+  "Tint maps to tint: Theme is the field with no category (the theme's colour, the themed button's fill for the pill); the eight are Semantics.Category, the taxonomy's quick-access colours. The accent takes the icon, the label and the 1 border, and sits at 12 % behind; the inked fill takes the count pill.",
+  "Label Text maps to label; Count Text to count and Show Count to count being set; Icon maps to icon and swaps from the Icons page, the taxonomy's quick-access symbols among them.",
+  "A symbol swapped in by hand comes in its source's black, since the tint was set on the icon it replaced: fill its shape with the field's Category/Accent.",
+  "48 tall at the control radius; the icon 28; the label 15/20; the pill 22; the clear 32 at the trailing edge (clearLabel and onClear are product code).",
+];
+
+async function buildCategoryFieldComponent() {
+  return buildSingleAxisComponent({
+    componentName: "CategoryField",
+    componentSetName: "CategoryField",
+    axisName: "Tint",
+    values: CATEGORY_TINTS,
+    x: 80,
+    y: 14700,
+    xStep: 360,
+    createVariant: createCategoryFieldVariant,
+    configureProperties: configureCategoryFieldProperties,
+    autoReorganize: true,
+    description: CATEGORY_FIELD_DESCRIPTION,
+  });
+}
+
+async function updateCategoryFieldComponent() {
+  return updateSingleAxisComponent({
+    componentName: "CategoryField",
+    componentSetName: "CategoryField",
+    axisName: "Tint",
+    values: CATEGORY_TINTS,
+    xStep: 360,
+    createVariant: createCategoryFieldVariant,
+    updateVariant: updateCategoryFieldVariant,
+    parseVariantName: parseCategoryFieldVariantName,
+    configureProperties: configureCategoryFieldProperties,
+    autoReorganize: true,
+    description: CATEGORY_FIELD_DESCRIPTION.concat([
+      "Updated in place to preserve the Code Connect node ID.",
+    ]),
+  });
+}
+
+async function rebuildCategoryFieldComponent() {
+  return rebuildGeneratedComponentSet({
+    componentName: "CategoryField",
+    componentSetName: "CategoryField",
+    build: buildCategoryFieldComponent,
+  });
+}
+
 async function createCategoryTileVariant(args) {
   const component = figma.createComponent();
   await updateCategoryTileVariant(component, args);
   return component;
 }
 
+function categoryTileVariantCombinations() {
+  const combinations = [];
+  for (const state of CATEGORY_TILE_STATES) {
+    for (const tint of CATEGORY_TINTS) {
+      combinations.push({ state, tint });
+    }
+  }
+  return combinations;
+}
+
+function categoryTileVariantKey(props) {
+  return `${props.state}/${props.tint}`;
+}
+
 function parseCategoryTileVariantName(name) {
-  return productSdkVariantValues(name, "State", CATEGORY_TILE_STATES);
+  const values = parseVariantValueMap(name);
+  if (CATEGORY_TILE_STATES.indexOf(values.State) === -1) return null;
+  // A tile from before the Tint axis (2026-09-21) is named by its state
+  // alone. It is the theme's, and Update renames it in place, so the three
+  // original variants keep their node IDs.
+  const tint = values.Tint === undefined ? "Theme" : values.Tint;
+  if (CATEGORY_TINTS.indexOf(tint) === -1) return null;
+  return { state: values.State, tint };
+}
+
+function layoutCategoryTileVariants(componentSet) {
+  if (!componentSet || !componentSet.children) return;
+  for (const child of componentSet.children) {
+    if (child.type !== "COMPONENT") continue;
+    const props = parseCategoryTileVariantName(child.name);
+    if (!props) continue;
+    child.x = CATEGORY_TINTS.indexOf(props.tint) * 120;
+    child.y = CATEGORY_TILE_STATES.indexOf(props.state) * 130;
+  }
+  resizeComponentSetToContainChildren(componentSet);
+}
+
+/**
+ * The three tokens of a tint. Theme is a part with no category — the
+ * theme's 500 where the accent goes, and no fill, so a nested Counter keeps
+ * its own tone — which leaves a tile without a tint looking as it did.
+ */
+function categoryTintTokens(tint) {
+  const fallback = CATEGORY_TINT_FALLBACKS[tint];
+  if (!fallback) {
+    return {
+      accent: { name: "Colors/theme/500", fallback: "#135BEC" },
+      fill: null,
+      onFill: null,
+    };
+  }
+  return {
+    accent: { name: `Category/Accent/${tint}`, fallback: fallback.accent },
+    fill: { name: `Category/Fill/${tint}`, fallback: fallback.fill },
+    onFill: { name: `Category/OnFill/${tint}`, fallback: fallback.onFill },
+  };
+}
+
+function tokenPaint(token, variableByName, stats) {
+  return paintFromVariable(token.name, token.fallback, variableByName, stats);
+}
+
+/**
+ * A bound colour at less than its token's strength, on a leaf layer. A token's
+ * own alpha rides on the paint (see paintFromVariable), but a strength laid on
+ * top of an opaque token did not hold: read over REST on 2026-09-21, the live
+ * file held CategoryTile's 5 % selection wash and 20 % ring and DirectionStep's
+ * 10 % disc at 1, though CategoryField's 12 % wash, painted by the same
+ * helper, kept its 0.12. So the strength goes on the layer: the paint keeps
+ * its token's own alpha and the node carries the opacity. For a layer that
+ * draws nothing else; a wash behind content is a layer of its own
+ * (`insertTranslucentTokenLayer`).
+ */
+function setTranslucentTokenPaint(
+  node,
+  key,
+  token,
+  opacity,
+  variableByName,
+  stats,
+) {
+  node[key] = [
+    paintFromVariable(token.name, token.fallback, variableByName, stats),
+  ];
+  node.opacity = opacity;
+}
+
+/**
+ * A translucent wash of a bound colour behind a frame's content: a layer of
+ * its own at the back, absolute, stretched to the frame, at the given layer
+ * opacity. The frame paints nothing itself, so its content stays at full
+ * strength — the way `bg-primary/10` and `color-mix(… 12%, transparent)`
+ * draw in the code.
+ */
+function insertTranslucentTokenLayer(
+  parent,
+  { name, token, opacity, shape, cornerRadius, variableByName, stats },
+) {
+  const layer =
+    shape === "ellipse" ? figma.createEllipse() : figma.createRectangle();
+  layer.name = name;
+  layer.resize(parent.width, parent.height);
+  if (shape !== "ellipse") layer.cornerRadius = cornerRadius || 0;
+  layer.strokes = [];
+  setTranslucentTokenPaint(
+    layer,
+    "fills",
+    token,
+    opacity,
+    variableByName,
+    stats,
+  );
+  layer.setSharedPluginData(RUN_NAMESPACE, "role", "translucent-token-layer");
+  parent.insertChild(0, layer);
+  if (parent.layoutMode && parent.layoutMode !== "NONE") {
+    layer.layoutPositioning = "ABSOLUTE";
+  }
+  layer.x = 0;
+  layer.y = 0;
+  layer.constraints = { horizontal: "STRETCH", vertical: "STRETCH" };
+  return layer;
+}
+
+/**
+ * A curated icon instance for a Product / SDK part, in a colour. A slot whose
+ * symbol is product data — a tile's, a field's — takes the library's default
+ * when the file lacks the one asked for (`fallbackToDefault`); a symbol with
+ * a meaning — a close, an arrow, a chevron — takes nothing, and the caller
+ * draws its typed glyph, because a magnifier where a close belongs is worse
+ * than a character. Either way the warning names the icon to curate.
+ */
+async function productSdkIconInstance({
+  iconName,
+  token,
+  size,
+  sizeToken,
+  variableByName,
+  stats,
+  owner,
+  fallbackToDefault,
+}) {
+  let source = await findKozmosIconSourceComponent(iconName);
+  if (!source && fallbackToDefault) {
+    source = await findKozmosIconSourceComponent(DEFAULT_CURATED_ICON_NAME);
+  }
+  if (!source) {
+    stats.warnings.push(
+      `${owner}: icon "${iconName}" is not on the Icons page; run Curated Icons → Update first.`,
+    );
+    return null;
+  }
+  const icon = createIconSlotInstance(
+    source,
+    token.name,
+    token.fallback,
+    variableByName,
+    stats,
+    size,
+    sizeToken,
+  );
+  scaleIconStrokes(icon, size);
+  return icon;
+}
+
+/** Figma keeps a resized icon's 2 stroke at 2; the code draws 2 × size / 24. */
+function scaleIconStrokes(icon, size) {
+  const weight = (2 * size) / 24;
+  const walk = (node) => {
+    if (
+      node.type === "VECTOR" &&
+      Array.isArray(node.strokes) &&
+      node.strokes.length > 0 &&
+      typeof node.strokeWeight === "number"
+    ) {
+      try {
+        node.strokeWeight = weight;
+      } catch (_error) {
+        // A locked or mixed stroke keeps its weight.
+      }
+    }
+    if (node.children) for (const child of node.children) walk(child);
+  };
+  walk(icon);
 }
 
 async function updateCategoryTileVariant(
   component,
-  { value, variableByName, fonts, stats },
+  { props, variableByName, fonts, stats },
 ) {
-  const selected = value === "Selected";
-  const disabled = value === "Disabled";
-  productSdkVariantRoot(component, "CategoryTile", "State=" + value, {
+  const selected = props.state === "Selected";
+  const disabled = props.state === "Disabled";
+  const tint = categoryTintTokens(props.tint);
+  productSdkVariantRoot(
+    component,
+    "CategoryTile",
+    `State=${props.state}, Tint=${props.tint}`,
+    {
+      primarySizing: "AUTO",
+      counterSizing: "FIXED",
+      primaryAlign: "MIN",
+      counterAlign: "CENTER",
+      spacing: CATEGORY_TILE_GAP,
+      padding: CATEGORY_TILE_PADDING,
+      width: CATEGORY_TILE_WIDTH,
+      height:
+        CATEGORY_TILE_PADDING * 2 +
+        CATEGORY_TILE_SQUARE +
+        CATEGORY_TILE_GAP +
+        CATEGORY_TILE_LABEL_LINE_HEIGHT * 2,
+    },
+  );
+  component.fills = [];
+  component.strokes = [];
+  component.cornerRadius = KOZMOS_RADIUS.control;
+  // The whole tile fades when disabled, as `disabled:opacity-50` does.
+  component.opacity = disabled ? 0.5 : 1;
+
+  // The icon's square: 64 at the control radius with the container edge,
+  // neutral whatever the tint. The selection shows on it — the accent as the
+  // stroke, at 5 % behind, and as a 1 ring at 20 % outside — never on the
+  // tile's own frame.
+  const square = productSdkFrame("Icon Square", {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "FIXED",
     primaryAlign: "CENTER",
     counterAlign: "CENTER",
-    spacing: 8,
-    padding: 12,
-    width: 120,
-    height: 104,
+    width: CATEGORY_TILE_SQUARE,
+    height: CATEGORY_TILE_SQUARE,
   });
-  component.cornerRadius = KOZMOS_RADIUS.container;
-  component.fills = [
-    paintFromVariable(
-      selected ? "Colors/theme/100" : "Surface/0",
-      selected ? "#CAD9FC" : "#FFFFFF",
-      variableByName,
-      stats,
-    ),
-  ];
-  component.strokes = [
-    paintFromVariable(
-      selected ? "Colors/theme/500" : "Border/Subtle",
-      selected ? "#135BEC" : "#C7CAD1",
-      variableByName,
-      stats,
-    ),
-  ];
-  // Selection thickens the border as well as recolouring it, so it survives a
-  // theme where the two colours are close.
-  component.strokeWeight = selected ? 2 : 1;
-  component.opacity = disabled ? 0.4 : 1;
-
-  const icon = await productSdkSlot({
-    name: "Icon Slot",
-    label: "Icon",
-    width: 40,
-    height: 40,
-    fonts,
+  square.cornerRadius = KOZMOS_RADIUS.control;
+  square.clipsContent = false;
+  const background = paintFromVariable(
+    "Colors/background/0",
+    "#FFFFFF",
     variableByName,
     stats,
-    muted: true,
-  });
-  icon.cornerRadius = 20;
-  appendWithSizing(component, icon, "FIXED", "FIXED");
+  );
+  square.fills = [background];
+  if (selected) {
+    insertTranslucentTokenLayer(square, {
+      name: "Selection Wash",
+      token: tint.accent,
+      opacity: 0.05,
+      cornerRadius: KOZMOS_RADIUS.control,
+      variableByName,
+      stats,
+    });
+  }
+  square.strokes = [
+    selected
+      ? tokenPaint(tint.accent, variableByName, stats)
+      : paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
+  ];
+  square.strokeWeight = 1;
+  square.strokeAlign = "INSIDE";
+  bindSizeVariables(
+    square,
+    "CategoryTile/square/size",
+    "CategoryTile/square/size",
+    variableByName,
+    stats,
+  );
+  appendWithSizing(component, square, "FIXED", "FIXED");
 
+  const icon = await productSdkIconInstance({
+    iconName: CATEGORY_TILE_DEFAULT_ICON,
+    fallbackToDefault: true,
+    token: tint.accent,
+    size: CATEGORY_TILE_ICON_SIZE,
+    sizeToken: "CategoryTile/icon/size",
+    variableByName,
+    stats,
+    owner: "CategoryTile",
+  });
+  if (icon) {
+    markDecorativeIcon(icon);
+    square.appendChild(icon);
+  }
+
+  if (selected) {
+    const selectionRing = figma.createRectangle();
+    selectionRing.name = "Selection Ring";
+    selectionRing.resize(CATEGORY_TILE_SQUARE + 2, CATEGORY_TILE_SQUARE + 2);
+    selectionRing.cornerRadius = KOZMOS_RADIUS.control + 1;
+    selectionRing.fills = [];
+    selectionRing.strokes = [tokenPaint(tint.accent, variableByName, stats)];
+    selectionRing.opacity = 0.2;
+    selectionRing.strokeWeight = 1;
+    selectionRing.strokeAlign = "INSIDE";
+    square.appendChild(selectionRing);
+    selectionRing.layoutPositioning = "ABSOLUTE";
+    selectionRing.constraints = { horizontal: "STRETCH", vertical: "STRETCH" };
+    selectionRing.x = -1;
+    selectionRing.y = -1;
+  }
+
+  // The count: the system's Counter in the brand tone, four beyond the
+  // square's top and right edges so the icon stays clear. A tint puts its
+  // inked fill on the instance — the fill on the pill, the ink on the digits.
+  const created = await createNestedComponentInstance({
+    componentSetName: "Counter",
+    variantProperties: { Tone: "Brand", Size: "Default" },
+    name: "Counter",
+    stats,
+  });
+  let counter;
+  if (created) {
+    counter = created.instance;
+    setInstanceTextProperty(
+      counter,
+      created.componentSet,
+      "Counter Text",
+      "12",
+      stats,
+    );
+    markNestedComponentInstance(counter, "Counter", "category-tile-count");
+    if (tint.fill) {
+      counter.fills = [tokenPaint(tint.fill, variableByName, stats)];
+      const digits = counter.findOne((node) => node.type === "TEXT");
+      if (digits) {
+        digits.fills = [tokenPaint(tint.onFill, variableByName, stats)];
+      }
+    }
+  } else {
+    counter = createMissingNestedComponentNode(
+      "Counter",
+      "Build Counter before updating CategoryTile.",
+      stats,
+    );
+  }
+  square.appendChild(counter);
+  counter.layoutPositioning = "ABSOLUTE";
+  counter.constraints = { horizontal: "MAX", vertical: "MIN" };
+  counter.x =
+    CATEGORY_TILE_SQUARE + CATEGORY_TILE_COUNTER_OVERHANG - counter.width;
+  counter.y = -CATEGORY_TILE_COUNTER_OVERHANG;
+  if (counter.type === "INSTANCE") exposeNestedCounterInstance(counter, stats);
+
+  // The caption: 11/14, the foreground colour under every tint, two lines
+  // at most, as `line-clamp-2`.
   const label = await productSdkText({
     name: "Label Text",
-    characters: "Food",
-    styleKey: "controlLabel",
+    characters: "Transport",
+    styleKey: "categoryTileLabel",
     fonts,
-    bold: selected,
-    fontSize: 14,
-    lineHeight: 20,
-    colorToken: selected ? "Colors/theme/700" : "Colors/foreground/0",
-    colorFallback: selected ? "#0B357F" : "#000000",
+    bold: false,
+    fontSize: CATEGORY_TILE_LABEL_FONT_SIZE,
+    lineHeight: CATEGORY_TILE_LABEL_LINE_HEIGHT,
+    colorToken: "Colors/foreground/0",
+    colorFallback: "#000000",
     variableByName,
     stats,
-    width: 96,
+    width: CATEGORY_TILE_WIDTH - CATEGORY_TILE_PADDING * 2,
+    wrap: true,
   });
   label.textAlignHorizontal = "CENTER";
+  bindFloatVariable(
+    label,
+    "fontSize",
+    "CategoryTile/label/font-size",
+    variableByName,
+    stats,
+  );
+  bindFloatVariable(
+    label,
+    "lineHeight",
+    "CategoryTile/label/line-height",
+    variableByName,
+    stats,
+  );
   appendWithSizing(component, label, "FILL", null);
+  clampTextLines(label, 2, `CategoryTile ${component.name}`, stats);
 }
 
-function configureCategoryTileProperties(componentSet, stats) {
+async function configureCategoryTileProperties(componentSet, stats) {
   configureNamedTextProperty(
     componentSet,
     "Label Text",
     "Label Text",
-    "Food",
+    "Transport",
     stats,
   );
+
+  // Show Count maps to category.resultCount being set: on by default, since
+  // a tile in the product carries its count; off hides the Counter.
+  const showCount = ensureBooleanProperty(
+    componentSet,
+    "Show Count",
+    true,
+    stats,
+  );
+  // A category's own symbol is offered too: the taxonomy's quick-access
+  // symbols are what the product's tiles draw.
+  const iconSourceComponents = await findKozmosIconSourceComponents({
+    withTaxonomy: true,
+  });
+  const preferredValues = iconPreferredValues(iconSourceComponents);
+  const defaultIcon =
+    (await findKozmosIconSourceComponent(CATEGORY_TILE_DEFAULT_ICON)) ||
+    (await findKozmosIconSourceComponent(DEFAULT_CURATED_ICON_NAME));
+  const iconProperty = defaultIcon
+    ? ensureInstanceSwapProperty(
+        componentSet,
+        "Icon",
+        defaultIcon.id,
+        stats,
+        preferredValues,
+      )
+    : null;
+
+  for (const child of componentSet.children) {
+    if (child.type !== "COMPONENT") continue;
+    const square = directChildNamed(child, "Icon Square");
+    if (!square) continue;
+    const counter = directChildNamed(square, "Counter");
+    if (counter && showCount) {
+      counter.componentPropertyReferences = Object.assign(
+        {},
+        counter.componentPropertyReferences || {},
+        { visible: showCount },
+      );
+    }
+    const icon = directChildNamed(square, "Icon");
+    if (icon && icon.type === "INSTANCE" && iconProperty) {
+      bindInstanceSwapProperty(icon, iconProperty, stats);
+    }
+  }
 }
 
 const CATEGORY_TILE_DESCRIPTION = [
   "Kozmos CategoryTile generated from the React CategoryTile API.",
-  "State maps to category.selected and category.disabled.",
-  "Label Text maps to category.label; Icon Slot maps to renderIcon(category).",
-  "Selection thickens the border as well as recolouring it, so it is not colour-only.",
-  "resultCountLabel is announced by product code and has no visual slot here.",
+  "State maps to category.selected and category.disabled; a disabled tile is at 50 %.",
+  "Tint maps to tint: Theme is a tile without one; the eight are Semantics.Category, the taxonomy's quick-access colours. The accent takes the icon and the selection's stroke, the inked fill the counter; the square stays neutral.",
+  "Label Text maps to category.label, 11/14 and two lines at most; Icon maps to icon and swaps from the Icons page, the taxonomy's quick-access symbols among them.",
+  "A symbol swapped in by hand comes in its source's black, since the tint was set on the icon it replaced: fill its shape with the tile's Category/Accent, as BrowseCategoriesPanel's tiles show.",
+  "Counter is the system's Counter in the brand tone at the square's top-right, 4 beyond its top and right edges; Show Count maps to category.resultCount being set, and the count is edited on the nested instance.",
+  "The square is 64 at the control radius with the container edge; the icon is 24.",
+  "resultCountLabel is the count's spoken form and draws nothing here.",
 ];
 
-async function buildCategoryTileComponent() {
-  return buildSingleAxisComponent({
+function categoryTileComponentConfig() {
+  return {
     componentName: "CategoryTile",
     componentSetName: "CategoryTile",
-    axisName: "State",
-    values: CATEGORY_TILE_STATES,
     x: 80,
     y: 14200,
-    xStep: 180,
+    combinations: categoryTileVariantCombinations,
+    keyForProps: categoryTileVariantKey,
+    parseVariantName: parseCategoryTileVariantName,
     createVariant: createCategoryTileVariant,
+    updateVariant: updateCategoryTileVariant,
+    layoutVariants: layoutCategoryTileVariants,
     configureProperties: configureCategoryTileProperties,
-    autoReorganize: true,
     description: CATEGORY_TILE_DESCRIPTION,
-  });
+  };
+}
+
+async function buildCategoryTileComponent() {
+  return buildPlannedMatrixComponent(categoryTileComponentConfig());
 }
 
 async function updateCategoryTileComponent() {
-  return updateSingleAxisComponent({
-    componentName: "CategoryTile",
-    componentSetName: "CategoryTile",
-    axisName: "State",
-    values: CATEGORY_TILE_STATES,
-    xStep: 180,
-    createVariant: createCategoryTileVariant,
-    updateVariant: updateCategoryTileVariant,
-    parseVariantName: parseCategoryTileVariantName,
-    configureProperties: configureCategoryTileProperties,
-    autoReorganize: true,
-    description: CATEGORY_TILE_DESCRIPTION.concat([
-      "Updated in place to preserve the Code Connect node ID.",
-    ]),
-  });
+  const stats = await updatePlannedMatrixComponent(
+    categoryTileComponentConfig(),
+  );
+  noteSetsToUpdateNext("CategoryTile", stats);
+  return stats;
 }
 
 async function rebuildCategoryTileComponent() {
@@ -46213,6 +48379,7 @@ async function updatePOIMediaGalleryVariant(
   const previous = await productSdkControlButton({
     name: "Previous Button",
     glyph: "‹",
+    iconName: "chevron-left",
     fonts,
     variableByName,
     stats,
@@ -46239,6 +48406,7 @@ async function updatePOIMediaGalleryVariant(
   const next = await productSdkControlButton({
     name: "Next Button",
     glyph: "›",
+    iconName: "chevron-right",
     fonts,
     variableByName,
     stats,
@@ -46989,6 +49157,7 @@ async function updateRoutePreviewPanelVariant(
   const back = await productSdkControlButton({
     name: "Back Button",
     glyph: "‹",
+    iconName: "chevron-left",
     label: "Back",
     fonts,
     variableByName,
@@ -46998,6 +49167,7 @@ async function updateRoutePreviewPanelVariant(
   const proceed = await productSdkControlButton({
     name: "Continue Button",
     glyph: "→",
+    iconName: "arrow-right",
     label: "Continue",
     pressed: ready,
     fonts,
@@ -47103,9 +49273,13 @@ async function updateRouteSummaryVariant(
     width,
     height: 76,
   });
-  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
+  // The panel role, 24, as SwiftUI and Compose draw these cards, and React
+  // since 2026-09-22 (the 2xl primitive, 32, before). It was the container,
+  // 20, here; the slots nest in the panel.
+  productSdkSurface(component, KOZMOS_RADIUS.panel, variableByName, stats);
 
   const mode = await productSdkSlot({
+    parentRadius: KOZMOS_RADIUS.panel,
     name: "Transport Mode Slot",
     label: "Mode",
     width: 44,
@@ -47164,6 +49338,7 @@ async function updateRouteSummaryVariant(
   const action = await productSdkControlButton({
     name: active ? "End Route Button" : "Start Navigation Button",
     glyph: active ? "×" : "→",
+    iconName: active ? "x-close" : "arrow-right",
     label: active ? "End" : "Start",
     pressed: !active,
     fonts,
@@ -47285,7 +49460,10 @@ async function updateRoutingInputGroupVariant(
     width,
     height: pointCount * 52 + 24,
   });
-  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
+  // The panel role, 24, as SwiftUI and Compose draw these cards, and React
+  // since 2026-09-22 (the 2xl primitive, 32, before). It was the container,
+  // 20, here; the slots nest in the panel.
+  productSdkSurface(component, KOZMOS_RADIUS.panel, variableByName, stats);
 
   const fields = productSdkFrame("Point Fields", {
     primarySizing: "AUTO",
@@ -47306,6 +49484,7 @@ async function updateRoutingInputGroupVariant(
         ? ROUTING_INPUT_GROUP_POINTS[index]
         : ROUTING_INPUT_GROUP_POINTS[index === 0 ? 0 : 2];
     const field = await productSdkSlot({
+      parentRadius: KOZMOS_RADIUS.panel,
       name: point.slot,
       label: point.label,
       width: fieldWidth,
@@ -47323,6 +49502,7 @@ async function updateRoutingInputGroupVariant(
   const swap = await productSdkControlButton({
     name: "Swap Button",
     glyph: "⇅",
+    iconName: "switch-vertical-01",
     fonts,
     variableByName,
     stats,
@@ -47424,7 +49604,10 @@ async function updateSaveLocationCardVariant(
     width,
     height: 160,
   });
-  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
+  // The panel role, 24, as SwiftUI and Compose draw these cards, and React
+  // since 2026-09-22 (the 2xl primitive, 32, before). It was the container,
+  // 20, here; the slots nest in the panel.
+  productSdkSurface(component, KOZMOS_RADIUS.panel, variableByName, stats);
 
   const title = await productSdkText({
     name: "Title Text",
@@ -47473,6 +49656,7 @@ async function updateSaveLocationCardVariant(
   const save = await productSdkControlButton({
     name: "Save Toggle Button",
     glyph: saved ? "★" : "☆",
+    iconName: "bookmark",
     label: saved ? "Saved" : "Save",
     pressed: saved,
     fonts,
@@ -47484,6 +49668,7 @@ async function updateSaveLocationCardVariant(
   const route = await productSdkControlButton({
     name: "Route Button",
     glyph: "→",
+    iconName: "arrow-right",
     fonts,
     variableByName,
     stats,
@@ -47493,6 +49678,7 @@ async function updateSaveLocationCardVariant(
   const note = await productSdkControlButton({
     name: "Edit Note Button",
     glyph: "✎",
+    iconName: "edit-01",
     fonts,
     variableByName,
     stats,
@@ -47736,42 +49922,51 @@ async function updateDynamicIslandVariant(
   { value, variableByName, fonts, stats },
 ) {
   const geometry = DYNAMIC_ISLAND_GEOMETRY[value];
-  // The island draws no stroke, so the inset is its padding alone — unlike a
-  // Product / SDK card, where the 1px border counts too.
-  const islandInset = value === "Expanded" ? 16 : 12;
+  // Laid out as the React component lays it out: the expanded card inset 16
+  // all round (p-4), the compact pill 16 at each end (px-4) with its slots
+  // centred between top and bottom, and the minimal circle's content centred.
+  const expanded = value === "Expanded";
   productSdkVariantRoot(component, "DynamicIsland", "State=" + value, {
-    direction: value === "Expanded" ? "vertical" : "horizontal",
+    direction: expanded ? "vertical" : "horizontal",
     primarySizing: "FIXED",
     counterSizing: "FIXED",
     primaryAlign: value === "Compact" ? "SPACE_BETWEEN" : "CENTER",
     counterAlign: "CENTER",
     spacing: 8,
-    padding: value === "Expanded" ? 16 : 12,
+    padding: expanded ? 16 : 0,
+    paddingLeft: value === "Minimal" ? 0 : 16,
+    paddingRight: value === "Minimal" ? 0 : 16,
     width: geometry.width,
     height: geometry.height,
     clip: true,
   });
-  // The island is a black pill on the device bezel, not a themed surface, so
-  // it uses the inverse foreground rather than a Surface token.
+  // The island draws no stroke, so a slot's inset is the space around it on
+  // its tighter side — unlike a Product / SDK card, whose 1px border counts.
+  const insetAround = (slotHeight) =>
+    expanded ? 16 : (geometry.height - slotHeight) / 2;
+  // The island is black in both themes, as the device's is, and what sits in
+  // it reads the dark theme: the set takes the Kozmos collections' Dark mode —
+  // as React nests a dark provider, SwiftUI scopes the dark scheme and Compose
+  // the dark palette — and the pill is that theme's page surface. Until
+  // 2026-09-22 it bound Colors/foreground/1000, which is white in the Kozmos
+  // light ramp (LocationPin's white ring binds the same variable), with a
+  // near-black fallback.
   component.cornerRadius = geometry.radius;
+  await applyKozmosDarkMode(component, stats);
   component.fills = [
-    paintFromVariable(
-      "Colors/foreground/1000",
-      "#0B0D12",
-      variableByName,
-      stats,
-    ),
+    paintFromVariable("Surface/0", "#000000", variableByName, stats),
   ];
   component.strokes = [];
 
   if (value === "Minimal") {
+    // One glyph in the circle: the default icon, for the product's to replace.
     const minimal = await productSdkSlot({
       name: "Minimal Content Slot",
       parentRadius: geometry.radius,
-      inset: islandInset,
-      label: "•",
+      inset: insetAround(32),
+      icon: { size: 16 },
       width: 32,
-      height: 24,
+      height: 32,
       fonts,
       variableByName,
       stats,
@@ -47784,7 +49979,7 @@ async function updateDynamicIslandVariant(
     const leading = await productSdkSlot({
       name: "Compact Leading Slot",
       parentRadius: geometry.radius,
-      inset: islandInset,
+      inset: insetAround(24),
       label: "Leading",
       width: 56,
       height: 24,
@@ -47797,7 +49992,7 @@ async function updateDynamicIslandVariant(
     const trailing = await productSdkSlot({
       name: "Compact Trailing Slot",
       parentRadius: geometry.radius,
-      inset: islandInset,
+      inset: insetAround(24),
       label: "Trailing",
       width: 56,
       height: 24,
@@ -47809,10 +50004,10 @@ async function updateDynamicIslandVariant(
     return;
   }
 
-  const expanded = await productSdkSlot({
+  const content = await productSdkSlot({
     name: "Expanded Content Slot",
     parentRadius: geometry.radius,
-    inset: islandInset,
+    inset: insetAround(),
     label: "Expanded content",
     width: geometry.width - 32,
     height: geometry.height - 32,
@@ -47820,7 +50015,7 @@ async function updateDynamicIslandVariant(
     variableByName,
     stats,
   });
-  appendWithSizing(component, expanded, "FILL", "FILL");
+  appendWithSizing(component, content, "FILL", "FILL");
 }
 
 function configureDynamicIslandProperties(_componentSet, _stats) {
@@ -47832,6 +50027,8 @@ const DYNAMIC_ISLAND_DESCRIPTION = [
   "State maps to DynamicIsland.islandState (compact, expanded, minimal).",
   "Compact Leading and Trailing Slots map to compactLeading and compactTrailing.",
   "Expanded Content Slot maps to expandedContent; Minimal Content Slot to minimalContent.",
+  "Minimal Content Slot holds the default icon: swap it for the product's glyph.",
+  "Sized as the React component draws it: a 240×44 pill, a 360×160 card at 32, a 56 circle.",
   "The pill sits on the device bezel, so it uses the inverse foreground rather than a Surface token.",
 ];
 
@@ -47905,7 +50102,10 @@ async function updateFeedbackCardVariant(
     width,
     height: 240,
   });
-  productSdkSurface(component, KOZMOS_RADIUS.container, variableByName, stats);
+  // The panel role, 24, as SwiftUI and Compose draw these cards, and React
+  // since 2026-09-22 (the 2xl primitive, 32, before). It was the container,
+  // 20, here; the slots nest in the panel.
+  productSdkSurface(component, KOZMOS_RADIUS.panel, variableByName, stats);
 
   // Success replaces the form outright. Leaving a disabled form behind the
   // confirmation would suggest the rating is still editable.
@@ -47963,6 +50163,7 @@ async function updateFeedbackCardVariant(
   appendWithSizing(component, description, "FILL", "HUG");
 
   const rating = await productSdkSlot({
+    parentRadius: KOZMOS_RADIUS.panel,
     name: "Rating Slot",
     label: "Rating slot",
     width: contentWidth,
@@ -47975,6 +50176,7 @@ async function updateFeedbackCardVariant(
   appendWithSizing(component, rating, "FILL", "FIXED");
 
   const comment = await productSdkSlot({
+    parentRadius: KOZMOS_RADIUS.panel,
     name: "Comment Slot",
     label: "Textarea slot",
     width: contentWidth,
@@ -47989,6 +50191,7 @@ async function updateFeedbackCardVariant(
   const submit = await productSdkControlButton({
     name: "Submit Button",
     glyph: submitting ? "◌" : "→",
+    iconName: submitting ? "loading-01" : "arrow-right",
     label: submitting ? "Sending" : "Send feedback",
     pressed: !submitting,
     fonts,
@@ -48230,6 +50433,11 @@ async function updateSingleAxisComponent(config) {
     }
 
     seenValues[props.value] = true;
+    await reportSetProgress(
+      config.componentSetName,
+      `variant ${stats.variantsUpdated + 1} of ${existing.children.length}`,
+      stats.variantsUpdated === 0,
+    );
     await config.updateVariant(child, {
       value: props.value,
       variableByName,
@@ -48258,18 +50466,26 @@ async function updateSingleAxisComponent(config) {
   stats.updated = true;
   stats.componentSetId = existing.id;
   stats.urlNodeId = nodeIdForUrl(existing.id);
+  await reportSetProgress(config.componentSetName, "variant properties", true);
   normalizeComponentSetVariantProperties(
     existing,
     expectedVariantAxesForComponentSetName(existing.name),
     stats,
   );
+  await reportSetProgress(
+    config.componentSetName,
+    "component properties",
+    true,
+  );
   await config.configureProperties(existing, stats, variableByName);
   reportUnboundComponentProperties(existing, stats);
+  await reportSetProgress(config.componentSetName, "maintenance", true);
   runGeneratedComponentPostUpdateMaintenance(
     existing,
     config.componentName,
     stats,
   );
+  await reportSetProgress(config.componentSetName, "layout", true);
   await reorganizeAfterGeneratedComponentMutation(stats);
   await runGeneratedComponentPostLayoutMaintenance({
     componentName: config.componentName,
@@ -55908,18 +58124,22 @@ async function createStepperStepItem({
   indicator.resizeWithoutConstraints(32, 32);
   indicator.cornerRadius = KOZMOS_RADIUS.pill;
   indicator.clipsContent = false;
+  // The accent is React's primary, theme/600, on every platform; it was
+  // theme/500 here and on the natives until 2026-09-22. A completed step's
+  // ring is its fill's colour, as React and the natives draw it — it was
+  // foreground/500 here, a grey ring around the blue.
   indicator.fills = [
     paintFromVariable(
-      completed ? "Colors/theme/500" : "Surface/0",
-      completed ? "#135BEC" : "#FFFFFF",
+      completed ? "Colors/theme/600" : "Surface/0",
+      completed ? "#1051E8" : "#FFFFFF",
       variableByName,
       stats,
     ),
   ];
   indicator.strokes = [
     paintFromVariable(
-      current ? "Colors/theme/500" : "Colors/foreground/500",
-      current ? "#135BEC" : "#747B8B",
+      current || completed ? "Colors/theme/600" : "Colors/foreground/500",
+      current || completed ? "#1051E8" : "#747B8B",
       variableByName,
       stats,
     ),
@@ -55989,16 +58209,18 @@ function createStepperConnector({ index, active, variableByName, stats }) {
   connector.name = `Step ${index + 1} Connector`;
   connector.resizeWithoutConstraints(92, 2);
   connector.cornerRadius = KOZMOS_RADIUS.pill;
+  // The accent, or the border role at its own strength, as React and the
+  // natives draw it; the pending connector was faded to 32 % until 2026-09-22.
   connector.fills = [
     paintFromVariable(
-      active ? "Colors/theme/500" : "Border/Subtle",
-      active ? "#135BEC" : "#C7CAD1",
+      active ? "Colors/theme/600" : "Border/Subtle",
+      active ? "#1051E8" : "#C7CAD1",
       variableByName,
       stats,
     ),
   ];
   connector.strokes = [];
-  connector.opacity = active ? 1 : 0.32;
+  connector.opacity = 1;
   connector.setSharedPluginData(RUN_NAMESPACE, "kind", "stepper-connector");
   return connector;
 }
@@ -58100,19 +60322,19 @@ async function syncBottomSheetVariantChildren({
   handle.name = "Drag Handle";
   handle.resizeWithoutConstraints(48, 5);
   handle.cornerRadius = KOZMOS_RADIUS.pill;
-  handle.fills = [
-    paintFromVariableWithOpacity(
-      "Colors/foreground/500",
-      "#747B8B",
-      0.36,
-      variableByName,
-      stats,
-    ),
-  ];
+  setTranslucentTokenPaint(
+    handle,
+    "fills",
+    { name: "Colors/foreground/500", fallback: "#747B8B" },
+    0.36,
+    variableByName,
+    stats,
+  );
   handle.strokes = [];
   handle.setSharedPluginData(RUN_NAMESPACE, "kind", "bottom-sheet-handle");
   component.appendChild(handle);
-  setHugChildSizing(handle);
+  // A rectangle has no content to hug; the handle keeps its 48 by 5.
+  setFixedChildSizing(handle);
 
   const header = figma.createFrame();
   header.name = "BottomSheet Header";
@@ -58257,8 +60479,10 @@ async function syncBottomSheetVariantChildren({
     reusableSlot: reusableContentSlot,
     stats,
   });
-  contentSlot.visible = content !== "Form";
+  // Sized while visible, then hidden in Form: FILL asked of the hidden slot
+  // read back without it, the one Content Slot refusal in the 2026-09-21 log.
   setVerticalStackChildSizing(contentSlot);
+  contentSlot.visible = content !== "Form";
   if (
     Array.from(body.children || []).some((child) => child.visible !== false)
   ) {
@@ -59837,7 +62061,15 @@ function setDialogFooterActionSizing(action, label, size) {
   if (!action) return;
 
   const metrics = buttonMetrics(size);
-  const width = expectedDialogFooterActionWidth(label, size);
+  // Measured beats guessed. At 7.5 a character "Save changes" was given 90,
+  // where Inter Medium draws 94, and Dialog's and Drawer's primary actions ran
+  // 4 past their buttons' padding (figma:verify, 2026-09-17 to 22). The label
+  // layer sizes itself, so the instance's own content is the width to fit; the
+  // guess stays as the floor the audit holds these buttons to.
+  const width = Math.max(
+    expectedDialogFooterActionWidth(label, size),
+    footerActionContentWidth(action) + metrics.paddingX * 2,
+  );
   const height = metrics.height;
 
   setLayoutSizingHorizontal(action, "FIXED");
@@ -59855,6 +62087,22 @@ function setDialogFooterActionSizing(action, label, size) {
   } catch (_error) {
     // layoutGrow is unavailable on older plugin runtimes.
   }
+}
+
+/** The width of a Button instance's shown content in flow, gaps included. */
+function footerActionContentWidth(action) {
+  if (!action || action.type !== "INSTANCE" || !Array.isArray(action.children))
+    return 0;
+  const shown = action.children.filter(
+    (child) =>
+      child.visible !== false && child.layoutPositioning !== "ABSOLUTE",
+  );
+  if (shown.length === 0) return 0;
+  const widths = shown.reduce(
+    (sum, child) => sum + (typeof child.width === "number" ? child.width : 0),
+    0,
+  );
+  return Math.ceil(widths + (action.itemSpacing || 0) * (shown.length - 1));
 }
 
 function expectedDialogFooterActionWidth(label, size) {
@@ -65261,14 +67509,16 @@ async function syncFileUploadVariantChildren({
 
   const browse = figma.createText();
   browse.name = "Browse Text";
-  await applyFieldTextTypography(
+  // The code draws it semibold; the Medium label style is the importer's
+  // nearest, attached rather than a Regular text style with its weight
+  // overridden.
+  await applyFieldLabelTypography(
     browse,
     fonts,
     "FileUpload",
     variableByName,
     stats,
   );
-  browse.fontName = fonts.medium;
   browse.characters = preservedText["Browse Text"] || "Click to upload";
   browse.fills = [
     paintFromVariable(
@@ -67134,7 +69384,6 @@ async function syncSliderVariantChildren({
   }
 
   root.layoutMode = "NONE";
-  setVerticalFixedFillChildSizing(root);
   root.resizeWithoutConstraints(320, 44);
   root.fills = [];
   root.strokes = [];
@@ -67215,7 +69464,8 @@ async function syncSliderVariantChildren({
   range.setSharedPluginData(RUN_NAMESPACE, "kind", "slider-range");
   track.appendChild(range);
   root.appendChild(track);
-  setLayoutSizingHorizontal(track, "FILL");
+  // The control is not auto layout, so FILL cannot apply here; the track's
+  // STRETCH constraint carries it to the control's width.
 
   const thumbSpecs = isRange
     ? [
@@ -67359,6 +69609,10 @@ async function syncSliderVariantChildren({
 
   component.appendChild(label);
   component.appendChild(root);
+  // The control fills the Slider's width, so a resized instance stretches
+  // it. FILL needs the control inside the component's auto layout, so it is
+  // set after the append: before it, Figma refused it for a new control.
+  setVerticalFixedFillChildSizing(root);
   normalizeInputFamilyChildSizing(component);
 }
 
@@ -68477,9 +70731,21 @@ function setFixedChildSizing(node) {
   }
 }
 
+// HUG takes an auto-layout frame or text. A leaf, an icon instance or a
+// rectangle, has no content to hug; its size is its content, so it stays
+// FIXED, which is what a refused HUG left anyway. Asking for HUG on it put
+// 306 refusals in one run log, burying the ones that mis-size a node.
+function canHugContent(node) {
+  return Boolean(
+    node &&
+    (node.type === "TEXT" || (node.layoutMode && node.layoutMode !== "NONE")),
+  );
+}
+
 function setHugChildSizing(node) {
-  setLayoutSizingHorizontal(node, "HUG");
-  setLayoutSizingVertical(node, "HUG");
+  const sizing = canHugContent(node) ? "HUG" : "FIXED";
+  setLayoutSizingHorizontal(node, sizing);
+  setLayoutSizingVertical(node, sizing);
 
   try {
     node.layoutAlign = "CENTER";
@@ -68604,6 +70870,56 @@ function removeGeneratedButtonChild(component, name, shouldRemove) {
   }
 }
 
+/**
+ * Whether every visible solid paint inside an icon instance is the expected
+ * one — bound to the foreground variable, or, unbound, the fallback colour.
+ * An instance with no visible solid paint at all is not expected either.
+ */
+function iconSlotPaintIsExpected(icon, config, variableByName) {
+  const variable = variableByName.get(config.foreground);
+  const expectedHex = String(config.foregroundFallback || "").toUpperCase();
+  const hexOf = (color) =>
+    "#" +
+    ["r", "g", "b"]
+      .map((key) =>
+        Math.round((color[key] || 0) * 255)
+          .toString(16)
+          .padStart(2, "0"),
+      )
+      .join("")
+      .toUpperCase();
+  let seen = false;
+  let expected = true;
+  function walk(node) {
+    for (const paints of [node.fills, node.strokes]) {
+      if (!Array.isArray(paints)) continue;
+      const paint = firstVisibleSolidPaint(paints);
+      if (!paint) continue;
+      seen = true;
+      const bound = paint.boundVariables && paint.boundVariables.color;
+      if (variable && bound && bound.id === variable.id) continue;
+      // The fallback colour is right only when the variable is not in the
+      // file. With it there, an unbound paint of the same light colour does
+      // not follow the mode: Colors/foreground/0's light value is the Icons
+      // page glyph's own black, and those icons stayed black in dark mode.
+      if (
+        !variable &&
+        !bound &&
+        paint.color &&
+        hexOf(paint.color) === expectedHex
+      ) {
+        continue;
+      }
+      expected = false;
+    }
+    if (node.children) {
+      for (const child of node.children) walk(child);
+    }
+  }
+  walk(icon);
+  return seen && expected;
+}
+
 function syncIconSlotInstance(
   icon,
   config,
@@ -68619,9 +70935,19 @@ function syncIconSlotInstance(
   const existingFallback = icon.getSharedPluginData
     ? icon.getSharedPluginData(RUN_NAMESPACE, "foreground-fallback")
     : "";
+  // The label an instance carries is not its paint: on 2026-09-21 the Button
+  // family's icons read the right token and were plain black (an instance
+  // reset had dropped the override while the plugin data stayed), and an
+  // Update that trusted the label skipped them. The paint decides.
+  const paintRepair =
+    existingToken === config.foreground &&
+    existingFallback === config.foregroundFallback &&
+    !iconSlotPaintIsExpected(icon, config, variableByName);
   const shouldRetint =
     existingToken !== config.foreground ||
-    existingFallback !== config.foregroundFallback;
+    existingFallback !== config.foregroundFallback ||
+    paintRepair;
+  if (paintRepair) incrementStat(stats, "iconSlotPaintRepairs");
 
   icon.resize(size, size);
   if (iconSizeToken) {
@@ -68714,7 +71040,9 @@ function storeIconSlotAuditMetadata(icon, variableName, fallback, stats) {
 }
 
 async function ensureDefaultIconComponent(variableByName, stats) {
-  const existing = await findComponentByName(DEFAULT_ICON_COMPONENT_NAME);
+  const existing = await findComponentByName(DEFAULT_ICON_COMPONENT_NAME, [
+    UTILITIES_PAGE_NAME,
+  ]);
   if (existing) {
     existing.description =
       "Default generated icon slot fallback for neutral button surfaces. Replace with Pointr Icon Library instances in consuming components.";
@@ -68729,7 +71057,7 @@ async function ensureDefaultIconComponent(variableByName, stats) {
     return existing;
   }
 
-  const page = await ensurePage("Utilities");
+  const page = await ensurePage(UTILITIES_PAGE_NAME);
   await figma.setCurrentPageAsync(page);
   await page.loadAsync();
 
@@ -68762,13 +71090,43 @@ async function resolveDefaultIconSourceComponent(variableByName, stats) {
   return ensureDefaultIconComponent(variableByName, stats);
 }
 
-async function findComponentByName(name) {
-  for (const page of figma.root.children) {
+// Components found by name, kept while each is still in the file under that
+// name. Painters ask for the same icons once per variant; the Tree block alone
+// asks 1,044 times.
+const componentsFoundByName = new Map();
+
+function componentStillNamed(component, name) {
+  return Boolean(
+    component &&
+    !component.removed &&
+    component.type === "COMPONENT" &&
+    component.name === name,
+  );
+}
+
+// A component lives on a known page: icons on Icons, the slot default on
+// Utilities. Read that page first, and every page only when it is not there:
+// a search in page order walks the whole Components page, 27k nodes in the
+// live file, before it reaches Icons.
+async function findComponentByName(name, pageNames = []) {
+  const known = componentsFoundByName.get(name);
+  if (componentStillNamed(known, name)) return known;
+  componentsFoundByName.delete(name);
+
+  const pages = figma.root.children;
+  const ordered = pageNames
+    .map((pageName) => pages.find((page) => page.name === pageName))
+    .filter(Boolean)
+    .concat(pages.filter((page) => pageNames.indexOf(page.name) === -1));
+  for (const page of ordered) {
     await page.loadAsync();
     const component = page.findOne(
       (node) => node.type === "COMPONENT" && node.name === name,
     );
-    if (component) return component;
+    if (component) {
+      componentsFoundByName.set(name, component);
+      return component;
+    }
   }
 
   return null;
@@ -68779,10 +71137,21 @@ function kozmosIconComponentName(name) {
 }
 
 async function findKozmosIconSourceComponent(name) {
-  return findComponentByName(kozmosIconComponentName(name));
+  return findComponentByName(kozmosIconComponentName(name), [ICON_PAGE_NAME]);
 }
 
-async function findKozmosIconSourceComponents() {
+function isTaxonomyIconDefinition(definition) {
+  return Boolean(definition && definition.source === "taxonomy");
+}
+
+/**
+ * The Icons page's sources, in definition order. A taxonomy symbol is left out
+ * unless asked for: it is a filled shape, and every icon slot but a category's
+ * is tinted by a stroke override on a Pointr outline, which does not reach a
+ * fill — offered to a Button, it would swap in black.
+ */
+async function findKozmosIconSourceComponents(options) {
+  const withTaxonomy = Boolean(options && options.withTaxonomy);
   const page = figma.root.children.find(
     (child) => child.name === ICON_PAGE_NAME,
   );
@@ -68791,6 +71160,7 @@ async function findKozmosIconSourceComponents() {
   await page.loadAsync();
   const components = [];
   for (const definition of KOSMOS_ICON_DEFINITIONS) {
+    if (isTaxonomyIconDefinition(definition) && !withTaxonomy) continue;
     const component = page.findOne(
       (node) =>
         node.type === "COMPONENT" &&
@@ -68821,8 +71191,11 @@ async function syncIconSourceLibrary() {
     page: ICON_PAGE_NAME,
     planned: KOSMOS_ICON_DEFINITIONS.length,
     imported: 0,
+    drawn: 0,
     created: 0,
     refreshed: 0,
+    sourcesKept: 0,
+    sourcesReplaced: 0,
     failed: 0,
     preferredValuesApplied: 0,
     warnings: [],
@@ -68832,14 +71205,21 @@ async function syncIconSourceLibrary() {
   await figma.setCurrentPageAsync(page);
   await page.loadAsync();
 
+  // Icons already on the page whose source had to be drawn again.
+  const redrawn = [];
   for (let index = 0; index < KOSMOS_ICON_DEFINITIONS.length; index += 1) {
     const definition = KOSMOS_ICON_DEFINITIONS[index];
+    const taxonomy = isTaxonomyIconDefinition(definition);
+    const replacedBefore = stats.sourcesReplaced;
+    let existed = false;
 
     try {
-      const sourceComponent = await figma.importComponentByKeyAsync(
-        definition.componentKey,
-      );
-      stats.imported += 1;
+      // A taxonomy symbol is drawn from the SVG the plugin carries; the Pointr
+      // Icon Library has no component to import for it.
+      const sourceComponent = taxonomy
+        ? null
+        : await figma.importComponentByKeyAsync(definition.componentKey);
+      if (sourceComponent) stats.imported += 1;
 
       let component = page.findOne(
         (node) =>
@@ -68853,41 +71233,57 @@ async function syncIconSourceLibrary() {
         page.appendChild(component);
         stats.created += 1;
       } else {
+        existed = true;
         stats.refreshed += 1;
       }
 
-      syncKozmosIconSourceComponent(
-        component,
-        sourceComponent,
-        definition,
-        index,
-        stats,
-      );
+      if (taxonomy) {
+        await syncTaxonomyIconSourceComponent(
+          component,
+          definition,
+          index,
+          stats,
+        );
+        stats.drawn += 1;
+      } else {
+        await syncKozmosIconSourceComponent(
+          component,
+          sourceComponent,
+          definition,
+          index,
+          stats,
+        );
+      }
     } catch (error) {
       stats.failed += 1;
       stats.warnings.push(
-        `Could not import icon "${definition.name}" (${messageFor(error)}).`,
+        `Could not ${taxonomy ? "draw" : "import"} icon "${definition.name}" (${messageFor(error)}).`,
       );
     }
+    if (existed && stats.sourcesReplaced > replacedBefore) {
+      redrawn.push(definition.name);
+    }
+  }
+  if (redrawn.length > 0) {
+    stats.warnings.push(
+      `Drew the source of ${redrawn.length} icon(s) already on the page anew (${redrawn.slice(0, 4).join(", ")}${redrawn.length > 4 ? ", …" : ""}), so the tints laid through the old source are gone. Update the sets that use them: BrowseCategoriesPanel for a taxonomy symbol; Update All Core, then Update All Product / SDK, for a Pointr icon.`,
+    );
   }
 
   await refreshComponentIconSlotsAfterIconSync(stats);
   await applyCuratedIconSourcesToSlots(stats);
-  stats.iconSourceCount = (await findKozmosIconSourceComponents()).length;
+  stats.iconSourceCount = (
+    await findKozmosIconSourceComponents({ withTaxonomy: true })
+  ).length;
   return stats;
 }
 
-function syncKozmosIconSourceComponent(
-  component,
-  sourceComponent,
-  definition,
-  index,
-  stats,
-) {
+/** What an icon source component says about itself, whatever draws it. */
+function describeIconSourceComponent(component, definition, index, source) {
   component.name = kozmosIconComponentName(definition.name);
   component.description = [
     `Kozmos curated icon source: ${definition.name}.`,
-    `Source: Pointr Icon Library / ${definition.figmaName}.`,
+    `Source: ${source}.`,
     `Category: ${definition.category}.`,
     definition.description,
     "Use as an instance-swap source. Consuming components own size and foreground color.",
@@ -68900,11 +71296,6 @@ function syncKozmosIconSourceComponent(
     "figma-name",
     definition.figmaName,
   );
-  component.setSharedPluginData(
-    RUN_NAMESPACE,
-    "source-component-key",
-    definition.componentKey,
-  );
 
   if (component.layoutMode !== undefined) {
     component.layoutMode = "NONE";
@@ -68915,15 +71306,39 @@ function syncKozmosIconSourceComponent(
   component.strokes = [];
   component.x = 80 + (index % 8) * 120;
   component.y = 80 + Math.floor(index / 8) * 96;
+}
 
-  if (component.children) {
-    const existing = [];
-    for (const child of component.children) existing.push(child);
-    for (const child of existing) child.remove();
+/**
+ * The source layer a run finds, if `accepts` says it is still the right one;
+ * every other child goes.
+ *
+ * Kept rather than drawn again because every tint an icon slot carries — a
+ * Button's icon, a CategoryTile's symbol — is an override keyed through this
+ * layer's id. A new layer under a new id drops them all, and every slot the
+ * run does not repaint turns back to the source's black: until 2026-09-22 each
+ * Curated Icons → Update did that to every set but the four it repaints.
+ */
+async function keepIconSourceLayer(component, name, accepts) {
+  let kept = null;
+  for (const child of component.children || []) {
+    if (kept || child.name !== name) continue;
+    if (await accepts(child)) kept = child;
   }
+  removeDirectChildrenExcept(component, kept);
+  return kept;
+}
 
-  const source = sourceComponent.createInstance();
-  source.name = "Pointr Source";
+async function mainComponentKey(instance) {
+  try {
+    const main = await instance.getMainComponentAsync();
+    return main ? main.key : null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+/** A source layer fills its 24 component and stretches with it. */
+function placeIconSource(source, definition, stats) {
   source.x = 0;
   source.y = 0;
   try {
@@ -68933,7 +71348,6 @@ function syncKozmosIconSourceComponent(
       `Could not resize icon "${definition.name}" source (${messageFor(error)}).`,
     );
   }
-  component.appendChild(source);
   try {
     source.constraints = {
       horizontal: "STRETCH",
@@ -68944,6 +71358,124 @@ function syncKozmosIconSourceComponent(
       `Could not set icon "${definition.name}" source constraints (${messageFor(error)}).`,
     );
   }
+}
+
+async function syncKozmosIconSourceComponent(
+  component,
+  sourceComponent,
+  definition,
+  index,
+  stats,
+) {
+  describeIconSourceComponent(
+    component,
+    definition,
+    index,
+    `Pointr Icon Library / ${definition.figmaName}`,
+  );
+  component.setSharedPluginData(
+    RUN_NAMESPACE,
+    "source-component-key",
+    definition.componentKey,
+  );
+
+  let source = await keepIconSourceLayer(
+    component,
+    "Pointr Source",
+    async (node) =>
+      node.type === "INSTANCE" &&
+      (await mainComponentKey(node)) === sourceComponent.key,
+  );
+  if (source) {
+    // As a new instance would be: the library's drawing, no local edits. An
+    // override here is on the source itself, so resetting it moves no id.
+    try {
+      source.resetOverrides();
+    } catch (_error) {
+      // A source with nothing to reset.
+    }
+    stats.sourcesKept += 1;
+  } else {
+    source = sourceComponent.createInstance();
+    source.name = "Pointr Source";
+    component.appendChild(source);
+    stats.sourcesReplaced += 1;
+  }
+  placeIconSource(source, definition, stats);
+}
+
+/**
+ * A short fingerprint of a taxonomy symbol's SVG (FNV-1a), stamped on its
+ * source layer so a run can tell the artwork it drew from the artwork it
+ * carries now.
+ */
+function taxonomyArtworkStamp(svg) {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < svg.length; index += 1) {
+    hash ^= svg.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return `${TAXONOMY_ICON_VERSION}:${hash.toString(16).padStart(8, "0")}`;
+}
+
+/**
+ * A taxonomy symbol on the Icons page: the SVG from TAXONOMY_ICON_SVGS as a
+ * "Taxonomy Source" frame that fills the 24 component, its shapes in black
+ * and scaling with it. The frame is kept while it draws the same artwork, for
+ * the reason a Pointr Source is (see keepIconSourceLayer).
+ */
+async function syncTaxonomyIconSourceComponent(
+  component,
+  definition,
+  index,
+  stats,
+) {
+  const svg = TAXONOMY_ICON_SVGS[definition.name];
+  if (!svg) {
+    throw new Error(
+      `the plugin carries no artwork for it; run scripts/build-taxonomy-icons.mjs`,
+    );
+  }
+  describeIconSourceComponent(
+    component,
+    definition,
+    index,
+    `Pointr taxonomy ${TAXONOMY_ICON_VERSION}, quick-access symbol ${definition.figmaName}`,
+  );
+  component.setSharedPluginData(RUN_NAMESPACE, "source-component-key", "");
+  component.setSharedPluginData(
+    RUN_NAMESPACE,
+    "taxonomy-version",
+    TAXONOMY_ICON_VERSION,
+  );
+
+  const stamp = taxonomyArtworkStamp(svg);
+  let source = await keepIconSourceLayer(
+    component,
+    "Taxonomy Source",
+    async (node) =>
+      node.type === "FRAME" &&
+      node.getSharedPluginData(RUN_NAMESPACE, "artwork") === stamp,
+  );
+  if (source) {
+    stats.sourcesKept += 1;
+  } else {
+    source = figma.createNodeFromSvg(svg);
+    source.name = "Taxonomy Source";
+    source.fills = [];
+    source.clipsContent = false;
+    source.setSharedPluginData(RUN_NAMESPACE, "artwork", stamp);
+    for (const shape of source.findAll(() => true)) {
+      try {
+        shape.constraints = { horizontal: "SCALE", vertical: "SCALE" };
+      } catch (_error) {
+        // A group takes no constraints; its shapes do.
+      }
+    }
+    component.appendChild(source);
+    stats.sourcesReplaced += 1;
+  }
+  placeIconSource(source, definition, stats);
 }
 
 async function applyCuratedIconSourcesToSlots(stats) {
@@ -69234,7 +71766,7 @@ async function refreshButtonSlotsIfPresent(page, variableByName, stats) {
 
 async function pruneLegacyGeneratedIconSlotComponents(stats) {
   const utilities = figma.root.children.find(
-    (page) => page.name === "Utilities",
+    (page) => page.name === UTILITIES_PAGE_NAME,
   );
   if (!utilities) return;
 
@@ -71601,6 +74133,13 @@ function paintFromVariable(name, fallback, variableByName, stats) {
 
   if (figma.variables.setBoundVariableForPaint) {
     try {
+      // The paint's opacity is what the file draws; the variable's own alpha
+      // does not show. Rendered over REST on 2026-09-21: Backdrop's fill,
+      // bound to Overlay/Scrim at paint opacity 0.502, draws at 128/255, not
+      // a quarter, and Button's Glass fill, bound to transparent/inverted/10
+      // at paint opacity 1 (build ed50a03a1912), draws opaque. So a
+      // translucent token's alpha rides on the paint, from the fallback, and
+      // the audit reads the same opacity.
       return figma.variables.setBoundVariableForPaint(paint, "color", variable);
     } catch (error) {
       stats.warnings.push(`Could not bind "${name}" (${messageFor(error)}).`);
@@ -71608,19 +74147,6 @@ function paintFromVariable(name, fallback, variableByName, stats) {
   }
 
   return paint;
-}
-
-function paintFromVariableWithOpacity(
-  name,
-  fallback,
-  opacity,
-  variableByName,
-  stats,
-) {
-  const paint = paintFromVariable(name, fallback, variableByName, stats);
-  const tinted = clonePaint(paint);
-  tinted.opacity = opacity;
-  return tinted;
 }
 
 function nodeIdForUrl(id) {
