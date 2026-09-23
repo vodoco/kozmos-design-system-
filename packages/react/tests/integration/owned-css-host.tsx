@@ -26,6 +26,7 @@ import {
   Skeleton,
   Tag,
   ToggleButton,
+  SegmentedControl,
 } from "@kozmos/react";
 
 function Controls({ id }: { id: string }) {
@@ -134,6 +135,29 @@ function Controls({ id }: { id: string }) {
         <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" />
         Step free
       </ToggleButton>
+      <SegmentedControl
+        aria-label={`${id} route`}
+        items={[
+          {
+            value: "walk",
+            label: (
+              <>
+                <svg
+                  aria-hidden="true"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                />
+                Walk
+              </>
+            ),
+          },
+          { value: "step-free", label: "Step free" },
+        ]}
+        value="walk"
+        onValueChange={() => undefined}
+        data-testid={`${id}-segmented`}
+      />
       <Tag data-testid={`${id}-tag-remove`} onRemove={() => undefined}>
         Open
       </Tag>

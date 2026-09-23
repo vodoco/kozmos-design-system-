@@ -518,13 +518,21 @@ try {
       // the whole component goes, not just its gap, and measuring it there
       // would say nothing about the gap. `Button`'s is an owned rule and is
       // measured in both.
-      for (const [testId, expected] of mode === "full"
+      for (const [testId, expected, within] of mode === "full"
         ? [
-            [`${id}-toggle-icon-label`, 8],
-            [`${id}-tag-icon-label`, 4],
+            [`${id}-toggle-icon-label`, 8, null],
+            [`${id}-tag-icon-label`, 4, null],
+            // A segmented item's label is a ReactNode and may be an icon beside
+            // text. No platform had an opinion on this gap — iOS spaces the
+            // track, Compose's options are plain strings — so it follows the
+            // control scale, as `Button` and `ToggleButton` do.
+            [`${id}-segmented`, 8, "[data-state='on']"],
           ]
         : []) {
-        const gaps = await page.getByTestId(testId).evaluate((node) => {
+        const host = within
+          ? page.getByTestId(testId).locator(within).first()
+          : page.getByTestId(testId);
+        const gaps = await host.evaluate((node) => {
           const measure = () => {
             const mark = node.querySelector("svg");
             const box = mark.getBoundingClientRect();
