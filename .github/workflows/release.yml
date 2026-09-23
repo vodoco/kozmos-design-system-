@@ -32,6 +32,35 @@ env:
   NPM_RELEASE_ENABLED: ${{ vars.NPM_RELEASE_ENABLED }}
 
 jobs:
+  # Both jobs below are fenced with `if:`, and a dispatch that fails those
+  # conditions skips them — leaving a run of skipped jobs, which GitHub
+  # concludes as success. A release that published nothing then looks exactly
+  # like a release that worked. This job carries no `if:`, so it always runs
+  # and turns that silence into a failure. Values reach the shell through the
+  # environment, never interpolated into the script.
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: The dispatch must name main HEAD
+        env:
+          CANDIDATE: ${{ inputs.sha }}
+          HEAD_SHA: ${{ github.sha }}
+          REF: ${{ github.ref }}
+        run: |
+          failed=0
+          if [ "$REF" != "refs/heads/main" ]; then
+            echo "Dispatched from $REF; a release runs from refs/heads/main." >&2
+            failed=1
+          fi
+          if [ "$CANDIDATE" != "$HEAD_SHA" ]; then
+            echo "Candidate $CANDIDATE is not main HEAD $HEAD_SHA." >&2
+            echo "Dispatch again naming the commit main actually points at." >&2
+            failed=1
+          fi
+          [ "$failed" -eq 0 ] || exit 1
+          echo "ok    candidate is main HEAD"
+
   prepare:
     if: github.ref == 'refs/heads/main' && inputs.sha == github.sha
     runs-on: ubuntu-latest
@@ -43,9 +72,10 @@ jobs:
         with:
           ref: ${{ inputs.sha }}
           persist-credentials: false
+      # No `version` here on purpose: v4 refuses to run when the action and
+      # package.json's `packageManager` both name a version, and the manifest
+      # is the one the whole repository already obeys.
       - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
-        with:
-          version: 9
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 20
@@ -78,9 +108,10 @@ jobs:
         with:
           ref: ${{ inputs.sha }}
           persist-credentials: false
+      # No `version` here on purpose: v4 refuses to run when the action and
+      # package.json's `packageManager` both name a version, and the manifest
+      # is the one the whole repository already obeys.
       - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
-        with:
-          version: 9
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 20

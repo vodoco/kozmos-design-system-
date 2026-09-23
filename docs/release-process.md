@@ -170,6 +170,10 @@ pnpm install --frozen-lockfile --ignore-scripts
 git diff --check
 ```
 
-No live dispatch or npm write has been tested. Restricted-token permissions and
-real registry publication require owner setup and a separately approved release
-rehearsal. Native/Figma/component behavior is unchanged by this batch.
+The first live dispatch ran on 2026-09-23 and failed at step 3, before any
+validation: `pnpm/action-setup@v4` refuses to start when the action input and
+`package.json`'s `packageManager` both name a version, and CI never caught it
+because CI pins v3, which has no such check. The action input is gone and a
+control now asserts the manifest is the only place a pnpm version is declared.
+No npm write has been tested; real registry publication still depends on the
+token's scope grant, which nothing in this repository can verify. Native/Figma/component behavior is unchanged by this batch.
