@@ -8,6 +8,7 @@
       "src/components/Button/Button.figma.tsx",
       "src/components/Button/Button.tsx",
       "src/components/Icon/Icon.figma.tsx",
+      "src/components/Icon/IconLibrary.figma.tsx",
       "src/components/Icon/Icon.tsx",
       "src/components/IconButton/IconButton.figma.tsx",
       "src/components/IconButton/IconButton.tsx",
