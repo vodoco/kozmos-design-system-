@@ -239,6 +239,31 @@
   /* The AI search's ring: the prototype's rainbow from the system's own data
      colours and its success green, as a conic gradient made of tokens.
      It turns in place, the prototype's 3.6 seconds a turn, unless motion is reduced. */
+  /* The search row: the field and what follows it, on one line.
+
+     Owned CSS rather than utilities, because the utility layer does not reach
+     a browser without `@scope` and this is exactly the rule that must not go
+     missing — the promise the row makes is that the pair cannot be put on
+     separate lines, and a promise that holds only where Tailwind's layer
+     applies is not one. */
+  .kozmos-search-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    gap: calc(var(--primitives-layout-spacing-100) * 1px);
+  }
+  .kozmos-search-row-field {
+    /* The field takes what is left, and may be narrower than the text inside
+       it: without `min-width: 0` a long placeholder pushes the row wider than
+       its container and the wrap comes back by another door. */
+    flex: 1 1 0%;
+    width: auto;
+    min-width: 0;
+  }
+  .kozmos-search-row-end {
+    flex: none;
+  }
   .kozmos-ai-search-ring {
     background: conic-gradient(
       from 0deg,

@@ -22,6 +22,7 @@ import {
   POIDetailPanel,
   Spinner,
   AISearchButton,
+  SearchBar,
 } from "@kozmos/react";
 
 function Controls({ id }: { id: string }) {
@@ -92,6 +93,38 @@ function Controls({ id }: { id: string }) {
         data-testid={`${id}-ai-search`}
         label={`${id} AI search`}
       />
+      {/* The search row, in a container narrow enough and willing to wrap. The
+          pair composed by hand lands on two lines, because the field is
+          `w-full`; the pair composed through `trailing` cannot. */}
+      <div
+        data-testid={`${id}-row-by-hand`}
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: 8,
+          width: 360,
+        }}
+      >
+        <SearchBar aria-label={`${id} by hand`} placeholder="Search places" />
+        <AISearchButton label={`${id} assistant, by hand`} />
+      </div>
+      <div
+        data-testid={`${id}-row-by-slot`}
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: 8,
+          width: 360,
+        }}
+      >
+        <SearchBar
+          aria-label={`${id} by slot`}
+          placeholder="Search places"
+          trailing={<AISearchButton label={`${id} assistant, by slot`} />}
+        />
+      </div>
       <Button data-testid={`${id}-icon-label`}>
         <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" />
         Navigate

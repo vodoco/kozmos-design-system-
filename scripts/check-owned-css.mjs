@@ -363,6 +363,54 @@ try {
           ),
         );
       }
+      // The search row: the field and what follows it on one line, in a
+      // container that puts them on two when the pair is composed by hand.
+      //
+      // The field is `w-full` and always has been, so a caller who did not know
+      // to pass `flex-1` through `containerClassName` got the assistant's
+      // button on the next line. Storybook's example knew; the reference site's
+      // did not. The row belongs to the component now, and this measures both:
+      // by hand it still wraps, through `trailing` it cannot.
+      const rowLines = (testId) =>
+        page.getByTestId(testId).evaluate((node) => {
+          const field = node.querySelector('[role="search"]');
+          const assistant = node.querySelector(".kozmos-ai-search");
+          const a = field.getBoundingClientRect();
+          const b = assistant.getBoundingClientRect();
+          return {
+            // Centres, not tops: the assistant is 48 and the field 44, so on
+            // one line their top edges are two apart by design.
+            sameLine:
+              Math.abs(a.y + a.height / 2 - (b.y + b.height / 2)) < 2,
+            drop: Math.round(b.y - a.y),
+            rowHeight: Math.round(node.getBoundingClientRect().height),
+            fieldHeight: Math.round(a.height),
+          };
+        });
+      const bySlot = await rowLines(`${id}-row-by-slot`);
+      assert.equal(
+        bySlot.sameLine,
+        true,
+        `the assistant is not beside the field through trailing: ${JSON.stringify(bySlot)}`,
+      );
+      assert.ok(
+        bySlot.rowHeight <= 49,
+        `the row through trailing is more than one control tall: ${JSON.stringify(bySlot)}`,
+      );
+      if (mode === "full") {
+        // The control: the same container, the same pair, composed by hand.
+        // It wraps, which is what makes the row above worth having. Only in
+        // this mode — without `@scope` the field's `w-full` is gone with the
+        // rest of the utility layer, the field shrinks to its content and the
+        // pair fits either way, so the control proves nothing there. The row's
+        // own rules are owned CSS precisely so that they do not go with it.
+        const byHand = await rowLines(`${id}-row-by-hand`);
+        assert.equal(
+          byHand.sameLine,
+          false,
+          `composed by hand the pair no longer wraps — if the field stopped being w-full, say so here and in SearchBar's trailing doc: ${JSON.stringify(byHand)}`,
+        );
+      }
       assert.equal(await page.getByTestId(`${id}-loading`).isDisabled(), true);
       const loader = await measure(
         page.getByTestId(`${id}-loading`).locator("svg"),
