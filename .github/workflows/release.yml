@@ -50,7 +50,7 @@ jobs:
         with:
           node-version: 20
       - run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Validate request, CI, release plan and approval protection
+      - name: Validate request, CI, release plan and environment protection
         run: node scripts/release/verify-request.mjs
         env:
           GH_TOKEN: ${{ github.token }}
@@ -86,7 +86,7 @@ jobs:
           node-version: 20
           registry-url: https://registry.npmjs.org/
       - run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Revalidate after the approval wait
+      - name: Revalidate inside the environment before any npm write
         run: node scripts/release/verify-request.mjs
         env:
           GH_TOKEN: ${{ github.token }}

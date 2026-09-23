@@ -21,10 +21,11 @@ is reviewed and merged; do not add a token before then.
 3. A manual dispatch **from main**, with the full lowercase 40-character SHA,
    the CI run ID and the exact confirmation `publish <SHA>`. The dispatch commit,
    checkout and candidate SHA must agree. The candidate must still be main HEAD
-   at each verification, including after the approval wait.
-4. Repository variable `NPM_RELEASE_ENABLED=true`, a configured `npm-release`
-   environment with required reviewers and an exact main branch policy, and
-   approval of that environment's publishing job.
+   at each verification, including at the start of the publish job.
+4. Repository variable `NPM_RELEASE_ENABLED=true` and an `npm-release`
+   environment carrying an exact `main` branch policy and holding `NPM_TOKEN`
+   as an environment secret. There is no approval wait; see "The approval gate
+   this plan cannot provide".
 
 Global concurrency serializes releases without cancelling a running publish.
 There is no automatic version PR, publication, git tag or GitHub release. Changesets
@@ -41,8 +42,9 @@ The candidate manifest binds package identities, SHA-512 integrity and a digest 
 the release plan to the source SHA. CI also exercises this export/readback path in
 an isolated fixture; that fixture never edits the real release plan.
 
-The publish job waits for environment approval, checks out the same SHA and
-revalidates live CI/environment/main evidence. It downloads the exact artifact ID
+The publish job runs in the `npm-release` environment, which is the only place
+the npm credential exists; it checks out the same SHA and revalidates live
+CI/environment/main evidence. It downloads the exact artifact ID
 from its own prepare job, checks hashes and packed manifests, and does not rebuild
 or repack. Install scripts are disabled in both jobs' dependency installation;
 the npm token is supplied only to the final publishing step. Third-party actions
@@ -63,19 +65,43 @@ artifact later produced by prepare; prepare independently tests what it will shi
 ## Owner setup — deliberately not performed by the agent
 
 - Keep `NPM_RELEASE_ENABLED` absent/false until the release checklist is complete.
-- Configure `npm-release` with named required reviewers and a selected branch rule
-  for `main` (not a wildcard or tag). Disable administrator bypass in the UI;
-  consider preventing self-review when another maintainer is available. The REST
-  environment response does not expose the bypass setting, so code does not claim
-  to verify it. Administrators and trusted workflow authors remain a trust boundary.
-- This repository is private. GitHub documents required-reviewer restrictions on
-  private repositories depending on the account plan. Confirm the setting is
-  available before promising this workflow is operational. If unavailable, stop
-  and choose a supported approval mechanism/account configuration explicitly—do
-  not remove the gate or make the repository public as a workaround.
-- Only after explicit authorization, provision a suitably restricted npm token as
-  the **environment** secret `NPM_TOKEN`, not a repository-wide secret. Confirm
-  ownership and publish access for the `@kozmos` scope. No token exists in this work.
+- Configure `npm-release` with a selected branch rule for `main` (not a wildcard
+  or tag). The REST environment response does not expose the administrator-bypass
+  setting, so code does not claim to verify it. Administrators and trusted
+  workflow authors remain a trust boundary.
+- Provision a suitably restricted npm token as the **environment** secret
+  `NPM_TOKEN`, never a repository-wide secret, and confirm ownership and publish
+  access for the `@kozmos-ds` scope. The token must be granted on the _scope_,
+  not on selected packages: before the first release no package exists to
+  select. Run `pnpm release:credential:check` before every dispatch: it asks
+  GitHub where `NPM_TOKEN` is configured — names and dates only, never a value —
+  and fails if it is a repository secret, if the environment does not hold it,
+  or if the environment admits any branch but `main`. The workflow cannot check
+  this itself, because a job's `GITHUB_TOKEN` has no grantable `secrets`
+  permission and a step reading `secrets.NPM_TOKEN` to test it would break the
+  rule that exactly one step in the workflow may reference that secret.
+
+### The approval gate this plan cannot provide
+
+This paragraph previously required named reviewers on `npm-release` and told the
+owner to stop rather than remove the gate. On 2026-09-23 that instruction was
+followed to its conclusion and the answer came back: it cannot be satisfied on
+this account. GitHub grants environments, environment secrets and deployment
+_branches_ to private repositories on Pro, but wait timers and required
+reviewers only to public repositories unless the plan is Enterprise. The REST
+API refuses both rules with a billing message and the settings page omits the
+section rather than disabling it. The repository is private on Pro.
+
+The owner (Olcay) was shown the evidence and chose, explicitly, to replace the
+approval with a fence around the credential rather than make the repository
+public or buy Enterprise. What that costs is real and is recorded here: the
+dispatch is now the only human act in a release, so whoever can dispatch can
+publish unattended. What replaces it: `NPM_TOKEN` moved from a repository secret
+that every workflow could read to an environment secret only the publish job, on
+`main`, can read, and a `prepare` step that fails if the token is reachable from
+outside the environment. Revisit this if the repository becomes public or the
+plan changes.
+
 - Protect main and the release workflow/plan from unreviewed edits as part of
   repository governance. Local scripts cannot prevent an administrator or someone
   already holding an npm token from bypassing the workflow outside GitHub.
@@ -96,9 +122,12 @@ GitHub references: [environment protection and plan restrictions](https://docs.g
    A documentation-only main commit can have no push CI due to path exclusions;
    do not substitute an older SHA or PR run. Prepare a reviewed release commit that
    actually triggers CI instead.
-4. Dispatch `Release Kozmos System` from main with those inputs. Review the candidate
-   artifact and plan before approving `npm-release`. If main advances during the
-   wait, validation fails: repeat against newly tested main, not a moving checkout.
+4. Run `pnpm release:credential:check`, then dispatch `Release Kozmos System`
+   from main with those inputs. There is no approval wait on this plan, so the
+   review of the plan and of what is about to ship happens **before** the
+   dispatch, not between the two jobs: publish follows prepare on its own. If
+   main advances mid-run, validation fails: repeat against newly tested main,
+   not a moving checkout.
 5. Check each package version, integrity and dist-tag. The script verifies these
    after each publish; registry propagation/network trouble stops it for inspection.
    Record the result in release notes. Git tags and GitHub releases need a separate
@@ -141,6 +170,6 @@ pnpm install --frozen-lockfile --ignore-scripts
 git diff --check
 ```
 
-No live dispatch or npm write has been tested. Environment approval, restricted-token
-permissions and real registry publication require owner setup and a separately approved
-release rehearsal. Native/Figma/component behavior is unchanged by this batch.
+No live dispatch or npm write has been tested. Restricted-token permissions and
+real registry publication require owner setup and a separately approved release
+rehearsal. Native/Figma/component behavior is unchanged by this batch.

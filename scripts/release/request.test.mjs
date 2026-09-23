@@ -40,12 +40,7 @@ const replies = {
   "git/ref/heads/main": { object: { sha } },
   "environments/npm-release": {
     name: "npm-release",
-    protection_rules: [
-      {
-        type: "required_reviewers",
-        reviewers: [{ type: "User", reviewer: { id: 1 } }],
-      },
-    ],
+    protection_rules: [{ type: "branch_policy" }],
     deployment_branch_policy: { custom_branch_policies: true },
   },
   "environments/npm-release/deployment-branch-policies?per_page=100": {
