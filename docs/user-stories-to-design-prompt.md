@@ -34,7 +34,7 @@ engineering team can act on, **using the Kozmos design system as it is**:
 2. every screen and state the stories imply, mapped part by part to Kozmos components;
 3. the user flows, as diagrams and as a walkable Figma prototype;
 4. a Figma design file composed from the Core Library's components;
-5. a functional prototype built from `@kozmos/react` with mock data, that the flows drive;
+5. a functional prototype built from `@kozmos-ds/react` with mock data, that the flows drive;
 6. a handoff document that carries all of it, plus the gaps the design system has.
 
 The gaps are a deliverable, not a failure. The rule that makes this exercise worth anything is
@@ -58,8 +58,8 @@ how something _outside_ the repository consumes it. Pick the case that applies.
 | The components          | `packages/react/src/components/` — 98 in `STATUS.md` (Core 69 · Code-only 5 · Product/SDK 22 · Platform 2); the barrel is `packages/react/src/index.ts`                                                                                                                                  |
 | Props and variants      | `docs/figma-library-manifest.json` → `components.items[]` (props, variant values, Code Connect node); regenerate with `pnpm figma:manifest`                                                                                                                                              |
 | Tokens and roles        | `packages/tokens/src/tokens-light.json`, `tokens-dark.json`; the roles and the one rule in `docs/style-playbook.md`                                                                                                                                                                      |
-| Icons                   | `@kozmos/icons` (`kozmosIconNames`); the set is small — count it before promising an icon                                                                                                                                                                                                |
-| Presentation models     | `@kozmos/product-contracts` (`POIPresentation`, `RouteOptionPresentation`, `FloorPresentation`…); the ownership boundary in `docs/product-sdk-react-handoff.md`                                                                                                                          |
+| Icons                   | `@kozmos-ds/icons` (`kozmosIconNames`); the set is small — count it before promising an icon                                                                                                                                                                                             |
+| Presentation models     | `@kozmos-ds/product-contracts` (`POIPresentation`, `RouteOptionPresentation`, `FloorPresentation`…); the ownership boundary in `docs/product-sdk-react-handoff.md`                                                                                                                       |
 | Native                  | `packages/ios` (SwiftUI, package `Kozmos`), `packages/android` (Compose) — the same component names                                                                                                                                                                                      |
 | Storybook               | `apps/docs` (`storybook-react` in `.claude/launch.json`, port 6006); examples in `apps/docs/stories/examples/`                                                                                                                                                                           |
 | Figma Core Library      | `Kozmos DS - Core Library`, file `Yj4O8p6Y9h2Sa9zJVoAiVY`; Components page `4:4`, Examples page `286:1601`; 95 sets; painted by `figma/foundations-importer`                                                                                                                             |
@@ -68,13 +68,13 @@ how something _outside_ the repository consumes it. Pick the case that applies.
 | Unmerged work           | branch `claude/pointr-browse-repairs` (worktree `/private/tmp/kozmos-browser-compat.uqPMBD`, pushed, nothing merged): the navigation parts, the sheet detents, `CategoryField`, `AISearchButton`, glass and category tokens. Its handoff: `docs/claude-code-handoff-2026-09-21.md` there |
 
 Build before reading anything at runtime: `pnpm install --frozen-lockfile` then
-`pnpm --filter "@kozmos/react..." build` (a fresh worktree has no built packages).
+`pnpm --filter "@kozmos-ds/react..." build` (a fresh worktree has no built packages).
 
 ### Case B — another machine, or another repository
 
 ```bash
 gh repo clone vodoco/kozmos-design-system- kozmos-design-system && cd kozmos-design-system
-pnpm install --frozen-lockfile && pnpm --filter "@kozmos/react..." build
+pnpm install --frozen-lockfile && pnpm --filter "@kozmos-ds/react..." build
 ```
 
 The repository is private: `gh auth status` must show an account with access. The Figma library is
@@ -82,12 +82,12 @@ not in git — the account running Figma needs access to `Yj4O8p6Y9h2Sa9zJVoAiVY
 
 ### Case C — after the npm publish, from a consumer that is not this repository
 
-As of 2026-09-21 the registry has nothing: `npm view @kozmos/react` is a 404, and `release.yml`
+As of 2026-09-21 the registry has nothing: `npm view @kozmos-ds/react` is a 404, and `release.yml`
 skips publish while `NPM_TOKEN` is unset. When that changes, a consumer installs
-`@kozmos/react @kozmos/tokens @kozmos/icons @kozmos/product-contracts` (`@kozmos/vue` is private
-by decision §5.15), imports `@kozmos/react/dist/style.css`, wraps the app in `ThemeProvider`, and
+`@kozmos-ds/react @kozmos-ds/tokens @kozmos-ds/icons @kozmos-ds/product-contracts` (`@kozmos-ds/vue` is private
+by decision §5.15), imports `@kozmos-ds/react/dist/style.css`, wraps the app in `ThemeProvider`, and
 reads the READMEs that ship in the packages (the repository stays private, §5.21). In a prototype
-under `apps/`, the only line that changes is `"@kozmos/react": "workspace:*"` → the published
+under `apps/`, the only line that changes is `"@kozmos-ds/react": "workspace:*"` → the published
 version. Everything else in this brief is unchanged, because the docs, the manifest and the Figma
 library live in the repository either way.
 
@@ -124,8 +124,8 @@ for the Figma part only; the rest of the work continues regardless.
    `git branch -r --merged origin/main | grep browse-repairs` — is the unmerged branch merged yet?
    Work in a `git worktree` under the scratchpad on a new branch `claude/<slug>-design`; the shared
    checkout stays on `main`.
-4. **The build is green.** `pnpm install --frozen-lockfile && pnpm --filter "@kozmos/react..." build
-&& pnpm --filter @kozmos/react typecheck`. A broad, uniform type error is the install, not the
+4. **The build is green.** `pnpm install --frozen-lockfile && pnpm --filter "@kozmos-ds/react..." build
+&& pnpm --filter @kozmos-ds/react typecheck`. A broad, uniform type error is the install, not the
    code (§8 of the handoff).
 5. **The stories are read** — count them and echo the count and their titles back, so a missing
    page is caught in the first message.
@@ -247,16 +247,16 @@ in the handoff, never made in passing.
 ### 5.5 · The functional prototype
 
 A Vite + React app at `apps/<slug>-prototype`, wired exactly as `apps/mapscale-review/src/main.tsx`
-is: `ThemeProvider`, `import "@kozmos/react/dist/style.css"`, `@kozmos/react`, `@kozmos/icons` and
-`@kozmos/product-contracts` as `workspace:*`. Functional means: real components, real states,
+is: `ThemeProvider`, `import "@kozmos-ds/react/dist/style.css"`, `@kozmos-ds/react`, `@kozmos-ds/icons` and
+`@kozmos-ds/product-contracts` as `workspace:*`. Functional means: real components, real states,
 real transitions, mock data — not a click-through of pictures. The Figma prototype is the
 click-through; this is where behaviour lives.
 
-- **Only Kozmos.** Components from `@kozmos/react`; layout from `Stack`, `Grid`, `Container`,
+- **Only Kozmos.** Components from `@kozmos-ds/react`; layout from `Stack`, `Grid`, `Container`,
   `Box`; tokens through the components. No Tailwind config of its own that adds one-off classes,
   no raw hex, no hand-rolled markup standing in for a component. A gap renders an `Alert` naming
   its `GAP-nn`, the same way `apps/docs/stories/examples/POIDetailCard.stories.tsx` does.
-- **Data** typed with `@kozmos/product-contracts` and, for POIs, types and names from the Pointr
+- **Data** typed with `@kozmos-ds/product-contracts` and, for POIs, types and names from the Pointr
   taxonomy. Fixtures in `src/mock/`, deterministic.
 - **Routes** are the screens; one small state machine per flow with the edge names of §5.3, so the
   flow diagram is the code's specification. A route list on the cover route to jump anywhere.
@@ -310,7 +310,7 @@ every change carries how to redo it by hand.
 
 ## 6 · Rules in force — do not relax them
 
-- **Only the design system.** `docs/ds-handoff.md` §11: what `@kozmos/react` exports, its tokens,
+- **Only the design system.** `docs/ds-handoff.md` §11: what `@kozmos-ds/react` exports, its tokens,
   its roles. A missing part is a labelled gap, reported and asked about; never approximated, never
   deferred silently. A partial is built and its deviation recorded.
 - **The Core Library is read-only in this work.** No edits, no Rebuild, no page added to it. The
@@ -359,5 +359,5 @@ The dated facts: 98 components, 92 Code Connect links, 95 Figma sets, 641 + 641 
 packages at `0.0.1` and unpublished, `claude/pointr-browse-repairs` unmerged, Figma MCP read-only
 in the writing session. Re-measure rather than trust: `STATUS.md` (`pnpm exec tsx
 scripts/skills/check-completion.ts --check`), `pnpm figma:manifest`, `pnpm figma:verify`,
-`npm view @kozmos/react version`, `git branch -r --merged origin/main`. If a number here disagrees
+`npm view @kozmos-ds/react version`, `git branch -r --merged origin/main`. If a number here disagrees
 with a measurement, the measurement wins and this file gets the correction in the same commit.
