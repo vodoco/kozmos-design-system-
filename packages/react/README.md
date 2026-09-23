@@ -63,6 +63,30 @@ module. Ordinary host resets/utilities are covered; this is not Shadow DOM isola
 against arbitrary high-specificity or `!important` host rules. `rem` units still
 follow the host document's root font size.
 
+## Browsers
+
+|                 |      |
+| --------------- | ---- |
+| Chrome, Edge    | 118  |
+| Safari, iOS     | 17.4 |
+| Firefox         | 128  |
+| Android WebView | 118  |
+
+The floor is `@scope`, which fences the component styles off from a host page so
+a product's own CSS and Kozmos's cannot overwrite each other. It landed in those
+versions, and a browser below one of them **discards the whole block** rather
+than ignoring the rule: 955 of the stylesheet's 1,227 rules live inside one.
+
+What that costs below the floor is not all or nothing. Measured across 43
+elements, 30 render identically without `@scope` and 13 do not: the 31
+components that carry their own CSS are unaffected, the 73 styled by utilities
+lose their layout and colour. `Button`, `Input` and `Heading` are in the first
+group; `AISearchButton`, `Tag` and `Skeleton` are in the second.
+
+Lowering this floor is the work of moving the remaining components to their own
+CSS, and every one of them moved lowers it a little. Raising it would be a
+breaking change, so it starts where the code actually is.
+
 ## Use
 
 ```tsx
