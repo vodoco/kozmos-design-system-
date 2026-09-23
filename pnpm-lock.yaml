@@ -79,6 +79,9 @@ importers:
 
   apps/docs:
     dependencies:
+      "@kozmos-ds/icons":
+        specifier: workspace:*
+        version: link:../../packages/icons
       "@kozmos-ds/react":
         specifier: workspace:*
         version: link:../../packages/react

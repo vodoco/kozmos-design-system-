@@ -14,6 +14,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@kozmos-ds/icons": "workspace:*",
     "@kozmos-ds/react": "workspace:*",
     "@kozmos-ds/tokens": "workspace:*",
     "@kozmos-ds/vue": "workspace:*",

@@ -77,6 +77,12 @@ const config: StorybookConfig = {
       "@storybook/manager-api",
       "react",
       "react-dom",
+      // @kozmos-ds/icons is a linked workspace package, and Vite excludes
+      // linked packages from dependency pre-bundling. Left out, the dev server
+      // transforms the package's single 769 KB module on demand before any
+      // story can render. lucide-react is fast here for exactly this reason:
+      // it arrives from node_modules and Vite pre-bundles it once with esbuild.
+      "@kozmos-ds/icons",
     ];
 
     return config;
