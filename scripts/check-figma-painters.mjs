@@ -1440,7 +1440,10 @@ section("Map cards on the panel radius");
   const tokens = payloadVariables([...variableByName.keys()]);
   const panel = plugin.KOZMOS_RADIUS.panel;
   const slotRadius = plugin.nestedRadius(panel, plugin.PRODUCT_SDK_CARD_INSET);
-  const stale = plugin.nestedRadius(plugin.KOZMOS_RADIUS.container, plugin.PRODUCT_SDK_CARD_INSET);
+  const stale = plugin.nestedRadius(
+    plugin.KOZMOS_RADIUS.container,
+    plugin.PRODUCT_SDK_CARD_INSET,
+  );
   for (const [name, painter, value] of cards) {
     const component = figma.createComponent();
     await plugin[painter](component, {
@@ -1449,7 +1452,9 @@ section("Map cards on the panel radius");
       fonts: FONTS,
       stats: freshStats(),
     });
-    const radii = component.findAll((node) => node !== component && node.cornerRadius > 0).map((node) => node.cornerRadius);
+    const radii = component
+      .findAll((node) => node !== component && node.cornerRadius > 0)
+      .map((node) => node.cornerRadius);
     ok(
       component.cornerRadius === panel && !radii.includes(stale),
       `${name}: the card at ${component.cornerRadius} (panel ${panel}), no slot left at the container's ${stale}${radii.includes(slotRadius) ? `; slots at ${slotRadius}` : ""}`,
@@ -1464,8 +1469,15 @@ section("Map cards on the panel radius");
 section("DynamicIsland's own theme");
 {
   const tokens = payloadVariables([...variableByName.keys()]);
-  const product = { id: "Primitive Tokens", name: "Primitive Tokens", modes: [{ modeId: "product-dark", name: "Dark" }] };
-  const themedFigma = createFigmaMock({ pages: pages(), collections: [...tokens.collections, product] });
+  const product = {
+    id: "Primitive Tokens",
+    name: "Primitive Tokens",
+    modes: [{ modeId: "product-dark", name: "Dark" }],
+  };
+  const themedFigma = createFigmaMock({
+    pages: pages(),
+    collections: [...tokens.collections, product],
+  });
   const themed = loadPlugin({ pluginPath: PLUGIN, figma: themedFigma });
   const island = themedFigma.createComponent();
   await themed.updateDynamicIslandVariant(island, {
@@ -1501,23 +1513,35 @@ section("Stepper accent");
       fonts: FONTS,
       stats: freshStats(),
     });
-  const indicator = (item) => item.findOne((node) => node.name.endsWith("Indicator"));
-  const [completed, current, pending] = [await step(0), await step(1), await step(2)].map(indicator);
+  const indicator = (item) =>
+    item.findOne((node) => node.name.endsWith("Indicator"));
+  const [completed, current, pending] = [
+    await step(0),
+    await step(1),
+    await step(2),
+  ].map(indicator);
   ok(
     boundVariableName(completed.fills[0]) === "Colors/theme/600" &&
       boundVariableName(completed.strokes[0]) === "Colors/theme/600",
     `a completed step is theme/600, ring and fill (${boundVariableName(completed.fills[0])}, ${boundVariableName(completed.strokes[0])})`,
   );
   ok(
-    boundVariableName(current.strokes[0]) === "Colors/theme/600" && current.strokeWeight === 2,
+    boundVariableName(current.strokes[0]) === "Colors/theme/600" &&
+      current.strokeWeight === 2,
     `the current step's ring is theme/600 at 2 (${boundVariableName(current.strokes[0])} at ${current.strokeWeight})`,
   );
   ok(
-    boundVariableName(pending.strokes[0]) === "Colors/foreground/500" && pending.strokeWeight === 1,
+    boundVariableName(pending.strokes[0]) === "Colors/foreground/500" &&
+      pending.strokeWeight === 1,
     `a pending step's ring is foreground/500 at 1 (${boundVariableName(pending.strokes[0])} at ${pending.strokeWeight})`,
   );
   const connector = (active) =>
-    plugin.createStepperConnector({ index: 0, active, variableByName: tokens.variableByName, stats: freshStats() });
+    plugin.createStepperConnector({
+      index: 0,
+      active,
+      variableByName: tokens.variableByName,
+      stats: freshStats(),
+    });
   const [done, ahead] = [connector(true), connector(false)];
   ok(
     boundVariableName(done.fills[0]) === "Colors/theme/600" &&
@@ -3462,6 +3486,73 @@ ok(
     .map((drop) => `${drop.node}: ${drop.token} at ${drop.opacity}`)
     .join(", ")})`,
 );
+
+section("Icon slots repaired from what they record");
+// Navbar sat at 0 of 5 tinted and Sidebar at 8 of 18 through repeated Updates
+// on 2026-09-23: every slot named Colors/foreground/400 in its own plugin data
+// and was painted plain black, because the three generic updaters never looked
+// at an icon's paint. repairIconSlotTints reads the record back.
+{
+  const NS = "kozmos_ds_importer";
+  const makeSlot = () => {
+    const slot = new MockNode("INSTANCE", "Icon");
+    slot.setSharedPluginData(NS, "kind", "icon-slot-instance");
+    slot.setSharedPluginData(NS, "foreground-token", "Colors/foreground/400");
+    slot.setSharedPluginData(NS, "foreground-fallback", "#000000");
+    const glyph = new MockNode("VECTOR", "glyph");
+    glyph.fills = [
+      { type: "SOLID", visible: true, color: { r: 0, g: 0, b: 0 } },
+    ];
+    slot.appendChild(glyph);
+    return { slot, glyph };
+  };
+
+  ok(
+    typeof plugin.repairIconSlotTints === "function",
+    "the plugin exposes a tint repair the generic updaters can call",
+  );
+
+  const set = new MockNode("COMPONENT_SET", "Navbar");
+  const variant = new MockNode("COMPONENT", "Size=Md");
+  set.appendChild(variant);
+  const orphan = makeSlot();
+  variant.appendChild(orphan.slot);
+
+  const stats = freshStats();
+  const first = plugin.repairIconSlotTints(set, variableByName, stats);
+  ok(first.repaired === 1, "an orphaned slot that records a token is repaired");
+  ok(
+    boundVariableName(orphan.glyph.fills[0]) === "Colors/foreground/400",
+    "the repaired paint binds the token the slot recorded",
+  );
+  const again = plugin.repairIconSlotTints(set, variableByName, stats);
+  ok(again.repaired === 0, "a second run writes nothing");
+
+  // Sidebar's remaining ten live inside another instance, where Figma owns the
+  // children. Say so rather than failing silently.
+  const nestedSet = new MockNode("COMPONENT_SET", "Sidebar");
+  const nestedVariant = new MockNode("COMPONENT", "Size=Md");
+  nestedSet.appendChild(nestedVariant);
+  const host = new MockNode("INSTANCE", "NavigationItem");
+  nestedVariant.appendChild(host);
+  const nested = makeSlot();
+  host.appendChild(nested.slot);
+
+  const nestedStats = freshStats();
+  const result = plugin.repairIconSlotTints(
+    nestedSet,
+    variableByName,
+    nestedStats,
+  );
+  ok(
+    result.repaired === 0 && result.unreachable.length === 1,
+    "a slot inside another instance is counted, not written",
+  );
+  ok(
+    nestedStats.warnings.some((warning) => /nested instance/.test(warning)),
+    "and the run warns which slots it could not reach",
+  );
+}
 
 // --- Summary ---------------------------------------------------------------------
 
