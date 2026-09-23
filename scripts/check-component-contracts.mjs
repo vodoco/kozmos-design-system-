@@ -9629,8 +9629,8 @@ assertContains(
 assertContains(
   files.iosButton,
   source.iosButton,
-  ".tint(foregroundColor)",
-  "iOS Button loading indicator foreground tint",
+  "KozmosSpinner(size: .sm, color: foregroundColor)",
+  "iOS Button draws the system's arc in its own foreground while loading",
 );
 
 assertContains(
@@ -9692,8 +9692,8 @@ assertContains(
 assertContains(
   files.iosIconButton,
   source.iosIconButton,
-  ".tint(foregroundColor)",
-  "iOS IconButton loading indicator foreground tint",
+  "KozmosSpinner(size: .sm, color: foregroundColor)",
+  "iOS IconButton draws the system's arc in its own foreground while loading",
 );
 
 // CategoryTile: the count is the system's counter, brand tone, at the icon
@@ -10247,8 +10247,8 @@ assertContains(
 assertContains(
   files.androidButton,
   source.androidButton,
-  "color = LocalContentColor.current",
-  "Android Button loading indicator foreground color",
+  "size = KozmosSpinnerSize.Sm",
+  "Android Button draws the system's arc while loading",
 );
 assertContains(
   files.androidButton,
@@ -10316,8 +10316,8 @@ assertContains(
 assertContains(
   files.androidIconButton,
   source.androidIconButton,
-  "color = LocalContentColor.current",
-  "Android IconButton loading indicator foreground color",
+  "size = KozmosSpinnerSize.Sm",
+  "Android IconButton draws the system's arc while loading",
 );
 assertContains(
   files.androidIconButton,

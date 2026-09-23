@@ -26,8 +26,8 @@ cannot".
 | Components scanned                        | 104    |
 | Declaring at least one React variant axis | 29     |
 | Variations that are compositional only    | 75     |
-| Components with variant gaps — iOS        | 4/29   |
-| Components with variant gaps — Android    | 4/29   |
+| Components with variant gaps — iOS        | 3/29   |
+| Components with variant gaps — Android    | 3/29   |
 | Components with variant gaps — Figma      | 4/29   |
 | Components with variant gaps — Vue        | 0/29   |
 | Components absent entirely — iOS          | 1/104  |
@@ -63,9 +63,6 @@ Link
   - android missing axes -> variant (default, subtle)
 MapControlButton
   - figma missing axes -> emphasis (tinted, filled); labelPlacement (inline, stacked)
-Spinner
-  - ios missing axes -> size (sm, md, lg, xl)
-  - android missing axes -> size (sm, md, lg, xl)
 ThemeProvider
   - ios missing axes -> dir (ltr, rtl)
   - android missing axes -> dir (ltr, rtl)

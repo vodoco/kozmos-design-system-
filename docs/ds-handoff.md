@@ -1781,3 +1781,33 @@ components and 29.0 % Product / SDK, so the split gets its own PR after #56. The
 off `/private/tmp` to `/Volumes/4TB Depo/development/K/kozmos-design-system-pointr`, and
 `QAConfig.json`, reported lost that morning, turned out never to have been: the check had read a
 wrong path. The handoff of the 22nd, §0a, has each of these.
+
+## The browser floor, and kiosks (2026-09-23)
+
+`@kozmos/react` declares its floor for the first time: Chrome and Edge 118,
+Safari and iOS 17.4, Firefox 128, Android WebView 118. Those are the versions
+where `@scope` landed, and `@scope` is what fences the component styles off
+from a host page. A browser below one of them discards the whole block rather
+than ignoring the rule, and 955 of the stylesheet's 1,227 rules live inside one.
+
+What that costs is per component, not per stylesheet. Measured across 43
+elements on 2026-09-23: **30 render identically without `@scope` and 13 do
+not**. The 31 components that carry their own CSS are unaffected; the 73 styled
+by Tailwind utilities lose their layout and colour. `Button`, `Input` and
+`Heading` are in the first group; `AISearchButton`, `Tag` and `Skeleton` are in
+the second. `scripts/check-owned-css.mjs` measures it on every run — its second
+pass strips `@scope` and asserts against what is left.
+
+**Kiosks.** Pointr has no full kiosk support yet, and will soon (Olcay,
+2026-09-23). That turns the risk into a requirement rather than a liability: the
+kiosk hardware has not been chosen, so it can be chosen knowing Kozmos needs
+Chrome 118 or newer. A kiosk is the one surface where an old, pinned browser
+would break every screen at once and identically, because the fleet is
+uniform — unlike visitors' own phones, where the floor is a spread and a
+documented limitation.
+
+So the floor stands as declared, and the thing to carry into the kiosk work is
+one line: **the browser on that hardware must be Chrome 118 or newer.**
+Lowering the floor later is the owned-CSS migration — 31 of 104 components done
+— and every component moved lowers it. Raising it would be breaking, so it
+starts where the code is.
