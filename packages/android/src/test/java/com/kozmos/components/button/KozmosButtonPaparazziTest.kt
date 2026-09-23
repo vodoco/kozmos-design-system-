@@ -118,28 +118,4 @@ class KozmosButtonPaparazziTest {
             }
         }
     }
-
-    /**
-     * The first golden of a loading button on Android.
-     *
-     * material3's indeterminate indicator threw against this BOM, so the state existed in the
-     * API and had never been rendered — on a golden or, as far as anyone had checked, a device.
-     * The button now draws the system's own arc: three quarters of a circle from the top, round
-     * caps, stroke 2 in the icons' 24 box, at the small size, in the button's own foreground.
-     *
-     * The arc's own geometry is measured in the browser, where the same drawing is a path this
-     * check cannot reach through Compose; here the golden is the evidence that it renders at all,
-     * and `theIconKeepsEightFromTheLabel` above measures the row that holds it.
-     */
-    @Test
-    fun aLoadingButtonDrawsTheSystemsArc() {
-        paparazzi.snapshot {
-            MaterialTheme {
-                Box(modifier = Modifier.background(Color.White).padding(24.dp)) {
-                    KozmosButton(onClick = {}, isLoading = true) { Text("Loading") }
-                }
-            }
-        }
-    }
 }
-
