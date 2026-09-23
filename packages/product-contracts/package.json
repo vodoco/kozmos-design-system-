@@ -11,6 +11,7 @@
     "wayfinding"
   ],
   "license": "MIT",
+  "sideEffects": false,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vodoco/kozmos-design-system-.git",
