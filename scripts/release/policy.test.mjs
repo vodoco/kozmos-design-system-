@@ -34,12 +34,7 @@ const evidence = {
   })),
   environment: {
     name: "npm-release",
-    protection_rules: [
-      {
-        type: "required_reviewers",
-        reviewers: [{ type: "User", reviewer: { id: 1 } }],
-      },
-    ],
+    protection_rules: [{ type: "branch_policy" }],
     deployment_branch_policy: { custom_branch_policies: true },
   },
   branches: [{ name: "main", type: "branch" }],
@@ -136,7 +131,7 @@ for (const [label, mutate] of [
     },
   ],
   [
-    "no reviewers",
+    "an environment with no branch rule",
     (e) => {
       e.environment.protection_rules = [];
     },

@@ -70,14 +70,21 @@ export function validateEvidence({
     );
   }
   assert.equal(environment.name, "npm-release");
-  // REST's environment response does not expose the administrator-bypass UI
-  // setting. Do not invent evidence for it; owner setup documents that control.
+  // GitHub sells required reviewers and wait timers for a PRIVATE repository
+  // only with Enterprise: on Free, Pro and Team they exist for public
+  // repositories alone, and the settings page omits the section rather than
+  // disabling it. This repository is private on Pro, so the approval click
+  // cannot be required here and asserting it would refuse every release for
+  // ever. The branch rule is the one protection this plan does enforce, so it
+  // is asserted. What replaces the approval is a fence around the credential
+  // rather than around the deployment: NPM_TOKEN is an environment secret, so
+  // only the publish job, running on main, can read it, and the prepare job
+  // fails if that token is reachable from outside the environment. REST does
+  // not expose the administrator-bypass setting either. Do not invent evidence
+  // for what the plan cannot give.
   assert.ok(
-    environment.protection_rules?.some(
-      (rule) =>
-        rule.type === "required_reviewers" && rule.reviewers?.length > 0,
-    ),
-    "Configure required environment reviewers",
+    environment.protection_rules?.some((rule) => rule.type === "branch_policy"),
+    "Restrict the environment with a branch protection rule",
   );
   assert.equal(
     environment.deployment_branch_policy?.custom_branch_policies,

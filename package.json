@@ -89,6 +89,7 @@
     "release": "node scripts/release/local-release.mjs",
     "test:release": "node --test scripts/release/*.test.mjs",
     "test:release:packages": "node scripts/release/export-smoke.mjs",
+    "release:credential:check": "node scripts/release/check-credential-placement.mjs",
     "prepare": "husky",
     "figma:stamp": "node scripts/stamp-figma-plugin.mjs",
     "figma:stamp:check": "node scripts/stamp-figma-plugin.mjs --check",
