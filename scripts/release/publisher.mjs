@@ -75,19 +75,73 @@ export async function preparePublication(
   return ordered;
 }
 
-export async function publishPrepared(entries, tag, publish, getPackage) {
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Confirm one published version, allowing for a registry that has not caught
+ * up with its own write.
+ *
+ * npm's read path is eventually consistent, and for a name published for the
+ * very first time the packument can 404 for minutes. On 2026-09-23 the first
+ * real release read back 0.04s after npm printed `+ @kozmos-ds/react@0.1.0`,
+ * found nothing, and failed a release that had in fact succeeded — four times,
+ * once per package. Re-running was worse: the preflight also could not see the
+ * new version, published again, and npm answered `403 You cannot publish over
+ * the previously published versions`.
+ *
+ * So absence is retried and disagreement is not. A version that is missing may
+ * simply be in flight. A version that is *present* with different bytes, or
+ * under a tag pointing elsewhere, is a fact about the registry that no amount
+ * of waiting will change — except that a freshly created tag can itself lag,
+ * so a tag that is missing or still moving is retried while the deadline holds
+ * and reported as it was last seen.
+ *
+ * The ten-minute budget is measured, not guessed. On 2026-09-23 the four names
+ * took about 3.5-3.7 minutes each to become readable, except the first name
+ * published into the brand-new scope, which took about nine. The publish job's
+ * `timeout-minutes` has to cover this budget times the number of packages, or
+ * the job is killed instead of the assertion firing; both are set together.
+ */
+async function confirmPublished(entry, tag, getPackage, wait, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  let delay = 1000;
+  let seen = "the registry returned no document for this package";
+  for (;;) {
+    const registered = await getPackage(entry.name);
+    const published = registered?.versions?.[entry.version];
+    if (published) {
+      // Present is a fact, not a race: hold it to the bytes we packed.
+      assert.equal(
+        published.dist?.integrity,
+        entry.integrity,
+        "Published bytes could not be confirmed; stop and inspect the registry",
+      );
+      const pointsAt = registered?.["dist-tags"]?.[tag];
+      if (pointsAt === entry.version) return;
+      seen = `${entry.version} is published, but ${tag} points at ${pointsAt ?? "nothing"}`;
+    } else if (registered) {
+      seen = `the registry knows ${entry.name} but not ${entry.version}`;
+    }
+    if (Date.now() >= deadline) {
+      assert.fail(
+        `Published bytes could not be confirmed; stop and inspect the registry. ` +
+          `After ${Math.round(timeoutMs / 1000)}s, ${seen}.`,
+      );
+    }
+    await wait(delay);
+    delay = Math.min(delay * 2, 15000);
+  }
+}
+
+export async function publishPrepared(
+  entries,
+  tag,
+  publish,
+  getPackage,
+  { wait = sleep, timeoutMs = 600000 } = {},
+) {
   for (const entry of entries) {
     if (!entry.alreadyPublished) await publish(entry, tag);
-    const registered = await getPackage(entry.name);
-    assert.equal(
-      registered?.versions?.[entry.version]?.dist?.integrity,
-      entry.integrity,
-      "Published bytes could not be confirmed; stop and inspect the registry",
-    );
-    assert.equal(
-      registered?.["dist-tags"]?.[tag],
-      entry.version,
-      "Registry tag differs; do not retag automatically",
-    );
+    await confirmPublished(entry, tag, getPackage, wait, timeoutMs);
   }
 }

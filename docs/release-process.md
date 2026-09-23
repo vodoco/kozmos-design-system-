@@ -170,10 +170,38 @@ pnpm install --frozen-lockfile --ignore-scripts
 git diff --check
 ```
 
-The first live dispatch ran on 2026-09-23 and failed at step 3, before any
-validation: `pnpm/action-setup@v4` refuses to start when the action input and
-`package.json`'s `packageManager` both name a version, and CI never caught it
-because CI pins v3, which has no such check. The action input is gone and a
-control now asserts the manifest is the only place a pnpm version is declared.
-No npm write has been tested; real registry publication still depends on the
-token's scope grant, which nothing in this repository can verify. Native/Figma/component behavior is unchanged by this batch.
+`@kozmos-ds/react`, `tokens`, `icons` and `product-contracts` 0.1.0 were
+published on 2026-09-23 from `5ec87ec`, and a clean `npm install` of
+`@kozmos-ds/react` into an empty directory resolves all four, loads the
+CommonJS entry and server-renders a Button. It took four dispatches, and each
+failure was a real defect rather than bad luck:
+
+1. `pnpm/action-setup@v4` refuses to start when the action input and
+   `package.json`'s `packageManager` both name a version. CI pins v3, which has
+   no such check, so the release workflow's `uses:` steps had never executed
+   anywhere. The input is gone and a control holds the manifest as the only
+   declaration.
+2. The npm token was a granular token without **Bypass two-factor
+   authentication**, so the registry answered `EOTP` and asked for a code no
+   runner can supply. Nothing published.
+3. npm's read path is eventually consistent. The readback ran 0.04s after npm
+   printed `+ @kozmos-ds/react@0.1.0`, found nothing, and failed a release that
+   had succeeded — once per package. See "Confirming a publish" below.
+4. Re-running before the registry caught up made the preflight believe a
+   published version was missing, so it published again and npm answered
+   `403 You cannot publish over the previously published versions`.
+
+Because the first publish of a package always sets `latest`, all four carry
+both `next` and `latest`; no promotion step was needed.
+
+### Confirming a publish
+
+`publishPrepared` now retries the readback while the version is **absent**, and
+never while the registry **disagrees**. A missing version may be in flight; a
+version that is present with different bytes, under a tag pointing elsewhere,
+is a fact no waiting will change. The budget is ten minutes per package,
+measured from the 2026-09-23 release: about 3.5-3.7 minutes for each name, and
+about nine for the first name published into the brand-new scope. The publish
+job's `timeout-minutes` is set to cover that budget for every package at once,
+so the assertion reports which package the registry never showed rather than
+the runner killing the job first. Change one and change the other. Native/Figma/component behavior is unchanged by this batch.

@@ -294,9 +294,84 @@ test("partial publish failure stops immediately; no automatic retag or overwrite
         versions: { "1.0.0": { dist: { integrity: entries[0].integrity } } },
         "dist-tags": { next: "2.0.0" },
       }),
+      { wait: async () => {}, timeoutMs: 0 },
     ),
-    /tag differs/,
+    /next points at 2.0.0/,
   );
+});
+
+test("a registry that has not caught up with its own write is waited for", async () => {
+  const one = entry("@kozmos-ds/a");
+  // npm printed success; the read path 404s for a while. That is the shape of
+  // the 2026-09-23 release, where the readback lost the race by 0.04s.
+  let reads = 0;
+  const slept = [];
+  await publishPrepared(
+    [one],
+    "next",
+    async () => {},
+    async () => {
+      reads += 1;
+      if (reads < 4) return null;
+      return {
+        versions: { "1.0.0": { dist: { integrity: one.integrity } } },
+        "dist-tags": { next: "1.0.0" },
+      };
+    },
+    { wait: async (ms) => slept.push(ms), timeoutMs: 300000 },
+  );
+  assert.equal(reads, 4);
+  assert.deepEqual(slept, [1000, 2000, 4000], "delay must back off");
+});
+
+test("a version that never appears fails, bounded, naming what was seen", async () => {
+  const one = entry("@kozmos-ds/a");
+  let reads = 0;
+  let waited = 0;
+  await assert.rejects(
+    publishPrepared(
+      [one],
+      "next",
+      async () => {},
+      async () => {
+        reads += 1;
+        return null;
+      },
+      {
+        wait: async (ms) => {
+          waited += ms;
+        },
+        timeoutMs: 50,
+      },
+    ),
+    /no document for this package/,
+  );
+  assert.ok(reads > 1, "it must retry at least once");
+  assert.ok(waited > 0, "it must have waited");
+});
+
+test("different bytes under the same version fail at once, never retried", async () => {
+  const one = entry("@kozmos-ds/a");
+  let reads = 0;
+  await assert.rejects(
+    publishPrepared(
+      [one],
+      "next",
+      async () => {},
+      async () => {
+        reads += 1;
+        return {
+          versions: {
+            "1.0.0": { dist: { integrity: "sha512-something-else" } },
+          },
+          "dist-tags": { next: "1.0.0" },
+        };
+      },
+      { wait: async () => assert.fail("must not wait"), timeoutMs: 300000 },
+    ),
+    /Published bytes could not be confirmed/,
+  );
+  assert.equal(reads, 1, "a disagreement is not a race; do not wait it out");
 });
 
 test("stale tag on an existing version fails before any package can publish", async () => {
