@@ -3528,6 +3528,42 @@ section("Icon slots repaired from what they record");
   const again = plugin.repairIconSlotTints(set, variableByName, stats);
   ok(again.repaired === 0, "a second run writes nothing");
 
+  // A slot with no visible paint cannot be re-tinted, and the predicate cannot
+  // say so: it returns `seen && expected`, so "no paint" reads exactly like
+  // "wrong paint". Repairing it writes nothing, so the next run finds it
+  // unchanged and repairs it again, for ever, pushing "Could not find tintable
+  // fill or stroke layers" into the warnings each time.
+  const paintlessSet = new MockNode("COMPONENT_SET", "Paintless");
+  const paintlessVariant = new MockNode("COMPONENT", "Size=Md");
+  paintlessSet.appendChild(paintlessVariant);
+  const bare = makeSlot();
+  bare.glyph.fills = [];
+  paintlessVariant.appendChild(bare.slot);
+
+  const bareStats = freshStats();
+  const bareFirst = plugin.repairIconSlotTints(
+    paintlessSet,
+    variableByName,
+    bareStats,
+  );
+  const bareSecond = plugin.repairIconSlotTints(
+    paintlessSet,
+    variableByName,
+    bareStats,
+  );
+  ok(
+    bareFirst.repaired === 0 && bareSecond.repaired === 0,
+    "a slot with no visible paint is never reported as repaired",
+  );
+  ok(
+    bareFirst.paintless === 1,
+    "it is counted as paintless so the run can still say so",
+  );
+  ok(
+    bareStats.warnings.length === 0,
+    "and neither run pushes a warning about it",
+  );
+
   // Sidebar's remaining ten live inside another instance, where Figma owns the
   // children. Say so rather than failing silently.
   const nestedSet = new MockNode("COMPONENT_SET", "Sidebar");

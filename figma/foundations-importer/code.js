@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "a86edd66dafb";
+const PLUGIN_BUILD = "59dea2a7b956";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -70954,7 +70954,7 @@ function iconSlotPaintIsExpected(icon, config, variableByName) {
  * silently, which is how Sidebar's remaining ten hid for so long.
  */
 function repairIconSlotTints(root, variableByName, stats) {
-  const result = { checked: 0, repaired: 0, unreachable: [] };
+  const result = { checked: 0, repaired: 0, paintless: 0, unreachable: [] };
   const walk = (node, insideInstance) => {
     const isInstance = node.type === "INSTANCE";
     if (isInstance && node.getSharedPluginData) {
@@ -70975,12 +70975,22 @@ function repairIconSlotTints(root, variableByName, stats) {
         );
         if (foreground) {
           result.checked += 1;
-          const expected = iconSlotPaintIsExpected(
-            node,
-            { foreground: foreground, foregroundFallback: fallback },
-            variableByName,
-          );
-          if (!expected) {
+          // A slot with no visible paint at all has nothing to re-tint, and
+          // `iconSlotPaintIsExpected` cannot say so: it returns `seen &&
+          // expected`, so "no paint" and "wrong paint" both read false. Left
+          // alone, such a slot is "repaired" on every single run — the write
+          // cannot take, so the next run finds it exactly as before — and each
+          // run pushes "Could not find tintable fill or stroke layers" into
+          // the warnings the panel reports. Count it and leave it.
+          if (!hasTintableIconPaint(node)) {
+            result.paintless += 1;
+          } else if (
+            !iconSlotPaintIsExpected(
+              node,
+              { foreground: foreground, foregroundFallback: fallback },
+              variableByName,
+            )
+          ) {
             if (insideInstance) {
               result.unreachable.push(node.id);
             } else {
