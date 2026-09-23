@@ -11,6 +11,15 @@
     "kotlin"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vodoco/kozmos-design-system-.git",
+    "directory": "packages/tokens"
+  },
+  "homepage": "https://github.com/vodoco/kozmos-design-system-/tree/main/packages/tokens#readme",
+  "bugs": {
+    "url": "https://github.com/vodoco/kozmos-design-system-/issues"
+  },
   "publishConfig": {
     "access": "public"
   },
