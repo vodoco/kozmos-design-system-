@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "b3257790f931";
+const PLUGIN_BUILD = "59dea2a7b956";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -36747,6 +36747,10 @@ async function updateStateStatusComponent(config) {
   );
   await config.configureProperties(existing, stats, variableByName);
   reportUnboundComponentProperties(existing, stats);
+  // These updaters sync variants and properties and never looked at an icon's
+  // paint, so a slot orphaned by an earlier redraw stayed black through every
+  // Update. Repair from what each slot already records.
+  repairIconSlotTints(existing, variableByName, stats);
   await reorganizeAfterGeneratedComponentMutation(stats);
   return stats;
 }
@@ -37037,6 +37041,10 @@ async function updatePlannedMatrixComponent(config) {
   );
   await config.configureProperties(existing, stats, variableByName);
   reportUnboundComponentProperties(existing, stats);
+  // These updaters sync variants and properties and never looked at an icon's
+  // paint, so a slot orphaned by an earlier redraw stayed black through every
+  // Update. Repair from what each slot already records.
+  repairIconSlotTints(existing, variableByName, stats);
   await reportSetProgress(config.componentSetName, "maintenance", true);
   runGeneratedComponentPostUpdateMaintenance(
     existing,
@@ -50479,6 +50487,10 @@ async function updateSingleAxisComponent(config) {
   );
   await config.configureProperties(existing, stats, variableByName);
   reportUnboundComponentProperties(existing, stats);
+  // These updaters sync variants and properties and never looked at an icon's
+  // paint, so a slot orphaned by an earlier redraw stayed black through every
+  // Update. Repair from what each slot already records.
+  repairIconSlotTints(existing, variableByName, stats);
   await reportSetProgress(config.componentSetName, "maintenance", true);
   runGeneratedComponentPostUpdateMaintenance(
     existing,
@@ -70918,6 +70930,103 @@ function iconSlotPaintIsExpected(icon, config, variableByName) {
   }
   walk(icon);
   return seen && expected;
+}
+
+/**
+ * Re-apply the tint an icon slot already records.
+ *
+ * Every slot the importer draws writes its own colour token into shared plugin
+ * data, and until now almost nothing read that back. `syncIconSlotInstance`
+ * repairs a slot whose paint disagrees with its label, but in this whole file
+ * only two families call it — FloatingActionButton and Badge. Every other set
+ * kept its tints because its updater happened to redraw the icons, not because
+ * anything checked them. The three generic updaters never touched icon paint
+ * at all, which is why on 2026-09-23 Navbar sat at 0 of 5 tinted and Sidebar
+ * at 8 of 18 across repeated Updates: each slot named `Colors/foreground/400`
+ * in its own plugin data and was painted plain black.
+ *
+ * This repairs from the recorded token, so it needs no per-slot config and
+ * works for any set the importer drew. It writes only where the paint and the
+ * record disagree, so running it twice changes nothing the second time.
+ *
+ * A slot living inside another instance cannot be written — Figma owns those
+ * children — so it is counted and named in a warning instead of failing
+ * silently, which is how Sidebar's remaining ten hid for so long.
+ */
+function repairIconSlotTints(root, variableByName, stats) {
+  const result = { checked: 0, repaired: 0, paintless: 0, unreachable: [] };
+  const walk = (node, insideInstance) => {
+    const isInstance = node.type === "INSTANCE";
+    if (isInstance && node.getSharedPluginData) {
+      let kind = "";
+      try {
+        kind = node.getSharedPluginData(RUN_NAMESPACE, "kind");
+      } catch (error) {
+        kind = "";
+      }
+      if (kind === "icon-slot-instance") {
+        const foreground = node.getSharedPluginData(
+          RUN_NAMESPACE,
+          "foreground-token",
+        );
+        const fallback = node.getSharedPluginData(
+          RUN_NAMESPACE,
+          "foreground-fallback",
+        );
+        if (foreground) {
+          result.checked += 1;
+          // A slot with no visible paint at all has nothing to re-tint, and
+          // `iconSlotPaintIsExpected` cannot say so: it returns `seen &&
+          // expected`, so "no paint" and "wrong paint" both read false. Left
+          // alone, such a slot is "repaired" on every single run — the write
+          // cannot take, so the next run finds it exactly as before — and each
+          // run pushes "Could not find tintable fill or stroke layers" into
+          // the warnings the panel reports. Count it and leave it.
+          if (!hasTintableIconPaint(node)) {
+            result.paintless += 1;
+          } else if (
+            !iconSlotPaintIsExpected(
+              node,
+              { foreground: foreground, foregroundFallback: fallback },
+              variableByName,
+            )
+          ) {
+            if (insideInstance) {
+              result.unreachable.push(node.id);
+            } else {
+              applyIconColorOverrides(
+                node,
+                foreground,
+                fallback,
+                variableByName,
+                stats,
+              );
+              result.repaired += 1;
+            }
+          }
+        }
+      }
+    }
+    if (node.children) {
+      for (const child of node.children) {
+        walk(child, insideInstance || isInstance);
+      }
+    }
+  };
+  walk(root, false);
+  if (result.repaired) {
+    incrementStat(stats, "iconSlotTintRepairs", result.repaired);
+  }
+  if (result.unreachable.length) {
+    stats.warnings.push(
+      result.unreachable.length +
+        " Icon slot(s) are painted wrongly inside a nested instance and cannot" +
+        " be repaired from here (" +
+        result.unreachable.slice(0, 3).join(", ") +
+        "). Update the component they are nested from, then run this again.",
+    );
+  }
+  return result;
 }
 
 function syncIconSlotInstance(
