@@ -1,10 +1,16 @@
-import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as TimePickerStories from "./TimePicker.stories";
 import { PlatformSnippets } from "../PlatformSnippets";
 
 <Meta of={TimePickerStories} />
 
 # TimePicker
+
+TimePicker retains native time-entry behavior. External `aria-describedby` IDs
+merge with helper/error guidance, and an explicit component error remains invalid.
+The owned field layout follows module direction and exposes a focus indicator for
+native segments, including engines that do not match them with `:focus-visible`.
 
 Displays the TimePicker interface topology natively.
 
@@ -20,9 +26,14 @@ Displays the TimePicker interface topology natively.
 
 <PlatformSnippets
     react={`
-import { TimePicker } from "@kozmos/react"
-
-<TimePicker />
+import { TimePicker } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <TimePicker label="Arrival time" />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

@@ -24,5 +24,15 @@ describe("IconButton", () => {
     expect(button).toHaveClass("h-11");
     expect(button).toHaveClass("w-11");
     expect(button).toHaveClass("px-0");
+    expect(button).not.toHaveClass("rounded-pill");
+    expect(button).toHaveClass("kozmos-button");
   });
+});
+
+it("draws the large size at 48, the prototype's, beside a 44 field", () => {
+  render(<IconButton size="lg" aria-label="Filters" icon={<svg />} />);
+  expect(screen.getByRole("button", { name: "Filters" })).toHaveClass(
+    "h-12",
+    "w-12",
+  );
 });

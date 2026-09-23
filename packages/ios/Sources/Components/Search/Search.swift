@@ -21,7 +21,7 @@ public struct KozmosSearch: View {
         .cornerRadius(KozmosDimensions.semanticsRadiusControl)
         .overlay(
             RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
-                .stroke(KozmosColors.primitivesColorsForeground300, lineWidth: 1)
+                .stroke(KozmosColors.semanticsBorderInput, lineWidth: 1)
         )
     }
 }

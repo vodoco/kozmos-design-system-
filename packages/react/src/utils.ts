@@ -70,3 +70,9 @@ const twMerge = extendTailwindMerge({
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+/** Combine caller and component-owned accessibility ID references. */
+export function mergeAriaIds(...values: (string | undefined)[]) {
+  const ids = values.flatMap((value) => value?.trim().split(/\s+/) ?? []);
+  return [...new Set(ids.filter(Boolean))].join(" ") || undefined;
+}

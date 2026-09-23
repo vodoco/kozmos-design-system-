@@ -1,6 +1,15 @@
 /* Import Design Tokens */
-@import '@kozmos/tokens/css/light.css';
-@import '@kozmos/tokens/css/dark.css';
+@import "@kozmos/tokens/css/light.css";
+@import "@kozmos/tokens/css/dark.css";
+@import "./styles/owned-components.css";
+@import "./styles/owned-native-fields.css";
+@import "./styles/owned-temporal-fields.css";
+@import "./styles/owned-selection.css";
+@import "./styles/owned-navbar.css";
+@import "./styles/owned-typography.css";
+@import "./styles/owned-meta-strip.css";
+@import "./styles/owned-poi-detail.css";
+@import "./styles/owned-poi-gallery.css";
 
 @tailwind base;
 @tailwind components;

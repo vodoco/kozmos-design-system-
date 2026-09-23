@@ -49,6 +49,18 @@ public struct KozmosFloorSelector: View {
         self.label = label
     }
 
+    /// For tests and previews: the collapsible list already open.
+    init(
+        floors: [KozmosFloorPresentation],
+        selectedFloor: Binding<String>,
+        variant: KozmosFloorSelectorVariant,
+        label: String = "Floor selector",
+        expanded: Bool
+    ) {
+        self.init(floors: floors, selectedFloor: selectedFloor, variant: variant, label: label)
+        self._isExpanded = State(initialValue: expanded)
+    }
+
     /// For venues with no separate display label: the ID is rendered verbatim.
     public init(
         floors: [String],
@@ -99,6 +111,9 @@ public struct KozmosFloorSelector: View {
     public var body: some View {
         container
             .opacity(baseIsHidden ? 0 : 1)
+            // Invisible is not enough: at opacity zero the pill would still be
+            // an element VoiceOver could land on behind the open list.
+            .accessibilityHidden(baseIsHidden)
             .padding(KozmosDimensions.primitivesLayoutSpacing75)
             .background(baseIsHidden ? Color.clear : KozmosColors.primitivesColorsBackground0.opacity(0.9))
             .cornerRadius(KozmosDimensions.semanticsRadiusPanel)
@@ -106,23 +121,31 @@ public struct KozmosFloorSelector: View {
             // Overlaid rather than stacked, so opening the list does not change
             // what this control measures. A map shell reports the space its
             // chrome covers, and a camera that re-frames every time a picker
-            // opens is worse than one that ignores it.
-            .overlay(alignment: .bottom) { expandedList }
+            // opens is worse than one that ignores it. Trailing-aligned: the
+            // list is wider than the control it opens from, and grows away
+            // from the map's edge the control sits at.
+            .overlay(alignment: .bottomTrailing) { expandedList }
             .accessibilityElement(children: .contain)
             .accessibilityLabel(label)
     }
 
-    /// The full list, floating above the closed control.
+    /// The full list, floating above the closed control: every level's short
+    /// label in its square with the level's name beside it, the current one
+    /// filled. A column of "L1, L2" alone told a visitor nothing they could
+    /// not read off the closed pill.
     @ViewBuilder
     private var expandedList: some View {
         if variant == .collapsible, isExpanded {
-            VStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
+            VStack(alignment: .leading, spacing: KozmosDimensions.primitivesLayoutSpacing100) {
                 ForEach(floors) { floor in
-                    floorButton(floor)
+                    namedFloorButton(floor)
                 }
             }
             .padding(KozmosDimensions.primitivesLayoutSpacing75)
-            .background(KozmosColors.primitivesColorsBackground0.opacity(0.9))
+            // Opaque, unlike the closed control: the named rows make the list
+            // wide enough to cover the map's other controls, and a zoom button
+            // showing through a translucent row read as part of it.
+            .background(KozmosColors.primitivesColorsBackground0)
             .cornerRadius(KozmosDimensions.semanticsRadiusPanel)
             .kozmosElevation(KozmosShadows.semanticsElevationFloating)
             .fixedSize()
@@ -199,6 +222,51 @@ public struct KozmosFloorSelector: View {
         .opacity(floor.disabled ? 0.4 : 1)
         // The button shows the short label; assistive technology gets the full
         // one, which is the only place the level is spelled out.
+        .accessibilityLabel(floor.label)
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+
+    /// A row of the open list: the short label in its square, the name beside
+    /// it when the venue gives one. One button, so a tap anywhere on the row
+    /// selects, and assistive technology hears the name once.
+    private func namedFloorButton(_ floor: KozmosFloorPresentation) -> some View {
+        let isSelected = floor.id == selectedFloor
+        return Button {
+            select(floor)
+        } label: {
+            HStack(spacing: KozmosDimensions.primitivesLayoutSpacing100) {
+                Text(floor.shortLabel)
+                    .font(KozmosTypography.subheadline)
+                    .bold()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .frame(width: controlSize, height: controlSize)
+                    .background(isSelected ? KozmosColors.primitivesColorsTheme500 : Color.clear)
+                    .foregroundColor(
+                        isSelected
+                            ? KozmosColors.primitivesColorsBackground0
+                            : KozmosColors.primitivesColorsForeground100
+                    )
+                    .cornerRadius(KozmosDimensions.semanticsRadiusPanel)
+                if floor.label != floor.shortLabel {
+                    Text(floor.label)
+                        .font(KozmosTypography.subheadline)
+                        .fontWeight(isSelected ? .semibold : .regular)
+                        .foregroundColor(KozmosColors.primitivesColorsForeground100)
+                        .lineLimit(1)
+                        .padding(.trailing, KozmosDimensions.primitivesLayoutSpacing100)
+                }
+            }
+            .contentShape(
+                RoundedRectangle(
+                    cornerRadius: KozmosDimensions.semanticsRadiusPanel,
+                    style: .continuous
+                )
+            )
+        }
+        .buttonStyle(.plain)
+        .disabled(floor.disabled)
+        .opacity(floor.disabled ? 0.4 : 1)
         .accessibilityLabel(floor.label)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }

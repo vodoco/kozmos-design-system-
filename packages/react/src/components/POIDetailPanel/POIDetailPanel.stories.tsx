@@ -54,6 +54,25 @@ type Story = StoryObj<typeof meta>;
 
 export const Inline: Story = {};
 
+/** In a sheet the panel paints no surface of its own; the story's grey
+ *  backdrop stands for the sheet. */
+export const Sheet: Story = {
+  args: { presentation: "sheet" },
+  decorators: [
+    (StoryComponent) => (
+      <div
+        style={{
+          background: "var(--primitives-colors-background-100)",
+          padding: 16,
+          maxWidth: 402,
+        }}
+      >
+        <StoryComponent />
+      </div>
+    ),
+  ],
+};
+
 export const DesktopPanel: Story = {
   args: { presentation: "panel" },
 };

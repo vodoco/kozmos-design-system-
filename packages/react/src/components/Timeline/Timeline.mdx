@@ -1,4 +1,5 @@
-import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as TimelineStories from "./Timeline.stories";
 import { PlatformSnippets } from "../PlatformSnippets";
 
@@ -26,17 +27,22 @@ import {
   TimelineTime,
   TimelineTitle,
   TimelineDescription,
-} from "@kozmos/react"
-
-<Timeline density="default">
-  <TimelineItem>
-    <TimelineTime>February 2022</TimelineTime>
-    <TimelineTitle>Application UI code in Tailwind CSS</TimelineTitle>
-    <TimelineDescription>
-      Dashboard layouts, charts, boards, and calendar screens shipped.
-    </TimelineDescription>
-  </TimelineItem>
-</Timeline>
+} from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Timeline density="default">
+        <TimelineItem>
+          <TimelineTime>February 2022</TimelineTime>
+          <TimelineTitle>Application UI code in Tailwind CSS</TimelineTitle>
+          <TimelineDescription>
+            Dashboard layouts, charts, boards, and calendar screens shipped.
+          </TimelineDescription>
+        </TimelineItem>
+      </Timeline>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

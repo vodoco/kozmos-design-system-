@@ -9,6 +9,10 @@ const categoryTileUrl =
 declare const categoryIcon: CategoryTileProps["icon"];
 declare const selectCategory: CategoryTileProps["onSelect"];
 
+// The Tint axis: Theme is a tile with no tint; the eight are the taxonomy's
+// quick-access colours as the Semantics.Category tokens' CSS variables — the
+// accent, the fill and the ink that reads on it. Code Connect takes literals
+// only, so each is written out.
 figma.connect(CategoryTile, categoryTileUrl, {
   props: {
     label: figma.string("Label Text"),
@@ -22,14 +26,64 @@ figma.connect(CategoryTile, categoryTileUrl, {
       Selected: false,
       Disabled: true,
     }),
+    tint: figma.enum("Tint", {
+      Theme: undefined,
+      Yellow: {
+        accent: "var(--semantics-category-accent-yellow)",
+        fill: "var(--semantics-category-fill-yellow)",
+        onFill: "var(--semantics-category-on-fill-yellow)",
+      },
+      Orange: {
+        accent: "var(--semantics-category-accent-orange)",
+        fill: "var(--semantics-category-fill-orange)",
+        onFill: "var(--semantics-category-on-fill-orange)",
+      },
+      Turquoise: {
+        accent: "var(--semantics-category-accent-turquoise)",
+        fill: "var(--semantics-category-fill-turquoise)",
+        onFill: "var(--semantics-category-on-fill-turquoise)",
+      },
+      Red: {
+        accent: "var(--semantics-category-accent-red)",
+        fill: "var(--semantics-category-fill-red)",
+        onFill: "var(--semantics-category-on-fill-red)",
+      },
+      Blue: {
+        accent: "var(--semantics-category-accent-blue)",
+        fill: "var(--semantics-category-fill-blue)",
+        onFill: "var(--semantics-category-on-fill-blue)",
+      },
+      Navy: {
+        accent: "var(--semantics-category-accent-navy)",
+        fill: "var(--semantics-category-fill-navy)",
+        onFill: "var(--semantics-category-on-fill-navy)",
+      },
+      Green: {
+        accent: "var(--semantics-category-accent-green)",
+        fill: "var(--semantics-category-fill-green)",
+        onFill: "var(--semantics-category-on-fill-green)",
+      },
+      Pink: {
+        accent: "var(--semantics-category-accent-pink)",
+        fill: "var(--semantics-category-fill-pink)",
+        onFill: "var(--semantics-category-on-fill-pink)",
+      },
+    }),
+    // Show Count is category.resultCount being set; the number itself is the
+    // nested Counter's text, which is product data.
+    resultCount: figma.boolean("Show Count", {
+      true: 12,
+      false: undefined,
+    }),
   },
   // category is a CategoryPresentation from @kozmos/product-contracts; the
-  // Figma set carries only the label and the selection state, so the rest of
-  // the object is product data supplied by the caller.
-  example: ({ label, selected, disabled }) => (
+  // Figma set carries the label, the selection state and the count, so the
+  // rest of the object is product data supplied by the caller.
+  example: ({ label, selected, disabled, tint, resultCount }) => (
     <CategoryTile
-      category={{ id: "food", label, selected, disabled }}
+      category={{ id: "transport", label, selected, disabled, resultCount }}
       icon={categoryIcon}
+      tint={tint}
       onSelect={(categoryId) => selectCategory(categoryId)}
     />
   ),

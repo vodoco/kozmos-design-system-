@@ -1,0 +1,59 @@
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
+import * as SurfaceStories from "./Surface.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={SurfaceStories} />
+
+# Surface
+
+What a surface over content is made of. **Solid** — the background colour with the subtle border — is the default on every platform. **Glass** is the glass surface role, composed from `Semantics.Effect.glass`: the theme's glass colour (white in light, black in dark) at the token's opacity, what shows through blurred and saturated by the token's numbers, an edge at the token's border opacity, light in both themes. A product chooses glass per surface; nothing is glass unless asked.
+
+The shape is the caller's — `rounded-container`, `rounded-panel` — and the elevation too; the variant is the material. With transparency reduced — the design config's `accessibility.reduceTransparency`, or the system's preference — glass is the plain colour, opaque and unblurred: a preference, not a look.
+
+The manoeuvre card, the route summary, FeedbackCard, SaveLocationCard and RoutingInputGroup take a `surface` prop with the same two values. On iOS the modifier is `kozmosSurface(_:style:)` — glass is the same tint over the system's thin material, whose blur and saturation are the system's. On Android it is `Modifier.kozmosSurface(shape, style)` and `KozmosSurfaceDefaults` — glass is the tint and the edge alone, since Compose blurs a node's own content, not what lies behind it.
+
+<Canvas>
+  <Story of={SurfaceStories.Solid} />
+</Canvas>
+
+<Canvas>
+  <Story of={SurfaceStories.Glass} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { Surface } from "@kozmos/react";
+
+export function Example() {
+  return (
+    <Surface variant="glass" className="rounded-container p-4 shadow-floating">
+      A card over the map
+    </Surface>
+  );
+}
+    `}
+    swift={`
+import SwiftUI
+
+Text("A card over the map")
+    .padding(KozmosDimensions.primitivesLayoutSpacing200)
+    .kozmosSurface(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusContainer, style: .continuous), style: .glass)
+    .kozmosElevation(KozmosShadows.semanticsElevationFloating)
+`}
+    kotlin={`
+Box(
+    modifier = Modifier
+        .kozmosSurface(RoundedCornerShape(KozmosDimensions.semanticsRadiusContainer), KozmosSurfaceStyle.Glass)
+        .padding(KozmosDimensions.primitivesLayoutSpacing200)
+) {
+    Text("A card over the map")
+}
+    `}
+/>

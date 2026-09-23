@@ -204,6 +204,14 @@
         line-height: 18px;
       }
 
+      .plugin-build {
+        margin-top: 2px;
+        color: var(--figma-color-text-tertiary);
+        font-size: 11px;
+        line-height: 16px;
+        font-variant-numeric: tabular-nums;
+      }
+
       .app-header {
         position: sticky;
         top: 0;
@@ -829,6 +837,7 @@
               Import foundations, audit readiness, and maintain generated
               components.
             </p>
+            <p id="pluginBuild" class="plugin-build">Build loading…</p>
           </div>
         </div>
       </header>
@@ -1149,10 +1158,12 @@
                 <option value="avatar">Avatar</option>
               </optgroup>
               <optgroup label="Product / SDK">
+                <option value="aiSearchButton">AISearchButton</option>
                 <option value="adaptiveMapShell">AdaptiveMapShell</option>
                 <option value="browseCategoriesPanel">
                   BrowseCategoriesPanel
                 </option>
+                <option value="categoryField">CategoryField</option>
                 <option value="categoryTile">CategoryTile</option>
                 <option value="directionStep">DirectionStep</option>
                 <option value="floorSelector">FloorSelector</option>
@@ -1530,7 +1541,7 @@
           build: "build-direction-step",
           update: "update-direction-step",
           rebuild: "rebuild-direction-step",
-          hint: "Build creates DirectionStep with Straight, Left, Right, and Destination turn types plus editable instruction, distance, and duration text. Turn glyphs never auto-mirror in RTL. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+          hint: "Build creates DirectionStep with the fourteen cases of the 20th: Straight, Left, Right and Destination, the lift, escalator and stairs up and down, LevelUp and LevelDown, Transition and TurnBack — each a 24 icon from the Icons page (arrow-up, arrow-down, arrow-left, arrow-right, marker-pin-01, flip-backward) in the theme\'s colour on a 40 disc at 10 %. Run Curated Icons first. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         browseCategoriesPanel: {
           label: "BrowseCategoriesPanel",
@@ -1539,12 +1550,19 @@
           rebuild: "rebuild-browse-categories-panel",
           hint: "Build creates BrowseCategoriesPanel with Basic, Search, and Empty content variants; Empty replaces the tile grid rather than sitting beside it. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
+        categoryField: {
+          label: "CategoryField",
+          build: "build-category-field",
+          update: "update-category-field",
+          rebuild: "rebuild-category-field",
+          hint: "Build creates CategoryField — the search field's form once a quick-access category is chosen — as Tint: Theme and the taxonomy's eight category colours. 48 tall at the control radius, the colour at 12 % behind a 1 border of it, a 28 icon swapped from the Icons page, a 15/20 label, a 22 count pill (Show Count), a 32 clear. Build Curated Icons first. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
         categoryTile: {
           label: "CategoryTile",
           build: "build-category-tile",
           update: "update-category-tile",
           rebuild: "rebuild-category-tile",
-          hint: "Build creates CategoryTile with Default, Selected, and Disabled states. Selection thickens the border as well as recolouring it. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+          hint: "Build creates CategoryTile as State × Tint: Default, Selected and Disabled by Theme and the taxonomy's eight category colours — a 64 square, a 24 icon swapped from the Icons page, the system's Counter 4 beyond the square's corner (Show Count), an 11/14 caption. Build Counter and Curated Icons first. Update preserves its Code Connect node ID and renames the three pre-Tint variants in place; Rebuild removes the current set and creates a fresh node ID.",
         },
         poiMediaGallery: {
           label: "POIMediaGallery",
@@ -1623,6 +1641,13 @@
           rebuild: "rebuild-feedback-card",
           hint: "Build creates FeedbackCard with Default, Submitting, and Success states; Success replaces the form rather than disabling it. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
+        aiSearchButton: {
+          label: "AISearchButton",
+          build: "build-ai-search-button",
+          update: "update-ai-search-button",
+          rebuild: "rebuild-ai-search-button",
+          hint: "Build creates AISearchButton — the search row's AI search, the prototype's — with Default and Disabled states: a 48 circle whose ring is a 2.5 band of the six data colours around a 43 disc, a 16 icon swapped from the Icons page. Run Curated Icons first (stars-01). Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+        },
         adaptiveMapShell: {
           label: "AdaptiveMapShell",
           build: "build-adaptive-map-shell",
@@ -1656,7 +1681,7 @@
           build: "build-poi-detail-panel",
           update: "update-poi-detail-panel",
           rebuild: "rebuild-poi-detail-panel",
-          hint: "Build creates POIDetailPanel with Inline, Sheet, and Panel presentations; Sheet rounds only its top corners and shows a grabber. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+          hint: "Build creates POIDetailPanel with Inline, Sheet, and Panel presentations; Sheet paints no surface, border or shadow of its own (the sheet draws the handle), rounds only its top corners at the control radius, and its inset blocks go white. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         floorSelector: {
           label: "FloorSelector",
@@ -1670,7 +1695,7 @@
           build: "build-location-pin",
           update: "update-location-pin",
           rebuild: "rebuild-location-pin",
-          hint: "Build creates LocationPin with Default, Selected, Featured, OffFloor, and Disabled states. Off-floor pins use an outline so state is not color-only. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
+          hint: "Build creates LocationPin as State × Size × Tint: Default, Selected, Featured, OffFloor and Disabled in Sm, Md and Lg, by Theme and the taxonomy's eight category colours (135 variants). A tint's fill is the marker and its ink the number; a featured pin keeps the alert colour. Off-floor pins use an outline so state is not color-only. Update preserves its Code Connect node ID; Rebuild removes the current set and creates a fresh node ID.",
         },
         mapView: {
           label: "MapView",
@@ -2195,7 +2220,7 @@
           build: "build-icons",
           update: "update-icons",
           rebuild: "update-icons",
-          hint: "Build or update the 38 local Icon / ... sources and preferred icon swap values.",
+          hint: "Build or update the Icons page: the curated Pointr icons, imported from the icon library, and the taxonomy's quick-access symbols, drawn from the SVGs this plugin carries — and the icon swap preferred values. An Update keeps every source layer that is still right, so the tints the sets carry through them survive it.",
         },
       };
 
@@ -2459,6 +2484,12 @@
         const message = event.data.pluginMessage;
         if (!message) return;
 
+        if (message.type === "plugin-build") {
+          const buildLabel = document.getElementById("pluginBuild");
+          if (buildLabel) buildLabel.textContent = `Build ${message.build}`;
+          return;
+        }
+
         if (message.type === "audit-progress") {
           syncAuditProgress(message);
           return;
@@ -2545,6 +2576,8 @@
           hideBootScreen();
         }
       };
+
+      postPluginMessage({ type: "ui-ready" });
 
       function startBootSequence() {
         if (!bootScreen || bootHidden) return;
@@ -3350,7 +3383,7 @@
             warning.includes("missing Figma text styles"),
           )
         ) {
-          return "Next: run Apply Text Styles, then audit again to confirm component typography is attached.";
+          return "Next: Update each set the warning names (Update, never Rebuild), then audit again.";
         }
         if (
           libraryState.warnings.some((warning) =>
@@ -3765,6 +3798,10 @@
           busy || !libraryState.audited || knownNoComponents;
         reorganizeComponentsButton.disabled =
           busy || !libraryState.audited || knownNoComponents;
+        // The bulk runs too: pressed during a run, they started a second
+        // sequence alongside the first (2026-09-21).
+        updateAllProductSdkButton.disabled = busy;
+        updateAllCoreButton.disabled = busy;
         const examplesDisabled =
           busy || !libraryState.audited || knownNoComponents;
         exampleDashboardButton.disabled = examplesDisabled;
@@ -3824,9 +3861,17 @@
           auditProgressState.title,
         );
 
-        if (busy && busyMode === "audit") {
-          setActivity(auditProgressState.detail);
-          renderAuditProgress();
+        // A bulk update posts the same message for every set it starts, and
+        // the Activity line is the only place a designer can watch a run that
+        // takes many minutes; until 2026-09-21 it showed only during an audit,
+        // so Update All Core looked frozen for its whole length.
+        if (busy) {
+          setActivity(
+            busyMode === "audit"
+              ? auditProgressState.detail
+              : `${auditProgressState.title} — ${auditProgressState.detail}`,
+          );
+          if (busyMode === "audit") renderAuditProgress();
         }
       }
 

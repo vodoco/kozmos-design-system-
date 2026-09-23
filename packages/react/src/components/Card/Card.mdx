@@ -1,5 +1,6 @@
 
-import { Canvas, Meta, Story, Controls, Source } from '@storybook/blocks';
+import { Canvas, Meta, Story, Source } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as CardStories from './Card.stories';
 import { PlatformSnippets } from '../PlatformSnippets';
 
@@ -28,20 +29,25 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@kozmos/react"
-
-<Card>
-  <CardHeader>
-    <CardTitle>Card Title</CardTitle>
-    <CardDescription>Card Description</CardDescription>
-  </CardHeader>
-  <CardContent>
-    <p>Card Content</p>
-  </CardContent>
-  <CardFooter>
-    <p>Card Footer</p>
-  </CardFooter>
-</Card>
+} from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Card Title</CardTitle>
+          <CardDescription>Card Description</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>Card Content</p>
+        </CardContent>
+        <CardFooter>
+          <p>Card Footer</p>
+        </CardFooter>
+      </Card>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

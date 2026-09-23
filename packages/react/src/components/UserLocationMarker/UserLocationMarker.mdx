@@ -1,18 +1,22 @@
-import { Meta, Story, Canvas } from '@storybook/blocks';
-import * as UserLocationMarkerStories from './UserLocationMarker.stories';
+import { Meta, Story, Canvas } from "@storybook/blocks";
+import * as UserLocationMarkerStories from "./UserLocationMarker.stories";
 
 <Meta of={UserLocationMarkerStories} />
 
 # User Location Marker (Blue Dot)
 
-The `UserLocationMarker` abstracts the highly intricate pulsating radar logic of a 2D Indoor map into a pure declarative component without needing map engine integrations like MapboxGL.
+<Canvas of={UserLocationMarkerStories.Default} />
+
+Shows a map position and optional heading. Supply these values from your map
+adapter; the component does not query device location. The example rotates only
+when requested, and the marker rings respect reduced-motion preferences.
 
 ## React Usage
 
 ```tsx
-import { UserLocationMarker } from '@kozmos/react';
+import { UserLocationMarker } from "@kozmos/react";
 
-<UserLocationMarker heading={45} showHeading={true} />
+<UserLocationMarker heading={45} showHeading={true} />;
 ```
 
 ## Android Jetpack Compose
@@ -29,7 +33,7 @@ KozmosUserLocationMarker(
 ## iOS SwiftUI
 
 ```swift
-import KozmosDesignSystem
+import Kozmos
 
 KozmosUserLocationMarker(
     heading: 45.0,

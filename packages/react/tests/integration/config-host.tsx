@@ -16,9 +16,19 @@ function Controls({ id }: { id: string }) {
     useDesignConfig();
   return (
     <div data-testid={`${id}-module`} style={{ padding: 32 }}>
-      <Button variant="glass" data-testid={`${id}-glass`}>
+      {/* Button's glass variant is the glass role (1f10259): the token's
+          numbers in every module. The design config's own glass — blur from
+          frost and refraction, noise, texture, bevel, spotlight — is the
+          glass class the surface below and the overlay carry. */}
+      <Button variant="glass" data-testid={`${id}-glass-button`}>
         {id} glass
       </Button>
+      <div
+        className="glass glass-spotlight glass-bevel"
+        data-testid={`${id}-glass`}
+      >
+        {id} glass surface
+      </div>
       <Button onClick={() => updateGlassConfig({ refraction: 80 })}>
         {id} refraction
       </Button>

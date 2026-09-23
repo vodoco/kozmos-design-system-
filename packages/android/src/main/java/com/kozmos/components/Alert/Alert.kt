@@ -17,13 +17,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 enum class AlertStatus {
     Default, Info, Success, Warning, Error
@@ -40,7 +41,7 @@ fun KozmosAlert(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(KozmosColors.semanticsSurface0, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
+            .background(KozmosThemeTokens.semanticsSurface0, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
             .border(1.dp, borderColor, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
             .padding(KozmosDimensions.primitivesLayoutSpacing200),
         verticalAlignment = Alignment.Top
@@ -84,7 +85,7 @@ fun KozmosAlertContent(
 fun KozmosAlertTitle(
     title: String,
     modifier: Modifier = Modifier,
-    color: Color = KozmosColors.primitivesColorsForeground100
+    color: Color = KozmosThemeTokens.primitivesColorsForeground100
 ) {
     Text(
         text = title,
@@ -99,7 +100,7 @@ fun KozmosAlertTitle(
 fun KozmosAlertDescription(
     description: String,
     modifier: Modifier = Modifier,
-    color: Color = KozmosColors.primitivesColorsForeground500
+    color: Color = KozmosThemeTokens.primitivesColorsForeground500
 ) {
     Text(
         text = description,
@@ -109,15 +110,19 @@ fun KozmosAlertDescription(
     )
 }
 
+@Composable
+@ReadOnlyComposable
 internal fun alertForegroundColor(status: AlertStatus): Color = when (status) {
-    AlertStatus.Default -> KozmosColors.primitivesColorsForeground0
-    AlertStatus.Info -> KozmosColors.primitivesColorsTheme600
-    AlertStatus.Success -> KozmosColors.primitivesColorsEmotionalSuccess900
-    AlertStatus.Warning -> KozmosColors.primitivesColorsEmotionalAlert900
-    AlertStatus.Error -> KozmosColors.primitivesColorsEmotionalDanger600
+    AlertStatus.Default -> KozmosThemeTokens.primitivesColorsForeground0
+    AlertStatus.Info -> KozmosThemeTokens.primitivesColorsTheme600
+    AlertStatus.Success -> KozmosThemeTokens.primitivesColorsEmotionalSuccess900
+    AlertStatus.Warning -> KozmosThemeTokens.primitivesColorsEmotionalAlert900
+    AlertStatus.Error -> KozmosThemeTokens.primitivesColorsEmotionalDanger600
 }
 
+@Composable
+@ReadOnlyComposable
 private fun alertBorderColor(status: AlertStatus): Color = when (status) {
-    AlertStatus.Default -> KozmosColors.primitivesColorsForeground500
+    AlertStatus.Default -> KozmosThemeTokens.primitivesColorsForeground500
     else -> alertForegroundColor(status)
 }

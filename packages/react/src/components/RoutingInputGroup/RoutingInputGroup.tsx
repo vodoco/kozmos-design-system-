@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "../../utils";
+import { surfaceClass, type SurfaceVariant } from "../Surface";
 import { Input } from "../Input";
 import { Button } from "../Button";
 import { ArrowDownUp, Plus, X, Circle, MapPin } from "lucide-react";
@@ -12,6 +13,8 @@ export interface RoutePoint {
 }
 
 export interface RoutingInputGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** What the card sits on: solid by default, glass where the product asks for it. */
+  surface?: SurfaceVariant;
   points: RoutePoint[];
   onPointChange: (id: string, value: string) => void;
   onSwap?: () => void;
@@ -26,6 +29,7 @@ const RoutingInputGroup = React.forwardRef<
   (
     {
       className,
+      surface = "solid",
       points,
       onPointChange,
       onSwap,
@@ -56,7 +60,7 @@ const RoutingInputGroup = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "flex items-start gap-3 w-full bg-white/70 dark:bg-black/70 backdrop-blur-3xl p-4 rounded-[var(--primitives-radius-2xl)] shadow-overlay ring-1 ring-black/5 dark:ring-white/10 transition-all duration-300",
+          `flex items-start gap-3 w-full ${surfaceClass(surface)} p-4 rounded-panel shadow-overlay transition-all duration-300`,
           className,
         )}
         {...props}
@@ -94,6 +98,10 @@ const RoutingInputGroup = React.forwardRef<
         <div className="flex flex-col gap-3 grow">
           {points.map((point, index) => (
             <div key={point.id} className="flex items-center gap-2">
+              {/* A field keeps the control radius and the standard focus ring,
+                  as every other field does. Until 2026-09-22 this one was
+                  rounded-panel (24) and drew no ring (ring-0): the only field
+                  in the system with no visible focus. */}
               <Input
                 value={point.value}
                 onChange={(e) => onPointChange(point.id, e.target.value)}
@@ -101,7 +109,7 @@ const RoutingInputGroup = React.forwardRef<
                   point.placeholder ||
                   (index === 0 ? "Choose Starting Point" : "Choose Destination")
                 }
-                className="h-10 text-sm bg-black/5 dark:bg-white/10 border-transparent focus-visible:bg-black/10 dark:focus-visible:bg-white/20 focus-visible:ring-0 rounded-panel transition-all duration-300"
+                className="h-10 text-sm bg-black/5 dark:bg-white/10 border-transparent focus-visible:bg-black/10 dark:focus-visible:bg-white/20 transition-all duration-300"
               />
               {points.length > 2 &&
                 index > 0 &&
@@ -110,7 +118,7 @@ const RoutingInputGroup = React.forwardRef<
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="w-10 h-10 shrink-0 text-muted-foreground hover:text-destructive"
+                    className="w-10 h-10 shrink-0 text-muted-foreground hover:text-destructive-text"
                     onClick={() => handleRemove(point.id)}
                     aria-label={`Remove ${point.placeholder || point.value || "route point"}`}
                   >

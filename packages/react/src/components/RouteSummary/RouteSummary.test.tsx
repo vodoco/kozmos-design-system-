@@ -37,4 +37,79 @@ describe("RouteSummary", () => {
     fireEvent.click(screen.getByRole("button", { name: /start navigation/i }));
     expect(onStartNavigation).toHaveBeenCalledTimes(1);
   });
+
+  it("lays out navigation: the destination as the heading with End beside it, the stats, the progress", () => {
+    const onEndRoute = vi.fn();
+    render(
+      <RouteSummary
+        destination="Airport Shuttles"
+        durationText="4 min"
+        distanceText="201 m"
+        arrivalText="Arrive 12:58"
+        onEndRoute={onEndRoute}
+        progress={<div data-testid="rail" />}
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Airport Shuttles" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("4 min")).toBeInTheDocument();
+    expect(screen.getByText("201 m")).toBeInTheDocument();
+    expect(screen.getByText("Arrive 12:58")).toBeInTheDocument();
+    expect(screen.getByTestId("rail")).toBeInTheDocument();
+    // The estimate layout's icon button is not there; End is a labelled button.
+    expect(screen.queryByLabelText("End route")).not.toBeInTheDocument();
+    const end = screen.getByRole("button", { name: "End" });
+    expect(end).toHaveClass("kozmos-button-outline");
+    fireEvent.click(end);
+    expect(onEndRoute).toHaveBeenCalledTimes(1);
+  });
+
+  it("is solid by default and glass on request, in both layouts", () => {
+    const { container, rerender } = render(
+      <RouteSummary
+        destination="B"
+        durationText="1 min"
+        distanceText="32 m"
+        onEndRoute={vi.fn()}
+      />,
+    );
+    expect(container.firstChild).toHaveClass(
+      "kozmos-reset",
+      "kozmos-surface-solid",
+    );
+    rerender(
+      <RouteSummary
+        destination="B"
+        durationText="1 min"
+        distanceText="32 m"
+        onEndRoute={vi.fn()}
+        surface="glass"
+      />,
+    );
+    expect(container.firstChild).toHaveClass("kozmos-surface-glass");
+    rerender(
+      <RouteSummary
+        etaText="12 min"
+        distanceText="1.8 km"
+        onEndRoute={vi.fn()}
+        surface="glass"
+      />,
+    );
+    expect(container.firstChild).toHaveClass("kozmos-surface-glass");
+  });
+
+  it("takes its own End label", () => {
+    render(
+      <RouteSummary
+        destination="B"
+        durationText="1 min"
+        distanceText="32 m"
+        endLabel="Beenden"
+        onEndRoute={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Beenden" })).toBeInTheDocument();
+  });
 });

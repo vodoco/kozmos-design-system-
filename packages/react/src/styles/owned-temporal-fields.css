@@ -1,0 +1,38 @@
+/* Native date/time controls stay native. Only the owned composition is styled;
+   logical padding and icon placement follow the module provider's direction. */
+@kozmos-owned {
+  .kozmos-temporal-field {
+    @apply relative min-w-0;
+  }
+  .kozmos-temporal-icon {
+    @apply pointer-events-none absolute start-3 top-1/2 z-10 block h-4 w-4 -translate-y-1/2 text-muted-foreground;
+  }
+  .kozmos-temporal-input {
+    @apply block min-w-0 w-full ps-9;
+  }
+  .kozmos-time-input {
+    appearance: none;
+  }
+  /* Native date/time segments in WebKit can hold keyboard focus without matching
+     :focus-visible. Always expose focus for these fields, in every engine. */
+  .kozmos-temporal-input:focus {
+    @apply outline-none ring-2 ring-ring ring-offset-2;
+  }
+  .kozmos-temporal-input.kozmos-input-warning:focus {
+    @apply ring-warning;
+  }
+  .kozmos-temporal-input.kozmos-input-success:focus {
+    @apply ring-success;
+  }
+  .kozmos-temporal-input.kozmos-input-error:focus {
+    @apply ring-destructive;
+  }
+  .kozmos-date-range {
+    @apply grid min-w-0 gap-3;
+    /* Available module width, not the whole viewport, determines the columns. */
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  }
+  .kozmos-date-range-label {
+    @apply grid min-w-0 gap-1.5 text-sm font-medium;
+  }
+}

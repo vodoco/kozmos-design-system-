@@ -1,0 +1,55 @@
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
+import * as AISearchButtonStories from "./AISearchButton.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={AISearchButtonStories} />
+
+# AISearchButton
+
+The AI search, beside the search field: a 48 disc inside a 66 ring whose gradient runs through the theme's own ramp — from the 300 step to the 600 and back — with a 16 icon. The first gradient the system draws is made of tokens, so it follows the theme like everything else. The button shows the icon alone and is named by its label to assistive technology.
+
+<Canvas>
+  <Story of={AISearchButtonStories.BesideTheSearchField} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+The button belongs at the end of the search row, and `SearchBar`'s `trailing`
+slot is how it gets there: the field is as wide as its container, so a pair
+composed by hand lands on two lines unless the caller knows to make the field
+shrink. Through the slot it cannot.
+
+<PlatformSnippets
+    react={`
+import { AISearchButton, SearchBar } from "@kozmos/react";
+
+export function Example() {
+  return (
+    <SearchBar
+      placeholder="Search this building"
+      trailing={<AISearchButton label="AI search" onClick={() => {}} />}
+    />
+  );
+}
+    `}
+    swift={`
+import SwiftUI
+
+KozmosSearchBar(text: $query, placeholder: "Search this building") {
+    KozmosAISearchButton(label: "AI search", action: {})
+}
+`}
+    kotlin={`
+KozmosSearchBar(
+    value = query,
+    onValueChange = { query = it },
+    placeholder = "Search this building",
+    trailing = { KozmosAISearchButton(label = "AI search", onClick = {}) }
+)
+    `}
+/>

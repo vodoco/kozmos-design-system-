@@ -10,24 +10,8 @@ global.ResizeObserver = class {
   disconnect() {}
 };
 
-global.DOMRect = class DOMRect {
-  bottom = 0;
-  left = 0;
-  right = 0;
-  top = 0;
-  constructor(
-    public x = 0,
-    public y = 0,
-    public width = 0,
-    public height = 0,
-  ) {}
-  static fromRect(other?: DOMRectInit): DOMRect {
-    return new DOMRect(other?.x, other?.y, other?.width, other?.height);
-  }
-  toJSON() {
-    return JSON.stringify(this);
-  }
-};
+// jsdom supplies DOMRect. Do not replace it with a shape whose edges always
+// equal zero: geometry tests must see left/right/top/bottom derived from x/y/size.
 
 // jsdom implements no pointer capture, and Radix calls it on pointerdown for
 // every draggable primitive — Slider, Toggle, anything with a knob. Without

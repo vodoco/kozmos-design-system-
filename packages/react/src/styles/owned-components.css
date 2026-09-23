@@ -1,0 +1,447 @@
+/* Build-time component CSS. Tailwind expands @apply; consumers need neither
+   Tailwind nor native @scope. Every target is explicitly component-owned. */
+@kozmos-owned {
+  .kozmos-reset,
+  .kozmos-reset::before,
+  .kozmos-reset::after {
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+    border-color: var(--semantics-border-subtle);
+  }
+  .kozmos-reset {
+    margin: 0;
+    padding: 0;
+    font-family: inherit;
+    font-size: 100%;
+    font-weight: inherit;
+    font-feature-settings: inherit;
+    font-variation-settings: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+  }
+  .kozmos-input::placeholder,
+  .kozmos-textarea::placeholder {
+    opacity: 1;
+  }
+  .kozmos-input::file-selector-button {
+    font: inherit;
+    -webkit-appearance: button;
+  }
+  .kozmos-input:where([type="search"]) {
+    -webkit-appearance: textfield;
+    outline-offset: -2px;
+  }
+  .kozmos-input::-webkit-search-decoration {
+    -webkit-appearance: none;
+  }
+  .kozmos-input {
+    @apply flex h-11 w-full rounded-control border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-[color:var(--primitives-colors-foreground-400)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:placeholder:text-muted-foreground disabled:opacity-100;
+  }
+  .kozmos-input-warning {
+    @apply border-warning text-warning-text focus-visible:ring-warning;
+  }
+  .kozmos-input-success {
+    @apply border-success text-success-text focus-visible:ring-success;
+  }
+  /* The public helper also accepts error=true alongside a status. Error wins,
+     consistently with Input's resolvedStatus, without relying on class order. */
+  .kozmos-input-error {
+    @apply border-destructive text-destructive-text focus-visible:ring-destructive;
+  }
+  .kozmos-textarea {
+    @apply flex min-h-20 w-full rounded-control border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    resize: vertical;
+  }
+  /* The old placeholder:text-destructive/60 compiled to nothing. Do not invent
+     a replacement colour during this behavior-preserving migration. */
+  .kozmos-textarea-error {
+    @apply border-destructive text-destructive-text focus-visible:ring-destructive;
+  }
+  .kozmos-label {
+    @apply text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50;
+  }
+  .kozmos-field {
+    @apply relative flex w-full flex-col gap-1.5;
+  }
+  .kozmos-field-heading {
+    @apply flex items-baseline justify-between gap-3;
+  }
+  .kozmos-field-label {
+    @apply text-sm font-semibold text-foreground;
+  }
+  .kozmos-field-hidden {
+    @apply sr-only;
+  }
+  .kozmos-field-required {
+    @apply ml-0.5 text-destructive-text;
+  }
+  .kozmos-field-optional {
+    @apply shrink-0 text-xs leading-5 text-muted-foreground;
+  }
+  .kozmos-field-message {
+    @apply text-sm leading-5;
+  }
+  .kozmos-field-default {
+    @apply text-muted-foreground;
+  }
+  .kozmos-field-error {
+    @apply text-destructive-text;
+  }
+  .kozmos-field-warning {
+    @apply text-warning-text;
+  }
+  .kozmos-field-success {
+    @apply text-success-text;
+  }
+  /* The solid surface: the default. The background colour with the subtle
+     border, the container edge. */
+  .kozmos-surface-solid {
+    background-color: var(--primitives-colors-background-0);
+    border: 1px solid var(--semantics-border-subtle);
+  }
+  .kozmos-surface-glass {
+    background-color: rgba(
+      var(--kozmos-glass-rgb),
+      var(--kozmos-surface-glass-opacity, var(--semantics-effect-glass-opacity))
+    );
+    -webkit-backdrop-filter: blur(
+        var(
+          --kozmos-surface-glass-blur,
+          calc(var(--semantics-effect-glass-blur) * 1px)
+        )
+      )
+      saturate(var(--semantics-effect-glass-saturation));
+    backdrop-filter: blur(
+        var(
+          --kozmos-surface-glass-blur,
+          calc(var(--semantics-effect-glass-blur) * 1px)
+        )
+      )
+      saturate(var(--semantics-effect-glass-saturation));
+    border: 1px solid
+      rgba(255, 255, 255, var(--semantics-effect-glass-border-opacity));
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .kozmos-surface-glass {
+      background-color: rgb(var(--kozmos-glass-rgb));
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+  /* The map shell's bottom sheet: its height and top ease between detents
+     on the standard motion (the prototype's 280 ms curve) while the shell
+     marks it settling, after a detent change or a drag's release. Never
+     under a finger, and never on its first placement or when the host
+     resizes: an eased first placement flew in from the host's top. The
+     handle's row is 16 tall with a 40 x 4 capsule in a background-scale
+     grey, the same handle the iOS shell draws. */
+  .kozmos-map-sheet {
+    touch-action: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .kozmos-map-sheet[data-settling]:not([data-dragging]) {
+      transition:
+        top var(--semantics-motion-duration-standard)
+          var(--semantics-motion-easing-standard),
+        height var(--semantics-motion-duration-standard)
+          var(--semantics-motion-easing-standard);
+    }
+  }
+  .kozmos-map-sheet-handle {
+    display: flex;
+    flex: none;
+    align-items: flex-start;
+    justify-content: center;
+    /* The layout tokens are unitless numbers (16, 6, 40), so they reach a
+       length only through `calc(… * 1px)` — the conversion the owned blur and
+       slide rules already make. Without it the browser drops the declaration
+       and the handle collapses to the grip's own 4px (GAP-38). */
+    height: calc(var(--primitives-layout-spacing-200) * 1px);
+    padding-top: calc(var(--primitives-layout-spacing-75) * 1px);
+    cursor: grab;
+    outline: none;
+  }
+  .kozmos-map-sheet-handle:focus-visible .kozmos-map-sheet-grip {
+    box-shadow: 0 0 0 2px var(--primitives-colors-theme-500);
+  }
+  .kozmos-map-sheet-grip {
+    display: block;
+    width: calc(var(--primitives-layout-sizing-500) * 1px);
+    height: 4px;
+    border-radius: 999px;
+    background-color: var(--primitives-colors-background-300);
+  }
+  /* How the system's parts enter, on the motion tokens — the same few moves
+     everywhere, so a row changing form reads as one thing happening. A part
+     that takes another's place pops (the prototype's chip: from 90 %, a
+     little left, fading in); a control appearing beside another reveals
+     (fades in from its side); content replacing content crossfades. Still
+     under reduced motion. */
+  .kozmos-pop {
+    animation: pop var(--semantics-motion-duration-standard)
+      var(--semantics-motion-easing-emphasised) both;
+  }
+  .kozmos-reveal {
+    animation: reveal var(--semantics-motion-duration-standard)
+      var(--semantics-motion-easing-standard) both;
+  }
+  .kozmos-crossfade {
+    animation: crossfade var(--semantics-motion-duration-standard)
+      var(--semantics-motion-easing-standard) both;
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: translateX(-22px) scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateX(calc(var(--semantics-motion-slide-md) * 1px));
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes crossfade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  .kozmos-category-field {
+    animation: pop var(--semantics-motion-duration-standard)
+      var(--semantics-motion-easing-emphasised) both;
+  }
+  .kozmos-search-clear {
+    animation: reveal var(--semantics-motion-duration-quick)
+      var(--semantics-motion-easing-standard) both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .kozmos-pop,
+    .kozmos-reveal,
+    .kozmos-crossfade,
+    .kozmos-category-field,
+    .kozmos-search-clear {
+      animation: none;
+    }
+  }
+  /* The AI search's ring: the prototype's rainbow from the system's own data
+     colours and its success green, as a conic gradient made of tokens.
+     It turns in place, the prototype's 3.6 seconds a turn, unless motion is reduced. */
+  /* The search row: the field and what follows it, on one line.
+
+     Owned CSS rather than utilities, because the utility layer does not reach
+     a browser without `@scope` and this is exactly the rule that must not go
+     missing — the promise the row makes is that the pair cannot be put on
+     separate lines, and a promise that holds only where Tailwind's layer
+     applies is not one. */
+  .kozmos-search-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    gap: calc(var(--primitives-layout-spacing-100) * 1px);
+  }
+  .kozmos-search-row-field {
+    /* The field takes what is left, and may be narrower than the text inside
+       it: without `min-width: 0` a long placeholder pushes the row wider than
+       its container and the wrap comes back by another door. */
+    flex: 1 1 0%;
+    width: auto;
+    min-width: 0;
+  }
+  .kozmos-search-row-end {
+    flex: none;
+  }
+  .kozmos-ai-search-ring {
+    background: conic-gradient(
+      from 0deg,
+      var(--semantics-data-red),
+      var(--semantics-data-yellow),
+      var(--primitives-colors-emotional-success-500),
+      var(--semantics-data-teal),
+      var(--semantics-data-blue),
+      var(--semantics-data-purple),
+      var(--semantics-data-red)
+    );
+    animation: ai-search-spin 3.6s linear infinite;
+    /* The band is cut out of this one element, not left over between two.
+       Stacked as a 43 disc inside a 48 circle it measured 1.83 to 3.14 wide
+       around the turn in Chromium — the disc's rounded rect painting 0.44px
+       right and down of the ring's, at every pixel ratio, animated or not,
+       while `getBoundingClientRect` swore they were concentric. WebKit and
+       Firefox drew it evenly, so it looked like nothing. Cut by a radial mask
+       the band is 2.5 in all three. The disc behind is inset 2, inside the
+       band, so its edge never decides where the ring ends. */
+    -webkit-mask: radial-gradient(
+      farthest-side,
+      #0000 calc(100% - 2.5px),
+      #000 calc(100% - 2.5px)
+    );
+    mask: radial-gradient(
+      farthest-side,
+      #0000 calc(100% - 2.5px),
+      #000 calc(100% - 2.5px)
+    );
+  }
+  /* The build prefixes keyframe names with kozmos-: this becomes kozmos-ai-search-spin. */
+  @keyframes ai-search-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .kozmos-skeleton {
+    @apply animate-pulse;
+  }
+  .kozmos-button {
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-control bg-transparent text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98];
+    cursor: pointer;
+    text-transform: none;
+    -webkit-appearance: button;
+    background-image: none;
+  }
+  .kozmos-button-default {
+    @apply bg-[var(--components-primary-buttons-themed-button-background-idle)] text-[var(--components-primary-buttons-themed-button-foreground-content-idle)] hover:bg-[var(--components-primary-buttons-themed-button-background-hover)];
+  }
+  .kozmos-button:disabled {
+    cursor: default;
+  }
+  .kozmos-button-destructive {
+    @apply bg-[var(--components-primary-buttons-danger-button-background-idle)] text-[var(--components-primary-buttons-danger-button-foreground-content-idle)] hover:bg-[var(--components-primary-buttons-danger-button-background-hover)];
+  }
+  .kozmos-button-outline {
+    @apply border border-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] bg-background text-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] hover:border-[var(--components-secondary-buttons-themed-button-foreground-content-hover)] hover:text-[var(--components-secondary-buttons-themed-button-foreground-content-hover)];
+  }
+  /* secondary/80 and accent/10 were inert token-alpha utilities. Their repair
+     remains the existing visual debt, not an unreviewed style change here. */
+  .kozmos-button-secondary {
+    @apply bg-secondary text-secondary-foreground;
+  }
+  .kozmos-button-ghost {
+    @apply text-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] hover:text-[var(--components-secondary-buttons-themed-button-foreground-content-hover)];
+  }
+  .kozmos-button-link {
+    @apply text-[var(--components-secondary-buttons-themed-button-foreground-content-idle)] underline-offset-4 hover:text-[var(--components-secondary-buttons-themed-button-foreground-content-hover)] hover:underline;
+  }
+  /* The glass variant is the glass surface — the same declarations as
+     .kozmos-surface-glass, written out because @apply will not take an
+     owned class; tokens:glass:check holds the two together — with the
+     spotlight the design config drives; hovered, a tenth more of the tint. */
+  .kozmos-button-glass {
+    @apply glass-spotlight text-foreground active:scale-[0.98];
+    background-color: rgba(
+      var(--kozmos-glass-rgb),
+      var(--kozmos-surface-glass-opacity, var(--semantics-effect-glass-opacity))
+    );
+    -webkit-backdrop-filter: blur(
+        var(
+          --kozmos-surface-glass-blur,
+          calc(var(--semantics-effect-glass-blur) * 1px)
+        )
+      )
+      saturate(var(--semantics-effect-glass-saturation));
+    backdrop-filter: blur(
+        var(
+          --kozmos-surface-glass-blur,
+          calc(var(--semantics-effect-glass-blur) * 1px)
+        )
+      )
+      saturate(var(--semantics-effect-glass-saturation));
+    border: 1px solid
+      rgba(255, 255, 255, var(--semantics-effect-glass-border-opacity));
+  }
+  .kozmos-button-glass:hover {
+    background-color: rgba(
+      var(--kozmos-glass-rgb),
+      calc(
+        var(
+            --kozmos-surface-glass-opacity,
+            var(--semantics-effect-glass-opacity)
+          ) +
+          0.1
+      )
+    );
+  }
+  /* The glass surface role: a surface over content it does not belong to —
+     the manoeuvre card, the navigation summary, the map's cards. Composed
+     from Semantics.Effect.glass: the theme's glass colour at the token's
+     opacity, what shows through blurred and saturated by the token's
+     numbers, an edge at the token's border opacity, light in both themes.
+     The design config sets --kozmos-surface-glass-opacity and -blur only
+     while transparency is reduced; otherwise the token is the value. The
+     element also carries kozmos-reset, or the scoped legacy preflight keeps
+     its border reset over the edge. */
+  .kozmos-button-size-default {
+    @apply h-11 px-4 py-2;
+  }
+  .kozmos-button-size-sm {
+    @apply h-11 rounded-control px-3;
+  }
+  .kozmos-button-size-lg {
+    @apply h-11 rounded-control px-8;
+  }
+  .kozmos-button-size-icon {
+    @apply h-11 w-11;
+  }
+  .kozmos-button-emotion-filled {
+    @apply bg-[var(--kz-button-bg)] text-[var(--kz-button-fg)] hover:bg-[var(--kz-button-bg-hover)];
+  }
+  .kozmos-button-emotion-outline {
+    @apply border-[var(--kz-button-fg)] text-[var(--kz-button-fg)] hover:bg-muted hover:border-[var(--kz-button-fg-hover)] hover:text-[var(--kz-button-fg-hover)];
+  }
+  .kozmos-button-emotion-text {
+    @apply text-[var(--kz-button-fg)] hover:bg-muted hover:text-[var(--kz-button-fg-hover)];
+  }
+  /* The loading arc turns on the system's own `kozmos-spin`, one second,
+     linear — the same turn every other spinning part takes. The rule lives on
+     the arc rather than on each caller, so `Spinner` and a loading `Button`
+     cannot drift, and so one media query answers for both (GAP-50: the
+     spinner, the skeleton and the loading button ignored the preference). The
+     status role keeps announcing the wait when the turn stops. */
+  .kozmos-spinner-arc {
+    @apply animate-spin;
+  }
+  .kozmos-button-loader {
+    @apply h-4 w-4;
+  }
+  .kozmos-popover {
+    @apply z-50 w-72 rounded-control border bg-popover p-4 text-popover-foreground shadow-overlay outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2;
+  }
+  .kozmos-popover-arrow {
+    @apply fill-popover;
+    display: block;
+  }
+  /* Last in the owned block on purpose: these rules and the animations
+     they stop are all one class, so source order is what decides, and a
+     `@apply animate-spin` declared later would simply win. */
+  /* Every animation that loops, stopped by either signal, in one place
+     (GAP-50). Two of them read only the media query before 2026-09-23, the
+     skeleton read neither, and the design config's `motion: reduced` reached
+     none of them — it scales `--semantics-motion-duration-scale` to 0.001,
+     which turns a transition into a cut and a one-second spin into a strobe,
+     so a loop needs telling, not scaling. The provider marks the scope and
+     these rules read the mark. */
+  @media (prefers-reduced-motion: reduce) {
+    .kozmos-ai-search-ring,
+    .kozmos-spinner-arc,
+    .kozmos-skeleton {
+      animation: none;
+    }
+  }
+  [data-kozmos-motion="reduced"] .kozmos-ai-search-ring,
+  [data-kozmos-motion="reduced"] .kozmos-spinner-arc,
+  [data-kozmos-motion="reduced"] .kozmos-skeleton {
+    animation: none;
+  }
+}

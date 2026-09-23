@@ -12,7 +12,7 @@ export type SegmentedControlItem = {
 };
 
 const segmentedControlVariants = cva(
-  "inline-flex items-center justify-center rounded-[16px] border border-transparent bg-muted p-1 text-muted-foreground transition-colors aria-[invalid=true]:border-destructive aria-[invalid=true]:ring-1 aria-[invalid=true]:ring-destructive data-[disabled=true]:opacity-50",
+  "inline-flex max-w-full overflow-x-auto items-center justify-start rounded-[16px] border border-transparent bg-muted p-1 text-muted-foreground transition-colors aria-[invalid=true]:border-destructive aria-[invalid=true]:ring-1 aria-[invalid=true]:ring-destructive data-[disabled=true]:opacity-50",
   {
     variants: {
       fullWidth: {
@@ -33,12 +33,18 @@ const segmentedControlVariants = cva(
 );
 
 const segmentedControlItemVariants = cva(
-  "inline-flex min-w-0 items-center justify-center whitespace-nowrap rounded-[12px] font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-raised",
+  // Eight between an item's parts, as `Button` and `ToggleButton` space
+  // theirs: an item's label is a ReactNode and may be an icon beside text.
+  // No platform had an opinion — iOS spaces the track, not the item, and
+  // Compose's options are plain strings — so this follows the control scale
+  // rather than inventing a number. It costs nothing where the label is one
+  // node, which is every use today: a gap applies between children.
+  "inline-flex min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-[12px] font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-raised",
   {
     variants: {
       fullWidth: {
         true: "flex-1",
-        false: "",
+        false: "shrink-0",
       },
       size: {
         sm: "min-h-11 px-3 text-xs",
@@ -150,11 +156,15 @@ export const SegmentedControl = React.forwardRef<
           aria-label={ariaLabel ?? label ?? "Segmented control"}
           className={cn(
             segmentedControlVariants({ fullWidth, size }),
+            "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
             className,
           )}
           data-disabled={disabled ? "true" : undefined}
           defaultValue={defaultValue}
           disabled={disabled}
+          {...(disabled || items.every((item) => item.disabled)
+            ? { tabIndex: 0 }
+            : {})}
           id={inputId}
           onValueChange={(nextValue) => {
             // Radix's single-mode toggle group reports a deselect as "".
@@ -183,10 +193,16 @@ export const SegmentedControl = React.forwardRef<
               key={item.value}
               className={cn(
                 segmentedControlItemVariants({ fullWidth, size }),
-                hasError && "data-[state=on]:text-destructive",
+                hasError && "data-[state=on]:text-destructive-text",
               )}
               disabled={disabled || item.disabled}
               value={item.value}
+              onFocus={(event) =>
+                event.currentTarget.scrollIntoView?.({
+                  block: "nearest",
+                  inline: "nearest",
+                })
+              }
             >
               {item.label}
             </ToggleGroupPrimitive.Item>

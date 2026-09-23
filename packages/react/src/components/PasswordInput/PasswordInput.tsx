@@ -1,6 +1,6 @@
 import React from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { cn } from "../../utils";
+import { cn, mergeAriaIds } from "../../utils";
 import { FieldWrapper } from "../FieldWrapper";
 import { inputVariants, type InputStatus } from "../Input/Input";
 
@@ -40,6 +40,8 @@ export const PasswordInput = React.forwardRef<
       status = "default",
       visible,
       wrapperClassName,
+      "aria-describedby": callerDescribedBy,
+      "aria-invalid": callerInvalid,
       ...props
     },
     ref,
@@ -80,34 +82,40 @@ export const PasswordInput = React.forwardRef<
         status={resolvedStatus}
         className={wrapperClassName}
       >
-        <div className="relative flex items-center">
+        <div className="kozmos-reset kozmos-password-field">
           <input
             {...props}
             type={isVisible ? "text" : "password"}
             id={inputId}
             className={cn(
               inputVariants({ status: resolvedStatus }),
-              showToggle && "pr-12",
+              showToggle && "kozmos-password-with-toggle",
               className,
             )}
             ref={ref}
             disabled={disabled}
-            aria-invalid={isInvalid || undefined}
-            aria-describedby={describedBy}
+            aria-invalid={isInvalid ? true : callerInvalid}
+            aria-describedby={mergeAriaIds(callerDescribedBy, describedBy)}
           />
           {showToggle && (
             <button
               type="button"
               aria-label={isVisible ? hidePasswordLabel : showPasswordLabel}
               aria-pressed={isVisible}
-              className="absolute right-0 inline-flex h-11 w-11 items-center justify-center rounded-r-control text-muted-foreground ring-offset-background transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-muted-foreground"
+              className="kozmos-reset kozmos-field-action kozmos-password-toggle"
               disabled={disabled}
               onClick={handleToggle}
             >
               {isVisible ? (
-                <EyeOff className="h-4 w-4" aria-hidden="true" />
+                <EyeOff
+                  className="kozmos-reset kozmos-field-action-icon"
+                  aria-hidden="true"
+                />
               ) : (
-                <Eye className="h-4 w-4" aria-hidden="true" />
+                <Eye
+                  className="kozmos-reset kozmos-field-action-icon"
+                  aria-hidden="true"
+                />
               )}
             </button>
           )}

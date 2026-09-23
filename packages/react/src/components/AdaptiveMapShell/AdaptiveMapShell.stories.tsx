@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Info } from "lucide-react";
-import { AdaptiveMapShell } from "./AdaptiveMapShell";
+import { AdaptiveMapShell, panelPeekAnchorProps } from "./AdaptiveMapShell";
 import { MapControlButton } from "../MapControlButton";
 
 const meta = {
@@ -67,5 +67,85 @@ export const Error: Story = {
     mapStatus: "error",
     mapStatusContent: "The map could not load. Check your connection.",
     panel: undefined,
+  },
+};
+
+/**
+ * The bottom sheet with its three detents — a fifth, 54 % and 94 % of the
+ * shell — dragged anywhere on it and snapping to the nearest; its list
+ * scrolls only at the largest. The browser check `pnpm test:map-sheet`
+ * drives this story.
+ */
+export const Sheet: Story = {
+  args: {
+    className: "h-[42rem] max-w-[402px]",
+    panelPresentation: "bottom",
+    panelLabel: "Places",
+    panel: (
+      <div className="flex flex-col">
+        <div
+          className="flex h-11 items-center px-4 text-sm text-muted-foreground"
+          data-testid="sheet-header"
+        >
+          Search
+        </div>
+        <ul className="m-0 list-none p-0">
+          {Array.from({ length: 30 }, (_, index) => (
+            <li
+              key={index}
+              className="h-20 border-t border-border px-4 py-3 text-sm"
+              data-testid="sheet-row"
+            >
+              Place {index + 1}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ),
+  },
+};
+
+/**
+ * A place card whose Go row is the sheet's peek anchor: collapsed rests on
+ * that row's bottom plus a margin, within a quarter and three quarters of the
+ * shell, as the prototype's place card peeks at its header and Go.
+ */
+export const SheetPeekAnchor: Story = {
+  args: {
+    className: "h-[42rem] max-w-[402px]",
+    panelPresentation: "bottom",
+    panelLabel: "Place",
+    defaultPanelDetent: "collapsed",
+    panel: (
+      <div className="flex flex-col">
+        <h2
+          className="m-0 px-4 pt-2 text-xl font-semibold"
+          data-testid="card-title"
+        >
+          Starbucks
+        </h2>
+        <p className="m-0 px-4 text-sm text-muted-foreground">
+          Current floor / Building A
+        </p>
+        <div
+          className="px-4 py-3"
+          data-testid="card-go"
+          {...panelPeekAnchorProps}
+        >
+          <button
+            type="button"
+            className="h-14 rounded-control bg-primary px-5 text-primary-foreground"
+          >
+            Go · 2 min
+          </button>
+        </div>
+        <p className="px-4 text-sm" data-testid="card-body">
+          {Array.from(
+            { length: 40 },
+            () => "Wood-fired Neapolitan pizza and more. ",
+          ).join("")}
+        </p>
+      </div>
+    ),
   },
 };

@@ -22,8 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
-import com.kozmos.tokens.KozmosDesignTokens
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosUserLocationMarker(
@@ -34,8 +33,8 @@ fun KozmosUserLocationMarker(
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     
     val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.8f,
+        initialValue = 0.6f,
+        targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(1500, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Restart
@@ -44,7 +43,7 @@ fun KozmosUserLocationMarker(
     )
     
     val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.5f,
+        initialValue = 0.3f,
         targetValue = 0f,
         animationSpec = infiniteRepeatable(
             animation = tween(1500, easing = FastOutSlowInEasing),
@@ -53,28 +52,31 @@ fun KozmosUserLocationMarker(
         label = "pulseAlpha"
     )
 
+    // Read in composition: the cone's draw block runs outside it.
+    val dataBlue = KozmosThemeTokens.semanticsDataBlue
+
     Box(
         modifier = modifier.size(64.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Pulsing background
+        // The halo: 64 at 14 %, still.
         Box(
             modifier = Modifier
-                .size(24.dp)
+                .size(64.dp)
+                .alpha(0.14f)
+                .background(KozmosThemeTokens.semanticsDataBlue, CircleShape)
+        )
+
+        // The ring: 48, pulsing.
+        Box(
+            modifier = Modifier
+                .size(48.dp)
                 .graphicsLayer {
                     scaleX = pulseScale
                     scaleY = pulseScale
                     alpha = pulseAlpha
                 }
-                .background(KozmosDesignTokens.semanticsDataBlue, CircleShape)
-        )
-        
-        // Static ring
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .alpha(0.2f)
-                .background(KozmosDesignTokens.semanticsDataBlue, CircleShape)
+                .background(KozmosThemeTokens.semanticsDataBlue, CircleShape)
         )
 
         // Heading Cone
@@ -100,7 +102,7 @@ fun KozmosUserLocationMarker(
                             path = path,
                             brush = Brush.radialGradient(
                                 colors = listOf(
-                                    KozmosDesignTokens.semanticsDataBlue.copy(alpha = 0.4f),
+                                    dataBlue.copy(alpha = 0.4f),
                                     Color.Transparent
                                 ),
                                 center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f),
@@ -114,9 +116,10 @@ fun KozmosUserLocationMarker(
         // Core Dot
         Box(
             modifier = Modifier
-                .size(16.dp)
-                .background(KozmosDesignTokens.semanticsDataBlue, CircleShape)
-                .border(2.dp, Color.White, CircleShape)
+                // The dot: 18, with a 3 white border.
+                .size(18.dp)
+                .background(KozmosThemeTokens.semanticsDataBlue, CircleShape)
+                .border(3.dp, Color.White, CircleShape)
         )
     }
 }

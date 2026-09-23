@@ -4,6 +4,34 @@ import { Slider } from "./Slider";
 import "@testing-library/jest-dom/vitest";
 
 describe("Slider", () => {
+  it("forwards accessible names and merged descriptions to the interactive thumb", () => {
+    render(
+      <>
+        <p id="hint">Adjust volume</p>
+        <Slider
+          defaultValue={[50]}
+          aria-label="Volume"
+          aria-describedby="hint"
+          aria-invalid={false}
+          error="Too loud"
+        />
+      </>,
+    );
+    const thumb = screen.getByRole("slider", { name: "Volume" });
+    expect(thumb).toHaveAttribute("aria-invalid", "true");
+    expect(thumb).toHaveAccessibleDescription("Adjust volume Too loud");
+  });
+  it("forwards external labelledby to the thumb", () => {
+    render(
+      <>
+        <span id="volume">Sound level</span>
+        <Slider defaultValue={[50]} aria-labelledby="volume" />
+      </>,
+    );
+    expect(
+      screen.getByRole("slider", { name: "Sound level" }),
+    ).toBeInTheDocument();
+  });
   it("renders correctly", () => {
     render(<Slider defaultValue={[50]} max={100} />);
     expect(screen.getByRole("slider")).toBeInTheDocument();

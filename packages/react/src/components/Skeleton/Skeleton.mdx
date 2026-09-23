@@ -1,4 +1,5 @@
-import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as SkeletonStories from "./Skeleton.stories";
 import { PlatformSnippets } from "../PlatformSnippets";
 
@@ -20,9 +21,14 @@ Displays the Skeleton interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Skeleton } from "@kozmos/react"
-
-<Skeleton />
+import { Skeleton } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Skeleton style={{ width: 160, height: 24 }} />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

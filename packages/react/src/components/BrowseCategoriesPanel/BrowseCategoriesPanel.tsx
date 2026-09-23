@@ -2,6 +2,7 @@ import React from "react";
 import type { CategoryPresentation } from "@kozmos/product-contracts";
 import { cn } from "../../utils";
 import { CategoryTile } from "../CategoryTile";
+import type { CategoryTint } from "../CategoryTile/CategoryTint";
 
 export interface BrowseCategoriesPanelProps extends Omit<
   React.HTMLAttributes<HTMLElement>,
@@ -10,6 +11,8 @@ export interface BrowseCategoriesPanelProps extends Omit<
   categories: readonly CategoryPresentation[];
   onSelect: (categoryId: string) => void;
   renderIcon: (category: CategoryPresentation) => React.ReactNode;
+  /** A category's colours for its tile, or undefined for the theme's. */
+  tint?: (category: CategoryPresentation) => CategoryTint | undefined;
   label?: string;
   search?: React.ReactNode;
   actions?: React.ReactNode;
@@ -26,6 +29,7 @@ const BrowseCategoriesPanel = React.forwardRef<
       categories,
       onSelect,
       renderIcon,
+      tint,
       label = "Browse categories",
       search,
       actions,
@@ -56,13 +60,17 @@ const BrowseCategoriesPanel = React.forwardRef<
               {emptyState}
             </div>
           ) : (
-            <ul className="m-0 grid list-none grid-cols-2 gap-3 p-0 sm:grid-cols-3 lg:grid-cols-4">
+            // Four across, 8 apart, and rows 12 apart: the prototype's grid
+            // (row-gap 12px, column-gap 8px, measured on 2026-09-22). The rows
+            // were 8 apart until then.
+            <ul className="m-0 grid list-none grid-cols-4 gap-x-2 gap-y-3 p-0">
               {categories.map((category) => (
                 <li className="min-w-0" key={category.id}>
                   <CategoryTile
                     category={category}
                     icon={renderIcon(category)}
                     onSelect={onSelect}
+                    tint={tint?.(category)}
                   />
                 </li>
               ))}

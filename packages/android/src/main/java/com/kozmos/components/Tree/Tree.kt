@@ -1,6 +1,5 @@
 package com.kozmos.components.tree
 
-import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
 
 import androidx.compose.animation.AnimatedVisibility

@@ -122,7 +122,7 @@ public struct KozmosDrawer<Content: View>: View {
         .cornerRadius(KozmosDimensions.semanticsRadiusControl)
         .overlay(
             RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
-                .stroke(KozmosColors.primitivesColorsForeground400, lineWidth: 1)
+                .stroke(KozmosColors.semanticsBorderSubtle, lineWidth: 1)
         )
         .kozmosElevation(KozmosShadows.semanticsElevationOverlay)
         .edgesIgnoringSafeArea(side.horizontal ? .vertical : .horizontal)

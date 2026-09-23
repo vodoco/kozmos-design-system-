@@ -1,6 +1,5 @@
 package com.kozmos.components.grid
 
-import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
 
 import androidx.compose.foundation.layout.Arrangement

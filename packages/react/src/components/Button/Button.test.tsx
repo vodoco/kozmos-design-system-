@@ -1,7 +1,6 @@
-import React from "react";
-import React from "react";
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { createRef } from "react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
 import { Button, BUTTON_EMOTIONS } from "./Button";
 
 describe("Button", () => {
@@ -21,25 +20,48 @@ describe("Button", () => {
     const button = screen.getByRole("button");
     expect(button).toBeDisabled();
     expect(screen.getByText("Loading...")).toBeInTheDocument();
-    // Check for the loader icon if possible, usually by testid or class
-    // For now assuming the disabling is the key behavior to check
+    expect(button.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
   });
 
-  it("handles clicks", async () => {
-    // We can add interaction tests later with user-event
-    // For now just basic rendering checks
-    render(<Button>Click me</Button>);
-    expect(screen.getByRole("button", { name: /click me/i })).toBeEnabled();
+  it("forwards the native button ref and click event", () => {
+    const ref = createRef<HTMLButtonElement>();
+    const onClick = vi.fn((event) =>
+      expect(event.currentTarget).toBe(ref.current),
+    );
+    render(
+      <Button ref={ref} type="button" onClick={onClick}>
+        Click me
+      </Button>,
+    );
+    const button = screen.getByRole("button", { name: /click me/i });
+    expect(ref.current).toBe(button);
+    expect(button).toHaveAttribute("type", "button");
+    fireEvent.click(button);
+    expect(onClick).toHaveBeenCalledTimes(1);
   });
+
+  it.each([{ disabled: true }, { isLoading: true }])(
+    "prevents activation when unavailable: %j",
+    (state) => {
+      const onClick = vi.fn();
+      render(
+        <Button {...state} onClick={onClick}>
+          Unavailable
+        </Button>,
+      );
+      const button = screen.getByRole("button");
+      expect(button).toBeDisabled();
+      fireEvent.click(button);
+      expect(onClick).not.toHaveBeenCalled();
+    },
+  );
 
   describe("emotion", () => {
     it("changes nothing when it is not set", () => {
       render(<Button>Plain</Button>);
       const button = screen.getByRole("button");
       expect(button.style.getPropertyValue("--kz-button-bg")).toBe("");
-      expect(button.className).toContain(
-        "bg-[var(--components-primary-buttons-themed-button-background-idle)]",
-      );
+      expect(button.className).toContain("kozmos-button-default");
     });
 
     it.each(BUTTON_EMOTIONS)("points the filled tier at %s", (emotion) => {
@@ -51,7 +73,7 @@ describe("Button", () => {
       expect(button.style.getPropertyValue("--kz-button-fg")).toBe(
         `var(--components-primary-buttons-${emotion}-button-foreground-content-idle)`,
       );
-      expect(button.className).toContain("bg-[var(--kz-button-bg)]");
+      expect(button.className).toContain("kozmos-button-emotion-filled");
     });
 
     it("reads the secondary tier for a bordered variant", () => {
@@ -64,7 +86,7 @@ describe("Button", () => {
       expect(button.style.getPropertyValue("--kz-button-fg")).toBe(
         "var(--components-secondary-buttons-success-button-foreground-content-idle)",
       );
-      expect(button.className).toContain("border-[var(--kz-button-fg)]");
+      expect(button.className).toContain("kozmos-button-emotion-outline");
     });
 
     it("reads the secondary tier for a text variant", () => {
@@ -77,7 +99,7 @@ describe("Button", () => {
       expect(button.style.getPropertyValue("--kz-button-fg")).toBe(
         "var(--components-secondary-buttons-alert-button-foreground-content-idle)",
       );
-      expect(button.className).toContain("text-[var(--kz-button-fg)]");
+      expect(button.className).toContain("kozmos-button-emotion-text");
     });
 
     it("leaves glass alone, because it is an effect and not a weight", () => {

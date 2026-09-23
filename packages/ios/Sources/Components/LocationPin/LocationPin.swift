@@ -48,6 +48,9 @@ public struct KozmosLocationPin: View {
     private let offFloor: Bool
     private let isDisabled: Bool
     private let onSelect: (() -> Void)?
+    /// A category's colours for the marker — its fill, with its ink for the
+    /// number — over the variant's; a featured pin keeps the alert colour.
+    private let tint: KozmosCategoryTint?
 
     public init(
         variant: KozmosLocationPinVariant = .primary,
@@ -59,7 +62,8 @@ public struct KozmosLocationPin: View {
         featured: Bool = false,
         offFloor: Bool = false,
         isDisabled: Bool = false,
-        onSelect: (() -> Void)? = nil
+        onSelect: (() -> Void)? = nil,
+        tint: KozmosCategoryTint? = nil
     ) {
         self.variant = variant
         self.size = size
@@ -71,10 +75,12 @@ public struct KozmosLocationPin: View {
         self.offFloor = offFloor
         self.isDisabled = isDisabled
         self.onSelect = onSelect
+        self.tint = tint
     }
 
     private var markerColor: Color {
         if featured { return KozmosColors.primitivesColorsEmotionalAlert500 }
+        if let tint { return tint.fill.fill }
         switch variant {
         case .default: return KozmosColors.primitivesColorsForeground100
         case .primary: return KozmosColors.primitivesColorsTheme500
@@ -156,11 +162,14 @@ public struct KozmosLocationPin: View {
                 )
                 .frame(width: diameter, height: diameter)
 
+            // Off the floor the number sits on the background in the
+            // foreground: the marker colour on white failed 4.5:1 for six
+            // tints (Olcay, 2026-09-21); the ring keeps the colour.
             if let number {
                 Text("\(number)")
                     .font(.system(size: diameter * 0.44, weight: .bold))
                     .foregroundColor(
-                        offFloor ? markerColor : KozmosColors.primitivesColorsForeground1000
+                        offFloor ? KozmosColors.primitivesColorsForeground0 : (tint?.fill.ink ?? KozmosColors.primitivesColorsForeground1000)
                     )
             }
         }

@@ -171,8 +171,8 @@ importers:
         specifier: ^11.0.0
         version: 11.18.2(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       lucide-react:
-        specifier: ^0.300.0
-        version: 0.300.0(react@19.2.4)
+        specifier: 0.563.0
+        version: 0.563.0(react@19.2.4)
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -335,12 +335,21 @@ importers:
       vite:
         specifier: ^5.2.0
         version: 5.4.21(@types/node@24.12.0)(lightningcss@1.32.0)
+      vite-plugin-dts:
+        specifier: 3.9.1
+        version: 3.9.1(@types/node@24.12.0)(rollup@4.57.1)(typescript@5.9.3)(vite@5.4.21(@types/node@24.12.0)(lightningcss@1.32.0))
 
   packages/product-contracts:
     devDependencies:
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
+      vite:
+        specifier: 5.4.21
+        version: 5.4.21(@types/node@24.12.0)(lightningcss@1.32.0)
+      vite-plugin-dts:
+        specifier: 3.9.1
+        version: 3.9.1(@types/node@24.12.0)(rollup@4.57.1)(typescript@5.9.3)(vite@5.4.21(@types/node@24.12.0)(lightningcss@1.32.0))
 
   packages/react:
     dependencies:
@@ -498,6 +507,9 @@ importers:
       rollup-plugin-visualizer:
         specifier: 7.0.1
         version: 7.0.1(rolldown@1.0.0-rc.11)(rollup@4.57.1)
+      storybook:
+        specifier: 8.6.15
+        version: 8.6.15(prettier@3.8.1)
       tailwindcss:
         specifier: ^3.4.3
         version: 3.4.19(tsx@4.21.0)(yaml@2.8.2)
@@ -8192,14 +8204,6 @@ packages:
         integrity: sha512-MhWWlVnuab1RG5/zMRRcVGXZLCXrZTgfwMikgzCegsPnG62yDQo5JnqKkrK4jO5iKqDAZGItAqN5CtKBCBWRUA==,
       }
     engines: { node: ">=16.14" }
-
-  lucide-react@0.300.0:
-    resolution:
-      {
-        integrity: sha512-rQxUUCmWAvNLoAsMZ5j04b2+OJv6UuNLYMY7VK0eVlm4aTwUEjEEHc09/DipkNIlhXUSDn2xoyIzVT0uh7dRsg==,
-      }
-    peerDependencies:
-      react: ^16.5.1 || ^17.0.0 || ^18.0.0
 
   lucide-react@0.563.0:
     resolution:
@@ -16992,10 +16996,6 @@ snapshots:
   lru-cache@7.18.3: {}
 
   lru-cache@8.0.5: {}
-
-  lucide-react@0.300.0(react@19.2.4):
-    dependencies:
-      react: 19.2.4
 
   lucide-react@0.563.0(react@19.2.4):
     dependencies:

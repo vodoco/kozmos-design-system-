@@ -35,18 +35,29 @@ import { PlatformSnippets } from '../PlatformSnippets';
 
 <PlatformSnippets
   react={`
-import { NumberInput } from '@kozmos/react';
-
-<NumberInput label="Quantity" min={1} max={99} step={1} defaultValue={1} />
-
-// null means empty, which is not the same as 0
-<NumberInput
-  label="Threshold"
-  onValueChange={(value) => setThreshold(value ?? undefined)}
-/>
-
-// Free-typed range, no steppers
-<NumberInput label="Year" min={1900} max={2100} showSteppers={false} />
+import { useState } from "react";
+import { NumberInput } from "@kozmos/react";
+export function Example() {
+  const [threshold, setThreshold] = useState<number | null>(null);
+  return (
+    <>
+      <NumberInput
+        label="Quantity"
+        min={1}
+        max={99}
+        step={1}
+        defaultValue={1}
+      />
+      {/* null means empty, which is not the same as 0 */}
+      <NumberInput
+        label="Threshold"
+        value={threshold ?? ""}
+        onValueChange={setThreshold}
+      />
+      <NumberInput label="Year" min={1900} max={2100} showSteppers={false} />
+    </>
+  );
+}
   `}
   vue={`
 <script setup>

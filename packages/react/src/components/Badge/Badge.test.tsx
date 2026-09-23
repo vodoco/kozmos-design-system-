@@ -3,6 +3,10 @@ import { describe, expect, it } from "vitest";
 import { Badge } from "./Badge";
 
 describe("Badge", () => {
+  it("gives a non-interactive icon badge nameable image semantics", () => {
+    render(<Badge size="icon" icon={<span>✓</span>} aria-label="Verified" />);
+    expect(screen.getByRole("img", { name: "Verified" })).toBeInTheDocument();
+  });
   it("renders correctly", () => {
     render(<Badge>Test Content</Badge>);
     expect(screen.getByText("Test Content")).toBeInTheDocument();

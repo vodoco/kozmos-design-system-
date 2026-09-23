@@ -1,4 +1,5 @@
-import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as WayfindingCardStories from "./WayfindingCard.stories";
 import { PlatformSnippets } from "../PlatformSnippets";
 
@@ -6,7 +7,11 @@ import { PlatformSnippets } from "../PlatformSnippets";
 
 # WayfindingCard
 
-Displays the WayfindingCard interface topology natively.
+Displays route-planning content with an optional close action. Localize
+`closeLabel` when providing `onClose`. `WayfindingInputRow` supports
+`originLabel`, `destinationLabel` and `swapLabel`; placeholders are hints, not
+replacements for those accessible names. Navigation actions do not submit a
+surrounding form.
 
 <Canvas>
   <Story of={WayfindingCardStories.Default} />
@@ -20,9 +25,16 @@ Displays the WayfindingCard interface topology natively.
 
 <PlatformSnippets
     react={`
-import { WayfindingCard } from "@kozmos/react"
-
-<WayfindingCard />
+import { WayfindingCard } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <WayfindingCard title="Route">
+        <p>Select a destination to begin.</p>
+      </WayfindingCard>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

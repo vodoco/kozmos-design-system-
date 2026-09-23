@@ -101,6 +101,27 @@ describe("adaptive map geometry", () => {
       }).panelBounds,
     ).toBeNull();
   });
+  it("runs the map under the device's safe areas and keeps the chrome inside them", () => {
+    // A bottom sheet: the map is the whole shell and the sheet reaches the edge.
+    const sheet = resolveAdaptiveMapLayout({
+      width: 390,
+      height: 800,
+      hasPanel: true,
+      chromeInsets: { top: 59, bottom: 34 },
+    });
+    expect(sheet.mapBounds).toEqual({ x: 0, y: 0, width: 390, height: 800 });
+    expect(sheet.panelBounds!.y + sheet.panelBounds!.height).toBe(800);
+    // A floating panel keeps them around it.
+    const side = resolveAdaptiveMapLayout({
+      width: 1024,
+      height: 768,
+      hasPanel: true,
+      chromeInsets: { top: 24, right: 40 },
+    });
+    expect(side.mapBounds).toEqual({ x: 0, y: 0, width: 1024, height: 768 });
+    expect(side.panelBounds!.y).toBe(24 + 16);
+    expect(side.panelBounds!.x + side.panelBounds!.width).toBe(1024 - 40 - 16);
+  });
   it("merges measured occlusion with host padding without adding it twice", () => {
     const map = { x: 0, y: 0, width: 400, height: 600 };
     expect(

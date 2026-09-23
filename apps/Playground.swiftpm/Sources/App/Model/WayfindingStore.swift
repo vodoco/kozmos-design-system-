@@ -272,7 +272,10 @@ final class WayfindingStore: ObservableObject {
         switch step.type {
         case .left: return -90
         case .right: return 90
-        case .straight, .destination: return 0
+        case .turnBack: return 180
+        case .straight, .destination, .liftUp, .liftDown, .escalatorUp, .escalatorDown,
+             .stairsUp, .stairsDown, .levelUp, .levelDown, .transition:
+            return 0
         }
     }
 
@@ -282,10 +285,21 @@ final class WayfindingStore: ObservableObject {
 
     // MARK: - Detail contracts
 
+    var selectedDetails: KozmosPOIDetailsPresentation {
+        guard let poi = selectedPOI else { return .init() }
+        let travel = estimate(for: poi)
+        return .init(travelEstimate: .init(
+            durationSeconds: travel.durationSeconds,
+            durationLabel: VenueFormat.duration(travel.durationSeconds),
+            distanceMetres: travel.distanceMetres,
+            distanceLabel: VenueFormat.distance(travel.distanceMetres)
+        ))
+    }
+
     var detailActionLabels: [KozmosPOIAction: String] {
         let saved = selectedPOIId.map(savedPOIIds.contains) ?? false
         return [
-            .navigate: "Directions",
+            .navigate: "Go",
             .favourite: saved ? "Saved" : "Save",
             .share: "Share"
         ]
@@ -372,7 +386,7 @@ final class WayfindingStore: ObservableObject {
                 actionMessage = DetailActionMessage(action: .favourite, text: "Saved \(poi.presentation.name) to your places.")
             }
         case .share:
-            actionMessage = DetailActionMessage(action: .share, text: "Shareable link for \(poi.presentation.name) copied.")
+            actionMessage = DetailActionMessage(action: .share, text: "Share requested for \(poi.presentation.name) (demo only; no link copied).")
         case .order:
             actionMessage = DetailActionMessage(action: .order, text: "Ordering is not available at \(poi.presentation.name).")
         }

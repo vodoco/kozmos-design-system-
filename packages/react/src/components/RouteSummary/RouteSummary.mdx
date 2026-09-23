@@ -1,8 +1,12 @@
-import { Meta, Story } from '@storybook/blocks';
+import { Meta, Canvas } from '@storybook/blocks';
+import { PlatformSnippets } from '../PlatformSnippets';
+import * as RouteSummaryStories from './RouteSummary.stories';
 
-<Meta title="Components/RouteSummary" />
+<Meta of={RouteSummaryStories} />
 
 # Route Summary
+
+<Canvas of={RouteSummaryStories.Active} />
 
 The `RouteSummary` serves as the primary bottom-anchored modal sheet during active turn-by-turn Wayfinding sessions. It safely structures ETAs, unit distances, and core routing logic into a distinct hardware-independent layer.
 
@@ -20,3 +24,51 @@ import { PersonStanding } from 'lucide-react';
     onEndRoute={() => prompt("End Route Confirmation")}
 />
 ```
+
+## Navigation
+
+Given a `destination`, the summary takes the navigation layout: the destination's name with End beside it in the danger outline, the time, distance and arrival on one row, and the caller's progress — a `RouteProgressRail` in the products — below. The estimate layout above is unchanged.
+
+<Canvas of={RouteSummaryStories.Navigation_} />
+
+<PlatformSnippets
+    react={`
+import { RouteProgressRail, RouteSummary } from "@kozmos/react";
+
+export function Example() {
+  return (
+    <RouteSummary
+      destination="Airport Shuttles"
+      durationText="4 min"
+      distanceText="201 m"
+      arrivalText="Arrive 12:58"
+      onEndRoute={() => {}}
+      progress={<RouteProgressRail progress={0.16} type="straight" label="Step 1 of 4" />}
+    />
+  );
+}
+    `}
+    swift={`
+import SwiftUI
+
+KozmosRouteSummary(
+    destination: "Airport Shuttles",
+    durationText: "4 min",
+    distanceText: "201 m",
+    arrivalText: "Arrive 12:58",
+    onEndRoute: {}
+) {
+    KozmosRouteProgressRail(progress: 0.16, type: .straight, label: "Step 1 of 4")
+}
+`}
+    kotlin={`
+KozmosRouteSummary(
+    destination = "Airport Shuttles",
+    durationText = "4 min",
+    distanceText = "201 m",
+    arrivalText = "Arrive 12:58",
+    onEndRoute = {},
+    progress = { KozmosRouteProgressRail(progress = 0.16f, type = DirectionType.Straight, label = "Step 1 of 4") }
+)
+    `}
+/>

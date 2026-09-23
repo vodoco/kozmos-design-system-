@@ -10,6 +10,53 @@ const contractPath = path.join(
 );
 const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
 const modes = ["light", "dark"];
+// Exercise every enabled button emotion/state, not only the default themed pair.
+// Outline/text treatments use the page surface, and the muted surface on hover.
+for (const emotion of [
+  "themed",
+  "neutral",
+  "success",
+  "danger",
+  "informative",
+  "alert",
+]) {
+  for (const state of ["idle", "hover", "pressed", "focus"]) {
+    contract.pairs.push({
+      name: `primary button ${emotion} ${state}`,
+      background: `components-primary-buttons-${emotion}-button-background-${state}`,
+      foreground: `components-primary-buttons-${emotion}-button-foreground-content-${state}`,
+      minimum: 4.5,
+    });
+    for (const surface of [0, 100])
+      contract.pairs.push({
+        name: `secondary button ${emotion} ${state} on surface ${surface}`,
+        background: `primitives-colors-background-${surface}`,
+        foreground: `components-secondary-buttons-${emotion}-button-foreground-content-${state}`,
+        minimum: 4.5,
+      });
+  }
+}
+
+// An emotion's Text role is the emotion as text or a glyph on the page itself,
+// and the page is any neutral surface a panel, card or sheet paints: white, and
+// the two greys (a sheet is background/100). The steps were once measured on
+// white alone, and four of six failed on the sheet's grey.
+for (const emotion of [
+  "themed",
+  "neutral",
+  "success",
+  "danger",
+  "informative",
+  "alert",
+]) {
+  for (const surface of [0, 50, 100])
+    contract.pairs.push({
+      name: `${emotion} text on background ${surface}`,
+      background: `primitives-colors-background-${surface}`,
+      foreground: `semantics-emotion-${emotion}-text`,
+      minimum: 4.5,
+    });
+}
 
 function readCssVariables(mode) {
   const filePath = path.join(
@@ -79,7 +126,10 @@ function getPath(value, segments) {
 for (const alias of contract.runtimeAliases ?? []) {
   const absolutePath = path.join(root, alias.file);
   const config = require(absolutePath);
-  const actual = getPath(config, alias.path);
+  const configured = getPath(config, alias.path);
+  // Tailwind token colours now accept /alpha through a colour callback. The
+  // unmodified role must still resolve to exactly the canonical alias.
+  const actual = typeof configured === "function" ? configured({}) : configured;
   checked += 1;
 
   if (actual !== alias.value) {
@@ -94,6 +144,16 @@ for (const alias of contract.runtimeAliases ?? []) {
 for (const mode of modes) {
   const variables = readCssVariables(mode);
 
+  // A category's count pill or counter: the ink on the fill reaches 4.5:1 in
+  // both modes (the palette is the taxonomy's, the same in light and dark).
+  for (const name of ["yellow", "orange", "turquoise", "red", "blue", "navy", "green", "pink"]) {
+    contract.pairs.push({
+      name: `category ${name} fill / on-fill`,
+      background: `semantics-category-fill-${name}`,
+      foreground: `semantics-category-on-fill-${name}`,
+      minimum: 4.5,
+    });
+  }
   for (const pair of contract.pairs) {
     const background = colorFor(variables, pair.background, mode, pair.name);
     const foreground = colorFor(variables, pair.foreground, mode, pair.name);

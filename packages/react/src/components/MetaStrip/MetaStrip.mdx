@@ -1,4 +1,5 @@
-import { Canvas, Controls, Meta } from "@storybook/blocks";
+import { Canvas, Meta } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as MetaStripStories from "./MetaStrip.stories";
 
 <Meta of={MetaStripStories} />
@@ -36,6 +37,13 @@ says what the fact is.
 The strip scrolls horizontally rather than wrapping, which is what the source
 does: a fact tile that has wrapped onto a second row reads as a different kind
 of thing.
+
+The minimum height is 64px, not a clipping height: labels and enlarged text may
+increase it while all fact tiles stay on one row. Icon/value groups are centered
+within each cell; text is start-aligned within its group (including RTL). Use
+Tab to focus the strip, arrow keys to scroll, and Home/End to reach its ends.
+The component owns its CSS, including labels and dividers, without relying on
+legacy CSS scope. POIDetailPanel uses this same primitive.
 
 <Canvas of={MetaStripStories.Overflowing} />
 

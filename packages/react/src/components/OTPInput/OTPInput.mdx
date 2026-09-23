@@ -1,4 +1,5 @@
-import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as OTPInputStories from "./OTPInput.stories";
 import { PlatformSnippets } from "../PlatformSnippets";
 
@@ -20,9 +21,14 @@ Displays the OTPInput interface topology natively.
 
 <PlatformSnippets
     react={`
-import { OTPInput } from "@kozmos/react"
-
-<OTPInput />
+import { OTPInput } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <OTPInput label="Verification code" />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

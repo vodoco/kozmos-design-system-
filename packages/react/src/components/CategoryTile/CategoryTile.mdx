@@ -1,4 +1,5 @@
-import { Meta, Canvas, Controls } from "@storybook/blocks";
+import { Meta, Canvas } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as Stories from "./CategoryTile.stories";
 
 <Meta of={Stories} />
@@ -6,8 +7,12 @@ import * as Stories from "./CategoryTile.stories";
 # CategoryTile
 
 Product category action with controlled selection, multiline localization-safe
-labels, optional localized result counts, and a minimum 44px target.
+labels, an optional count drawn as the system's counter at the icon square's top-right (its localized label spoken, not drawn), and a minimum 44px target.
 
 <Canvas of={Stories.Default} />
 <Canvas of={Stories.Selected} />
 <Controls />
+
+## A category's colours
+
+A `tint` — `{ accent, fill, onFill }` — puts the category's accent on the icon and the selection's stroke, and its inked fill on the counter; the square stays neutral. The taxonomy's eight quick-access colours are the `--semantics-category-accent-*`, `-fill-*` and `-on-fill-*` variables, each fill's ink held to 4.5:1 by `pnpm tokens:contrast:check`.

@@ -57,6 +57,20 @@ widgets, Shadow DOM support or isolation from every third-party overlay manager.
 
 ## CSS architecture and compatibility gate
 
+**Migration continuation:** `component-owned-css-2026-09-17.md` supersedes the
+implementation description below for Input, Textarea, Button, Popover, FieldWrapper
+and Label. Their recipes, token foundations and animation definitions no longer
+require native scope. The remaining library still does; this is not a completed
+cross-browser release. The paragraphs below retain the original foundation design
+and the finding that prompted its replacement.
+
+**2026-09-17 follow-up:** the existing green browser suite missed native form
+controls. The built Input/Textarea fixture now reproduces scoped-style failures in
+the installed WebKit 26.0, including sizing and theme colours. Chromium 145 and
+Firefox 146 pass that fixture. See `browser-compatibility-2026-09-17.md` before using
+the earlier evidence as a readiness claim. No workaround or support-floor decision
+has been implemented; this remains a release blocker.
+
 The React build processes the existing generated token CSS and Tailwind output into
 bounded native `@scope` rules. Light values are established at every root; dark values
 apply to that root's resolved theme. Dark utility scopes use `:scope` and stop at the

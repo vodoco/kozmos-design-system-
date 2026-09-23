@@ -66,4 +66,31 @@ describe("POIResultCard", () => {
     fireEvent.click(screen.getByRole("button"));
     expect(onSelect).not.toHaveBeenCalled();
   });
+
+  it("is the prototype's row: 80 tall, no number, a dot before the floor when it is the current one", () => {
+    const { container, rerender } = render(
+      <POIResultCard
+        poi={poi}
+        result={{ ...result, featured: false, selected: false }}
+        onSelect={vi.fn()}
+        currentFloorId={result.floorId}
+      />,
+    );
+    expect(screen.getByRole("button")).toHaveClass("min-h-20");
+    expect(
+      screen.queryByText(String(result.resultIndex)),
+    ).not.toBeInTheDocument();
+    expect(
+      container.querySelector("[data-current-floor='true']"),
+    ).not.toBeNull();
+    rerender(
+      <POIResultCard
+        poi={poi}
+        result={{ ...result, featured: false, selected: false }}
+        onSelect={vi.fn()}
+        currentFloorId="somewhere-else"
+      />,
+    );
+    expect(container.querySelector("[data-current-floor='true']")).toBeNull();
+  });
 });

@@ -1,10 +1,15 @@
-import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as DatePickerStories from "./DatePicker.stories";
 import { PlatformSnippets } from "../PlatformSnippets";
 
 <Meta of={DatePickerStories} />
 
 # DatePicker
+
+DatePicker retains the browser's native date input. External `aria-describedby`
+IDs are merged with helper/error guidance; explicit error state cannot be hidden
+by `aria-invalid={false}`. The decorative icon follows the module's text direction.
 
 Displays the DatePicker interface topology natively.
 
@@ -20,9 +25,14 @@ Displays the DatePicker interface topology natively.
 
 <PlatformSnippets
     react={`
-import { DatePicker } from "@kozmos/react"
-
-<DatePicker />
+import { DatePicker } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <DatePicker label="Visit date" />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

@@ -82,12 +82,8 @@ describe("MapControlButton", () => {
     // a tint is absent is not enough — this passed for as long as the control
     // was white with black text, because the map surface and ink classes were
     // still on the root and tailwind-merge let them beat the tier's own.
-    expect(button.className).toContain(
-      "bg-[var(--components-primary-buttons-themed-button-background-idle)]",
-    );
-    expect(button.className).toContain(
-      "text-[var(--components-primary-buttons-themed-button-foreground-content-idle)]",
-    );
+    expect(button.className).toContain("kozmos-button-default");
+    expect(button.className).toContain("kozmos-button");
     expect(button).not.toHaveClass("bg-background");
     expect(button).not.toHaveClass("text-foreground");
     expect(button).not.toHaveClass("hover:bg-muted");

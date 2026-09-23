@@ -6,6 +6,7 @@ build
 .DS_Store
 coverage
 storybook-static
+storybook-internal
 
 # Native Build Tooling
 .gradle/
@@ -36,3 +37,6 @@ packages/react/playwright/.cache/
 xcuserdata/
 *.xcuserstate
 *.xcuserdatad/
+
+# Kotlin compiler session files
+packages/android/.kotlin/

@@ -36,3 +36,30 @@ export const ExternalLabel: Story = {
     labelPlacement: "bottom",
   },
 };
+
+/** A pin in a category's colours: the fill as the marker, its ink on the number. */
+export const Tinted: Story = {
+  args: {
+    label: "Dining",
+    number: 3,
+    tint: {
+      accent: "var(--semantics-category-accent-red)",
+      fill: "var(--semantics-category-fill-red)",
+      onFill: "var(--semantics-category-on-fill-red)",
+    },
+  },
+};
+
+/** Off the floor: a hollow marker outlined in the fill, the number in the foreground. */
+export const TintedOffFloor: Story = {
+  args: {
+    label: "Gates, on another floor",
+    number: 4,
+    offFloor: true,
+    tint: {
+      accent: "var(--semantics-category-accent-yellow)",
+      fill: "var(--semantics-category-fill-yellow)",
+      onFill: "var(--semantics-category-on-fill-yellow)",
+    },
+  },
+};

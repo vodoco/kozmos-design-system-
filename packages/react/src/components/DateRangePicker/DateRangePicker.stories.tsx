@@ -30,7 +30,7 @@ export const ResponsiveStack: Story = {
     <div className="w-80">
       <DateRangePicker
         label="Booking dates"
-        helperText="Fields stack below the small breakpoint."
+        helperText="Fields stack when their container is too narrow for two columns."
       />
     </div>
   ),

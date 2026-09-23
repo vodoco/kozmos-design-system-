@@ -19,7 +19,7 @@ extension UIColor {
             (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
         case 6: // RGB (24-bit)
             (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8: // ARGB (32-bit)
+        case 8: // ARGB (32-bit): alpha first, as the token build writes it
             (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
         default:
             (a, r, g, b) = (1, 1, 1, 0)
@@ -1060,11 +1060,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparent3: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C08") : UIColor(hex: "#17191C08")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#0817191C") : UIColor(hex: "#0817191C")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#17191C08") : NSColor(hex: "#17191C08")
+            return appearance.name == .darkAqua ? NSColor(hex: "#0817191C") : NSColor(hex: "#0817191C")
         }))
         #else
         return Color.clear
@@ -1073,11 +1073,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparent5: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C0D") : UIColor(hex: "#17191C0D")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#0D17191C") : UIColor(hex: "#0D17191C")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#17191C0D") : NSColor(hex: "#17191C0D")
+            return appearance.name == .darkAqua ? NSColor(hex: "#0D17191C") : NSColor(hex: "#0D17191C")
         }))
         #else
         return Color.clear
@@ -1086,11 +1086,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparent10: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C1A") : UIColor(hex: "#17191C1A")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#1A17191C") : UIColor(hex: "#1A17191C")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#17191C1A") : NSColor(hex: "#17191C1A")
+            return appearance.name == .darkAqua ? NSColor(hex: "#1A17191C") : NSColor(hex: "#1A17191C")
         }))
         #else
         return Color.clear
@@ -1099,11 +1099,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparent25: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C40") : UIColor(hex: "#17191C40")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4017191C") : UIColor(hex: "#4017191C")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#17191C40") : NSColor(hex: "#17191C40")
+            return appearance.name == .darkAqua ? NSColor(hex: "#4017191C") : NSColor(hex: "#4017191C")
         }))
         #else
         return Color.clear
@@ -1112,11 +1112,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparent50: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C80") : UIColor(hex: "#17191C80")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#8017191C") : UIColor(hex: "#8017191C")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#17191C80") : NSColor(hex: "#17191C80")
+            return appearance.name == .darkAqua ? NSColor(hex: "#8017191C") : NSColor(hex: "#8017191C")
         }))
         #else
         return Color.clear
@@ -1125,11 +1125,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparent60: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C99") : UIColor(hex: "#17191C99")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#9917191C") : UIColor(hex: "#9917191C")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#17191C99") : NSColor(hex: "#17191C99")
+            return appearance.name == .darkAqua ? NSColor(hex: "#9917191C") : NSColor(hex: "#9917191C")
         }))
         #else
         return Color.clear
@@ -1138,11 +1138,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparent75: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191CBF") : UIColor(hex: "#17191CBF")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#BF17191C") : UIColor(hex: "#BF17191C")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#17191CBF") : NSColor(hex: "#17191CBF")
+            return appearance.name == .darkAqua ? NSColor(hex: "#BF17191C") : NSColor(hex: "#BF17191C")
         }))
         #else
         return Color.clear
@@ -1151,11 +1151,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparent80: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191CCC") : UIColor(hex: "#17191CCC")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#CC17191C") : UIColor(hex: "#CC17191C")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#17191CCC") : NSColor(hex: "#17191CCC")
+            return appearance.name == .darkAqua ? NSColor(hex: "#CC17191C") : NSColor(hex: "#CC17191C")
         }))
         #else
         return Color.clear
@@ -1164,11 +1164,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparent90: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191CE5") : UIColor(hex: "#17191CE5")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#E517191C") : UIColor(hex: "#E517191C")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#17191CE5") : NSColor(hex: "#17191CE5")
+            return appearance.name == .darkAqua ? NSColor(hex: "#E517191C") : NSColor(hex: "#E517191C")
         }))
         #else
         return Color.clear
@@ -1177,11 +1177,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparent95: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191CF2") : UIColor(hex: "#17191CF2")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#F217191C") : UIColor(hex: "#F217191C")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#17191CF2") : NSColor(hex: "#17191CF2")
+            return appearance.name == .darkAqua ? NSColor(hex: "#F217191C") : NSColor(hex: "#F217191C")
         }))
         #else
         return Color.clear
@@ -1190,11 +1190,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparentInverted3: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFD08") : UIColor(hex: "#FCFCFD08")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#08FCFCFD") : UIColor(hex: "#08FCFCFD")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFD08") : NSColor(hex: "#FCFCFD08")
+            return appearance.name == .darkAqua ? NSColor(hex: "#08FCFCFD") : NSColor(hex: "#08FCFCFD")
         }))
         #else
         return Color.clear
@@ -1203,11 +1203,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparentInverted5: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFD0D") : UIColor(hex: "#FCFCFD0D")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#0DFCFCFD") : UIColor(hex: "#0DFCFCFD")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFD0D") : NSColor(hex: "#FCFCFD0D")
+            return appearance.name == .darkAqua ? NSColor(hex: "#0DFCFCFD") : NSColor(hex: "#0DFCFCFD")
         }))
         #else
         return Color.clear
@@ -1216,11 +1216,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparentInverted10: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFD1A") : UIColor(hex: "#FCFCFD1A")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#1AFCFCFD") : UIColor(hex: "#1AFCFCFD")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFD1A") : NSColor(hex: "#FCFCFD1A")
+            return appearance.name == .darkAqua ? NSColor(hex: "#1AFCFCFD") : NSColor(hex: "#1AFCFCFD")
         }))
         #else
         return Color.clear
@@ -1229,11 +1229,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparentInverted25: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFD40") : UIColor(hex: "#FCFCFD40")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#40FCFCFD") : UIColor(hex: "#40FCFCFD")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFD40") : NSColor(hex: "#FCFCFD40")
+            return appearance.name == .darkAqua ? NSColor(hex: "#40FCFCFD") : NSColor(hex: "#40FCFCFD")
         }))
         #else
         return Color.clear
@@ -1242,11 +1242,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparentInverted50: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFD80") : UIColor(hex: "#FCFCFD80")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#80FCFCFD") : UIColor(hex: "#80FCFCFD")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFD80") : NSColor(hex: "#FCFCFD80")
+            return appearance.name == .darkAqua ? NSColor(hex: "#80FCFCFD") : NSColor(hex: "#80FCFCFD")
         }))
         #else
         return Color.clear
@@ -1255,11 +1255,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparentInverted60: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFD99") : UIColor(hex: "#FCFCFD99")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#99FCFCFD") : UIColor(hex: "#99FCFCFD")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFD99") : NSColor(hex: "#FCFCFD99")
+            return appearance.name == .darkAqua ? NSColor(hex: "#99FCFCFD") : NSColor(hex: "#99FCFCFD")
         }))
         #else
         return Color.clear
@@ -1268,11 +1268,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparentInverted75: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFDBF") : UIColor(hex: "#FCFCFDBF")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#BFFCFCFD") : UIColor(hex: "#BFFCFCFD")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFDBF") : NSColor(hex: "#FCFCFDBF")
+            return appearance.name == .darkAqua ? NSColor(hex: "#BFFCFCFD") : NSColor(hex: "#BFFCFCFD")
         }))
         #else
         return Color.clear
@@ -1281,11 +1281,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparentInverted80: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFDCC") : UIColor(hex: "#FCFCFDCC")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#CCFCFCFD") : UIColor(hex: "#CCFCFCFD")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFDCC") : NSColor(hex: "#FCFCFDCC")
+            return appearance.name == .darkAqua ? NSColor(hex: "#CCFCFCFD") : NSColor(hex: "#CCFCFCFD")
         }))
         #else
         return Color.clear
@@ -1294,11 +1294,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparentInverted90: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFDE5") : UIColor(hex: "#FCFCFDE5")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#E5FCFCFD") : UIColor(hex: "#E5FCFCFD")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFDE5") : NSColor(hex: "#FCFCFDE5")
+            return appearance.name == .darkAqua ? NSColor(hex: "#E5FCFCFD") : NSColor(hex: "#E5FCFCFD")
         }))
         #else
         return Color.clear
@@ -1307,11 +1307,11 @@ public class KozmosColors {
     public static var primitivesColorsTransparentInverted95: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCFCFDF2") : UIColor(hex: "#FCFCFDF2")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#F2FCFCFD") : UIColor(hex: "#F2FCFCFD")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FCFCFDF2") : NSColor(hex: "#FCFCFDF2")
+            return appearance.name == .darkAqua ? NSColor(hex: "#F2FCFCFD") : NSColor(hex: "#F2FCFCFD")
         }))
         #else
         return Color.clear
@@ -1632,11 +1632,11 @@ public class KozmosColors {
     public static var primitivesBorderBevelTop: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FFFFFF80") : UIColor(hex: "#FFFFFF80")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#80FFFFFF") : UIColor(hex: "#80FFFFFF")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FFFFFF80") : NSColor(hex: "#FFFFFF80")
+            return appearance.name == .darkAqua ? NSColor(hex: "#80FFFFFF") : NSColor(hex: "#80FFFFFF")
         }))
         #else
         return Color.clear
@@ -1645,11 +1645,11 @@ public class KozmosColors {
     public static var primitivesBorderBevelBottom: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#00000033") : UIColor(hex: "#00000033")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#33000000") : UIColor(hex: "#33000000")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#00000033") : NSColor(hex: "#00000033")
+            return appearance.name == .darkAqua ? NSColor(hex: "#33000000") : NSColor(hex: "#33000000")
         }))
         #else
         return Color.clear
@@ -1840,11 +1840,11 @@ public class KozmosColors {
     public static var semanticsEmotionSuccessText: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#A0ECC6") : UIColor(hex: "#197F4C")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#CBF5E0") : UIColor(hex: "#14653D")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#A0ECC6") : NSColor(hex: "#197F4C")
+            return appearance.name == .darkAqua ? NSColor(hex: "#CBF5E0") : NSColor(hex: "#14653D")
         }))
         #else
         return Color.clear
@@ -1879,11 +1879,11 @@ public class KozmosColors {
     public static var semanticsEmotionDangerText: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#E95A77") : UIColor(hex: "#D41C42")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#EE7E95") : UIColor(hex: "#B01736")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#E95A77") : NSColor(hex: "#D41C42")
+            return appearance.name == .darkAqua ? NSColor(hex: "#EE7E95") : NSColor(hex: "#B01736")
         }))
         #else
         return Color.clear
@@ -1918,11 +1918,11 @@ public class KozmosColors {
     public static var semanticsEmotionAlertText: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FDE0A8") : UIColor(hex: "#A06B04")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FEEED0") : UIColor(hex: "#744D03")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FDE0A8") : NSColor(hex: "#A06B04")
+            return appearance.name == .darkAqua ? NSColor(hex: "#FEEED0") : NSColor(hex: "#744D03")
         }))
         #else
         return Color.clear
@@ -1957,11 +1957,11 @@ public class KozmosColors {
     public static var semanticsEmotionInformativeText: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#87C6E5") : UIColor(hex: "#2379A4")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#A9D6EC") : UIColor(hex: "#1C6082")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#87C6E5") : NSColor(hex: "#2379A4")
+            return appearance.name == .darkAqua ? NSColor(hex: "#A9D6EC") : NSColor(hex: "#1C6082")
         }))
         #else
         return Color.clear
@@ -2100,11 +2100,11 @@ public class KozmosColors {
     public static var semanticsOverlayScrim: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "rgba(0, 0, 0, 0.5)") : UIColor(hex: "rgba(0, 0, 0, 0.5)")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#80000000") : UIColor(hex: "#80000000")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "rgba(0, 0, 0, 0.5)") : NSColor(hex: "rgba(0, 0, 0, 0.5)")
+            return appearance.name == .darkAqua ? NSColor(hex: "#80000000") : NSColor(hex: "#80000000")
         }))
         #else
         return Color.clear
@@ -2113,11 +2113,323 @@ public class KozmosColors {
     public static var semanticsOverlayDim: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "rgba(0, 0, 0, 0.2)") : UIColor(hex: "rgba(0, 0, 0, 0.2)")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#33000000") : UIColor(hex: "#33000000")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "rgba(0, 0, 0, 0.2)") : NSColor(hex: "rgba(0, 0, 0, 0.2)")
+            return appearance.name == .darkAqua ? NSColor(hex: "#33000000") : NSColor(hex: "#33000000")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryAccentYellow: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#F9AC17") : UIColor(hex: "#F9AC17")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#F9AC17") : NSColor(hex: "#F9AC17")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryAccentOrange: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#E5801A") : UIColor(hex: "#E5801A")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#E5801A") : NSColor(hex: "#E5801A")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryAccentTurquoise: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#37A4A4") : UIColor(hex: "#37A4A4")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#37A4A4") : NSColor(hex: "#37A4A4")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryAccentRed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#D92626") : UIColor(hex: "#D92626")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#D92626") : NSColor(hex: "#D92626")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryAccentBlue: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#2080DF") : UIColor(hex: "#2080DF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#2080DF") : NSColor(hex: "#2080DF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryAccentNavy: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4D4DB2") : UIColor(hex: "#4D4DB2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#4D4DB2") : NSColor(hex: "#4D4DB2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryAccentGreen: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#339933") : UIColor(hex: "#339933")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#339933") : NSColor(hex: "#339933")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryAccentPink: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#B24DB2") : UIColor(hex: "#B24DB2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#B24DB2") : NSColor(hex: "#B24DB2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryFillYellow: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#F9AC17") : UIColor(hex: "#F9AC17")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#F9AC17") : NSColor(hex: "#F9AC17")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryFillOrange: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#E5801A") : UIColor(hex: "#E5801A")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#E5801A") : NSColor(hex: "#E5801A")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryFillTurquoise: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#37A4A4") : UIColor(hex: "#37A4A4")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#37A4A4") : NSColor(hex: "#37A4A4")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryFillRed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#D92626") : UIColor(hex: "#D92626")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#D92626") : NSColor(hex: "#D92626")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryFillBlue: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#1E77CF") : UIColor(hex: "#1E77CF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#1E77CF") : NSColor(hex: "#1E77CF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryFillNavy: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4D4DB2") : UIColor(hex: "#4D4DB2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#4D4DB2") : NSColor(hex: "#4D4DB2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryFillGreen: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#339933") : UIColor(hex: "#339933")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#339933") : NSColor(hex: "#339933")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryFillPink: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#B24DB2") : UIColor(hex: "#B24DB2")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#B24DB2") : NSColor(hex: "#B24DB2")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryOnfillYellow: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C") : UIColor(hex: "#17191C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191C") : NSColor(hex: "#17191C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryOnfillOrange: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C") : UIColor(hex: "#17191C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191C") : NSColor(hex: "#17191C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryOnfillTurquoise: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C") : UIColor(hex: "#17191C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191C") : NSColor(hex: "#17191C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryOnfillRed: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FFFFFF") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FFFFFF") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryOnfillBlue: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FFFFFF") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FFFFFF") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryOnfillNavy: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FFFFFF") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FFFFFF") : NSColor(hex: "#FFFFFF")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryOnfillGreen: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#17191C") : UIColor(hex: "#17191C")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#17191C") : NSColor(hex: "#17191C")
+        }))
+        #else
+        return Color.clear
+        #endif
+    }
+    public static var semanticsCategoryOnfillPink: Color {
+        #if canImport(UIKit)
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FFFFFF") : UIColor(hex: "#FFFFFF")
+        })
+        #elseif canImport(AppKit)
+        return Color(NSColor(name: nil, dynamicProvider: { appearance in
+            return appearance.name == .darkAqua ? NSColor(hex: "#FFFFFF") : NSColor(hex: "#FFFFFF")
         }))
         #else
         return Color.clear
@@ -2321,11 +2633,11 @@ public class KozmosColors {
     public static var componentsPrimaryButtonsSuccessButtonBackgroundIdle: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#76E4AD") : UIColor(hex: "#1E995B")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#76E4AD") : UIColor(hex: "#197F4C")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#76E4AD") : NSColor(hex: "#1E995B")
+            return appearance.name == .darkAqua ? NSColor(hex: "#76E4AD") : NSColor(hex: "#197F4C")
         }))
         #else
         return Color.clear
@@ -2347,11 +2659,11 @@ public class KozmosColors {
     public static var componentsPrimaryButtonsSuccessButtonBackgroundHover: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4BDC93") : UIColor(hex: "#23B26B")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4BDC93") : UIColor(hex: "#14653D")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#4BDC93") : NSColor(hex: "#23B26B")
+            return appearance.name == .darkAqua ? NSColor(hex: "#4BDC93") : NSColor(hex: "#14653D")
         }))
         #else
         return Color.clear
@@ -2360,11 +2672,11 @@ public class KozmosColors {
     public static var componentsPrimaryButtonsSuccessButtonBackgroundPressed: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#A0ECC6") : UIColor(hex: "#197F4C")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#A0ECC6") : UIColor(hex: "#0F4C2D")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#A0ECC6") : NSColor(hex: "#197F4C")
+            return appearance.name == .darkAqua ? NSColor(hex: "#A0ECC6") : NSColor(hex: "#0F4C2D")
         }))
         #else
         return Color.clear
@@ -2373,11 +2685,11 @@ public class KozmosColors {
     public static var componentsPrimaryButtonsSuccessButtonBackgroundFocus: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4BDC93") : UIColor(hex: "#23B26B")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4BDC93") : UIColor(hex: "#14653D")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#4BDC93") : NSColor(hex: "#23B26B")
+            return appearance.name == .darkAqua ? NSColor(hex: "#4BDC93") : NSColor(hex: "#14653D")
         }))
         #else
         return Color.clear
@@ -2516,11 +2828,11 @@ public class KozmosColors {
     public static var componentsPrimaryButtonsAlertButtonBackgroundIdle: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCD281") : UIColor(hex: "#CD8905")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCD281") : UIColor(hex: "#A06B04")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FCD281") : NSColor(hex: "#CD8905")
+            return appearance.name == .darkAqua ? NSColor(hex: "#FCD281") : NSColor(hex: "#A06B04")
         }))
         #else
         return Color.clear
@@ -2542,11 +2854,11 @@ public class KozmosColors {
     public static var componentsPrimaryButtonsAlertButtonBackgroundHover: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FBC459") : UIColor(hex: "#F9A707")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FBC459") : UIColor(hex: "#744D03")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FBC459") : NSColor(hex: "#F9A707")
+            return appearance.name == .darkAqua ? NSColor(hex: "#FBC459") : NSColor(hex: "#744D03")
         }))
         #else
         return Color.clear
@@ -2555,11 +2867,11 @@ public class KozmosColors {
     public static var componentsPrimaryButtonsAlertButtonBackgroundPressed: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FDE0A8") : UIColor(hex: "#A06B04")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FDE0A8") : UIColor(hex: "#472F02")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FDE0A8") : NSColor(hex: "#A06B04")
+            return appearance.name == .darkAqua ? NSColor(hex: "#FDE0A8") : NSColor(hex: "#472F02")
         }))
         #else
         return Color.clear
@@ -2568,11 +2880,11 @@ public class KozmosColors {
     public static var componentsPrimaryButtonsAlertButtonBackgroundFocus: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FBC459") : UIColor(hex: "#F9A707")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FBC459") : UIColor(hex: "#744D03")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FBC459") : NSColor(hex: "#F9A707")
+            return appearance.name == .darkAqua ? NSColor(hex: "#FBC459") : NSColor(hex: "#744D03")
         }))
         #else
         return Color.clear
@@ -2932,11 +3244,11 @@ public class KozmosColors {
     public static var componentsPrimaryButtonsInformativeButtonBackgroundHover: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#65B6DE") : UIColor(hex: "#2A92C6")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#65B6DE") : UIColor(hex: "#1C6082")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#65B6DE") : NSColor(hex: "#2A92C6")
+            return appearance.name == .darkAqua ? NSColor(hex: "#65B6DE") : NSColor(hex: "#1C6082")
         }))
         #else
         return Color.clear
@@ -2958,11 +3270,11 @@ public class KozmosColors {
     public static var componentsPrimaryButtonsInformativeButtonBackgroundFocus: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#65B6DE") : UIColor(hex: "#2A92C6")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#65B6DE") : UIColor(hex: "#1C6082")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#65B6DE") : NSColor(hex: "#2A92C6")
+            return appearance.name == .darkAqua ? NSColor(hex: "#65B6DE") : NSColor(hex: "#1C6082")
         }))
         #else
         return Color.clear
@@ -3556,11 +3868,11 @@ public class KozmosColors {
     public static var componentsSecondaryButtonsSuccessButtonForegroundContentIdle: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#76E4AD") : UIColor(hex: "#1E995B")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#76E4AD") : UIColor(hex: "#14653D")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#76E4AD") : NSColor(hex: "#1E995B")
+            return appearance.name == .darkAqua ? NSColor(hex: "#76E4AD") : NSColor(hex: "#14653D")
         }))
         #else
         return Color.clear
@@ -3582,11 +3894,11 @@ public class KozmosColors {
     public static var componentsSecondaryButtonsSuccessButtonForegroundContentHover: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4BDC93") : UIColor(hex: "#23B26B")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4BDC93") : UIColor(hex: "#0F4C2D")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#4BDC93") : NSColor(hex: "#23B26B")
+            return appearance.name == .darkAqua ? NSColor(hex: "#4BDC93") : NSColor(hex: "#0F4C2D")
         }))
         #else
         return Color.clear
@@ -3595,11 +3907,11 @@ public class KozmosColors {
     public static var componentsSecondaryButtonsSuccessButtonForegroundContentPressed: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#A0ECC6") : UIColor(hex: "#197F4C")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#A0ECC6") : UIColor(hex: "#0F4C2D")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#A0ECC6") : NSColor(hex: "#197F4C")
+            return appearance.name == .darkAqua ? NSColor(hex: "#A0ECC6") : NSColor(hex: "#0F4C2D")
         }))
         #else
         return Color.clear
@@ -3608,11 +3920,11 @@ public class KozmosColors {
     public static var componentsSecondaryButtonsSuccessButtonForegroundContentFocus: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4BDC93") : UIColor(hex: "#23B26B")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#4BDC93") : UIColor(hex: "#0F4C2D")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#4BDC93") : NSColor(hex: "#23B26B")
+            return appearance.name == .darkAqua ? NSColor(hex: "#4BDC93") : NSColor(hex: "#0F4C2D")
         }))
         #else
         return Color.clear
@@ -3777,11 +4089,11 @@ public class KozmosColors {
     public static var componentsSecondaryButtonsDangerButtonForegroundContentHover: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#E95A77") : UIColor(hex: "#D41C42")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#E95A77") : UIColor(hex: "#8C132B")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#E95A77") : NSColor(hex: "#D41C42")
+            return appearance.name == .darkAqua ? NSColor(hex: "#E95A77") : NSColor(hex: "#8C132B")
         }))
         #else
         return Color.clear
@@ -3790,11 +4102,11 @@ public class KozmosColors {
     public static var componentsSecondaryButtonsDangerButtonForegroundContentPressed: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#F3A2B3") : UIColor(hex: "#8C132B")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#F3A2B3") : UIColor(hex: "#670E20")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#F3A2B3") : NSColor(hex: "#8C132B")
+            return appearance.name == .darkAqua ? NSColor(hex: "#F3A2B3") : NSColor(hex: "#670E20")
         }))
         #else
         return Color.clear
@@ -3803,11 +4115,11 @@ public class KozmosColors {
     public static var componentsSecondaryButtonsDangerButtonForegroundContentFocus: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#E95A77") : UIColor(hex: "#D41C42")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#E95A77") : UIColor(hex: "#8C132B")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#E95A77") : NSColor(hex: "#D41C42")
+            return appearance.name == .darkAqua ? NSColor(hex: "#E95A77") : NSColor(hex: "#8C132B")
         }))
         #else
         return Color.clear
@@ -3946,11 +4258,11 @@ public class KozmosColors {
     public static var componentsSecondaryButtonsAlertButtonForegroundContentIdle: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCD281") : UIColor(hex: "#CD8905")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FCD281") : UIColor(hex: "#744D03")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FCD281") : NSColor(hex: "#CD8905")
+            return appearance.name == .darkAqua ? NSColor(hex: "#FCD281") : NSColor(hex: "#744D03")
         }))
         #else
         return Color.clear
@@ -3972,11 +4284,11 @@ public class KozmosColors {
     public static var componentsSecondaryButtonsAlertButtonForegroundContentHover: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FBC459") : UIColor(hex: "#F9A707")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FBC459") : UIColor(hex: "#472F02")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FBC459") : NSColor(hex: "#F9A707")
+            return appearance.name == .darkAqua ? NSColor(hex: "#FBC459") : NSColor(hex: "#472F02")
         }))
         #else
         return Color.clear
@@ -3985,11 +4297,11 @@ public class KozmosColors {
     public static var componentsSecondaryButtonsAlertButtonForegroundContentPressed: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FDE0A8") : UIColor(hex: "#A06B04")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FDE0A8") : UIColor(hex: "#472F02")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FDE0A8") : NSColor(hex: "#A06B04")
+            return appearance.name == .darkAqua ? NSColor(hex: "#FDE0A8") : NSColor(hex: "#472F02")
         }))
         #else
         return Color.clear
@@ -3998,11 +4310,11 @@ public class KozmosColors {
     public static var componentsSecondaryButtonsAlertButtonForegroundContentFocus: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FBC459") : UIColor(hex: "#F9A707")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#FBC459") : UIColor(hex: "#472F02")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#FBC459") : NSColor(hex: "#F9A707")
+            return appearance.name == .darkAqua ? NSColor(hex: "#FBC459") : NSColor(hex: "#472F02")
         }))
         #else
         return Color.clear
@@ -4141,11 +4453,11 @@ public class KozmosColors {
     public static var componentsSecondaryButtonsInformativeButtonForegroundContentIdle: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#87C6E5") : UIColor(hex: "#2379A4")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#87C6E5") : UIColor(hex: "#1C6082")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#87C6E5") : NSColor(hex: "#2379A4")
+            return appearance.name == .darkAqua ? NSColor(hex: "#87C6E5") : NSColor(hex: "#1C6082")
         }))
         #else
         return Color.clear
@@ -4167,11 +4479,11 @@ public class KozmosColors {
     public static var componentsSecondaryButtonsInformativeButtonForegroundContentHover: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#65B6DE") : UIColor(hex: "#2A92C6")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#65B6DE") : UIColor(hex: "#154761")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#65B6DE") : NSColor(hex: "#2A92C6")
+            return appearance.name == .darkAqua ? NSColor(hex: "#65B6DE") : NSColor(hex: "#154761")
         }))
         #else
         return Color.clear
@@ -4180,11 +4492,11 @@ public class KozmosColors {
     public static var componentsSecondaryButtonsInformativeButtonForegroundContentPressed: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#A9D6EC") : UIColor(hex: "#1C6082")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#A9D6EC") : UIColor(hex: "#154761")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#A9D6EC") : NSColor(hex: "#1C6082")
+            return appearance.name == .darkAqua ? NSColor(hex: "#A9D6EC") : NSColor(hex: "#154761")
         }))
         #else
         return Color.clear
@@ -4193,11 +4505,11 @@ public class KozmosColors {
     public static var componentsSecondaryButtonsInformativeButtonForegroundContentFocus: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#65B6DE") : UIColor(hex: "#2A92C6")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#65B6DE") : UIColor(hex: "#154761")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#65B6DE") : NSColor(hex: "#2A92C6")
+            return appearance.name == .darkAqua ? NSColor(hex: "#65B6DE") : NSColor(hex: "#154761")
         }))
         #else
         return Color.clear
@@ -4336,11 +4648,11 @@ public class KozmosColors {
     public static var componentsSecondaryButtonsNeutralButtonForegroundContentIdle: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#5C6069") : UIColor(hex: "#ABAFBA")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#a29d90") : UIColor(hex: "#5D626F")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#5C6069") : NSColor(hex: "#ABAFBA")
+            return appearance.name == .darkAqua ? NSColor(hex: "#a29d90") : NSColor(hex: "#5D626F")
         }))
         #else
         return Color.clear
@@ -4362,11 +4674,11 @@ public class KozmosColors {
     public static var componentsSecondaryButtonsNeutralButtonForegroundContentHover: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#6f6a5d") : UIColor(hex: "#9095A2")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#6f6a5d") : NSColor(hex: "#9095A2")
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
         }))
         #else
         return Color.clear
@@ -4375,11 +4687,11 @@ public class KozmosColors {
     public static var componentsSecondaryButtonsNeutralButtonForegroundContentPressed: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#464A53") : UIColor(hex: "#C7CAD1")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#d1cec7") : UIColor(hex: "#2E3138")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#464A53") : NSColor(hex: "#C7CAD1")
+            return appearance.name == .darkAqua ? NSColor(hex: "#d1cec7") : NSColor(hex: "#2E3138")
         }))
         #else
         return Color.clear
@@ -4388,11 +4700,11 @@ public class KozmosColors {
     public static var componentsSecondaryButtonsNeutralButtonForegroundContentFocus: Color {
         #if canImport(UIKit)
         return Color(UIColor { traitCollection in
-            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#6f6a5d") : UIColor(hex: "#9095A2")
+            return traitCollection.userInterfaceStyle == .dark ? UIColor(hex: "#b9b5ac") : UIColor(hex: "#464A53")
         })
         #elseif canImport(AppKit)
         return Color(NSColor(name: nil, dynamicProvider: { appearance in
-            return appearance.name == .darkAqua ? NSColor(hex: "#6f6a5d") : NSColor(hex: "#9095A2")
+            return appearance.name == .darkAqua ? NSColor(hex: "#b9b5ac") : NSColor(hex: "#464A53")
         }))
         #else
         return Color.clear

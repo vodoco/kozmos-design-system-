@@ -1,6 +1,5 @@
 package com.kozmos.components.search
 
-import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
 
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosSearch(
@@ -30,11 +30,11 @@ fun KozmosSearch(
         shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusControl),
         singleLine = true,
         colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = com.kozmos.tokens.KozmosColors.primitivesColorsTheme500,
-            unfocusedBorderColor = com.kozmos.tokens.KozmosColors.primitivesColorsForeground300,
-            cursorColor = com.kozmos.tokens.KozmosColors.primitivesColorsTheme500,
-            focusedLeadingIconColor = com.kozmos.tokens.KozmosColors.primitivesColorsForeground500,
-            unfocusedLeadingIconColor = com.kozmos.tokens.KozmosColors.primitivesColorsForeground500
+            focusedBorderColor = com.kozmos.tokens.KozmosThemeTokens.primitivesColorsTheme500,
+            unfocusedBorderColor = KozmosThemeTokens.semanticsBorderInput,
+            cursorColor = com.kozmos.tokens.KozmosThemeTokens.primitivesColorsTheme500,
+            focusedLeadingIconColor = com.kozmos.tokens.KozmosThemeTokens.primitivesColorsForeground500,
+            unfocusedLeadingIconColor = com.kozmos.tokens.KozmosThemeTokens.primitivesColorsForeground500
         )
     )
 }

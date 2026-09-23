@@ -9,13 +9,13 @@ import Foundation
 /// components. Human-readable labels are included alongside machine values so
 /// each platform renders the same meaning without embedding English formatters.
 
-public enum KozmosPOIAvailability: String, Sendable, Hashable, CaseIterable {
+public enum KozmosPOIAvailability: String, Sendable, Hashable, CaseIterable, Codable {
     case open
     case closed
     case unknown
 }
 
-public enum KozmosPOIAccessRestrictions: String, Sendable, Hashable, CaseIterable {
+public enum KozmosPOIAccessRestrictions: String, Sendable, Hashable, CaseIterable, Codable {
     /// The POI is known to have no access restrictions.
     ///
     /// Reference this case fully qualified — `KozmosPOIAccessRestrictions.none` —
@@ -25,7 +25,7 @@ public enum KozmosPOIAccessRestrictions: String, Sendable, Hashable, CaseIterabl
     case unknown
 }
 
-public enum KozmosPOIAction: String, Sendable, Hashable, CaseIterable {
+public enum KozmosPOIAction: String, Sendable, Hashable, CaseIterable, Codable {
     case navigate
     case favourite
     case bookmark
@@ -33,7 +33,7 @@ public enum KozmosPOIAction: String, Sendable, Hashable, CaseIterable {
     case order
 }
 
-public struct KozmosPOIMediaPresentation: Sendable, Hashable, Identifiable {
+public struct KozmosPOIMediaPresentation: Sendable, Hashable, Identifiable, Codable {
     public let id: String
     public let src: String
     public let alt: String
@@ -45,7 +45,7 @@ public struct KozmosPOIMediaPresentation: Sendable, Hashable, Identifiable {
     }
 }
 
-public struct KozmosPOIServicePresentation: Sendable, Hashable, Identifiable {
+public struct KozmosPOIServicePresentation: Sendable, Hashable, Identifiable, Codable {
     public let id: String
     public let label: String
     public let iconName: String?
@@ -57,7 +57,7 @@ public struct KozmosPOIServicePresentation: Sendable, Hashable, Identifiable {
     }
 }
 
-public struct KozmosPOILogoPresentation: Sendable, Hashable {
+public struct KozmosPOILogoPresentation: Sendable, Hashable, Codable {
     public let src: String
     public let alt: String
 
@@ -67,7 +67,7 @@ public struct KozmosPOILogoPresentation: Sendable, Hashable {
     }
 }
 
-public struct KozmosPOIPresentation: Sendable, Hashable, Identifiable {
+public struct KozmosPOIPresentation: Sendable, Hashable, Identifiable, Codable {
     public let id: String
     public let name: String
     public let categoryId: String?
@@ -138,7 +138,7 @@ public struct KozmosPOIPresentation: Sendable, Hashable, Identifiable {
     }
 }
 
-public struct KozmosTravelEstimatePresentation: Sendable, Hashable {
+public struct KozmosTravelEstimatePresentation: Sendable, Hashable, Codable {
     public let durationSeconds: Double
     public let durationLabel: String
     public let distanceMetres: Double?

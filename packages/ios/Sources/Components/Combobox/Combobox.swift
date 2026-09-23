@@ -112,7 +112,7 @@ public struct KozmosCombobox: View {
                         .clipShape(RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl))
                         .overlay(
                             RoundedRectangle(cornerRadius: KozmosDimensions.semanticsRadiusControl)
-                                .stroke(KozmosColors.primitivesColorsForeground500, lineWidth: 1)
+                                .stroke(KozmosColors.semanticsBorderInput, lineWidth: 1)
                         )
                 } else {
                     KozmosListbox(

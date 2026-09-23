@@ -10,6 +10,7 @@ const options = [
 const meta = {
   title: "Components/Listbox",
   component: Listbox,
+  args: { "aria-label": "Sort locations" },
   parameters: {
     layout: "centered",
   },

@@ -1,5 +1,7 @@
 import React from "react";
 import type { CategoryPresentation } from "@kozmos/product-contracts";
+import { Counter } from "../Counter";
+import type { CategoryTint } from "./CategoryTint";
 import { cn } from "../../utils";
 
 export interface CategoryTileProps extends Omit<
@@ -9,6 +11,10 @@ export interface CategoryTileProps extends Omit<
   category: CategoryPresentation;
   icon: React.ReactNode;
   onSelect: (categoryId: string) => void;
+  /** The category's colours, as the chosen-category field wears them: the
+   *  accent takes the icon and the selection's stroke, the inked fill the
+   *  counter; the square stays neutral. */
+  tint?: CategoryTint;
 }
 
 const CategoryTile = React.forwardRef<HTMLButtonElement, CategoryTileProps>(
@@ -18,6 +24,7 @@ const CategoryTile = React.forwardRef<HTMLButtonElement, CategoryTileProps>(
       category,
       icon,
       onSelect,
+      tint,
       type = "button",
       disabled: disabledProp,
       ...props
@@ -25,16 +32,26 @@ const CategoryTile = React.forwardRef<HTMLButtonElement, CategoryTileProps>(
     ref,
   ) => {
     const disabled = category.disabled || disabledProp;
+    const tinted = tint
+      ? ({
+          "--kozmos-category-tint": tint.accent,
+          color: "var(--kozmos-category-tint)",
+          ...(category.selected
+            ? {
+                borderColor: "var(--kozmos-category-tint)",
+                backgroundColor:
+                  "color-mix(in srgb, var(--kozmos-category-tint) 5%, transparent)",
+              }
+            : {}),
+        } as React.CSSProperties)
+      : undefined;
 
     return (
       <button
         ref={ref}
         aria-pressed={category.selected}
         className={cn(
-          "flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-container border bg-background p-3 text-center text-sm font-medium text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-          category.selected
-            ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-            : "border-border hover:bg-muted/60",
+          "kozmos-category-tile flex w-full flex-col items-center gap-1.5 rounded-control bg-transparent p-1 text-center text-[11px] font-normal leading-[14px] text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
           className,
         )}
         data-category-id={category.id}
@@ -43,19 +60,43 @@ const CategoryTile = React.forwardRef<HTMLButtonElement, CategoryTileProps>(
         type={type}
         {...props}
       >
+        {/* The icon's square: 64, radius Control, the container edge; the
+            selection shows on it. The label sits under it, two lines at most. */}
         <span
           aria-hidden="true"
-          className="flex h-10 w-10 items-center justify-center text-primary"
+          className={cn(
+            "relative flex h-16 w-16 shrink-0 items-center justify-center rounded-control border bg-background text-primary transition-colors [&>svg]:h-6 [&>svg]:w-6",
+            category.selected
+              ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+              : "border-border",
+          )}
+          style={tinted}
         >
           {icon}
+          {category.resultCount !== undefined && (
+            // The count: the system's counter, brand tone, four beyond the
+            // square's top and right edges so the icon stays clear. An absolute
+            // offset counts from inside the 1px border, so five here is four
+            // past the visible edge.
+            <Counter
+              className="absolute -right-[5px] -top-[5px]"
+              style={
+                tint
+                  ? { backgroundColor: tint.fill, color: tint.onFill }
+                  : undefined
+              }
+              tone="brand"
+            >
+              {category.resultCount}
+            </Counter>
+          )}
         </span>
-        <span className="max-w-full text-balance leading-tight">
+        <span className="line-clamp-2 max-w-full text-balance">
           {category.label}
         </span>
         {category.resultCountLabel && (
-          <span className="text-xs font-normal text-muted-foreground">
-            {category.resultCountLabel}
-          </span>
+          // The count's spoken form; the counter itself is drawn in the square.
+          <span className="sr-only">{category.resultCountLabel}</span>
         )}
       </button>
     );

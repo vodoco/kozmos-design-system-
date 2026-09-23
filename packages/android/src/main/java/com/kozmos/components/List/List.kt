@@ -11,7 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosList(
@@ -33,11 +33,11 @@ fun KozmosListItem(
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
-            color = KozmosColors.primitivesColorsForeground100,
+            color = KozmosThemeTokens.primitivesColorsForeground100,
             modifier = Modifier.padding(KozmosDimensions.primitivesLayoutSpacing200)
         )
         if (showDivider) {
-            Divider(color = KozmosColors.primitivesColorsBackground300)
+            Divider(color = KozmosThemeTokens.primitivesColorsBackground300)
         }
     }
 }

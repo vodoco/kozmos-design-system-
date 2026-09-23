@@ -1,6 +1,7 @@
 import React from "react";
-import { Check, ChevronDown, X } from "lucide-react";
-import { cn } from "../../utils";
+import { ChevronDown, X } from "lucide-react";
+import { cn, mergeAriaIds } from "../../utils";
+import { OptionRow } from "../Listbox/OptionRow";
 import { useKozmosAnalytics } from "../../utils/analytics";
 import { Chip, ChipGroup } from "../Chip";
 import { FieldWrapper } from "../FieldWrapper";
@@ -88,6 +89,10 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
       status = "default",
       value,
       wrapperClassName,
+      "aria-label": ariaLabel,
+      "aria-labelledby": ariaLabelledBy,
+      "aria-describedby": callerDescribedBy,
+      "aria-invalid": callerInvalid,
       ...props
     },
     ref,
@@ -130,18 +135,40 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
     const activeOption = activeIndex >= 0 ? filteredOptions[activeIndex] : null;
     const activeOptionId =
       open && activeOption ? `${inputId}-option-${activeIndex}` : undefined;
+    const listboxOpen = open && filteredOptions.length > 0;
+
+    React.useEffect(() => {
+      if (activeOptionId)
+        rootRef.current?.ownerDocument
+          .getElementById(activeOptionId)
+          ?.scrollIntoView?.({ block: "nearest" });
+    }, [activeOptionId]);
     const selectedSet = React.useMemo(
       () => new Set(selectedValues),
       [selectedValues],
     );
     const atSelectionLimit =
       typeof maxSelected === "number" && selectedValues.length >= maxSelected;
+    const navigableOptions = React.useMemo(
+      () =>
+        filteredOptions.map((option) => ({
+          ...option,
+          disabled:
+            option.disabled ||
+            (atSelectionLimit && !selectedSet.has(option.value)),
+        })),
+      [filteredOptions, atSelectionLimit, selectedSet],
+    );
     const canClear =
       clearable && !disabled && !readOnly && selectedValues.length > 0;
 
     React.useEffect(() => {
-      setActiveIndex(firstEnabledIndex(filteredOptions));
-    }, [filteredOptions]);
+      setActiveIndex(firstEnabledIndex(navigableOptions));
+    }, [navigableOptions]);
+
+    React.useEffect(() => {
+      if (disabled || readOnly) setOpen(false);
+    }, [disabled, readOnly]);
 
     React.useEffect(() => {
       if (!open) return undefined;
@@ -198,6 +225,7 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
     };
 
     const removeValue = (selectedValue: string) => {
+      if (disabled || readOnly) return;
       const option = options.find(
         (candidate) => candidate.value === selectedValue,
       );
@@ -211,6 +239,7 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
     };
 
     const clearSelection = () => {
+      if (disabled || readOnly) return;
       commitValue([]);
       setSearch("");
       setOpen(false);
@@ -240,7 +269,16 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
         required={required}
         status={resolvedStatus}
       >
-        <div ref={rootRef} className="relative">
+        <div
+          ref={rootRef}
+          className="relative"
+          onBlur={(event) => {
+            if (
+              !event.currentTarget.contains(event.relatedTarget as Node | null)
+            )
+              setOpen(false);
+          }}
+        >
           <div
             ref={setRefs}
             className={cn(
@@ -275,15 +313,17 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
                 id={inputId}
                 role="combobox"
                 aria-autocomplete="list"
-                aria-controls={listboxId}
-                aria-expanded={open}
+                aria-controls={listboxOpen ? listboxId : undefined}
+                aria-expanded={listboxOpen}
                 aria-haspopup="listbox"
                 aria-activedescendant={activeOptionId}
-                aria-describedby={describedBy}
-                aria-invalid={resolvedStatus === "error" || undefined}
+                aria-label={ariaLabel}
+                aria-labelledby={ariaLabelledBy}
+                aria-describedby={mergeAriaIds(callerDescribedBy, describedBy)}
+                aria-invalid={resolvedStatus === "error" ? true : callerInvalid}
                 aria-required={required || undefined}
                 autoComplete="off"
-                className="h-8 min-w-24 flex-1 bg-transparent px-1 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:text-muted-foreground"
+                className="kozmos-reset kozmos-multiselect-input"
                 disabled={disabled}
                 readOnly={readOnly}
                 placeholder={selectedValues.length > 0 ? "" : placeholder}
@@ -296,6 +336,8 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
                   setOpen(true);
                 }}
                 onKeyDown={(event) => {
+                  if (disabled || readOnly || event.nativeEvent.isComposing)
+                    return;
                   if (event.key === "Backspace" && !visibleSearchValue) {
                     const lastValue = selectedValues[selectedValues.length - 1];
                     if (lastValue) removeValue(lastValue);
@@ -303,13 +345,13 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
                     event.preventDefault();
                     setOpen(true);
                     setActiveIndex((current) =>
-                      enabledIndex(filteredOptions, current, 1),
+                      enabledIndex(navigableOptions, current, 1),
                     );
                   } else if (event.key === "ArrowUp") {
                     event.preventDefault();
                     setOpen(true);
                     setActiveIndex((current) =>
-                      enabledIndex(filteredOptions, current, -1),
+                      enabledIndex(navigableOptions, current, -1),
                     );
                   } else if (event.key === "Enter" && open) {
                     event.preventDefault();
@@ -340,8 +382,9 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
               disabled={disabled || readOnly}
               onClick={(event) => {
                 event.stopPropagation();
-                setOpen((current) => !current);
+                const nextOpen = !open;
                 inputRef.current?.focus();
+                setOpen(nextOpen);
               }}
             >
               <ChevronDown
@@ -355,9 +398,11 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
           </div>
           {open && (
             <div
-              id={listboxId}
-              role="listbox"
-              aria-multiselectable="true"
+              id={listboxOpen ? listboxId : undefined}
+              role={listboxOpen ? "listbox" : "status"}
+              aria-label={listboxOpen ? (ariaLabel ?? label) : undefined}
+              aria-labelledby={listboxOpen ? ariaLabelledBy : undefined}
+              aria-multiselectable={listboxOpen ? true : undefined}
               className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-control border bg-popover p-3 text-popover-foreground shadow-overlay"
             >
               {filteredOptions.length === 0 ? (
@@ -372,41 +417,21 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
                   const active = index === activeIndex;
 
                   return (
-                    <div
+                    <OptionRow
                       key={option.value}
                       id={`${inputId}-option-${index}`}
-                      role="option"
-                      aria-selected={selected}
-                      aria-disabled={disabledOption || undefined}
-                      className={cn(
-                        "flex cursor-pointer items-start gap-2 rounded-marker px-3 py-2 text-sm outline-none",
-                        active && "bg-accent text-accent-foreground",
-                        disabledOption &&
-                          "cursor-not-allowed text-muted-foreground opacity-60",
-                      )}
-                      onMouseEnter={() => setActiveIndex(index)}
+                      option={option}
+                      selected={selected}
+                      active={active}
+                      disabled={disabledOption}
+                      onMouseEnter={() => {
+                        if (!disabledOption) setActiveIndex(index);
+                      }}
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() =>
                         !disabledOption ? toggleOption(option) : undefined
                       }
-                    >
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium">
-                          {option.label}
-                        </span>
-                        {option.description && (
-                          <span className="block truncate text-xs text-muted-foreground">
-                            {option.description}
-                          </span>
-                        )}
-                      </span>
-                      {selected && (
-                        <Check
-                          className="mt-0.5 h-4 w-4 shrink-0"
-                          aria-hidden="true"
-                        />
-                      )}
-                    </div>
+                    />
                   );
                 })
               )}

@@ -6,6 +6,42 @@ import "@testing-library/jest-dom/vitest";
 afterEach(cleanup);
 
 describe("Input", () => {
+  it("does not let an empty error string hide linked helper text", () => {
+    const { getByRole, getByText } = render(
+      <Input error="" helperText="Guidance" />,
+    );
+    expect(getByRole("textbox")).toHaveAttribute(
+      "aria-describedby",
+      getByText("Guidance").id,
+    );
+  });
+  it("retains caller descriptions alongside its error message", () => {
+    const { getByRole } = render(
+      <Input error="Required" aria-describedby=" caller-help  caller-help " />,
+    );
+    expect(
+      getByRole("textbox").getAttribute("aria-describedby")?.split(/\s+/),
+    ).toEqual(["caller-help", getByRole("alert").id]);
+  });
+
+  it("retains caller descriptions alongside helper text", () => {
+    const { getByRole, getByText } = render(
+      <Input helperText="Guidance" aria-describedby="caller-help" />,
+    );
+    expect(
+      getByRole("textbox").getAttribute("aria-describedby")?.split(/\s+/),
+    ).toEqual(["caller-help", getByText("Guidance").id]);
+  });
+
+  it("does not let aria-invalid=false conceal an error status", () => {
+    const { getByRole } = render(<Input status="error" aria-invalid={false} />);
+    expect(getByRole("textbox")).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("preserves caller invalid semantics when no component error is set", () => {
+    const { getByRole } = render(<Input aria-invalid="spelling" />);
+    expect(getByRole("textbox")).toHaveAttribute("aria-invalid", "spelling");
+  });
   it("renders correctly", () => {
     const { getByRole } = render(<Input />);
     expect(getByRole("textbox")).toBeInTheDocument();
@@ -19,9 +55,9 @@ describe("Input", () => {
     expect(input).toHaveAttribute("placeholder", "Email address");
   });
 
-  it("uses the 44px field height class", () => {
+  it("uses the owned input recipe (geometry is checked in built browsers)", () => {
     const { getByRole } = render(<Input />);
-    expect(getByRole("textbox")).toHaveClass("h-11");
+    expect(getByRole("textbox")).toHaveClass("kozmos-reset", "kozmos-input");
   });
 
   it("renders error messages and aria attributes correctly", () => {
@@ -61,11 +97,11 @@ describe("Input", () => {
     const { getByRole, rerender } = render(
       <Input status="warning" helperText="Check this value." />,
     );
-    expect(getByRole("textbox")).toHaveClass("border-warning");
+    expect(getByRole("textbox")).toHaveClass("kozmos-input-warning");
     expect(getByRole("textbox")).not.toHaveAttribute("aria-invalid");
 
     rerender(<Input status="success" helperText="Looks good." />);
-    expect(getByRole("textbox")).toHaveClass("border-success");
+    expect(getByRole("textbox")).toHaveClass("kozmos-input-success");
   });
 
   it("treats status error as invalid for assistive tech", () => {

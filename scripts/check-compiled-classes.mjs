@@ -29,8 +29,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
+import { createRequire } from "node:module";
 
 const ROOT = process.cwd();
+const postcss = createRequire(path.join(ROOT, "packages/react/package.json"))(
+  "postcss",
+);
 const SRC = "packages/react/src";
 const CSS = "packages/react/dist/style.css";
 const problems = [];
@@ -43,7 +47,10 @@ const fail = (m) => {
 // Counts as they stood on 2026-09-17 on main at f89b734, after #47 fixed
 // MapControlButton and MapControlsGroup (66/41/29 before it). Lower these as
 // they are fixed.
-const BASELINE = { occurrences: 62, classes: 40, files: 27 };
+// Three inert references were removed by the owned-CSS migration (not
+// activated/fixed visually): Button secondary/ghost and Textarea placeholder.
+// Token-alpha colour callbacks close the remaining 58/38/25 baseline. Keep zero.
+const BASELINE = { occurrences: 0, classes: 0, files: 0 };
 
 const FIXTURE = /\.(?:test|stories|figma)\.[jt]sx?$|[\\/]__tests__[\\/]/;
 
@@ -58,7 +65,7 @@ function walk(dir, files = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) walk(full, files);
-    else if (/\.[jt]sx?$/.test(entry.name)) files.push(full);
+    else if (/\.(?:[jt]sx?|css)$/.test(entry.name)) files.push(full);
   }
   return files;
 }
@@ -95,6 +102,17 @@ function tokens(text, openStart, openEnd) {
 
 function authoredSlashClasses(file) {
   const text = fs.readFileSync(file, "utf8");
+  if (file.endsWith(".css")) {
+    const classes = [];
+    postcss.parse(text, { from: file }).walkAtRules("apply", (rule) => {
+      classes.push(
+        ...tokens(rule.params, false, false).filter((token) =>
+          SLASH_CLASS.test(token),
+        ),
+      );
+    });
+    return classes;
+  }
   const kind = file.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
   const source = ts.createSourceFile(
     file,
@@ -204,11 +222,8 @@ if (worse) {
   );
 }
 
-console.log(
-  `
-  Most of these are a colour role with an opacity modifier. The roles in
-  tailwind.config.js are plain var() colours, which Tailwind cannot take apart,
-  so the fix is in how the roles are declared rather than in each component.`,
+if (current.occurrences > 0) console.log(
+  "  Check token-alpha.cjs and the authoring contract before adding per-component workarounds.",
 );
 
 console.log(

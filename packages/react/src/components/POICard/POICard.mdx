@@ -1,4 +1,5 @@
-import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as POICardStories from "./POICard.stories";
 import { PlatformSnippets } from "../PlatformSnippets";
 
@@ -20,9 +21,16 @@ Displays the POICard interface topology natively.
 
 <PlatformSnippets
     react={`
-import { POICard } from "@kozmos/react"
-
-<POICard />
+import { POICard } from "@kozmos/react";
+export function Example() {
+  return (
+    <POICard
+      title="Atrium Café"
+      subtitle="Ground floor"
+      description="Coffee and refreshments by the main entrance."
+    />
+  );
+}
     `}
     vue={`
 <script setup>

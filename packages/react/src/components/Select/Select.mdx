@@ -28,18 +28,23 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@kozmos/react"
-
-<Select>
-  <SelectTrigger className="w-[180px]">
-    <SelectValue placeholder="Theme" />
-  </SelectTrigger>
-  <SelectContent>
-    <SelectItem value="light">Light</SelectItem>
-    <SelectItem value="dark">Dark</SelectItem>
-    <SelectItem value="system">System</SelectItem>
-  </SelectContent>
-</Select>
+} from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Select>
+        <SelectTrigger aria-label="Theme" className="w-[180px]">
+          <SelectValue placeholder="Theme" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="light">Light</SelectItem>
+          <SelectItem value="dark">Dark</SelectItem>
+          <SelectItem value="system">System</SelectItem>
+        </SelectContent>
+      </Select>
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

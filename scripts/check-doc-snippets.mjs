@@ -2,8 +2,9 @@
  * Verify that the platform code snippets in Storybook MDX name things that
  * actually exist.
  *
- * The snippets live inside template strings in `<PlatformSnippets>`, so nothing
- * compiles them — a wrong type name renders happily and misleads the reader.
+ * The snippets live inside template strings in `<PlatformSnippets>`. React
+ * recipes now compile in check-package-install; other platforms still only
+ * receive this weaker identifier check, not compiler validation.
  * Four such names shipped before this check existed (KozmosComboboxOption,
  * KozmosDateRange, KozmosOverlayPosition in a Kotlin block, and a String bound
  * where SwiftUI wanted a Date).
@@ -14,6 +15,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { extractSnippets } from "./lib/doc-snippets.mjs";
 
 const ROOT = process.cwd();
 const COMPONENTS_DIR = path.join(ROOT, "packages/react/src/components");
@@ -55,28 +57,6 @@ function symbolsFor(platform) {
   return symbols;
 }
 
-/**
- * Pull the `<platform>={`...`}` template literals out of an MDX file.
- *
- * Braces and backticks nest inside the snippets, so match the delimiters
- * rather than trying to balance them.
- */
-function snippetsIn(source) {
-  const found = [];
-  for (const platform of Object.keys(PLATFORMS)) {
-    const opener = `${platform}={\``;
-    let index = source.indexOf(opener);
-    while (index !== -1) {
-      const start = index + opener.length;
-      const end = source.indexOf("`}", start);
-      if (end === -1) break;
-      found.push({ platform, code: source.slice(start, end) });
-      index = source.indexOf(opener, end);
-    }
-  }
-  return found;
-}
-
 const symbolCache = {};
 function knownSymbols(platform) {
   if (!symbolCache[platform]) symbolCache[platform] = symbolsFor(platform);
@@ -114,7 +94,7 @@ for (const file of mdxFiles) {
   const relative = path.relative(ROOT, file);
   const source = fs.readFileSync(file, "utf8");
 
-  for (const { platform, code } of snippetsIn(source)) {
+  for (const { platform, code } of extractSnippets(source, relative)) {
     snippetCount += 1;
     const known = knownSymbols(platform);
     const declared = declaredIn(code);
@@ -138,7 +118,7 @@ if (problems.length > 0) {
   console.error("Documentation snippet check failed:\n");
   for (const problem of problems) console.error(`- ${problem}`);
   console.error(
-    `\n${problems.length} unknown identifier(s). Snippets are template strings, so nothing compiles them — the name has to be checked against the platform's own sources.`,
+    `\n${problems.length} unknown identifier(s). This identifier check is not compiler validation; run docs:snippets:compile for React recipes.`,
   );
   process.exit(1);
 }

@@ -59,6 +59,7 @@ export default defineConfig(async () => {
       },
       dts({
         insertTypesEntry: true,
+        rollupTypes: true,
         // The Code Connect files are type-checked (they are in tsconfig's
         // include since 2026-09-14) but they are not part of the package: each
         // one describes a Figma mapping, not an export. Without this the dts
@@ -84,17 +85,33 @@ export default defineConfig(async () => {
       lib: {
         entry: path.resolve(__dirname, "src/index.ts"),
         name: "KozmosReact",
-        fileName: (format: string) =>
-          format === "es" ? "kozmos-react.mjs" : "kozmos-react.umd.cjs",
       },
       rollupOptions: {
         external: dependencyExternals,
-        output: {
-          banner: '"use client";',
-          globals: Object.fromEntries(
-            dependencyExternals.map((dep) => [dep, toGlobalName(dep)]),
-          ),
-        },
+        output: [
+          // One file per source module, so an app's bundler keeps only the modules behind what
+          // it imports (package.json declares the JavaScript free of side effects). As one file,
+          // importing Button alone cost an app 48.7 KB gzip of the library's 54.5; this way,
+          // 1.1 KB. The entry keeps its published name; the modules sit under dist/esm/.
+          {
+            format: "es",
+            banner: '"use client";',
+            preserveModules: true,
+            preserveModulesRoot: "src",
+            entryFileNames: (chunk) =>
+              chunk.name === "index" ? "kozmos-react.mjs" : "esm/[name].mjs",
+          },
+          // require() keeps one file: CommonJS consumers do not tree-shake.
+          {
+            format: "umd",
+            name: "KozmosReact",
+            banner: '"use client";',
+            entryFileNames: "kozmos-react.umd.cjs",
+            globals: Object.fromEntries(
+              dependencyExternals.map((dep) => [dep, toGlobalName(dep)]),
+            ),
+          },
+        ],
       },
     },
   };

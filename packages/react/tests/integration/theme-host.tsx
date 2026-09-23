@@ -19,10 +19,7 @@ function Controls({ id }: { id: string }) {
       >
         Surface
       </div>
-      <div
-        data-testid={`${id}-variant`}
-        className="bg-white/70 dark:bg-black/70"
-      >
+      <div data-testid={`${id}-variant`} className="kozmos-surface-glass">
         Variant
       </div>
       <Button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>

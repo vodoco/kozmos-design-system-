@@ -17,10 +17,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.geometry.Offset
+import android.provider.Settings
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 fun Modifier.shimmer(): Modifier = composed {
     val transition = rememberInfiniteTransition(label = "shimmer")
@@ -38,15 +41,29 @@ fun Modifier.shimmer(): Modifier = composed {
     )
     
     val shimmerColors = listOf(
-        KozmosColors.primitivesColorsBackground300.copy(alpha = 0.6f),
-        KozmosColors.primitivesColorsBackground300.copy(alpha = 0.2f),
-        KozmosColors.primitivesColorsBackground300.copy(alpha = 0.6f),
+        KozmosThemeTokens.primitivesColorsBackground300.copy(alpha = 0.6f),
+        KozmosThemeTokens.primitivesColorsBackground300.copy(alpha = 0.2f),
+        KozmosThemeTokens.primitivesColorsBackground300.copy(alpha = 0.6f),
     )
     
+    // Held still when the system's animations are off, as the assistant's ring
+    // and the spinner are: the sheen ran whatever the preference said, which is
+    // GAP-50's third part. Stopped it rests at the sweep's start, which is the
+    // surface's own grey with the sheen off the end.
+    val context = LocalContext.current
+    val animationsOn = remember(context) {
+        Settings.Global.getFloat(
+            context.contentResolver,
+            Settings.Global.ANIMATOR_DURATION_SCALE,
+            1f
+        ) > 0f
+    }
+    val sweep = if (animationsOn) translateAnimation.value else 1000f
+
     val brush = Brush.linearGradient(
         colors = shimmerColors,
         start = Offset.Zero,
-        end = Offset(x = translateAnimation.value, y = translateAnimation.value)
+        end = Offset(x = sweep, y = sweep)
     )
     
     background(brush)
@@ -58,7 +75,7 @@ fun KozmosSkeleton(
 ) {
     Box(
         modifier = modifier
-            .background(KozmosColors.primitivesColorsBackground100, RoundedCornerShape(KozmosDimensions.semanticsRadiusMarker))
+            .background(KozmosThemeTokens.primitivesColorsBackground100, RoundedCornerShape(KozmosDimensions.semanticsRadiusMarker))
             .shimmer()
     )
 }

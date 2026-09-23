@@ -1,11 +1,9 @@
 import React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "../../utils";
+import { cn, mergeAriaIds } from "../../utils";
 import { FieldWrapper } from "../FieldWrapper";
 
-const textareaVariants = cva(
-  "flex min-h-20 w-full rounded-control border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-);
+const textareaVariants = cva("kozmos-reset kozmos-textarea");
 
 export interface TextareaProps
   extends
@@ -17,7 +15,18 @@ export interface TextareaProps
 }
 
 export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, wrapperClassName, error, label, ...props }, ref) => {
+  (
+    {
+      className,
+      wrapperClassName,
+      error,
+      label,
+      "aria-describedby": callerDescribedBy,
+      "aria-invalid": callerInvalid,
+      ...props
+    },
+    ref,
+  ) => {
     const errorId = React.useId();
     const hasError = !!error;
     const isStringError = typeof error === "string";
@@ -37,13 +46,15 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           id={inputId}
           className={cn(
             textareaVariants(),
-            hasError &&
-              "border-destructive text-destructive focus-visible:ring-destructive placeholder:text-destructive/60",
+            hasError && "kozmos-textarea-error",
             className,
           )}
           ref={ref}
-          aria-invalid={hasError}
-          aria-describedby={hasError && isStringError ? errorId : undefined}
+          aria-invalid={hasError ? true : (callerInvalid ?? false)}
+          aria-describedby={mergeAriaIds(
+            callerDescribedBy,
+            hasError && isStringError ? errorId : undefined,
+          )}
           {...props}
         />
       </FieldWrapper>

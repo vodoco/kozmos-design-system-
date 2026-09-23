@@ -7,7 +7,7 @@ import com.figma.code.connect.FigmaConnect
 import com.figma.code.connect.FigmaProperty
 import com.figma.code.connect.FigmaType
 import com.figma.code.connect.FigmaVariant
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 @FigmaConnect("https://figma.com/design/Yj4O8p6Y9h2Sa9zJVoAiVY?node-id=280-1157")
 @FigmaVariant("Content", "Basic")
@@ -74,7 +74,7 @@ class KozmosPaginationCompactConnect {
             KozmosPaginationPrevious(onClick = {})
             Text(
                 text = compactText,
-                color = KozmosColors.primitivesColorsForeground500,
+                color = KozmosThemeTokens.primitivesColorsForeground500,
                 style = MaterialTheme.typography.bodyMedium
             )
             KozmosPaginationNext(onClick = {})

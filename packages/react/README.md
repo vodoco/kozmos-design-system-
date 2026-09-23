@@ -24,11 +24,37 @@ It holds the token variables for both themes and the styles the components
 use, so there is no Tailwind configuration to add. `@kozmos/react/dist/style.css`
 resolves to the same file, for code that already imports that path.
 
-Tokens, utilities and the component reset are scoped to provider boundaries.
-Unrelated host content is not reset. This build requires native CSS `@scope`,
-including nested scopes with `:scope`; the production browser/WebView support
-matrix must be approved and tested before release. Unsupported browsers receive
-no component styles, not a legacy fallback.
+Token definitions belong to provider boundaries. Input, Textarea, Button, Popover,
+FieldWrapper, Label, PasswordInput and NumberInput use precompiled component-owned styles and local resets;
+the remaining utility-based components still require native CSS `@scope`.
+This is an unfinished compatibility migration, **not a broadly compatible release**.
+The production browser/WebView support matrix must be approved and tested before
+release. Unsupported engines will render the unmigrated parts incorrectly.
+
+`inputVariants` and `buttonVariants` retain their arguments but return opaque,
+namespaced recipe classes. Do not depend on the individual class strings.
+For migrated components, ordinary custom CSS loaded after the package can override
+base styles through `className`; state overrides follow normal CSS specificity.
+Provider `tokens` are the preferred theme-wide customization and follow portals.
+Input/Textarea/PasswordInput/NumberInput merge caller `aria-describedby` with their error/helper IDs; a
+component error keeps `aria-invalid` true even if a caller supplies false.
+
+Button always renders a native `<button>` and forwards an `HTMLButtonElement` ref.
+The previously declared but non-functional `asChild` prop has been removed before
+publication, including from Button-based wrappers. Do not nest links inside Button.
+Use Link for navigation, or apply `buttonVariants` to your own anchor/router link
+when it needs button styling. `variant="link"` changes appearance, not semantics.
+Native `disabled`, `isLoading`, form props and keyboard activation remain button-only;
+the styling helper does not implement disabled/loading behavior for an anchor.
+This is separate from Radix's working `PopoverTrigger asChild`.
+
+```tsx
+import { buttonVariants } from "@kozmos/react";
+
+<a href="/locations" className={buttonVariants({ variant: "link" })}>
+  Browse locations
+</a>;
+```
 
 For an application that deliberately wants Tailwind's **global** reset, optionally
 import `@kozmos/react/reset.css` before its own host styles. It is never imported
@@ -36,6 +62,30 @@ automatically. Do not also import the token package's global CSS into an embedde
 module. Ordinary host resets/utilities are covered; this is not Shadow DOM isolation
 against arbitrary high-specificity or `!important` host rules. `rem` units still
 follow the host document's root font size.
+
+## Browsers
+
+|                 |      |
+| --------------- | ---- |
+| Chrome, Edge    | 118  |
+| Safari, iOS     | 17.4 |
+| Firefox         | 128  |
+| Android WebView | 118  |
+
+The floor is `@scope`, which fences the component styles off from a host page so
+a product's own CSS and Kozmos's cannot overwrite each other. It landed in those
+versions, and a browser below one of them **discards the whole block** rather
+than ignoring the rule: 955 of the stylesheet's 1,227 rules live inside one.
+
+What that costs below the floor is not all or nothing. Measured across 43
+elements, 30 render identically without `@scope` and 13 do not: the 31
+components that carry their own CSS are unaffected, the 73 styled by utilities
+lose their layout and colour. `Button`, `Input` and `Heading` are in the first
+group; `AISearchButton`, `Tag` and `Skeleton` are in the second.
+
+Lowering this floor is the work of moving the remaining components to their own
+CSS, and every one of them moved lowers it a little. Raising it would be a
+breaking change, so it starts where the code actually is.
 
 ## Use
 

@@ -8,18 +8,25 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import com.kozmos.components.spinner.KozmosSpinner
+import com.kozmos.components.spinner.KozmosSpinnerSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.components.surface.KozmosSurfaceDefaults
+import com.kozmos.components.surface.KozmosSurfaceStyle
 import com.kozmos.tokens.KozmosThemeTokens
 
 enum class KozmosButtonVariant {
@@ -148,14 +155,15 @@ fun KozmosButton(
             val containerColor = if (emotion != null && variant != KozmosButtonVariant.Glass) emotionPrimaryBackground(emotion) else when(variant) {
                 KozmosButtonVariant.Destructive -> KozmosThemeTokens.componentsPrimaryButtonsDangerButtonBackgroundIdle
                 KozmosButtonVariant.Secondary -> KozmosThemeTokens.componentsPrimaryButtonsNeutralButtonBackgroundIdle
-                KozmosButtonVariant.Glass -> KozmosThemeTokens.primitivesColorsForeground0.copy(alpha = 0.16f)
+                // The glass variant is the glass surface, composed from the token.
+                KozmosButtonVariant.Glass -> KozmosSurfaceDefaults.tint(KozmosSurfaceStyle.Glass)
                 else -> KozmosThemeTokens.componentsPrimaryButtonsThemedButtonBackgroundIdle
             }
             
             val contentColor = if (emotion != null && variant != KozmosButtonVariant.Glass) emotionPrimaryForeground(emotion) else when(variant) {
                  KozmosButtonVariant.Secondary -> KozmosThemeTokens.componentsPrimaryButtonsNeutralButtonForegroundContentIdle
                  KozmosButtonVariant.Destructive -> KozmosThemeTokens.componentsPrimaryButtonsDangerButtonForegroundContentIdle
-                 KozmosButtonVariant.Glass -> KozmosThemeTokens.primitivesColorsForeground1000
+                 KozmosButtonVariant.Glass -> KozmosThemeTokens.primitivesColorsForeground100
                  else -> KozmosThemeTokens.componentsPrimaryButtonsThemedButtonForegroundContentIdle
             }
             
@@ -168,7 +176,8 @@ fun KozmosButton(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = containerColor,
                     contentColor = contentColor
-                )
+                ),
+                border = if (variant == KozmosButtonVariant.Glass) KozmosSurfaceDefaults.border(KozmosSurfaceStyle.Glass) else null
             ) {
                 ButtonContent(isLoading, content)
             }
@@ -181,12 +190,25 @@ private fun RowScope.ButtonContent(
     isLoading: Boolean,
     content: @Composable RowScope.() -> Unit
 ) {
-    if (isLoading) {
-        CircularProgressIndicator(
-            modifier = Modifier.size(14.dp),
-            color = LocalContentColor.current,
-            strokeWidth = 2.dp
-        )
+    // GAP-56: the loader and the caller's children keep 8 apart, as Figma's Button (itemSpacing
+    // 8) and iOS's (HStack spacing 100) do. Both used to touch the label.
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(KozmosDimensions.primitivesLayoutSpacing100),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (isLoading) {
+            // The system's arc at the small size, not material3's indicator:
+            // one drawing on all four platforms (2026-09-22). material3 1.1.2's
+            // indeterminate indicator is also the one Paparazzi cannot render
+            // against animation-core 1.6.0, so no golden has ever shown a
+            // loading button. Cleared from semantics — the button is already
+            // disabled and named.
+            KozmosSpinner(
+                modifier = Modifier.clearAndSetSemantics {},
+                size = KozmosSpinnerSize.Sm,
+                color = LocalContentColor.current
+            )
+        }
+        content()
     }
-    content()
 }

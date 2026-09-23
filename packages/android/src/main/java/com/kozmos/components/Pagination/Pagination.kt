@@ -25,7 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.tokens.KozmosDimensions
 
 @Composable
@@ -54,20 +54,20 @@ fun KozmosPaginationLink(
             .padding(horizontal = KozmosDimensions.primitivesLayoutSpacing50)
             .defaultMinSize(minWidth = 36.dp, minHeight = 36.dp)
             .clip(RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
-            .background(if (isActive) KozmosColors.primitivesColorsTheme500.copy(alpha = 0.1f) else Color.Transparent)
+            .background(if (isActive) KozmosThemeTokens.primitivesColorsTheme500.copy(alpha = 0.1f) else Color.Transparent)
             .clickable { 
                 trackEvent(com.kozmos.providers.KozmosAnalyticsEvent(component = "Pagination", eventName = "page_changed"))
                 onClick() 
             }
             .then(
-                if (isActive) Modifier.border(1.dp, KozmosColors.primitivesColorsTheme500, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
+                if (isActive) Modifier.border(1.dp, KozmosThemeTokens.primitivesColorsTheme500, RoundedCornerShape(KozmosDimensions.semanticsRadiusControl))
                 else Modifier
             ),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            color = if (isActive) KozmosColors.primitivesColorsTheme500 else KozmosColors.primitivesColorsForeground100,
+            color = if (isActive) KozmosThemeTokens.primitivesColorsTheme500 else KozmosThemeTokens.primitivesColorsForeground100,
             style = MaterialTheme.typography.bodyMedium
         )
     }
@@ -88,9 +88,9 @@ fun KozmosPaginationPrevious(
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Previous", tint = KozmosColors.primitivesColorsForeground100)
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Previous", tint = KozmosThemeTokens.primitivesColorsForeground100)
             Spacer(modifier = Modifier.width(KozmosDimensions.primitivesLayoutSpacing50))
-            Text("Previous", color = KozmosColors.primitivesColorsForeground100, style = MaterialTheme.typography.bodyMedium)
+            Text("Previous", color = KozmosThemeTokens.primitivesColorsForeground100, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
@@ -110,9 +110,9 @@ fun KozmosPaginationNext(
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Next", color = KozmosColors.primitivesColorsForeground100, style = MaterialTheme.typography.bodyMedium)
+            Text("Next", color = KozmosThemeTokens.primitivesColorsForeground100, style = MaterialTheme.typography.bodyMedium)
             Spacer(modifier = Modifier.width(KozmosDimensions.primitivesLayoutSpacing50))
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Next", tint = KozmosColors.primitivesColorsForeground100)
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Next", tint = KozmosThemeTokens.primitivesColorsForeground100)
         }
     }
 }
@@ -123,6 +123,6 @@ fun KozmosPaginationEllipsis(modifier: Modifier = Modifier) {
         modifier = modifier.defaultMinSize(minWidth = 36.dp, minHeight = 36.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text("...", color = KozmosColors.primitivesColorsForeground500, style = MaterialTheme.typography.bodyLarge)
+        Text("...", color = KozmosThemeTokens.primitivesColorsForeground500, style = MaterialTheme.typography.bodyLarge)
     }
 }

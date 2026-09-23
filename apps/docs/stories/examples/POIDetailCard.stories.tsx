@@ -8,6 +8,7 @@ import {
   AvatarImage,
   BottomSheet,
   BottomSheetContent,
+  BottomSheetDescription,
   BottomSheetTitle,
   Button,
   Icon,
@@ -275,6 +276,9 @@ export const Default: Story = {
   render: () => (
     <BottomSheet open onOpenChange={() => undefined}>
       <BottomSheetContent showClose={false}>
+        <BottomSheetDescription className="sr-only">
+          Location details, photos, amenities and available actions.
+        </BottomSheetDescription>
         <Stack className="overflow-y-auto" gap={4}>
           {/* cardHeader — logo, name, and the top quick buttons */}
           <Stack direction="row" align="center" gap={2}>
@@ -296,10 +300,9 @@ export const Default: Story = {
           </Stack>
 
           <Gap title="Favourite and bookmark buttons">
-            The card&apos;s `topQuickButtons` carries a heart and a bookmark
-            beside the close button. `IconButton` expresses the control, but
-            `@kozmos/icons` has neither glyph — 14 of this card&apos;s icons are
-            absent from the 38-icon set.
+            Heart and bookmark glyphs are now available in @kozmos/icons. This
+            legacy example still needs product favourite/save callbacks before
+            those actions can be demonstrated meaningfully.
           </Gap>
 
           {/* level / building, and the open-now status */}
@@ -335,10 +338,10 @@ export const Default: Story = {
           </Stack>
 
           <Gap title="poiMetaInformation — the meta strip">
-            A row of seven bordered tiles: travel time, distance, rating, price
-            band, wheelchair access, crowd level and access restriction. Nothing
-            in Kozmos expresses a tile strip like it; `MetaStrip` is named as
-            missing in `ds-handoff.md` §4.4, and it is drawn on four surfaces.
+            MetaStrip is now exported by @kozmos/react. This legacy example
+            still needs its travel time, distance, rating, price and access data
+            mapped into that component; the component itself is no longer
+            missing.
           </Gap>
 
           <Separator />

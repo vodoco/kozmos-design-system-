@@ -14,7 +14,7 @@ public struct KozmosTable<Data: RandomAccessCollection, RowContent: View>: View 
             ForEach(data) { item in
                 VStack(spacing: KozmosDimensions.primitivesLayoutSpacing0) {
                     rowContent(item)
-                    Divider()
+                    Divider().overlay(KozmosColors.semanticsBorderSubtle)
                 }
             }
         }

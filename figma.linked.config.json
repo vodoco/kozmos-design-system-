@@ -1,9 +1,14 @@
 {
   "codeConnect": {
     "parser": "react",
+    "importPaths": {
+      "src/components/*": "@kozmos/react"
+    },
     "include": [
       "src/components/Button/Button.figma.tsx",
       "src/components/Button/Button.tsx",
+      "src/components/Icon/Icon.figma.tsx",
+      "src/components/Icon/Icon.tsx",
       "src/components/IconButton/IconButton.figma.tsx",
       "src/components/IconButton/IconButton.tsx",
       "src/components/ToggleButton/ToggleButton.figma.tsx",
@@ -122,6 +127,8 @@
       "src/components/Accordion/Accordion.tsx",
       "src/components/Tooltip/Tooltip.figma.tsx",
       "src/components/Tooltip/Tooltip.tsx",
+      "src/components/Backdrop/Backdrop.figma.tsx",
+      "src/components/Backdrop/Backdrop.tsx",
       "src/components/Dialog/Dialog.figma.tsx",
       "src/components/Dialog/Dialog.tsx",
       "src/components/Drawer/Drawer.figma.tsx",
@@ -138,6 +145,10 @@
       "src/components/SearchBar/SearchBar.tsx",
       "src/components/CategoryTile/CategoryTile.figma.tsx",
       "src/components/CategoryTile/CategoryTile.tsx",
+      "src/components/CategoryField/CategoryField.figma.tsx",
+      "src/components/CategoryField/CategoryField.tsx",
+      "src/components/AISearchButton/AISearchButton.figma.tsx",
+      "src/components/AISearchButton/AISearchButton.tsx",
       "src/components/MapControlButton/MapControlButton.figma.tsx",
       "src/components/MapControlButton/MapControlButton.tsx",
       "src/components/MapOverlay/MapOverlay.figma.tsx",

@@ -1,7 +1,7 @@
 import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { fn } from "@storybook/test";
-import { Focus, Info } from "lucide-react";
+import { Accessibility, Focus, Info } from "lucide-react";
 import { MapControlButton } from "./MapControlButton";
 
 const meta = {
@@ -88,7 +88,7 @@ export const RevealsOnChange: Story = {
  */
 export const RevealsAfterWork: Story = {
   args: {
-    icon: <Focus className="h-5 w-5" />,
+    icon: <Accessibility size={24} />,
     label: "Step-free",
     labelPlacement: "stacked",
     revealDelay: 1400,
@@ -101,7 +101,7 @@ export const RevealsAfterWork: Story = {
     return (
       <MapControlButton
         {...args}
-        icon={<Focus className="h-5 w-5" />}
+        icon={<Accessibility size={24} />}
         pressed={on}
         stateLabel={on ? "On" : "Off"}
         onClick={() => setOn((value) => !value)}

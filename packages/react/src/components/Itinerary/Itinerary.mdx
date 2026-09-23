@@ -1,0 +1,63 @@
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
+import * as ItineraryStories from "./Itinerary.stories";
+import { PlatformSnippets } from "../PlatformSnippets";
+
+<Meta of={ItineraryStories} />
+
+# Itinerary
+
+The whole route as a list: where it starts, every step with the current one emphasised, where it ends. The steps are the routing engine's own words with the arrow the product gives each; the origin and destination sit under their labels. Assistive technology reads the endpoints with their labels and each step as one item, the current one marked as such.
+
+<Canvas>
+  <Story of={ItineraryStories.Default} />
+</Canvas>
+
+<Controls />
+
+## Implementation
+
+<div className="subheading">Code</div>
+
+<PlatformSnippets
+    react={`
+import { Itinerary } from "@kozmos/react";
+
+export function Example() {
+  return (
+    <Itinerary
+      origin="Dunkin'"
+      steps={[
+        { id: "1", instruction: "Take Elevator down to First Floor", type: "straight" },
+        { id: "2", instruction: "Take Corridor to Garage B", type: "straight", current: true },
+        { id: "3", instruction: "Destination", type: "destination" },
+      ]}
+      destination="Airport Shuttles"
+    />
+  );
+}
+    `}
+    swift={`
+import SwiftUI
+
+KozmosItinerary(
+    origin: "Dunkin'",
+    steps: [
+        KozmosItineraryStep(id: "1", instruction: "Take Elevator down to First Floor", type: .straight),
+        KozmosItineraryStep(id: "2", instruction: "Take Corridor to Garage B", type: .straight, isCurrent: true),
+        KozmosItineraryStep(id: "3", instruction: "Destination", type: .destination),
+    ],
+    destination: "Airport Shuttles")
+`}
+    kotlin={`
+KozmosItinerary(
+    origin = "Dunkin'",
+    steps = listOf(
+        KozmosItineraryStep("1", "Take Elevator down to First Floor", DirectionType.Straight),
+        KozmosItineraryStep("2", "Take Corridor to Garage B", DirectionType.Straight, isCurrent = true),
+        KozmosItineraryStep("3", "Destination", DirectionType.Destination)
+    ),
+    destination = "Airport Shuttles"
+)
+    `}
+/>

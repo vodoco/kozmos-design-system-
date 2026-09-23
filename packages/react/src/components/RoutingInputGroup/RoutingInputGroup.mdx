@@ -1,8 +1,11 @@
-import { Meta, Story } from '@storybook/blocks';
+import { Meta, Canvas } from '@storybook/blocks';
+import * as RoutingInputGroupStories from './RoutingInputGroup.stories';
 
-<Meta title="Components/RoutingInputGroup" />
+<Meta of={RoutingInputGroupStories} />
 
 # Routing Input Group
+
+<Canvas of={RoutingInputGroupStories.Default} />
 
 The `RoutingInputGroup` maps Pointr's timeline logic into physical multi-point data entry boxes, allowing dynamic addition/reduction of navigational stops while keeping layout structures aligned cleanly against timeline borders.
 

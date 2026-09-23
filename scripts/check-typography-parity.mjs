@@ -33,9 +33,12 @@ const ANDROID_THEME = path.join(
 );
 
 // The Dynamic Type styles the components use. A bare `.font(.body)` is not
-// wrong, it just makes the decision in the wrong place.
+// wrong, it just makes the decision in the wrong place. KozmosTypography's own
+// `font(_:)` is the right place, so a style handed to it is not bare: POI
+// DetailPanel's `KozmosTypography.font(.callout)`, a style with no shorthand,
+// read as one from 2026-09-18.
 const BARE_TEXT_STYLE =
-  /\.font\(\.(body|headline|subheadline|footnote|caption|callout|title|title2|title3|largeTitle|caption2)\)/g;
+  /(?<!KozmosTypography)\.font\(\.(body|headline|subheadline|footnote|caption|callout|title|title2|title3|largeTitle|caption2)\)/g;
 
 function walk(dir, extension, files = []) {
   if (!fs.existsSync(dir)) return files;

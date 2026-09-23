@@ -1,4 +1,5 @@
-import { Meta, Canvas, Controls } from "@storybook/blocks";
+import { Meta, Canvas } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as Stories from "./AdaptiveMapShell.stories";
 
 <Meta of={Stories} />
@@ -10,8 +11,11 @@ Give the shell a definite height (or a bounded parent for its default `height: 1
 The old 448px minimum has been removed so a short landscape host can constrain it.
 
 Auto presentation uses a side panel in a local region at least 720×160px, otherwise
-a bottom panel. Override with `panelPresentation`; `panelFraction` controls bottom
-height, subject to space reserved for measured map controls. Read the resolved
+a bottom panel. Override with `panelPresentation`; a bottom sheet rests at one of its `panelDetents` — collapsed (a fifth of the shell, or
+the content's peek anchor, marked with `panelPeekAnchorProps`), medium (54 %) and large
+(94 %) by default, resting at medium — dragged anywhere on it and snapping to the nearest;
+its content scrolls only at the largest detent. `panelFraction` and `panelSizing="content"`
+are single-detent shorthands. Read the resolved
 panel bounds from `onLayoutChange`. `panelPlacement` is logical and follows inherited RTL direction.
 
 `usableRegions` accepts host-provided hinge-free rectangles in shell-local CSS pixels.

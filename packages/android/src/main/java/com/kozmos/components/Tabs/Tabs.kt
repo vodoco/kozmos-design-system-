@@ -16,7 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 import com.kozmos.tokens.KozmosDimensions
 
 @Composable
@@ -37,7 +37,7 @@ fun KozmosTabsList(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(KozmosColors.primitivesColorsBackground0),
+            .background(KozmosThemeTokens.primitivesColorsBackground0),
         verticalAlignment = Alignment.CenterVertically
     ) {
         content()
@@ -68,14 +68,14 @@ fun RowScope.KozmosTabsTrigger(
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = title,
-                color = if (isSelected) KozmosColors.primitivesColorsForeground100 else KozmosColors.primitivesColorsForeground500,
+                color = if (isSelected) KozmosThemeTokens.primitivesColorsForeground100 else KozmosThemeTokens.primitivesColorsForeground500,
             )
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = KozmosDimensions.primitivesLayoutSpacing100)
                     .height(2.dp)
-                    .background(if (isSelected) KozmosColors.primitivesColorsTheme500 else Color.Transparent)
+                    .background(if (isSelected) KozmosThemeTokens.primitivesColorsTheme500 else Color.Transparent)
             )
         }
     }

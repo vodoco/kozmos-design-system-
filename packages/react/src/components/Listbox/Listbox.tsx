@@ -1,5 +1,5 @@
 import React from "react";
-import { Check } from "lucide-react";
+import { OptionRow } from "./OptionRow";
 import { cn } from "../../utils";
 import { type ComboboxOption } from "../Combobox";
 
@@ -58,6 +58,15 @@ export const Listbox = React.forwardRef<HTMLDivElement, ListboxProps>(
   ) => {
     const defaultListboxId = React.useId();
     const listboxId = id || defaultListboxId;
+    const rootRef = React.useRef<HTMLDivElement | null>(null);
+    const setRef = React.useCallback(
+      (node: HTMLDivElement | null) => {
+        rootRef.current = node;
+        if (typeof ref === "function") ref(node);
+        else if (ref) ref.current = node;
+      },
+      [ref],
+    );
     const [uncontrolledValue, setUncontrolledValue] = React.useState<
       string | string[] | undefined
     >(defaultValue ?? (multiple ? [] : ""));
@@ -77,6 +86,15 @@ export const Listbox = React.forwardRef<HTMLDivElement, ListboxProps>(
     React.useEffect(() => {
       setActiveIndex(firstEnabledIndex(options));
     }, [options]);
+
+    React.useEffect(() => {
+      const root = rootRef.current;
+      if (root && root.ownerDocument.activeElement === root && activeOptionId) {
+        root.ownerDocument
+          .getElementById(activeOptionId)
+          ?.scrollIntoView?.({ block: "nearest" });
+      }
+    }, [activeOptionId]);
 
     const commitOption = (option: ComboboxOption) => {
       if (disabled || option.disabled) return;
@@ -98,19 +116,17 @@ export const Listbox = React.forwardRef<HTMLDivElement, ListboxProps>(
 
     return (
       <div
-        ref={ref}
+        ref={setRef}
         id={listboxId}
         role="listbox"
         aria-activedescendant={activeOptionId}
         aria-disabled={disabled || undefined}
         aria-multiselectable={multiple || undefined}
         tabIndex={disabled ? -1 : 0}
-        className={cn(
-          "grid max-h-64 min-w-48 gap-1 overflow-auto rounded-control border bg-popover p-3 text-popover-foreground shadow-overlay ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-          disabled && "cursor-not-allowed opacity-60",
-          className,
-        )}
+        className={cn("kozmos-reset kozmos-listbox", className)}
         onKeyDown={(event) => {
+          onKeyDown?.(event);
+          if (event.defaultPrevented || disabled) return;
           if (event.key === "ArrowDown") {
             event.preventDefault();
             setActiveIndex((current) => nextEnabledIndex(options, current, 1));
@@ -128,7 +144,6 @@ export const Listbox = React.forwardRef<HTMLDivElement, ListboxProps>(
             const option = options[activeIndex];
             if (option) commitOption(option);
           }
-          onKeyDown?.(event);
         }}
         {...props}
       >
@@ -137,35 +152,23 @@ export const Listbox = React.forwardRef<HTMLDivElement, ListboxProps>(
           const active = index === activeIndex;
 
           return (
-            <div
+            <OptionRow
               key={option.value}
               id={`${listboxId}-option-${index}`}
-              role="option"
-              aria-selected={selected}
-              aria-disabled={option.disabled || undefined}
-              className={cn(
-                "flex cursor-pointer items-start gap-2 rounded-marker px-3 py-2 text-sm outline-none",
-                active && "bg-accent text-accent-foreground",
-                option.disabled &&
-                  "cursor-not-allowed text-muted-foreground opacity-60",
-              )}
-              onMouseEnter={() => setActiveIndex(index)}
-              onClick={() => commitOption(option)}
-            >
-              <span className="min-w-0 flex-1">
-                <span className="block truncate font-medium">
-                  {option.label}
-                </span>
-                {option.description && (
-                  <span className="block truncate text-xs text-muted-foreground">
-                    {option.description}
-                  </span>
-                )}
-              </span>
-              {selected && (
-                <Check className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-              )}
-            </div>
+              option={option}
+              selected={selected}
+              active={active}
+              disabled={disabled || option.disabled}
+              onMouseEnter={() => {
+                if (!disabled && !option.disabled) setActiveIndex(index);
+              }}
+              onClick={(event) => {
+                if (disabled || option.disabled) return;
+                event.currentTarget.parentElement?.focus();
+                setActiveIndex(index);
+                commitOption(option);
+              }}
+            />
           );
         })}
       </div>

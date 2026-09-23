@@ -4,6 +4,19 @@ import "@testing-library/jest-dom/vitest";
 import { ScrollArea } from "./ScrollArea";
 
 describe("ScrollArea", () => {
+  it("makes the viewport keyboard reachable and allows naming it independently", () => {
+    const { getByRole } = render(
+      <ScrollArea
+        viewportProps={{ role: "region", "aria-label": "Nearby places" }}
+      >
+        Content
+      </ScrollArea>,
+    );
+    expect(getByRole("region", { name: "Nearby places" })).toHaveAttribute(
+      "tabindex",
+      "0",
+    );
+  });
   it("renders children inside a scroll viewport", () => {
     const { getByText } = render(<ScrollArea>Scrollable content</ScrollArea>);
     expect(getByText("Scrollable content")).toBeInTheDocument();

@@ -1,5 +1,7 @@
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "./Tabs/Tabs"; // Import from local Tabs component
-import { Source } from "@storybook/blocks";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "./Tabs/Tabs";
+import { DesignConfigProvider } from "../context/DesignConfigContext";
+import { SyntaxHighlighter } from "storybook/internal/components";
+import { convert, ThemeProvider, themes } from "storybook/internal/theming";
 
 export interface PlatformSnippetsProps {
   react?: string;
@@ -8,60 +10,101 @@ export interface PlatformSnippetsProps {
   kotlin?: string;
 }
 
-export const PlatformSnippets = ({
-  react,
-  vue,
-  swift,
-  kotlin,
-}: PlatformSnippetsProps) => {
-  const snippets = [
-    { value: "react", label: "React", code: react, language: "tsx" },
-    { value: "vue", label: "Vue 3", code: vue, language: "html" },
-    { value: "swift", label: "Swift (iOS)", code: swift, language: "swift" },
-    {
-      value: "kotlin",
-      label: "Kotlin (Android)",
-      code: kotlin,
-      language: "kotlin",
-    },
-  ].filter(
-    (
-      snippet,
-    ): snippet is {
-      value: string;
-      label: string;
-      code: string;
-      language: string;
-    } => Boolean(snippet.code),
-  );
+const codeTheme = convert(themes.dark);
 
-  if (snippets.length === 0) {
-    return null;
-  }
+const platforms = [
+  {
+    value: "react",
+    label: "React",
+    language: "tsx",
+    note: "The live preview uses React. Docs recipes are type-checked against installed package tarballs under React 18 and 19 by docs:snippets:compile. This is not runtime or accessibility certification. Follow the package README for CSS and provider setup.",
+  },
+  {
+    value: "vue",
+    label: "Vue 3 · Internal",
+    language: "html",
+    note: "Internal only: @kozmos/vue is a private React-wrapper package, not a native Vue library or a published npm package. It requires React and React DOM and does not support server rendering. This reference snippet is not independently compiled.",
+  },
+  {
+    value: "swift",
+    label: "Swift (iOS)",
+    language: "text",
+    note: "Native reference only; not rendered or compiled here. Some examples are implementation excerpts, not complete copy-and-paste applications. Verify against the iOS package before use.",
+  },
+  {
+    value: "kotlin",
+    label: "Kotlin (Android)",
+    language: "text",
+    note: "Native reference only; not rendered or compiled here. Some examples are implementation excerpts, not complete copy-and-paste applications. Verify against the Android package before use.",
+  },
+] as const;
+
+export const PlatformSnippets = (props: PlatformSnippetsProps) => {
+  const first = platforms.find(({ value }) => props[value]?.trim());
+  if (!first) return null;
 
   return (
-    <Tabs
-      defaultValue={snippets[0].value}
-      className="w-full mt-6 border rounded-control"
+    // Only Kozmos controls belong inside its style boundary. Storybook's viewer
+    // must remain outside so the component reset cannot change its copy/scroll UI.
+    <section
+      className="kozmos-platform-snippets"
+      aria-label="Platform implementation references"
     >
-      <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
-        {snippets.map((snippet) => (
-          <TabsTrigger
-            key={snippet.value}
-            value={snippet.value}
-            className="relative h-9 rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+      <p className="kozmos-platform-note">
+        One design system, platform-specific APIs. A snippet is not a claim of
+        feature parity or release readiness.{" "}
+        <a href="./?path=/docs/guides-platform-support--docs" target="_top">
+          Platform support and validation
+        </a>
+      </p>
+      <Tabs defaultValue={first.value}>
+        <DesignConfigProvider theme="light">
+          <TabsList
+            className="kozmos-platform-tabs flex h-auto justify-start"
+            aria-label="Implementation language"
           >
-            {snippet.label}
-          </TabsTrigger>
+            {platforms.map(({ value, label }) => (
+              <TabsTrigger
+                key={value}
+                value={value}
+                className="kozmos-platform-tab whitespace-normal"
+              >
+                {label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </DesignConfigProvider>
+        {platforms.map(({ value, note, language }) => (
+          <TabsContent
+            key={value}
+            value={value}
+            className="kozmos-platform-panel"
+          >
+            <p className="kozmos-platform-note">{note}</p>
+            {props[value]?.trim() ? (
+              <div className="kozmos-platform-code">
+                <ThemeProvider theme={codeTheme}>
+                  <SyntaxHighlighter
+                    language={language}
+                    copyable
+                    bordered
+                    padded
+                    wrapLongLines
+                    format={false}
+                  >
+                    {props[value]}
+                  </SyntaxHighlighter>
+                </ThemeProvider>
+              </div>
+            ) : (
+              <p className="kozmos-platform-note">
+                No example is documented for this platform. This does not
+                establish whether the component is implemented or supported.
+              </p>
+            )}
+          </TabsContent>
         ))}
-      </TabsList>
-
-      {snippets.map((snippet) => (
-        <TabsContent key={snippet.value} value={snippet.value} className="mt-0">
-          {/* @ts-expect-error language prop is poorly typed */}
-          <Source code={snippet.code} language={snippet.language} dark />
-        </TabsContent>
-      ))}
-    </Tabs>
+      </Tabs>
+    </section>
   );
 };

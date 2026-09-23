@@ -14,7 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 enum class KozmosSidebarVariant {
     Expanded,
@@ -44,7 +44,7 @@ fun KozmosSidebar(
     val isRail = variant == KozmosSidebarVariant.Rail
     PermanentDrawerSheet(
         modifier = modifier.width(if (isRail) 80.dp else 280.dp),
-        drawerContainerColor = KozmosColors.primitivesColorsBackground0,
+        drawerContainerColor = KozmosThemeTokens.primitivesColorsBackground0,
     ) {
         Column(
             modifier = Modifier

@@ -1,4 +1,5 @@
-import { Canvas, Meta, Story, Controls } from "@storybook/blocks";
+import { Canvas, Meta, Story } from "@storybook/blocks";
+import { Controls } from "../DocumentationControls";
 import * as BackdropStories from "./Backdrop.stories";
 import { PlatformSnippets } from "../PlatformSnippets";
 
@@ -20,9 +21,14 @@ Displays the Backdrop interface topology natively.
 
 <PlatformSnippets
     react={`
-import { Backdrop } from "@kozmos/react"
-
-<Backdrop />
+import { Backdrop } from "@kozmos/react";
+export function Example() {
+  return (
+    <>
+      <Backdrop />
+    </>
+  );
+}
     `}
     vue={`
 <script setup>

@@ -42,6 +42,26 @@ struct KozmosLocationPinConnect: FigmaConnect {
     )
     var isDisabled: Bool = false
 
+    // The Tint axis: Theme is a pin with no tint; the eight are the
+    // taxonomy's quick-access colours as the Semantics.Category tokens — the
+    // fill is the marker, its ink the number; a featured pin keeps the alert
+    // colour.
+    @FigmaEnum(
+        "Tint",
+        mapping: [
+            "Theme": nil,
+            "Yellow": KozmosCategoryTint(accent: KozmosColors.semanticsCategoryAccentYellow, fill: KozmosInkedFill(fill: KozmosColors.semanticsCategoryFillYellow, ink: KozmosColors.semanticsCategoryOnfillYellow)),
+            "Orange": KozmosCategoryTint(accent: KozmosColors.semanticsCategoryAccentOrange, fill: KozmosInkedFill(fill: KozmosColors.semanticsCategoryFillOrange, ink: KozmosColors.semanticsCategoryOnfillOrange)),
+            "Turquoise": KozmosCategoryTint(accent: KozmosColors.semanticsCategoryAccentTurquoise, fill: KozmosInkedFill(fill: KozmosColors.semanticsCategoryFillTurquoise, ink: KozmosColors.semanticsCategoryOnfillTurquoise)),
+            "Red": KozmosCategoryTint(accent: KozmosColors.semanticsCategoryAccentRed, fill: KozmosInkedFill(fill: KozmosColors.semanticsCategoryFillRed, ink: KozmosColors.semanticsCategoryOnfillRed)),
+            "Blue": KozmosCategoryTint(accent: KozmosColors.semanticsCategoryAccentBlue, fill: KozmosInkedFill(fill: KozmosColors.semanticsCategoryFillBlue, ink: KozmosColors.semanticsCategoryOnfillBlue)),
+            "Navy": KozmosCategoryTint(accent: KozmosColors.semanticsCategoryAccentNavy, fill: KozmosInkedFill(fill: KozmosColors.semanticsCategoryFillNavy, ink: KozmosColors.semanticsCategoryOnfillNavy)),
+            "Green": KozmosCategoryTint(accent: KozmosColors.semanticsCategoryAccentGreen, fill: KozmosInkedFill(fill: KozmosColors.semanticsCategoryFillGreen, ink: KozmosColors.semanticsCategoryOnfillGreen)),
+            "Pink": KozmosCategoryTint(accent: KozmosColors.semanticsCategoryAccentPink, fill: KozmosInkedFill(fill: KozmosColors.semanticsCategoryFillPink, ink: KozmosColors.semanticsCategoryOnfillPink))
+        ]
+    )
+    var tint: KozmosCategoryTint? = nil
+
     // variant is a per-venue colour role and labelPlacement belongs to the map
     // renderer, so neither is a Figma variant axis.
     var body: some View {
@@ -51,7 +71,8 @@ struct KozmosLocationPinConnect: FigmaConnect {
             selected: self.selected,
             featured: self.featured,
             offFloor: self.offFloor,
-            isDisabled: self.isDisabled
+            isDisabled: self.isDisabled,
+            tint: self.tint
         )
     }
 }

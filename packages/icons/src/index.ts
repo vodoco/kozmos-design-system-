@@ -12,3 +12,4 @@
  */
 export * from "./registry.js";
 export * from "./pointr/icons.generated.js";
+export * from "./taxonomy/icons.generated.js";

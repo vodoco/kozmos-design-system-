@@ -25,8 +25,8 @@ import com.kozmos.providers.KozmosAnalyticsEvent
 import com.kozmos.providers.LocalKozmosAnalytics
 import com.kozmos.components.mapcontrolbutton.KozmosMapControlButton
 import com.kozmos.components.mapcontrolbutton.KozmosMapControlButtonPresentation
-import com.kozmos.tokens.KozmosColors
 import com.kozmos.tokens.KozmosDimensions
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosMapControlsGroup(
@@ -49,10 +49,10 @@ fun KozmosMapControlsGroup(
     ) {
         Surface(
             shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusContainer),
-            color = KozmosColors.primitivesColorsBackground0.copy(alpha = 0.9f),
+            color = KozmosThemeTokens.primitivesColorsBackground0.copy(alpha = 0.9f),
             tonalElevation = 6.dp,
             shadowElevation = 8.dp,
-            border = BorderStroke(1.dp, KozmosColors.primitivesColorsForeground900.copy(alpha = 0.08f))
+            border = BorderStroke(1.dp, KozmosThemeTokens.semanticsBorderSubtle)
         ) {
             Column {
                 MapControlIconButton(
@@ -63,7 +63,7 @@ fun KozmosMapControlsGroup(
                         onZoomIn()
                     }
                 )
-                Divider(color = KozmosColors.primitivesColorsForeground900.copy(alpha = 0.08f))
+                Divider(color = KozmosThemeTokens.semanticsBorderSubtle)
                 MapControlIconButton(
                     icon = Icons.Default.Remove,
                     contentDescription = "Zoom out",
@@ -79,7 +79,7 @@ fun KozmosMapControlsGroup(
             Surface(
                 modifier = Modifier.size(44.dp),
                 shape = RoundedCornerShape(KozmosDimensions.semanticsRadiusContainer),
-                color = KozmosColors.primitivesColorsBackground0.copy(alpha = 0.9f),
+                color = KozmosThemeTokens.primitivesColorsBackground0.copy(alpha = 0.9f),
                 tonalElevation = 6.dp,
                 shadowElevation = 8.dp
             ) {
@@ -139,7 +139,7 @@ private fun MapControlIconButton(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = KozmosColors.primitivesColorsForeground100
+            tint = KozmosThemeTokens.primitivesColorsForeground100
         )
     }
 }

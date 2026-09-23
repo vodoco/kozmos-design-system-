@@ -5,7 +5,7 @@ import { cn } from "../../utils";
 import { useKozmosAnalytics } from "../../utils/analytics";
 
 const searchBarVariants = cva(
-  "flex items-center w-full rounded-2xl bg-background shadow-floating px-4 h-14 border border-input transition-all focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
+  "flex items-center w-full rounded-control bg-background shadow-floating px-3 h-11 border border-input transition-all focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
   {
     variants: {
       variant: {
@@ -28,6 +28,21 @@ export interface SearchBarProps extends Omit<
   onClear?: () => void;
   containerClassName?: string;
   variant?: "floating" | "inline";
+  /**
+   * What sits at the end of the search row — the assistant's button, in the
+   * SDK's sheet.
+   *
+   * The field is `w-full` and always has been, so a caller composing the pair
+   * in a row of their own got the field on one line and the button on the
+   * next, unless they happened to know to pass `flex-1` through
+   * `containerClassName`. Storybook's example knew; the reference site's did
+   * not, and neither will an integrator's. So the row is the component's, not
+   * the caller's: with this set the field and what follows it cannot be put on
+   * separate lines.
+   */
+  trailing?: React.ReactNode;
+  /** Classes for the row `trailing` creates, not for the field inside it. */
+  rowClassName?: string;
 }
 
 export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
@@ -35,6 +50,8 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
     {
       className,
       containerClassName,
+      rowClassName,
+      trailing,
       variant,
       value,
       onChange,
@@ -48,19 +65,27 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
   ) => {
     const { trackEvent } = useKozmosAnalytics();
 
-    return (
+    const field = (
       <div
-        className={cn(searchBarVariants({ variant }), containerClassName)}
+        className={cn(
+          searchBarVariants({ variant }),
+          // In a row the field takes what is left, and `min-w-0` lets it be
+          // narrower than the text inside it — without that a long placeholder
+          // pushes the row wider than its container and the wrap comes back by
+          // another door.
+          trailing && "w-auto min-w-0 flex-1",
+          containerClassName,
+        )}
         role="search"
       >
         <Search
           aria-hidden="true"
-          className="w-5 h-5 text-muted-foreground mr-3 shrink-0"
+          className="h-[18px] w-[18px] text-muted-foreground mr-2 shrink-0"
         />
         <input
           ref={ref}
           className={cn(
-            "flex-1 bg-transparent border-none outline-none text-base placeholder:text-muted-foreground",
+            "min-w-0 flex-1 bg-transparent border-none outline-none text-[15px] placeholder:text-muted-foreground",
             className,
           )}
           aria-label={ariaLabel ?? placeholder}
@@ -83,13 +108,33 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
               onChange?.("");
               onClear?.();
             }}
-            className="ml-1 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-pill transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="kozmos-search-clear ml-1 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-pill transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Clear search"
             type="button"
           >
-            <X aria-hidden="true" className="w-5 h-5 text-muted-foreground" />
+            {/* A 24 grey circle to see; the 44 button around it to hit. */}
+            <span
+              aria-hidden="true"
+              className="flex h-6 w-6 items-center justify-center rounded-pill bg-muted text-muted-foreground"
+            >
+              <X className="h-3.5 w-3.5" />
+            </span>
           </button>
         )}
+      </div>
+    );
+
+    if (!trailing) return field;
+
+    return (
+      <div
+        className={cn(
+          "kozmos-search-row flex w-full min-w-0 items-center gap-2",
+          rowClassName,
+        )}
+      >
+        {field}
+        <div className="shrink-0">{trailing}</div>
       </div>
     );
   },

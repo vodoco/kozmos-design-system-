@@ -1,0 +1,2796 @@
+{
+  "source": "https://pointrmapstorage.blob.core.windows.net/taxonomy/10.12.0/taxonomy.json",
+  "version": "10.12.0",
+  "properties": {
+    "accessPrograms": {
+      "valueType": "array",
+      "segment": "Access Programs",
+      "validation": {
+        "type": "array",
+        "options": [
+          "tsa-precheck",
+          "clear",
+          "global-entry",
+          "nexus",
+          "sentri",
+          "fast-track",
+          "registered-traveller",
+          "privium",
+          "digiyatra",
+          "uae-smart-gate",
+          "apec-btc",
+          "viajero-confiable",
+          "priority-pass",
+          "lounge-key",
+          "dragon-pass",
+          "diners-club"
+        ]
+      },
+      "display": {
+        "displayName": "Access Programs",
+        "order": 560,
+        "valueDisplay": {
+          "tsa-precheck": {
+            "displayName": "TSA PreCheck"
+          },
+          "clear": {
+            "displayName": "CLEAR"
+          },
+          "global-entry": {
+            "displayName": "Global Entry"
+          },
+          "nexus": {
+            "displayName": "NEXUS"
+          },
+          "sentri": {
+            "displayName": "SENTRI"
+          },
+          "fast-track": {
+            "displayName": "Fast Track"
+          },
+          "registered-traveller": {
+            "displayName": "Registered Traveller"
+          },
+          "privium": {
+            "displayName": "Privium"
+          },
+          "digiyatra": {
+            "displayName": "DigiYatra"
+          },
+          "uae-smart-gate": {
+            "displayName": "UAE Smart Gate"
+          },
+          "apec-btc": {
+            "displayName": "APEC Business Travel Card"
+          },
+          "viajero-confiable": {
+            "displayName": "Viajero Confiable"
+          },
+          "priority-pass": {
+            "displayName": "Priority Pass"
+          },
+          "lounge-key": {
+            "displayName": "LoungeKey"
+          },
+          "dragon-pass": {
+            "displayName": "DragonPass"
+          },
+          "diners-club": {
+            "displayName": "Diners Club"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/access-programs.png"
+    },
+    "accessRestrictions": {
+      "valueType": "array",
+      "segment": "Access Restrictions",
+      "validation": {
+        "type": "array",
+        "options": [
+          "invite-only",
+          "membership-required",
+          "booking-required",
+          "ticket-required",
+          "credential-required"
+        ]
+      },
+      "display": {
+        "displayName": "Access Restrictions",
+        "order": 565,
+        "highlight": 90,
+        "color": "theme_themeColor",
+        "valueDisplay": {
+          "invite-only": {
+            "displayName": "Invite Only"
+          },
+          "membership-required": {
+            "displayName": "Membership Required"
+          },
+          "booking-required": {
+            "displayName": "Booking Required"
+          },
+          "ticket-required": {
+            "displayName": "Ticket Required"
+          },
+          "credential-required": {
+            "displayName": "Credential Required"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/access-restrictions.png"
+    },
+    "ageRestriction": {
+      "valueType": "enum",
+      "segment": "Age Restriction",
+      "validation": {
+        "type": "enum",
+        "options": [
+          "None",
+          "13+",
+          "16+",
+          "18+",
+          "21+",
+          "Seniors",
+          "Children-Only",
+          "Family-Friendly"
+        ]
+      },
+      "display": {
+        "displayName": "Age Restriction",
+        "order": 535,
+        "valueDisplay": {
+          "None": {
+            "displayName": "None"
+          },
+          "13+": {
+            "displayName": "13+"
+          },
+          "16+": {
+            "displayName": "16+"
+          },
+          "18+": {
+            "displayName": "18+"
+          },
+          "21+": {
+            "displayName": "21+"
+          },
+          "Seniors": {
+            "displayName": "Seniors"
+          },
+          "Children-Only": {
+            "displayName": "Children-Only"
+          },
+          "Family-Friendly": {
+            "displayName": "Family-Friendly"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/age-restriction.png"
+    },
+    "bookingUrl": {
+      "valueType": "hyperlink",
+      "segment": "Contact",
+      "validation": {
+        "type": "string",
+        "maxLength": 255
+      },
+      "display": {
+        "order": 100,
+        "action": "href",
+        "actionName": "Book",
+        "displayName": "Booking URL"
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/booking-url.png"
+    },
+    "capacity": {
+      "valueType": "integer",
+      "segment": "Capacity",
+      "validation": {
+        "type": "integer",
+        "min": 0,
+        "max": 999999
+      },
+      "display": {
+        "displayName": "Capacity",
+        "order": 545
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/capacity.png"
+    },
+    "clinicalSpecialty": {
+      "valueType": "array",
+      "segment": "Clinical Specialty",
+      "validation": {
+        "type": "array",
+        "options": [
+          "Acupuncture",
+          "Addiction Medicine",
+          "Allergy and Immunology",
+          "Anesthesiology",
+          "Audiology",
+          "Bariatric Medicine",
+          "Behavioral Health",
+          "Cardiology",
+          "Cardiothoracic Surgery",
+          "Chiropractic",
+          "Colon and Rectal Surgery",
+          "Critical Care Medicine",
+          "Dental Medicine",
+          "Dermatology",
+          "Diagnostic Imaging",
+          "Emergency Medicine",
+          "Endocrinology Diabetes and Metabolism",
+          "Family Medicine",
+          "Gastroenterology",
+          "General Practice",
+          "General Surgery",
+          "Genetics",
+          "Geriatric Medicine",
+          "Gynecology",
+          "Hematology",
+          "Hepatology",
+          "Hospice and Palliative Care",
+          "Hyperbaric Medicine",
+          "Infectious Disease",
+          "Integrative Medicine",
+          "Internal Medicine",
+          "Laboratory Medicine",
+          "Maternal Fetal Medicine",
+          "Neonatology",
+          "Nephrology",
+          "Neurology",
+          "Neurosurgery",
+          "Nuclear Medicine",
+          "Nutrition and Dietetics",
+          "Obstetrics and Gynecology",
+          "Occupational Medicine",
+          "Occupational Therapy",
+          "Oncology",
+          "Ophthalmology",
+          "Optometry",
+          "Oral and Maxillofacial Surgery",
+          "Orthodontics",
+          "Orthopedics",
+          "Otolaryngology",
+          "Pain Medicine",
+          "Pathology",
+          "Pediatrics",
+          "Physical Medicine and Rehabilitation",
+          "Physical Therapy",
+          "Plastic and Reconstructive Surgery",
+          "Podiatry",
+          "Preventive Medicine",
+          "Primary Care",
+          "Psychiatry",
+          "Psychology",
+          "Pulmonology",
+          "Radiation Oncology",
+          "Radiology",
+          "Reproductive Endocrinology and Infertility",
+          "Rheumatology",
+          "Sleep Medicine",
+          "Speech Language Pathology",
+          "Sports Medicine",
+          "Transplant Medicine",
+          "Urgent Care",
+          "Urology",
+          "Vascular Surgery",
+          "Wound Care"
+        ]
+      },
+      "display": {
+        "displayName": "Clinical Specialty",
+        "order": 240,
+        "valueDisplay": {
+          "Acupuncture": {
+            "displayName": "Acupuncture"
+          },
+          "Addiction Medicine": {
+            "displayName": "Addiction Medicine"
+          },
+          "Allergy and Immunology": {
+            "displayName": "Allergy and Immunology"
+          },
+          "Anesthesiology": {
+            "displayName": "Anesthesiology"
+          },
+          "Audiology": {
+            "displayName": "Audiology"
+          },
+          "Bariatric Medicine": {
+            "displayName": "Bariatric Medicine"
+          },
+          "Behavioral Health": {
+            "displayName": "Behavioral Health"
+          },
+          "Cardiology": {
+            "displayName": "Cardiology"
+          },
+          "Cardiothoracic Surgery": {
+            "displayName": "Cardiothoracic Surgery"
+          },
+          "Chiropractic": {
+            "displayName": "Chiropractic"
+          },
+          "Colon and Rectal Surgery": {
+            "displayName": "Colon and Rectal Surgery"
+          },
+          "Critical Care Medicine": {
+            "displayName": "Critical Care Medicine"
+          },
+          "Dental Medicine": {
+            "displayName": "Dental Medicine"
+          },
+          "Dermatology": {
+            "displayName": "Dermatology"
+          },
+          "Diagnostic Imaging": {
+            "displayName": "Diagnostic Imaging"
+          },
+          "Emergency Medicine": {
+            "displayName": "Emergency Medicine"
+          },
+          "Endocrinology Diabetes and Metabolism": {
+            "displayName": "Endocrinology Diabetes and Metabolism"
+          },
+          "Family Medicine": {
+            "displayName": "Family Medicine"
+          },
+          "Gastroenterology": {
+            "displayName": "Gastroenterology"
+          },
+          "General Practice": {
+            "displayName": "General Practice"
+          },
+          "General Surgery": {
+            "displayName": "General Surgery"
+          },
+          "Genetics": {
+            "displayName": "Genetics"
+          },
+          "Geriatric Medicine": {
+            "displayName": "Geriatric Medicine"
+          },
+          "Gynecology": {
+            "displayName": "Gynecology"
+          },
+          "Hematology": {
+            "displayName": "Hematology"
+          },
+          "Hepatology": {
+            "displayName": "Hepatology"
+          },
+          "Hospice and Palliative Care": {
+            "displayName": "Hospice and Palliative Care"
+          },
+          "Hyperbaric Medicine": {
+            "displayName": "Hyperbaric Medicine"
+          },
+          "Infectious Disease": {
+            "displayName": "Infectious Disease"
+          },
+          "Integrative Medicine": {
+            "displayName": "Integrative Medicine"
+          },
+          "Internal Medicine": {
+            "displayName": "Internal Medicine"
+          },
+          "Laboratory Medicine": {
+            "displayName": "Laboratory Medicine"
+          },
+          "Maternal Fetal Medicine": {
+            "displayName": "Maternal Fetal Medicine"
+          },
+          "Neonatology": {
+            "displayName": "Neonatology"
+          },
+          "Nephrology": {
+            "displayName": "Nephrology"
+          },
+          "Neurology": {
+            "displayName": "Neurology"
+          },
+          "Neurosurgery": {
+            "displayName": "Neurosurgery"
+          },
+          "Nuclear Medicine": {
+            "displayName": "Nuclear Medicine"
+          },
+          "Nutrition and Dietetics": {
+            "displayName": "Nutrition and Dietetics"
+          },
+          "Obstetrics and Gynecology": {
+            "displayName": "Obstetrics and Gynecology"
+          },
+          "Occupational Medicine": {
+            "displayName": "Occupational Medicine"
+          },
+          "Occupational Therapy": {
+            "displayName": "Occupational Therapy"
+          },
+          "Oncology": {
+            "displayName": "Oncology"
+          },
+          "Ophthalmology": {
+            "displayName": "Ophthalmology"
+          },
+          "Optometry": {
+            "displayName": "Optometry"
+          },
+          "Oral and Maxillofacial Surgery": {
+            "displayName": "Oral and Maxillofacial Surgery"
+          },
+          "Orthodontics": {
+            "displayName": "Orthodontics"
+          },
+          "Orthopedics": {
+            "displayName": "Orthopedics"
+          },
+          "Otolaryngology": {
+            "displayName": "Otolaryngology"
+          },
+          "Pain Medicine": {
+            "displayName": "Pain Medicine"
+          },
+          "Pathology": {
+            "displayName": "Pathology"
+          },
+          "Pediatrics": {
+            "displayName": "Pediatrics"
+          },
+          "Physical Medicine and Rehabilitation": {
+            "displayName": "Physical Medicine and Rehabilitation"
+          },
+          "Physical Therapy": {
+            "displayName": "Physical Therapy"
+          },
+          "Plastic and Reconstructive Surgery": {
+            "displayName": "Plastic and Reconstructive Surgery"
+          },
+          "Podiatry": {
+            "displayName": "Podiatry"
+          },
+          "Preventive Medicine": {
+            "displayName": "Preventive Medicine"
+          },
+          "Primary Care": {
+            "displayName": "Primary Care"
+          },
+          "Psychiatry": {
+            "displayName": "Psychiatry"
+          },
+          "Psychology": {
+            "displayName": "Psychology"
+          },
+          "Pulmonology": {
+            "displayName": "Pulmonology"
+          },
+          "Radiation Oncology": {
+            "displayName": "Radiation Oncology"
+          },
+          "Radiology": {
+            "displayName": "Radiology"
+          },
+          "Reproductive Endocrinology and Infertility": {
+            "displayName": "Reproductive Endocrinology and Infertility"
+          },
+          "Rheumatology": {
+            "displayName": "Rheumatology"
+          },
+          "Sleep Medicine": {
+            "displayName": "Sleep Medicine"
+          },
+          "Speech Language Pathology": {
+            "displayName": "Speech Language Pathology"
+          },
+          "Sports Medicine": {
+            "displayName": "Sports Medicine"
+          },
+          "Transplant Medicine": {
+            "displayName": "Transplant Medicine"
+          },
+          "Urgent Care": {
+            "displayName": "Urgent Care"
+          },
+          "Urology": {
+            "displayName": "Urology"
+          },
+          "Vascular Surgery": {
+            "displayName": "Vascular Surgery"
+          },
+          "Wound Care": {
+            "displayName": "Wound Care"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/clinical-specialty.png"
+    },
+    "crowdLevel": {
+      "valueType": "enum",
+      "segment": "Crowd Level",
+      "validation": {
+        "type": "enum",
+        "options": ["empty", "light", "moderate", "busy", "packed"]
+      },
+      "display": {
+        "displayName": "Crowd Level",
+        "order": 610,
+        "highlight": 50,
+        "valueDisplay": {
+          "empty": {
+            "displayName": "Empty",
+            "color": "theme_successColor"
+          },
+          "light": {
+            "displayName": "Light",
+            "color": "theme_successColor"
+          },
+          "moderate": {
+            "displayName": "Moderate",
+            "color": "theme_alertColor"
+          },
+          "busy": {
+            "displayName": "Busy",
+            "color": "theme_alertColor"
+          },
+          "packed": {
+            "displayName": "Packed",
+            "color": "theme_dangerColor"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/crowd-level.png"
+    },
+    "cuisines": {
+      "valueType": "array",
+      "segment": "Cuisines",
+      "validation": {
+        "type": "array",
+        "options": [
+          "Afghan",
+          "African",
+          "American",
+          "Argentinian",
+          "Armenian",
+          "Asian Fusion",
+          "Austrian",
+          "Bangladeshi",
+          "Belgian",
+          "Brazilian",
+          "British",
+          "Bulgarian",
+          "Cajun",
+          "Cantonese",
+          "Caribbean",
+          "Chinese",
+          "Colombian",
+          "Cuban",
+          "Ethiopian",
+          "Filipino",
+          "French",
+          "Georgian",
+          "German",
+          "Greek",
+          "Hawaiian",
+          "Hungarian",
+          "Indian",
+          "Indonesian",
+          "Iranian",
+          "Irish",
+          "Israeli",
+          "Italian",
+          "Jamaican",
+          "Japanese",
+          "Korean",
+          "Latin American",
+          "Lebanese",
+          "Malaysian",
+          "Mediterranean",
+          "Mexican",
+          "Middle Eastern",
+          "Mongolian",
+          "Moroccan",
+          "Nepalese",
+          "Pakistani",
+          "Peruvian",
+          "Pizza",
+          "Polish",
+          "Portuguese",
+          "Romanian",
+          "Russian",
+          "Scandinavian",
+          "Scottish",
+          "Seafood",
+          "Singaporean",
+          "Slovak",
+          "South African",
+          "Southeast Asian",
+          "Spanish",
+          "Sri Lankan",
+          "Sushi",
+          "Swedish",
+          "Swiss",
+          "Syrian",
+          "Taiwanese",
+          "Tex-Mex",
+          "Thai",
+          "Tibetan",
+          "Turkish",
+          "Ukrainian",
+          "Uzbek",
+          "Vietnamese",
+          "West African"
+        ]
+      },
+      "display": {
+        "displayName": "Cuisines",
+        "order": 200,
+        "valueDisplay": {
+          "Afghan": {
+            "displayName": "Afghan"
+          },
+          "African": {
+            "displayName": "African"
+          },
+          "American": {
+            "displayName": "American"
+          },
+          "Argentinian": {
+            "displayName": "Argentinian"
+          },
+          "Armenian": {
+            "displayName": "Armenian"
+          },
+          "Asian Fusion": {
+            "displayName": "Asian Fusion"
+          },
+          "Austrian": {
+            "displayName": "Austrian"
+          },
+          "Bangladeshi": {
+            "displayName": "Bangladeshi"
+          },
+          "Belgian": {
+            "displayName": "Belgian"
+          },
+          "Brazilian": {
+            "displayName": "Brazilian"
+          },
+          "British": {
+            "displayName": "British"
+          },
+          "Bulgarian": {
+            "displayName": "Bulgarian"
+          },
+          "Cajun": {
+            "displayName": "Cajun"
+          },
+          "Cantonese": {
+            "displayName": "Cantonese"
+          },
+          "Caribbean": {
+            "displayName": "Caribbean"
+          },
+          "Chinese": {
+            "displayName": "Chinese"
+          },
+          "Colombian": {
+            "displayName": "Colombian"
+          },
+          "Cuban": {
+            "displayName": "Cuban"
+          },
+          "Ethiopian": {
+            "displayName": "Ethiopian"
+          },
+          "Filipino": {
+            "displayName": "Filipino"
+          },
+          "French": {
+            "displayName": "French"
+          },
+          "Georgian": {
+            "displayName": "Georgian"
+          },
+          "German": {
+            "displayName": "German"
+          },
+          "Greek": {
+            "displayName": "Greek"
+          },
+          "Hawaiian": {
+            "displayName": "Hawaiian"
+          },
+          "Hungarian": {
+            "displayName": "Hungarian"
+          },
+          "Indian": {
+            "displayName": "Indian"
+          },
+          "Indonesian": {
+            "displayName": "Indonesian"
+          },
+          "Iranian": {
+            "displayName": "Iranian"
+          },
+          "Irish": {
+            "displayName": "Irish"
+          },
+          "Israeli": {
+            "displayName": "Israeli"
+          },
+          "Italian": {
+            "displayName": "Italian"
+          },
+          "Jamaican": {
+            "displayName": "Jamaican"
+          },
+          "Japanese": {
+            "displayName": "Japanese"
+          },
+          "Korean": {
+            "displayName": "Korean"
+          },
+          "Latin American": {
+            "displayName": "Latin American"
+          },
+          "Lebanese": {
+            "displayName": "Lebanese"
+          },
+          "Malaysian": {
+            "displayName": "Malaysian"
+          },
+          "Mediterranean": {
+            "displayName": "Mediterranean"
+          },
+          "Mexican": {
+            "displayName": "Mexican"
+          },
+          "Middle Eastern": {
+            "displayName": "Middle Eastern"
+          },
+          "Mongolian": {
+            "displayName": "Mongolian"
+          },
+          "Moroccan": {
+            "displayName": "Moroccan"
+          },
+          "Nepalese": {
+            "displayName": "Nepalese"
+          },
+          "Pakistani": {
+            "displayName": "Pakistani"
+          },
+          "Peruvian": {
+            "displayName": "Peruvian"
+          },
+          "Pizza": {
+            "displayName": "Pizza"
+          },
+          "Polish": {
+            "displayName": "Polish"
+          },
+          "Portuguese": {
+            "displayName": "Portuguese"
+          },
+          "Romanian": {
+            "displayName": "Romanian"
+          },
+          "Russian": {
+            "displayName": "Russian"
+          },
+          "Scandinavian": {
+            "displayName": "Scandinavian"
+          },
+          "Scottish": {
+            "displayName": "Scottish"
+          },
+          "Seafood": {
+            "displayName": "Seafood"
+          },
+          "Singaporean": {
+            "displayName": "Singaporean"
+          },
+          "Slovak": {
+            "displayName": "Slovak"
+          },
+          "South African": {
+            "displayName": "South African"
+          },
+          "Southeast Asian": {
+            "displayName": "Southeast Asian"
+          },
+          "Spanish": {
+            "displayName": "Spanish"
+          },
+          "Sri Lankan": {
+            "displayName": "Sri Lankan"
+          },
+          "Sushi": {
+            "displayName": "Sushi"
+          },
+          "Swedish": {
+            "displayName": "Swedish"
+          },
+          "Swiss": {
+            "displayName": "Swiss"
+          },
+          "Syrian": {
+            "displayName": "Syrian"
+          },
+          "Taiwanese": {
+            "displayName": "Taiwanese"
+          },
+          "Tex-Mex": {
+            "displayName": "Tex-Mex"
+          },
+          "Thai": {
+            "displayName": "Thai"
+          },
+          "Tibetan": {
+            "displayName": "Tibetan"
+          },
+          "Turkish": {
+            "displayName": "Turkish"
+          },
+          "Ukrainian": {
+            "displayName": "Ukrainian"
+          },
+          "Uzbek": {
+            "displayName": "Uzbek"
+          },
+          "Vietnamese": {
+            "displayName": "Vietnamese"
+          },
+          "West African": {
+            "displayName": "West African"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/cuisines.png"
+    },
+    "description": {
+      "valueType": "text",
+      "segment": "Description",
+      "validation": {
+        "type": "string",
+        "maxLength": 10000
+      },
+      "display": {
+        "displayName": "Description",
+        "order": 900
+      }
+    },
+    "dietaryOptions": {
+      "valueType": "array",
+      "segment": "Dietary Options",
+      "validation": {
+        "type": "array",
+        "options": [
+          "Allergen-Friendly",
+          "Dairy-Free",
+          "Egg-Free",
+          "Gluten-Free",
+          "Halal",
+          "Keto",
+          "Kosher",
+          "Locally Sourced",
+          "Low Carb",
+          "Low Sodium",
+          "No MSG",
+          "Nut-Free",
+          "Organic",
+          "Paleo",
+          "Peanut-Free",
+          "Pescatarian",
+          "Shellfish-Free",
+          "Soy-Free",
+          "Sugar-Free",
+          "Vegan",
+          "Vegetarian"
+        ]
+      },
+      "display": {
+        "displayName": "Dietary Options",
+        "order": 210,
+        "highlight": 70,
+        "color": "theme_successColor",
+        "valueDisplay": {
+          "Allergen-Friendly": {
+            "displayName": "Allergen-Friendly"
+          },
+          "Dairy-Free": {
+            "displayName": "Dairy-Free"
+          },
+          "Egg-Free": {
+            "displayName": "Egg-Free"
+          },
+          "Gluten-Free": {
+            "displayName": "Gluten-Free"
+          },
+          "Halal": {
+            "displayName": "Halal"
+          },
+          "Keto": {
+            "displayName": "Keto"
+          },
+          "Kosher": {
+            "displayName": "Kosher"
+          },
+          "Locally Sourced": {
+            "displayName": "Locally Sourced"
+          },
+          "Low Carb": {
+            "displayName": "Low Carb"
+          },
+          "Low Sodium": {
+            "displayName": "Low Sodium"
+          },
+          "No MSG": {
+            "displayName": "No MSG"
+          },
+          "Nut-Free": {
+            "displayName": "Nut-Free"
+          },
+          "Organic": {
+            "displayName": "Organic"
+          },
+          "Paleo": {
+            "displayName": "Paleo"
+          },
+          "Peanut-Free": {
+            "displayName": "Peanut-Free"
+          },
+          "Pescatarian": {
+            "displayName": "Pescatarian"
+          },
+          "Shellfish-Free": {
+            "displayName": "Shellfish-Free"
+          },
+          "Soy-Free": {
+            "displayName": "Soy-Free"
+          },
+          "Sugar-Free": {
+            "displayName": "Sugar-Free"
+          },
+          "Vegan": {
+            "displayName": "Vegan"
+          },
+          "Vegetarian": {
+            "displayName": "Vegetarian"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/dietary-options.png"
+    },
+    "dressCodes": {
+      "valueType": "array",
+      "segment": "Dress Code",
+      "validation": {
+        "type": "array",
+        "options": [
+          "none",
+          "casual",
+          "smart-casual",
+          "business-casual",
+          "business",
+          "formal"
+        ]
+      },
+      "display": {
+        "displayName": "Dress Code",
+        "order": 530,
+        "valueDisplay": {
+          "none": {
+            "displayName": "No Dress Code"
+          },
+          "casual": {
+            "displayName": "Casual"
+          },
+          "smart-casual": {
+            "displayName": "Smart Casual"
+          },
+          "business-casual": {
+            "displayName": "Business Casual"
+          },
+          "business": {
+            "displayName": "Business"
+          },
+          "formal": {
+            "displayName": "Formal"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/dress-codes.png"
+    },
+    "eid": {
+      "valueType": "text",
+      "segment": "System",
+      "validation": {
+        "type": "string",
+        "maxLength": 255
+      },
+      "display": {
+        "displayName": "External ID"
+      }
+    },
+    "email": {
+      "valueType": "email",
+      "segment": "Contact",
+      "validation": {
+        "type": "string",
+        "format": "email",
+        "maxLength": 255
+      },
+      "display": {
+        "order": 120,
+        "action": "mailto",
+        "actionName": "E-mail",
+        "displayName": "Email"
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/email.png"
+    },
+    "genderDesignation": {
+      "valueType": "enum",
+      "segment": "Gender Designation",
+      "validation": {
+        "type": "enum",
+        "options": ["male", "female", "all-gender", "gender-neutral", "family"]
+      },
+      "display": {
+        "displayName": "Gender Designation",
+        "order": 540,
+        "valueDisplay": {
+          "male": {
+            "displayName": "Male"
+          },
+          "female": {
+            "displayName": "Female"
+          },
+          "all-gender": {
+            "displayName": "All-Gender"
+          },
+          "gender-neutral": {
+            "displayName": "Gender-Neutral"
+          },
+          "family": {
+            "displayName": "Family"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/gender-designation.png"
+    },
+    "hasAlcoholService": {
+      "valueType": "boolean",
+      "segment": "Amenities",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Alcohol Service",
+        "order": 490,
+        "valueDisplay": {
+          "true": {
+            "displayName": "Alcohol Service"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-alcohol-service.png"
+    },
+    "hasAssistance": {
+      "valueType": "boolean",
+      "segment": "Accessibility",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Assistance Available",
+        "order": 340,
+        "valueDisplay": {
+          "true": {
+            "displayName": "Assistance Available"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-assistance.png"
+    },
+    "hasChangingFacilities": {
+      "valueType": "boolean",
+      "segment": "Amenities",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Changing Facilities",
+        "order": 450,
+        "valueDisplay": {
+          "true": {
+            "displayName": "Changing Facilities"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-changing-facilities.png"
+    },
+    "hasChargingAvailable": {
+      "valueType": "boolean",
+      "segment": "Amenities",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Chargers",
+        "order": 410,
+        "valueDisplay": {
+          "true": {
+            "displayName": "Chargers"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-charging-available.png"
+    },
+    "hasHearingLoop": {
+      "valueType": "boolean",
+      "segment": "Accessibility",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Hearing Loop",
+        "order": 310,
+        "valueDisplay": {
+          "true": {
+            "displayName": "Hearing Loop"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-hearing-loop.png"
+    },
+    "hasLockers": {
+      "valueType": "boolean",
+      "segment": "Amenities",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Locker Room",
+        "order": 430,
+        "valueDisplay": {
+          "true": {
+            "displayName": "Locker Room"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-lockers.png"
+    },
+    "hasLuggageStorage": {
+      "valueType": "boolean",
+      "segment": "Amenities",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Luggage Storage",
+        "order": 440,
+        "valueDisplay": {
+          "true": {
+            "displayName": "Luggage Storage"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-luggage-storage.png"
+    },
+    "hasOutdoorSeating": {
+      "valueType": "boolean",
+      "segment": "Amenities",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Outdoor Seating",
+        "order": 460,
+        "valueDisplay": {
+          "true": {
+            "displayName": "Outdoor Seating"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-outdoor-seating.png"
+    },
+    "hasPlayArea": {
+      "valueType": "boolean",
+      "segment": "Amenities",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Play Area",
+        "order": 470,
+        "valueDisplay": {
+          "true": {
+            "displayName": "Play Area"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-play-area.png"
+    },
+    "hasRestrooms": {
+      "valueType": "boolean",
+      "segment": "Amenities",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Restrooms",
+        "order": 420,
+        "valueDisplay": {
+          "true": {
+            "displayName": "Restrooms"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-restrooms.png"
+    },
+    "hasSecurityStaff": {
+      "valueType": "boolean",
+      "segment": "Amenities",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Security Staff",
+        "order": 480,
+        "valueDisplay": {
+          "true": {
+            "displayName": "Security Staff"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-security-staff.png"
+    },
+    "hasVisualAids": {
+      "valueType": "boolean",
+      "segment": "Accessibility",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Visual Aids",
+        "order": 320,
+        "valueDisplay": {
+          "true": {
+            "displayName": "Visual Aids"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-visual-aids.png"
+    },
+    "hasWifi": {
+      "valueType": "boolean",
+      "segment": "Amenities",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "WiFi",
+        "order": 400,
+        "valueDisplay": {
+          "true": {
+            "displayName": "WiFi"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/has-wifi.png"
+    },
+    "images": {
+      "valueType": "image",
+      "segment": "Content",
+      "validation": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "format": "uri",
+          "maxLength": 2048
+        },
+        "maxItems": 7
+      },
+      "display": {
+        "displayName": "Images"
+      }
+    },
+    "isAccessible": {
+      "valueType": "boolean",
+      "segment": "Wayfinding Network",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Accessible"
+      }
+    },
+    "isAnchor": {
+      "valueType": "boolean",
+      "segment": "Prominence",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Anchor"
+      }
+    },
+    "isAutismFriendly": {
+      "valueType": "boolean",
+      "segment": "Accessibility",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Autism Friendly",
+        "order": 330,
+        "valueDisplay": {
+          "true": {
+            "displayName": "Autism Friendly"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/is-autism-friendly.png"
+    },
+    "isFamilyFriendly": {
+      "valueType": "boolean",
+      "segment": "Good to Know",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Family Friendly",
+        "order": 510,
+        "valueDisplay": {
+          "true": {
+            "displayName": "Family Friendly"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/is-family-friendly.png"
+    },
+    "isFeatured": {
+      "valueType": "boolean",
+      "segment": "Prominence",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Featured"
+      }
+    },
+    "isPetFriendly": {
+      "valueType": "boolean",
+      "segment": "Good to Know",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Pet Friendly",
+        "order": 520,
+        "valueDisplay": {
+          "true": {
+            "displayName": "Pet Friendly"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/is-pet-friendly.png"
+    },
+    "isQuietZone": {
+      "valueType": "boolean",
+      "segment": "Good to Know",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Quiet Room",
+        "order": 500,
+        "valueDisplay": {
+          "true": {
+            "displayName": "Quiet Room"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/is-quiet-zone.png"
+    },
+    "isWalkable": {
+      "valueType": "boolean",
+      "segment": "Wayfinding Network",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Walkable"
+      }
+    },
+    "isWheelchairAccessible": {
+      "valueType": "boolean",
+      "segment": "Accessibility",
+      "validation": {
+        "type": "boolean"
+      },
+      "display": {
+        "displayName": "Wheelchair Accessible",
+        "order": 300,
+        "highlight": 40,
+        "valueDisplay": {
+          "true": {
+            "displayName": "Wheelchair Friendly"
+          },
+          "false": {
+            "displayName": "Not Wheelchair Accessible"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/is-wheelchair-accessible.png"
+    },
+    "keywords": {
+      "valueType": "array",
+      "segment": "Search",
+      "validation": {
+        "type": "array"
+      },
+      "display": {
+        "displayName": "Keywords"
+      }
+    },
+    "languageSupport": {
+      "valueType": "array",
+      "segment": "Language Support",
+      "validation": {
+        "type": "array",
+        "options": [
+          "English",
+          "Spanish",
+          "French",
+          "German",
+          "Italian",
+          "Portuguese",
+          "Dutch",
+          "Russian",
+          "Arabic",
+          "Chinese (Simplified)",
+          "Chinese (Traditional)",
+          "Japanese",
+          "Korean",
+          "Hindi",
+          "Bengali",
+          "Turkish"
+        ]
+      },
+      "display": {
+        "displayName": "Language Support",
+        "order": 550,
+        "valueDisplay": {
+          "English": {
+            "displayName": "English"
+          },
+          "Spanish": {
+            "displayName": "Spanish"
+          },
+          "French": {
+            "displayName": "French"
+          },
+          "German": {
+            "displayName": "German"
+          },
+          "Italian": {
+            "displayName": "Italian"
+          },
+          "Portuguese": {
+            "displayName": "Portuguese"
+          },
+          "Dutch": {
+            "displayName": "Dutch"
+          },
+          "Russian": {
+            "displayName": "Russian"
+          },
+          "Arabic": {
+            "displayName": "Arabic"
+          },
+          "Chinese (Simplified)": {
+            "displayName": "Chinese (Simplified)"
+          },
+          "Chinese (Traditional)": {
+            "displayName": "Chinese (Traditional)"
+          },
+          "Japanese": {
+            "displayName": "Japanese"
+          },
+          "Korean": {
+            "displayName": "Korean"
+          },
+          "Hindi": {
+            "displayName": "Hindi"
+          },
+          "Bengali": {
+            "displayName": "Bengali"
+          },
+          "Turkish": {
+            "displayName": "Turkish"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/language-support.png"
+    },
+    "logo": {
+      "valueType": "image",
+      "segment": "Content",
+      "validation": {
+        "type": "string",
+        "format": "uri",
+        "maxLength": 2048
+      },
+      "display": {
+        "displayName": "Logo"
+      }
+    },
+    "menuUrl": {
+      "valueType": "hyperlink",
+      "segment": "Contact",
+      "validation": {
+        "type": "string",
+        "maxLength": 255
+      },
+      "display": {
+        "order": 150,
+        "action": "href",
+        "actionName": "Menu",
+        "displayName": "Menu URL"
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/menu-url.png"
+    },
+    "name": {
+      "valueType": "text",
+      "segment": "Content",
+      "validation": {
+        "type": "string",
+        "maxLength": 255
+      },
+      "display": {
+        "displayName": "Name"
+      }
+    },
+    "occupancyStatus": {
+      "valueType": "enum",
+      "segment": "Occupancy Status",
+      "validation": {
+        "type": "enum",
+        "options": [
+          "available",
+          "occupied",
+          "busy",
+          "full",
+          "underConstruction",
+          "maintenance",
+          "closed",
+          "temporarilyClosed"
+        ]
+      },
+      "display": {
+        "displayName": "Occupancy Status",
+        "order": 620,
+        "highlight": 80,
+        "valueDisplay": {
+          "available": {
+            "displayName": "Available",
+            "color": "theme_successColor"
+          },
+          "occupied": {
+            "displayName": "Occupied",
+            "color": "theme_dangerColor"
+          },
+          "busy": {
+            "displayName": "Busy",
+            "color": "theme_alertColor"
+          },
+          "full": {
+            "displayName": "Full",
+            "color": "theme_dangerColor"
+          },
+          "underConstruction": {
+            "displayName": "Under Construction"
+          },
+          "maintenance": {
+            "displayName": "Maintenance"
+          },
+          "closed": {
+            "displayName": "Closed"
+          },
+          "temporarilyClosed": {
+            "displayName": "Temporarily Closed"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/occupancy-status.png"
+    },
+    "openingHours": {
+      "valueType": "object",
+      "segment": "Opening Hours",
+      "validation": {
+        "type": "object"
+      },
+      "display": {
+        "displayName": "Opening Hours",
+        "order": 600
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/opening-hours.png"
+    },
+    "orderUrl": {
+      "valueType": "hyperlink",
+      "segment": "Contact",
+      "validation": {
+        "type": "string",
+        "maxLength": 255
+      },
+      "display": {
+        "order": 110,
+        "action": "href",
+        "actionName": "Order",
+        "displayName": "Order URL"
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/order-url.png"
+    },
+    "parkingTypes": {
+      "valueType": "array",
+      "segment": "Parking Types",
+      "validation": {
+        "type": "array",
+        "options": [
+          "Self-Park",
+          "Valet",
+          "EV Charging",
+          "Disabled",
+          "Motorcycle",
+          "Bicycle",
+          "Covered",
+          "Outdoor",
+          "Street Parking",
+          "Garage",
+          "Reserved",
+          "Paid",
+          "Free"
+        ]
+      },
+      "display": {
+        "displayName": "Parking Types",
+        "order": 555,
+        "valueDisplay": {
+          "Self-Park": {
+            "displayName": "Self-Park"
+          },
+          "Valet": {
+            "displayName": "Valet"
+          },
+          "EV Charging": {
+            "displayName": "EV Charging"
+          },
+          "Disabled": {
+            "displayName": "Disabled"
+          },
+          "Motorcycle": {
+            "displayName": "Motorcycle"
+          },
+          "Bicycle": {
+            "displayName": "Bicycle"
+          },
+          "Covered": {
+            "displayName": "Covered"
+          },
+          "Outdoor": {
+            "displayName": "Outdoor"
+          },
+          "Street Parking": {
+            "displayName": "Street Parking"
+          },
+          "Garage": {
+            "displayName": "Garage"
+          },
+          "Reserved": {
+            "displayName": "Reserved"
+          },
+          "Paid": {
+            "displayName": "Paid"
+          },
+          "Free": {
+            "displayName": "Free"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/parking-types.png"
+    },
+    "paymentMethods": {
+      "valueType": "array",
+      "segment": "Payment Methods",
+      "validation": {
+        "type": "array",
+        "options": [
+          "Cash",
+          "Credit",
+          "Debit",
+          "Contactless",
+          "Mobile",
+          "Apple Pay",
+          "Google Pay",
+          "Samsung Pay",
+          "Bank Transfer",
+          "QR Code",
+          "Crypto",
+          "Store Card",
+          "Gift Card"
+        ]
+      },
+      "display": {
+        "displayName": "Payment Methods",
+        "order": 700,
+        "valueDisplay": {
+          "Cash": {
+            "displayName": "Cash",
+            "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/payment-methods/cash.png",
+            "formats": ["png", "svg", "pdf"]
+          },
+          "Credit": {
+            "displayName": "Credit/Debit",
+            "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/payment-methods/credit.png",
+            "formats": ["png", "svg", "pdf"]
+          },
+          "Debit": {
+            "displayName": "Debit",
+            "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/payment-methods/debit.png",
+            "formats": ["png", "svg", "pdf"]
+          },
+          "Contactless": {
+            "displayName": "Contactless",
+            "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/payment-methods/contactless.png",
+            "formats": ["png", "svg", "pdf"]
+          },
+          "Mobile": {
+            "displayName": "Mobile",
+            "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/payment-methods/mobile.png",
+            "formats": ["png", "svg", "pdf"]
+          },
+          "Apple Pay": {
+            "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/payment-methods/apple-pay.png",
+            "formats": ["png", "svg", "pdf"],
+            "displayName": "Apple Pay"
+          },
+          "Google Pay": {
+            "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/payment-methods/google-pay.png",
+            "formats": ["png", "svg", "pdf"],
+            "displayName": "Google Pay"
+          },
+          "Samsung Pay": {
+            "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/payment-methods/samsung-pay.png",
+            "formats": ["png", "svg", "pdf"],
+            "displayName": "Samsung Pay"
+          },
+          "QR Code": {
+            "displayName": "QR Code",
+            "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/payment-methods/qr-code.png",
+            "formats": ["png", "svg", "pdf"]
+          },
+          "Bank Transfer": {
+            "displayName": "Bank Transfer",
+            "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/payment-methods/bank-transfer.png",
+            "formats": ["png", "svg", "pdf"]
+          },
+          "Crypto": {
+            "displayName": "Crypto",
+            "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/payment-methods/crypto.png",
+            "formats": ["png", "svg", "pdf"]
+          },
+          "Store Card": {
+            "displayName": "Store Card",
+            "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/payment-methods/store-card.png",
+            "formats": ["png", "svg", "pdf"]
+          },
+          "Gift Card": {
+            "displayName": "Gift Card",
+            "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/payment-methods/gift-card.png",
+            "formats": ["png", "svg", "pdf"]
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/payment-methods.png"
+    },
+    "phoneNumber": {
+      "valueType": "hyperlink",
+      "segment": "Contact",
+      "validation": {
+        "type": "string",
+        "maxLength": 255
+      },
+      "display": {
+        "order": 130,
+        "action": "tel",
+        "actionName": "Call",
+        "displayName": "Phone Number"
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/phone-number.png"
+    },
+    "priceRange": {
+      "valueType": "integer",
+      "segment": "Content",
+      "validation": {
+        "type": "integer",
+        "min": 1,
+        "max": 4
+      },
+      "display": {
+        "displayName": "Price Range",
+        "highlight": 30
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/price-range.png"
+    },
+    "productTypes": {
+      "valueType": "array",
+      "segment": "Product Types",
+      "validation": {
+        "type": "array",
+        "options": [
+          "Accessories",
+          "Activewear",
+          "Adaptive Clothing",
+          "Alcoholic Beverages",
+          "Appliances",
+          "Art Supplies",
+          "Automotive Parts and Accessories",
+          "Baby and Toddler Products",
+          "Beauty and Cosmetics",
+          "Bedding and Bath",
+          "Books and Media",
+          "Cameras and Photography",
+          "Cleaning Supplies",
+          "Convenience Goods",
+          "Crafts and Hobbies",
+          "Department Store Goods",
+          "Duty Free Goods",
+          "Electronics",
+          "Eyewear and Optical",
+          "Fine Art",
+          "Fitness Equipment",
+          "Flowers Plants and Gardening",
+          "Footwear",
+          "Formalwear",
+          "Fresh Food",
+          "Furniture and Mattresses",
+          "Gaming and Entertainment",
+          "Gifts and Souvenirs",
+          "Groceries",
+          "Hardware and Tools",
+          "Health and Medical",
+          "Home Decor",
+          "Home Improvement",
+          "Jewelry and Watches",
+          "Kids Clothing",
+          "Kitchen and Dining",
+          "Loungewear",
+          "Luggage and Travel Goods",
+          "Maternity Clothing",
+          "Meat and Seafood",
+          "Mens Clothing",
+          "Mobile Phones and Telecom",
+          "Musical Instruments",
+          "Office Supplies",
+          "Outdoor Recreation",
+          "Outerwear",
+          "Packaged Food",
+          "Party Supplies",
+          "Pet Supplies",
+          "Petite Clothing",
+          "Pharmacy and Wellness",
+          "Plus Size Clothing",
+          "Religious and Spiritual Goods",
+          "Seasonal Goods",
+          "Sleepwear",
+          "Sporting Goods",
+          "Stationery",
+          "Supplements and Nutrition",
+          "Swimwear",
+          "Tall Clothing",
+          "Teens Clothing",
+          "Textiles and Fabrics",
+          "Tobacco and Vaping",
+          "Toys and Games",
+          "Undergarments",
+          "Unisex Clothing",
+          "Vintage and Antiques",
+          "Womens Clothing",
+          "Workwear and Uniforms"
+        ]
+      },
+      "display": {
+        "displayName": "Product Types",
+        "order": 230,
+        "valueDisplay": {
+          "Accessories": {
+            "displayName": "Accessories"
+          },
+          "Activewear": {
+            "displayName": "Activewear"
+          },
+          "Adaptive Clothing": {
+            "displayName": "Adaptive Clothing"
+          },
+          "Alcoholic Beverages": {
+            "displayName": "Alcoholic Beverages"
+          },
+          "Appliances": {
+            "displayName": "Appliances"
+          },
+          "Art Supplies": {
+            "displayName": "Art Supplies"
+          },
+          "Automotive Parts and Accessories": {
+            "displayName": "Automotive Parts and Accessories"
+          },
+          "Baby and Toddler Products": {
+            "displayName": "Baby and Toddler Products"
+          },
+          "Beauty and Cosmetics": {
+            "displayName": "Beauty and Cosmetics"
+          },
+          "Bedding and Bath": {
+            "displayName": "Bedding and Bath"
+          },
+          "Books and Media": {
+            "displayName": "Books and Media"
+          },
+          "Cameras and Photography": {
+            "displayName": "Cameras and Photography"
+          },
+          "Cleaning Supplies": {
+            "displayName": "Cleaning Supplies"
+          },
+          "Convenience Goods": {
+            "displayName": "Convenience Goods"
+          },
+          "Crafts and Hobbies": {
+            "displayName": "Crafts and Hobbies"
+          },
+          "Department Store Goods": {
+            "displayName": "Department Store Goods"
+          },
+          "Duty Free Goods": {
+            "displayName": "Duty Free Goods"
+          },
+          "Electronics": {
+            "displayName": "Electronics"
+          },
+          "Eyewear and Optical": {
+            "displayName": "Eyewear and Optical"
+          },
+          "Fine Art": {
+            "displayName": "Fine Art"
+          },
+          "Fitness Equipment": {
+            "displayName": "Fitness Equipment"
+          },
+          "Flowers Plants and Gardening": {
+            "displayName": "Flowers Plants and Gardening"
+          },
+          "Footwear": {
+            "displayName": "Footwear"
+          },
+          "Formalwear": {
+            "displayName": "Formalwear"
+          },
+          "Fresh Food": {
+            "displayName": "Fresh Food"
+          },
+          "Furniture and Mattresses": {
+            "displayName": "Furniture and Mattresses"
+          },
+          "Gaming and Entertainment": {
+            "displayName": "Gaming and Entertainment"
+          },
+          "Gifts and Souvenirs": {
+            "displayName": "Gifts and Souvenirs"
+          },
+          "Groceries": {
+            "displayName": "Groceries"
+          },
+          "Hardware and Tools": {
+            "displayName": "Hardware and Tools"
+          },
+          "Health and Medical": {
+            "displayName": "Health and Medical"
+          },
+          "Home Decor": {
+            "displayName": "Home Decor"
+          },
+          "Home Improvement": {
+            "displayName": "Home Improvement"
+          },
+          "Jewelry and Watches": {
+            "displayName": "Jewelry and Watches"
+          },
+          "Kids Clothing": {
+            "displayName": "Kids Clothing"
+          },
+          "Kitchen and Dining": {
+            "displayName": "Kitchen and Dining"
+          },
+          "Loungewear": {
+            "displayName": "Loungewear"
+          },
+          "Luggage and Travel Goods": {
+            "displayName": "Luggage and Travel Goods"
+          },
+          "Maternity Clothing": {
+            "displayName": "Maternity Clothing"
+          },
+          "Meat and Seafood": {
+            "displayName": "Meat and Seafood"
+          },
+          "Mens Clothing": {
+            "displayName": "Mens Clothing"
+          },
+          "Mobile Phones and Telecom": {
+            "displayName": "Mobile Phones and Telecom"
+          },
+          "Musical Instruments": {
+            "displayName": "Musical Instruments"
+          },
+          "Office Supplies": {
+            "displayName": "Office Supplies"
+          },
+          "Outdoor Recreation": {
+            "displayName": "Outdoor Recreation"
+          },
+          "Outerwear": {
+            "displayName": "Outerwear"
+          },
+          "Packaged Food": {
+            "displayName": "Packaged Food"
+          },
+          "Party Supplies": {
+            "displayName": "Party Supplies"
+          },
+          "Pet Supplies": {
+            "displayName": "Pet Supplies"
+          },
+          "Petite Clothing": {
+            "displayName": "Petite Clothing"
+          },
+          "Pharmacy and Wellness": {
+            "displayName": "Pharmacy and Wellness"
+          },
+          "Plus Size Clothing": {
+            "displayName": "Plus Size Clothing"
+          },
+          "Religious and Spiritual Goods": {
+            "displayName": "Religious and Spiritual Goods"
+          },
+          "Seasonal Goods": {
+            "displayName": "Seasonal Goods"
+          },
+          "Sleepwear": {
+            "displayName": "Sleepwear"
+          },
+          "Sporting Goods": {
+            "displayName": "Sporting Goods"
+          },
+          "Stationery": {
+            "displayName": "Stationery"
+          },
+          "Supplements and Nutrition": {
+            "displayName": "Supplements and Nutrition"
+          },
+          "Swimwear": {
+            "displayName": "Swimwear"
+          },
+          "Tall Clothing": {
+            "displayName": "Tall Clothing"
+          },
+          "Teens Clothing": {
+            "displayName": "Teens Clothing"
+          },
+          "Textiles and Fabrics": {
+            "displayName": "Textiles and Fabrics"
+          },
+          "Tobacco and Vaping": {
+            "displayName": "Tobacco and Vaping"
+          },
+          "Toys and Games": {
+            "displayName": "Toys and Games"
+          },
+          "Undergarments": {
+            "displayName": "Undergarments"
+          },
+          "Unisex Clothing": {
+            "displayName": "Unisex Clothing"
+          },
+          "Vintage and Antiques": {
+            "displayName": "Vintage and Antiques"
+          },
+          "Womens Clothing": {
+            "displayName": "Womens Clothing"
+          },
+          "Workwear and Uniforms": {
+            "displayName": "Workwear and Uniforms"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/product-types.png"
+    },
+    "rating": {
+      "valueType": "object",
+      "segment": "Content",
+      "validation": {
+        "type": "object"
+      },
+      "display": {
+        "displayName": "Rating",
+        "highlight": 10
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/rating.png"
+    },
+    "serviceOptions": {
+      "valueType": "enum",
+      "segment": "Service Options",
+      "validation": {
+        "type": "enum",
+        "options": [
+          "Dine-in",
+          "Takeout",
+          "Delivery",
+          "Curbside Pickup",
+          "Drive-thru"
+        ]
+      },
+      "display": {
+        "displayName": "Service Options",
+        "order": 220,
+        "valueDisplay": {
+          "Dine-in": {
+            "displayName": "Dine-in",
+            "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/service-options/dine-in.png",
+            "formats": ["png", "svg", "pdf"]
+          },
+          "Takeout": {
+            "displayName": "Takeout",
+            "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/service-options/takeout.png",
+            "formats": ["png", "svg", "pdf"]
+          },
+          "Delivery": {
+            "displayName": "Delivery",
+            "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/service-options/delivery.png",
+            "formats": ["png", "svg", "pdf"]
+          },
+          "Curbside Pickup": {
+            "displayName": "Curbside Pickup",
+            "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/service-options/curbside-pickup.png",
+            "formats": ["png", "svg", "pdf"]
+          },
+          "Drive-thru": {
+            "displayName": "Drive-thru",
+            "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/values/service-options/drive-thru.png",
+            "formats": ["png", "svg", "pdf"]
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/service-options.png"
+    },
+    "serviceTypes": {
+      "valueType": "array",
+      "segment": "Service Types",
+      "validation": {
+        "type": "array",
+        "options": [
+          "Accessibility Services",
+          "Accounting and Tax Preparation",
+          "Advertising and Marketing",
+          "Architecture and Engineering",
+          "Automotive Repair and Detailing",
+          "Badge Pickup",
+          "Baggage Services",
+          "Banking and Credit Union",
+          "Barber and Hair Salon",
+          "Beauty and Spa Services",
+          "Bicycle Services",
+          "Business Consulting",
+          "Car Rental",
+          "Catering and Event Planning",
+          "Childcare and Daycare",
+          "Claims Assistance",
+          "Cleaning and Housekeeping",
+          "Cloakroom and Coat Check",
+          "Concierge and Guest Services",
+          "Courier Shipping and Mailing",
+          "Coworking and Workspace Rental",
+          "Currency Exchange",
+          "Customer Service",
+          "Device Charging",
+          "Dry Cleaning and Laundry",
+          "Equipment and Tool Rental",
+          "Event Registration",
+          "Facilities Support",
+          "Financial Planning and Wealth Management",
+          "First Aid",
+          "Florist Services",
+          "Food Ordering and Pickup",
+          "Government and Municipal Services",
+          "Guest Assistance",
+          "Health and Wellness Coaching",
+          "Hydration",
+          "Hygiene and Sanitation",
+          "Immigration and Visa Services",
+          "Information and Help Desk",
+          "Insurance Services",
+          "Interior Design",
+          "IT and Tech Support",
+          "Key Cutting and Locksmith",
+          "Legal Services and Notary",
+          "Locker and Storage Services",
+          "Logistics and Freight",
+          "Lost and Found",
+          "Massage Therapy",
+          "Mobile Phone and Telecom Services",
+          "Package Pickup and Returns",
+          "Parking Assistance",
+          "Passport Services",
+          "Pet Grooming and Boarding",
+          "Pharmacy Services",
+          "Photography Studio",
+          "Postal Services",
+          "Printing Copying and Signage",
+          "Public Assistance",
+          "Real Estate and Leasing",
+          "Reception",
+          "Registration",
+          "Repair Services Appliance and Tech",
+          "Repair Services Jewelry and Watch",
+          "Reservations and Booking",
+          "Returns and Exchanges",
+          "Security Services",
+          "Shoe Care and Shine",
+          "Shuttle and Transportation Assistance",
+          "Tailoring and Alterations",
+          "Ticketing",
+          "Ticketing and Box Office",
+          "Translation and Interpretation",
+          "Travel and Tourism",
+          "Tutoring and Test Prep",
+          "Valet Parking",
+          "Visitor Check-in",
+          "Wayfinding"
+        ]
+      },
+      "display": {
+        "displayName": "Service Types",
+        "order": 260,
+        "valueDisplay": {
+          "Accessibility Services": {
+            "displayName": "Accessibility Services"
+          },
+          "Accounting and Tax Preparation": {
+            "displayName": "Accounting and Tax Preparation"
+          },
+          "Advertising and Marketing": {
+            "displayName": "Advertising and Marketing"
+          },
+          "Architecture and Engineering": {
+            "displayName": "Architecture and Engineering"
+          },
+          "Automotive Repair and Detailing": {
+            "displayName": "Automotive Repair and Detailing"
+          },
+          "Badge Pickup": {
+            "displayName": "Badge Pickup"
+          },
+          "Baggage Services": {
+            "displayName": "Baggage Services"
+          },
+          "Banking and Credit Union": {
+            "displayName": "Banking and Credit Union"
+          },
+          "Barber and Hair Salon": {
+            "displayName": "Barber and Hair Salon"
+          },
+          "Beauty and Spa Services": {
+            "displayName": "Beauty and Spa Services"
+          },
+          "Bicycle Services": {
+            "displayName": "Bicycle Services"
+          },
+          "Business Consulting": {
+            "displayName": "Business Consulting"
+          },
+          "Car Rental": {
+            "displayName": "Car Rental"
+          },
+          "Catering and Event Planning": {
+            "displayName": "Catering and Event Planning"
+          },
+          "Childcare and Daycare": {
+            "displayName": "Childcare and Daycare"
+          },
+          "Claims Assistance": {
+            "displayName": "Claims Assistance"
+          },
+          "Cleaning and Housekeeping": {
+            "displayName": "Cleaning and Housekeeping"
+          },
+          "Cloakroom and Coat Check": {
+            "displayName": "Cloakroom and Coat Check"
+          },
+          "Concierge and Guest Services": {
+            "displayName": "Concierge and Guest Services"
+          },
+          "Courier Shipping and Mailing": {
+            "displayName": "Courier Shipping and Mailing"
+          },
+          "Coworking and Workspace Rental": {
+            "displayName": "Coworking and Workspace Rental"
+          },
+          "Currency Exchange": {
+            "displayName": "Currency Exchange"
+          },
+          "Customer Service": {
+            "displayName": "Customer Service"
+          },
+          "Device Charging": {
+            "displayName": "Device Charging"
+          },
+          "Dry Cleaning and Laundry": {
+            "displayName": "Dry Cleaning and Laundry"
+          },
+          "Equipment and Tool Rental": {
+            "displayName": "Equipment and Tool Rental"
+          },
+          "Event Registration": {
+            "displayName": "Event Registration"
+          },
+          "Facilities Support": {
+            "displayName": "Facilities Support"
+          },
+          "Financial Planning and Wealth Management": {
+            "displayName": "Financial Planning and Wealth Management"
+          },
+          "First Aid": {
+            "displayName": "First Aid"
+          },
+          "Florist Services": {
+            "displayName": "Florist Services"
+          },
+          "Food Ordering and Pickup": {
+            "displayName": "Food Ordering and Pickup"
+          },
+          "Government and Municipal Services": {
+            "displayName": "Government and Municipal Services"
+          },
+          "Guest Assistance": {
+            "displayName": "Guest Assistance"
+          },
+          "Health and Wellness Coaching": {
+            "displayName": "Health and Wellness Coaching"
+          },
+          "Hydration": {
+            "displayName": "Hydration"
+          },
+          "Hygiene and Sanitation": {
+            "displayName": "Hygiene and Sanitation"
+          },
+          "Immigration and Visa Services": {
+            "displayName": "Immigration and Visa Services"
+          },
+          "Information and Help Desk": {
+            "displayName": "Information and Help Desk"
+          },
+          "Insurance Services": {
+            "displayName": "Insurance Services"
+          },
+          "Interior Design": {
+            "displayName": "Interior Design"
+          },
+          "IT and Tech Support": {
+            "displayName": "IT and Tech Support"
+          },
+          "Key Cutting and Locksmith": {
+            "displayName": "Key Cutting and Locksmith"
+          },
+          "Legal Services and Notary": {
+            "displayName": "Legal Services and Notary"
+          },
+          "Locker and Storage Services": {
+            "displayName": "Locker and Storage Services"
+          },
+          "Logistics and Freight": {
+            "displayName": "Logistics and Freight"
+          },
+          "Lost and Found": {
+            "displayName": "Lost and Found"
+          },
+          "Massage Therapy": {
+            "displayName": "Massage Therapy"
+          },
+          "Mobile Phone and Telecom Services": {
+            "displayName": "Mobile Phone and Telecom Services"
+          },
+          "Package Pickup and Returns": {
+            "displayName": "Package Pickup and Returns"
+          },
+          "Parking Assistance": {
+            "displayName": "Parking Assistance"
+          },
+          "Passport Services": {
+            "displayName": "Passport Services"
+          },
+          "Pet Grooming and Boarding": {
+            "displayName": "Pet Grooming and Boarding"
+          },
+          "Pharmacy Services": {
+            "displayName": "Pharmacy Services"
+          },
+          "Photography Studio": {
+            "displayName": "Photography Studio"
+          },
+          "Postal Services": {
+            "displayName": "Postal Services"
+          },
+          "Printing Copying and Signage": {
+            "displayName": "Printing Copying and Signage"
+          },
+          "Public Assistance": {
+            "displayName": "Public Assistance"
+          },
+          "Real Estate and Leasing": {
+            "displayName": "Real Estate and Leasing"
+          },
+          "Reception": {
+            "displayName": "Reception"
+          },
+          "Registration": {
+            "displayName": "Registration"
+          },
+          "Repair Services Appliance and Tech": {
+            "displayName": "Repair Services Appliance and Tech"
+          },
+          "Repair Services Jewelry and Watch": {
+            "displayName": "Repair Services Jewelry and Watch"
+          },
+          "Reservations and Booking": {
+            "displayName": "Reservations and Booking"
+          },
+          "Returns and Exchanges": {
+            "displayName": "Returns and Exchanges"
+          },
+          "Security Services": {
+            "displayName": "Security Services"
+          },
+          "Shoe Care and Shine": {
+            "displayName": "Shoe Care and Shine"
+          },
+          "Shuttle and Transportation Assistance": {
+            "displayName": "Shuttle and Transportation Assistance"
+          },
+          "Tailoring and Alterations": {
+            "displayName": "Tailoring and Alterations"
+          },
+          "Ticketing": {
+            "displayName": "Ticketing"
+          },
+          "Ticketing and Box Office": {
+            "displayName": "Ticketing and Box Office"
+          },
+          "Translation and Interpretation": {
+            "displayName": "Translation and Interpretation"
+          },
+          "Travel and Tourism": {
+            "displayName": "Travel and Tourism"
+          },
+          "Tutoring and Test Prep": {
+            "displayName": "Tutoring and Test Prep"
+          },
+          "Valet Parking": {
+            "displayName": "Valet Parking"
+          },
+          "Visitor Check-in": {
+            "displayName": "Visitor Check-in"
+          },
+          "Wayfinding": {
+            "displayName": "Wayfinding"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/service-types.png"
+    },
+    "shortDescription": {
+      "valueType": "text",
+      "segment": "Content",
+      "validation": {
+        "type": "string",
+        "maxLength": 80
+      },
+      "display": {
+        "displayName": "Short Description"
+      }
+    },
+    "sportTypes": {
+      "valueType": "array",
+      "segment": "Sport Types",
+      "validation": {
+        "type": "array",
+        "options": [
+          "Aerobics",
+          "American Football",
+          "Archery",
+          "Athletics",
+          "Badminton",
+          "Baseball",
+          "Basketball",
+          "Bouldering",
+          "Bowling",
+          "Boxing",
+          "Cheerleading",
+          "Cricket",
+          "Curling",
+          "Cycling",
+          "Dance",
+          "Diving",
+          "Fencing",
+          "Field Hockey",
+          "Functional Fitness",
+          "Golf",
+          "Gymnastics",
+          "Handball",
+          "Ice Hockey",
+          "Ice Skating",
+          "Indoor Cycling",
+          "Lacrosse",
+          "Lap Swimming",
+          "Martial Arts",
+          "Mini Golf",
+          "Pickleball",
+          "Pilates",
+          "Racquetball",
+          "Recreational Swimming",
+          "Rock Climbing",
+          "Roller Skating",
+          "Rowing",
+          "Rugby",
+          "Running",
+          "Skateboarding",
+          "Soccer",
+          "Softball",
+          "Squash",
+          "Strength Training",
+          "Table Tennis",
+          "Tennis",
+          "Track and Field",
+          "Trampoline",
+          "Volleyball",
+          "Water Polo",
+          "Wrestling",
+          "Yoga"
+        ]
+      },
+      "display": {
+        "displayName": "Sport Types",
+        "order": 250,
+        "valueDisplay": {
+          "Aerobics": {
+            "displayName": "Aerobics"
+          },
+          "American Football": {
+            "displayName": "American Football"
+          },
+          "Archery": {
+            "displayName": "Archery"
+          },
+          "Athletics": {
+            "displayName": "Athletics"
+          },
+          "Badminton": {
+            "displayName": "Badminton"
+          },
+          "Baseball": {
+            "displayName": "Baseball"
+          },
+          "Basketball": {
+            "displayName": "Basketball"
+          },
+          "Bouldering": {
+            "displayName": "Bouldering"
+          },
+          "Bowling": {
+            "displayName": "Bowling"
+          },
+          "Boxing": {
+            "displayName": "Boxing"
+          },
+          "Cheerleading": {
+            "displayName": "Cheerleading"
+          },
+          "Cricket": {
+            "displayName": "Cricket"
+          },
+          "Curling": {
+            "displayName": "Curling"
+          },
+          "Cycling": {
+            "displayName": "Cycling"
+          },
+          "Dance": {
+            "displayName": "Dance"
+          },
+          "Diving": {
+            "displayName": "Diving"
+          },
+          "Fencing": {
+            "displayName": "Fencing"
+          },
+          "Field Hockey": {
+            "displayName": "Field Hockey"
+          },
+          "Functional Fitness": {
+            "displayName": "Functional Fitness"
+          },
+          "Golf": {
+            "displayName": "Golf"
+          },
+          "Gymnastics": {
+            "displayName": "Gymnastics"
+          },
+          "Handball": {
+            "displayName": "Handball"
+          },
+          "Ice Hockey": {
+            "displayName": "Ice Hockey"
+          },
+          "Ice Skating": {
+            "displayName": "Ice Skating"
+          },
+          "Indoor Cycling": {
+            "displayName": "Indoor Cycling"
+          },
+          "Lacrosse": {
+            "displayName": "Lacrosse"
+          },
+          "Lap Swimming": {
+            "displayName": "Lap Swimming"
+          },
+          "Martial Arts": {
+            "displayName": "Martial Arts"
+          },
+          "Mini Golf": {
+            "displayName": "Mini Golf"
+          },
+          "Pickleball": {
+            "displayName": "Pickleball"
+          },
+          "Pilates": {
+            "displayName": "Pilates"
+          },
+          "Racquetball": {
+            "displayName": "Racquetball"
+          },
+          "Recreational Swimming": {
+            "displayName": "Recreational Swimming"
+          },
+          "Rock Climbing": {
+            "displayName": "Rock Climbing"
+          },
+          "Roller Skating": {
+            "displayName": "Roller Skating"
+          },
+          "Rowing": {
+            "displayName": "Rowing"
+          },
+          "Rugby": {
+            "displayName": "Rugby"
+          },
+          "Running": {
+            "displayName": "Running"
+          },
+          "Skateboarding": {
+            "displayName": "Skateboarding"
+          },
+          "Soccer": {
+            "displayName": "Soccer"
+          },
+          "Softball": {
+            "displayName": "Softball"
+          },
+          "Squash": {
+            "displayName": "Squash"
+          },
+          "Strength Training": {
+            "displayName": "Strength Training"
+          },
+          "Table Tennis": {
+            "displayName": "Table Tennis"
+          },
+          "Tennis": {
+            "displayName": "Tennis"
+          },
+          "Track and Field": {
+            "displayName": "Track and Field"
+          },
+          "Trampoline": {
+            "displayName": "Trampoline"
+          },
+          "Volleyball": {
+            "displayName": "Volleyball"
+          },
+          "Water Polo": {
+            "displayName": "Water Polo"
+          },
+          "Wrestling": {
+            "displayName": "Wrestling"
+          },
+          "Yoga": {
+            "displayName": "Yoga"
+          }
+        }
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/sport-types.png"
+    },
+    "tags": {
+      "valueType": "array",
+      "segment": "Tags",
+      "validation": {
+        "type": "array"
+      },
+      "display": {
+        "displayName": "Tags",
+        "order": 950
+      }
+    },
+    "travelTime": {
+      "valueType": "number",
+      "segment": "Wayfinding Network",
+      "validation": {
+        "type": "number"
+      },
+      "display": {
+        "displayName": "Travel Time"
+      }
+    },
+    "unitId": {
+      "valueType": "text",
+      "segment": "System",
+      "validation": {
+        "type": "string",
+        "maxLength": 255
+      },
+      "display": {
+        "displayName": "Unit ID"
+      }
+    },
+    "waitTime": {
+      "valueType": "integer",
+      "segment": "Wait Time",
+      "validation": {
+        "type": "integer",
+        "min": 0,
+        "max": 999999
+      },
+      "display": {
+        "displayName": "Wait Time",
+        "order": 615,
+        "highlight": 60
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/wait-time.png"
+    },
+    "websiteUrl": {
+      "valueType": "hyperlink",
+      "segment": "Contact",
+      "validation": {
+        "type": "string",
+        "maxLength": 255
+      },
+      "display": {
+        "order": 140,
+        "action": "href",
+        "actionName": "Website",
+        "displayName": "Website URL"
+      },
+      "iconUrl": "https://mapscdn.pointr.tech/taxonomy/10.12.0/symbols/properties/website-url.png"
+    }
+  }
+}

@@ -5,7 +5,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 @Composable
 fun KozmosTextarea(
@@ -24,10 +24,10 @@ fun KozmosTextarea(
         maxLines = maxLines,
         modifier = modifier.fillMaxWidth(),
         colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = KozmosColors.primitivesColorsTheme500,
-            unfocusedBorderColor = KozmosColors.primitivesColorsForeground300,
-            cursorColor = KozmosColors.primitivesColorsTheme500,
-            focusedLabelColor = KozmosColors.primitivesColorsTheme500
+            focusedBorderColor = KozmosThemeTokens.primitivesColorsTheme500,
+            unfocusedBorderColor = KozmosThemeTokens.semanticsBorderInput,
+            cursorColor = KozmosThemeTokens.primitivesColorsTheme500,
+            focusedLabelColor = KozmosThemeTokens.primitivesColorsTheme500
         )
     )
 }

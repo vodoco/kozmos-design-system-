@@ -6,7 +6,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.kozmos.tokens.KozmosColors
+import com.kozmos.tokens.KozmosThemeTokens
 
 enum class SeparatorOrientation {
     Horizontal,
@@ -19,13 +19,13 @@ fun KozmosSeparator(
     orientation: SeparatorOrientation = SeparatorOrientation.Horizontal
 ) {
     if (orientation == SeparatorOrientation.Horizontal) {
-        Divider(modifier = modifier, color = KozmosColors.primitivesColorsBackground300)
+        Divider(modifier = modifier, color = KozmosThemeTokens.primitivesColorsBackground300)
     } else {
         Divider(
             modifier = modifier
                 .fillMaxHeight()
                 .width(1.dp),
-            color = KozmosColors.primitivesColorsBackground300
+            color = KozmosThemeTokens.primitivesColorsBackground300
         )
     }
 }

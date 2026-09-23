@@ -18,8 +18,13 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { createRequire } from "node:module";
+import { rawValuePatterns as PATTERNS } from "./lib/raw-value-patterns.mjs";
 
 const ROOT = process.cwd();
+const postcss = createRequire(path.join(ROOT, "packages/react/package.json"))(
+  "postcss",
+);
 const DIR = "packages/react/src/components";
 const problems = [];
 const ok = (m) => console.log(`  ok    ${m}`);
@@ -30,25 +35,9 @@ const fail = (m) => {
 
 // Counts as they stood on 2026-09-09. Lower these as they are fixed.
 const BASELINE = {
-  colour: { total: 35, components: 7 },
-  radius: { total: 7, components: 6 },
-};
-
-const TAILWIND_PALETTE =
-  "slate|gray|grey|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|white|black";
-
-const PATTERNS = {
-  // A literal from Tailwind's own palette, where Semantics or Primitives.Colors
-  // already names the job.
-  colour: new RegExp(
-    `\\b(?:bg|text|ring|border|fill|stroke|from|via|to|decoration|outline|shadow|accent|caret|divide)-(?:${TAILWIND_PALETTE})(?:-\\d{2,3})?(?:\\/\\d{1,3})?\\b`,
-    "g",
-  ),
-  // A raw radius, or one reaching past Semantics.Radius into a primitive.
-  // rounded-none, rounded-pill/control/container/panel and a calc() deriving
-  // from a semantic role are all legitimate.
-  radius:
-    /\brounded-(?:sm|md|lg|xl|2xl|3xl|full)\b|\brounded-\[(?!inherit|calc\([^\]]*--semantics-)[^\]]*\]/g,
+  colour: { total: 19, components: 6 },
+  // 6 across 5 until 2026-09-22, when the four map cards took the panel role.
+  radius: { total: 2, components: 1 },
 };
 
 console.log("Raw values that bypass a role\n");
@@ -56,6 +45,26 @@ console.log("Raw values that bypass a role\n");
 const entries = fs.existsSync(path.join(ROOT, DIR))
   ? fs.readdirSync(path.join(ROOT, DIR), { withFileTypes: true })
   : [];
+
+// CSS recipes are product source too. Count @apply tokens, not comments, so
+// moving a literal out of JSX cannot make the debt disappear from this gate.
+function cssSources(dir, result = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) cssSources(full, result);
+    else if (entry.name.endsWith(".css")) result.push(full);
+  }
+  return result;
+}
+const recipes = cssSources(path.join(ROOT, "packages/react/src")).map(
+  (file) => {
+    const classes = [];
+    postcss
+      .parse(fs.readFileSync(file, "utf8"), { from: file })
+      .walkAtRules("apply", (rule) => classes.push(rule.params));
+    return [path.relative(ROOT, file), classes.join(" ")];
+  },
+);
 
 for (const [kind, pattern] of Object.entries(PATTERNS)) {
   const byComponent = new Map();
@@ -70,6 +79,13 @@ for (const [kind, pattern] of Object.entries(PATTERNS)) {
     if (hits === 0) continue;
     byComponent.set(entry.name, hits);
     total += hits;
+  }
+  for (const [file, text] of recipes) {
+    const hits = (text.match(pattern) || []).length;
+    if (hits) {
+      byComponent.set(file, hits);
+      total += hits;
+    }
   }
 
   const base = BASELINE[kind];
