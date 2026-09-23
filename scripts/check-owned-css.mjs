@@ -506,6 +506,50 @@ try {
           `${testId}: 8px between the icon and the label in both directions (GAP-56)`,
         );
       }
+      // GAP-75: the same measurement on the parts that share none of the
+      // Button's CSS. `ToggleButton` is a Radix Toggle styled on its own and
+      // read 0 — while SwiftUI's `HStack(spacing: spacing100)` and Compose's
+      // spacer already drew 8 — and `Tag` takes arbitrary children on React
+      // alone, where an icon beside its text touched. `Chip` is not here: its
+      // 6 is `Chip/gap`, bound to `Layout/spacing/75` in Figma, and right.
+      //
+      // The full pass only. Neither part is in the owned slice — their height,
+      // padding, colours and this gap are all Tailwind — so without `@scope`
+      // the whole component goes, not just its gap, and measuring it there
+      // would say nothing about the gap. `Button`'s is an owned rule and is
+      // measured in both.
+      for (const [testId, expected] of mode === "full"
+        ? [
+            [`${id}-toggle-icon-label`, 8],
+            [`${id}-tag-icon-label`, 4],
+          ]
+        : []) {
+        const gaps = await page.getByTestId(testId).evaluate((node) => {
+          const measure = () => {
+            const mark = node.querySelector("svg");
+            const box = mark.getBoundingClientRect();
+            const label = [...node.childNodes].find(
+              (child) => child.nodeType === Node.TEXT_NODE && child.textContent.trim(),
+            );
+            const range = document.createRange();
+            range.selectNodeContents(label);
+            const text = range.getBoundingClientRect();
+            return Math.round(Math.max(text.left - box.right, box.left - text.right));
+          };
+          const own = node.getAttribute("dir");
+          const rendered = measure();
+          node.setAttribute("dir", getComputedStyle(node).direction === "rtl" ? "ltr" : "rtl");
+          const flipped = measure();
+          if (own === null) node.removeAttribute("dir");
+          else node.setAttribute("dir", own);
+          return [rendered, flipped];
+        });
+        assert.deepEqual(
+          gaps,
+          [expected, expected],
+          `${testId}: ${expected}px between the mark and the label in both directions (GAP-75)`,
+        );
+      }
       const button = page.getByTestId(`${id}-button`);
       await button.hover();
       await page.mouse.down();
@@ -720,11 +764,12 @@ try {
   );
   await still.addScriptTag({ content: code });
   await still.getByTestId("outer-spinner").waitFor();
-  for (const testId of ["outer-spinner", "outer-loading"]) {
-    const animation = await still
-      .getByTestId(testId)
-      .locator("svg")
-      .evaluate((node) => getComputedStyle(node).animationName);
+  for (const testId of ["outer-spinner", "outer-loading", "outer-skeleton"]) {
+    const target = still.getByTestId(testId);
+    const animation = await (testId.endsWith("-skeleton")
+      ? target
+      : target.locator("svg")
+    ).evaluate((node) => getComputedStyle(node).animationName);
     assert.equal(
       animation,
       "none",
@@ -736,8 +781,62 @@ try {
     "status",
     "a spinner that has stopped must still say it is waiting",
   );
-  console.log("PASS reduced motion: the arc rests, the status role remains");
+  // A page with no preference set at all, so the media query above cannot be
+  // what stops anything here: whatever rests on this page rests because the
+  // config said so.
+  const moving = await browser.newPage({
+    viewport: { width: 600, height: 600 },
+    reducedMotion: "no-preference",
+  });
+  await moving.setContent(
+    `<!doctype html><html><head><style>${css}</style></head><body data-kozmos-root data-theme="light"><div id="fixture"></div></body></html>`,
+  );
+  await moving.addScriptTag({ content: code });
+  await moving.getByTestId("config-reduced").waitFor();
+
+  // The design config's own `motion: reduced`, with no media query set. It
+  // scales `--semantics-motion-duration-scale` to 0.001, which turns a
+  // transition into a cut — and a one-second spin into a strobe, so an
+  // animation that loops has to be told to stop rather than scaled. The
+  // provider marks its scope and the owned rules read the mark (GAP-50).
+  for (const [testId, selector] of [
+    ["config-reduced-spinner", "svg"],
+    ["config-reduced-skeleton", null],
+  ]) {
+    const target = moving.getByTestId(testId);
+    const animation = await (selector ? target.locator(selector) : target).evaluate(
+      (node) => getComputedStyle(node).animationName,
+    );
+    assert.equal(
+      animation,
+      "none",
+      `${testId} keeps moving under the config's motion: reduced: ${animation}`,
+    );
+  }
+  const ringUnderConfig = await moving
+    .getByTestId("config-reduced")
+    .locator(".kozmos-ai-search-ring")
+    .evaluate((node) => getComputedStyle(node).animationName);
+  assert.equal(
+    ringUnderConfig,
+    "none",
+    `the assistant's ring keeps turning under the config's motion: reduced: ${ringUnderConfig}`,
+  );
+  // The control: with no preference and no config, they do move.
+  const stillMoving = await moving
+    .getByTestId("outer-spinner")
+    .locator("svg")
+    .evaluate((node) => getComputedStyle(node).animationName);
+  assert.match(
+    stillMoving,
+    /^kozmos-/,
+    `nothing moves at all, so resting proves nothing: ${stillMoving}`,
+  );
+  console.log(
+    "PASS reduced motion: the arc, the skeleton and the ring rest under the preference and under the config; the status role remains",
+  );
   await still.close();
+  await moving.close();
 
   // The AI search button's gradient ring: a band two and a half wide, all the
   // way round, MEASURED IN THE PAINT.

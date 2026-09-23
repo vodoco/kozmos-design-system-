@@ -301,10 +301,8 @@
       transform: rotate(360deg);
     }
   }
-  @media (prefers-reduced-motion: reduce) {
-    .kozmos-ai-search-ring {
-      animation: none;
-    }
+  .kozmos-skeleton {
+    @apply animate-pulse;
   }
   .kozmos-button {
     @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-control bg-transparent text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98];
@@ -414,11 +412,6 @@
   .kozmos-spinner-arc {
     @apply animate-spin;
   }
-  @media (prefers-reduced-motion: reduce) {
-    .kozmos-spinner-arc {
-      animation: none;
-    }
-  }
   .kozmos-button-loader {
     @apply h-4 w-4;
   }
@@ -428,5 +421,27 @@
   .kozmos-popover-arrow {
     @apply fill-popover;
     display: block;
+  }
+  /* Last in the owned block on purpose: these rules and the animations
+     they stop are all one class, so source order is what decides, and a
+     `@apply animate-spin` declared later would simply win. */
+  /* Every animation that loops, stopped by either signal, in one place
+     (GAP-50). Two of them read only the media query before 2026-09-23, the
+     skeleton read neither, and the design config's `motion: reduced` reached
+     none of them — it scales `--semantics-motion-duration-scale` to 0.001,
+     which turns a transition into a cut and a one-second spin into a strobe,
+     so a loop needs telling, not scaling. The provider marks the scope and
+     these rules read the mark. */
+  @media (prefers-reduced-motion: reduce) {
+    .kozmos-ai-search-ring,
+    .kozmos-spinner-arc,
+    .kozmos-skeleton {
+      animation: none;
+    }
+  }
+  [data-kozmos-motion="reduced"] .kozmos-ai-search-ring,
+  [data-kozmos-motion="reduced"] .kozmos-spinner-arc,
+  [data-kozmos-motion="reduced"] .kozmos-skeleton {
+    animation: none;
   }
 }

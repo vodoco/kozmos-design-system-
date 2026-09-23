@@ -11,7 +11,12 @@ import {
 import { useKozmosAnalytics } from "../../utils/analytics";
 
 const tagVariants = cva(
-  "inline-flex items-center rounded-pill border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  // Four between a Tag's parts, the spacing scale's 50, as SwiftUI's
+  // `HStack(spacing: spacing50)` draws it. A Tag takes arbitrary children on
+  // React alone, so an icon beside its text touched — the pill scale's gap,
+  // not the control scale's 8, and not `Chip`'s 6, which Figma binds to
+  // `Layout/spacing/75` for a larger pill.
+  "inline-flex items-center gap-1 rounded-pill border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {

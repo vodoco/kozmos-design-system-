@@ -23,6 +23,9 @@ import {
   Spinner,
   AISearchButton,
   SearchBar,
+  Skeleton,
+  Tag,
+  ToggleButton,
 } from "@kozmos/react";
 
 function Controls({ id }: { id: string }) {
@@ -125,6 +128,17 @@ function Controls({ id }: { id: string }) {
           trailing={<AISearchButton label={`${id} assistant, by slot`} />}
         />
       </div>
+      {/* GAP-75: the same icon-and-label gap as the Button's, in parts that
+          share none of its CSS. */}
+      <ToggleButton data-testid={`${id}-toggle-icon-label`}>
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" />
+        Step free
+      </ToggleButton>
+      <Tag data-testid={`${id}-tag-icon-label`}>
+        <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" />
+        Open
+      </Tag>
+      <Skeleton data-testid={`${id}-skeleton`} className="h-4 w-24" />
       <Button data-testid={`${id}-icon-label`}>
         <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" />
         Navigate
@@ -293,6 +307,19 @@ function Fixture() {
           <ThemeProvider theme="light">
             <Controls id="nested" />
           </ThemeProvider>
+          {/* The design config's own reduced motion, with no media query set:
+              GAP-50 asked that `motion: reduced` reach the animations, and it
+              reached none of them. */}
+          <DesignConfigProvider initialConfig={{ motion: "reduced" }}>
+            <div data-testid="config-reduced">
+              <Spinner data-testid="config-reduced-spinner" />
+              <Skeleton
+                data-testid="config-reduced-skeleton"
+                className="h-4 w-24"
+              />
+              <AISearchButton label="config reduced assistant" />
+            </div>
+          </DesignConfigProvider>
         </DesignConfigProvider>
       </ThemeProvider>
     </>
