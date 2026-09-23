@@ -87,7 +87,11 @@ const Tag = React.forwardRef<HTMLDivElement, TagProps>(
               }
               onRemove();
             }}
-            className="ml-1 rounded-pill p-0.5 hover:bg-accent focus:outline-none"
+            // No margin of its own: the row's gap spaces it. With both it
+            // sat 8 from the label where the rest of the Tag spaces 4 — the
+            // same compensating margin GAP-56 took off the Button's loader,
+            // reintroduced here the moment the gap arrived.
+            className="rounded-pill p-0.5 hover:bg-accent focus:outline-none"
           >
             <X className="h-3 w-3" />
             <span className="sr-only">Remove</span>

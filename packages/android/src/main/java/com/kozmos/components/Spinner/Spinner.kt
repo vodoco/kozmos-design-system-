@@ -101,9 +101,12 @@ fun KozmosSpinner(
             .semantics { contentDescription = label }
     ) {
         val stroke = strokeWidth.toPx()
-        // Inset by half the stroke: an arc is centred on its path, so a circle
-        // drawn on the edge loses half its width off the side.
-        val inset = stroke / 2f
+        // The path is radius 9 in the icons' 24 box, as React's `d` is and as
+        // SwiftUI insets to: three units from the edge to the path, so the ink
+        // — one unit either side of it — sits two units inside the box. Half
+        // the stroke is not enough: it put the ink on the box's edge here while
+        // React kept it inside, which is three drawings of one arc.
+        val inset = this.size.width / 8f
         drawArc(
             color = color,
             // From the top. Compose measures from 3 o'clock, so -90 puts the
@@ -112,7 +115,7 @@ fun KozmosSpinner(
             sweepAngle = 270f,
             useCenter = false,
             topLeft = Offset(inset, inset),
-            size = Size(this.size.width - stroke, this.size.height - stroke),
+            size = Size(this.size.width - inset * 2f, this.size.height - inset * 2f),
             style = Stroke(width = stroke, cap = StrokeCap.Round)
         )
     }

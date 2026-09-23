@@ -550,6 +550,46 @@ try {
           `${testId}: ${expected}px between the mark and the label in both directions (GAP-75)`,
         );
       }
+      // A Tag that can be removed: its cross is spaced by the row's gap and
+      // nothing else. The cross carried `ml-1` of its own, so the moment the
+      // gap arrived it sat 8 from the label where the rest of the Tag spaces
+      // 4 — the same compensating margin GAP-56 took off the Button's loader,
+      // reintroduced by the fix for GAP-75. Measured in both directions,
+      // because a margin is physical and a gap is not.
+      if (mode === "full") {
+        const removeGaps = await page
+          .getByTestId(`${id}-tag-remove`)
+          .evaluate((node) => {
+            const measure = () => {
+              const label = [...node.childNodes].find(
+                (child) =>
+                  child.nodeType === Node.TEXT_NODE && child.textContent.trim(),
+              );
+              const range = document.createRange();
+              range.selectNodeContents(label);
+              const text = range.getBoundingClientRect();
+              const cross = node.querySelector("button").getBoundingClientRect();
+              return Math.round(
+                Math.max(cross.left - text.right, text.left - cross.right),
+              );
+            };
+            const own = node.getAttribute("dir");
+            const rendered = measure();
+            node.setAttribute(
+              "dir",
+              getComputedStyle(node).direction === "rtl" ? "ltr" : "rtl",
+            );
+            const flipped = measure();
+            if (own === null) node.removeAttribute("dir");
+            else node.setAttribute("dir", own);
+            return [rendered, flipped];
+          });
+        assert.deepEqual(
+          removeGaps,
+          [4, 4],
+          `${id}-tag-remove: the cross is spaced 4 by the row's gap alone, in both directions`,
+        );
+      }
       const button = page.getByTestId(`${id}-button`);
       await button.hover();
       await page.mouse.down();

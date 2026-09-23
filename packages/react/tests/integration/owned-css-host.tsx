@@ -134,6 +134,9 @@ function Controls({ id }: { id: string }) {
         <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" />
         Step free
       </ToggleButton>
+      <Tag data-testid={`${id}-tag-remove`} onRemove={() => undefined}>
+        Open
+      </Tag>
       <Tag data-testid={`${id}-tag-icon-label`}>
         <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" />
         Open

@@ -71,6 +71,13 @@ public struct KozmosSpinner: View {
             // From the top, three quarters of the way round. The quarter that
             // is missing is what reads as motion; a full ring turning shows
             // nothing at all.
+            // Inset to the path's own radius before trimming: SwiftUI strokes
+            // centred on the path, so an uninset circle paints half its width
+            // outside the frame — a 48 spinner drew 52, measured. The path is
+            // radius 9 in the icons' 24 box, as React's `d` is and as Compose
+            // insets to, which puts the ink 2 units inside the edge on all
+            // three.
+            .inset(by: size.points / 8)
             .trim(from: 0, to: 0.75)
             .stroke(color, style: StrokeStyle(lineWidth: size.lineWidth, lineCap: .round))
             .rotationEffect(.degrees(-90 + angle))
