@@ -3,7 +3,7 @@ package com.kozmos.contracts
 /**
  * Platform-neutral, already-localized presentation models.
  *
- * These mirror the TypeScript contracts in `@kozmos/product-contracts` so that
+ * These mirror the TypeScript contracts in `@kozmos-ds/product-contracts` so that
  * React, SwiftUI, and Compose Product / SDK components describe the same shape.
  *
  * API and map-SDK objects must be adapted into these contracts outside UI

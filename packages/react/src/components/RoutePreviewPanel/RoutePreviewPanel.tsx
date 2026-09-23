@@ -2,7 +2,7 @@ import React from "react";
 import type {
   RouteOptionPresentation,
   RouteReadiness,
-} from "@kozmos/product-contracts";
+} from "@kozmos-ds/product-contracts";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "../../utils";
 import {

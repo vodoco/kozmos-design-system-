@@ -1,5 +1,5 @@
 ---
-"@kozmos/react": patch
+"@kozmos-ds/react": patch
 ---
 
 AdaptiveMapShell's bottom sheet eases only between detents — after a new

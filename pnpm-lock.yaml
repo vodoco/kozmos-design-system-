@@ -73,13 +73,13 @@ importers:
 
   apps/docs:
     dependencies:
-      "@kozmos/react":
+      "@kozmos-ds/react":
         specifier: workspace:*
         version: link:../../packages/react
-      "@kozmos/tokens":
+      "@kozmos-ds/tokens":
         specifier: workspace:*
         version: link:../../packages/tokens
-      "@kozmos/vue":
+      "@kozmos-ds/vue":
         specifier: workspace:*
         version: link:../../packages/vue
       react:
@@ -155,10 +155,10 @@ importers:
       "@emotion/is-prop-valid":
         specifier: 1.4.0
         version: 1.4.0
-      "@kozmos/icons":
+      "@kozmos-ds/icons":
         specifier: workspace:*
         version: link:../../packages/icons
-      "@kozmos/react":
+      "@kozmos-ds/react":
         specifier: workspace:*
         version: link:../../packages/react
       framer-motion:
@@ -216,10 +216,10 @@ importers:
 
   apps/playground-vue:
     dependencies:
-      "@kozmos/react":
+      "@kozmos-ds/react":
         specifier: workspace:*
         version: link:../../packages/react
-      "@kozmos/vue":
+      "@kozmos-ds/vue":
         specifier: workspace:*
         version: link:../../packages/vue
       react:
@@ -256,10 +256,10 @@ importers:
       "@emotion/is-prop-valid":
         specifier: 1.4.0
         version: 1.4.0
-      "@kozmos/icons":
+      "@kozmos-ds/icons":
         specifier: workspace:*
         version: link:../../packages/icons
-      "@kozmos/react":
+      "@kozmos-ds/react":
         specifier: workspace:*
         version: link:../../packages/react
       framer-motion:
@@ -350,13 +350,13 @@ importers:
       "@emotion/is-prop-valid":
         specifier: 1.4.0
         version: 1.4.0
-      "@kozmos/icons":
+      "@kozmos-ds/icons":
         specifier: workspace:*
         version: link:../icons
-      "@kozmos/product-contracts":
+      "@kozmos-ds/product-contracts":
         specifier: workspace:*
         version: link:../product-contracts
-      "@kozmos/tokens":
+      "@kozmos-ds/tokens":
         specifier: workspace:*
         version: link:../tokens
       "@radix-ui/react-accordion":
@@ -540,7 +540,7 @@ importers:
 
   packages/vue:
     dependencies:
-      "@kozmos/react":
+      "@kozmos-ds/react":
         specifier: workspace:*
         version: link:../react
       react:

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import type { POIPresentation } from "@kozmos/product-contracts";
+import type { POIPresentation } from "@kozmos-ds/product-contracts";
 import { describe, expect, it, vi } from "vitest";
 import { POIResultList, type POIResultListItem } from "./POIResultList";
 

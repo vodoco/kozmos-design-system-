@@ -1,5 +1,5 @@
 ---
-"@kozmos/react": patch
+"@kozmos-ds/react": patch
 ---
 
 Compose POI summary facts with the shared MetaStrip instead of a wrapping

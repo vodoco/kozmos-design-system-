@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { kozmosIconDefinitions } from "@kozmos/icons";
+import { kozmosIconDefinitions } from "@kozmos-ds/icons";
 import { Sparkles } from "lucide-react";
 import { AISearchButton } from "./AISearchButton";
 

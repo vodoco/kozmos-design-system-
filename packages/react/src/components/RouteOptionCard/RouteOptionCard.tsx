@@ -1,5 +1,5 @@
 import React from "react";
-import type { RouteOptionPresentation } from "@kozmos/product-contracts";
+import type { RouteOptionPresentation } from "@kozmos-ds/product-contracts";
 import { Accessibility, Clock3, SlidersHorizontal } from "lucide-react";
 import { cn } from "../../utils";
 

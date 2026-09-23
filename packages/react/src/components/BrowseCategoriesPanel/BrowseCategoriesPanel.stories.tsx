@@ -9,7 +9,7 @@ import {
   TaxonomySecuritySpace,
   TaxonomyServiceSpaceOffice,
   TaxonomyTransportationSpaceBoardingGate,
-} from "@kozmos/icons";
+} from "@kozmos-ds/icons";
 import {
   Accessibility,
   Heart,

@@ -1,5 +1,5 @@
 ---
-"@kozmos/react": patch
+"@kozmos-ds/react": patch
 ---
 
 The ES build ships one file per module, so an app's bundler keeps only what it

@@ -47,7 +47,7 @@ const config: StorybookConfig = {
     const aliases = config.resolve.alias || [];
     config.resolve.alias = [
       {
-        find: /^@kozmos\/react$/,
+        find: /^@kozmos-ds\/react$/,
         replacement: resolve(__dirname, "../../../packages/react/src/index.ts"),
       },
       ...(Array.isArray(aliases)

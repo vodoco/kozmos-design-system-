@@ -1,5 +1,5 @@
 import React from "react";
-import type { CategoryPresentation } from "@kozmos/product-contracts";
+import type { CategoryPresentation } from "@kozmos-ds/product-contracts";
 import { Counter } from "../Counter";
 import type { CategoryTint } from "./CategoryTint";
 import { cn } from "../../utils";

@@ -5,7 +5,7 @@ import { execSync } from "child_process";
 import { createRequire } from "module";
 import { gzipSync } from "zlib";
 
-// What an app pays for @kozmos/react. The ES build is one file per module, and package.json
+// What an app pays for @kozmos-ds/react. The ES build is one file per module, and package.json
 // declares the JavaScript free of side effects, so an app's bundler keeps only the modules behind
 // what it imports. Each budget is measured the way a Vite app builds: Rollup, honouring the
 // package's `sideEffects`, with its dependencies left out (they are the app's own), then minified
@@ -99,11 +99,11 @@ const isExternal = (id: string) =>
 
 async function main() {
   console.log(
-    "🔄 Building @kozmos/react and its dependencies for performance analysis...",
+    "🔄 Building @kozmos-ds/react and its dependencies for performance analysis...",
   );
   try {
-    // turbo builds the transitive dependencies, such as @kozmos/tokens, first
-    execSync("ANALYZE=true pnpm turbo run build --filter=@kozmos/react", {
+    // turbo builds the transitive dependencies, such as @kozmos-ds/tokens, first
+    execSync("ANALYZE=true pnpm turbo run build --filter=@kozmos-ds/react", {
       stdio: "inherit",
     });
   } catch {
@@ -185,7 +185,7 @@ async function main() {
     const sorted = perExport.map(([, gzip]) => gzip).sort((a, b) => a - b);
     const median = sorted[Math.floor(sorted.length / 2)] ?? 0;
 
-    console.log(`\n📊 What an app pays for @kozmos/react (minified, gzip):`);
+    console.log(`\n📊 What an app pays for @kozmos-ds/react (minified, gzip):`);
     console.log(`---------------------------------`);
     console.log(`ES modules:        ${modules.length} files in dist/esm`);
     console.log(

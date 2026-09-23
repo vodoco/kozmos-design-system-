@@ -5,7 +5,7 @@ import type {
   MapLayoutRect,
   MapPanelPresentation,
   MapReadiness,
-} from "@kozmos/product-contracts";
+} from "@kozmos-ds/product-contracts";
 import { cn } from "../../utils";
 import { surfaceClass, type SurfaceVariant } from "../Surface";
 import {
@@ -38,7 +38,7 @@ export type {
   AdaptiveMapLayoutSnapshot,
   MapLayoutRect,
   MapPanelPresentation,
-} from "@kozmos/product-contracts";
+} from "@kozmos-ds/product-contracts";
 
 export interface AdaptiveMapShellProps extends React.HTMLAttributes<HTMLDivElement> {
   map: React.ReactNode;

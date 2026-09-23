@@ -1,5 +1,5 @@
 import React from "react";
-import type { UserLocationState } from "@kozmos/product-contracts";
+import type { UserLocationState } from "@kozmos-ds/product-contracts";
 import { cn } from "../../utils";
 import { MapControlButton } from "../MapControlButton";
 import { Plus, Minus, Compass, Focus } from "lucide-react";
