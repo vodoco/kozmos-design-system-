@@ -135,6 +135,8 @@ The Storybook and POI thread, 2026-09-18:
 
 - `browser-compatibility-2026-09-17.md`: reproduced WebKit form-styling blocker,
   real Firefox coverage and the unfixed baseline that motivated the CSS migration.
+- `release-process.md`: manual SHA-confirmed releases, protected environment setup,
+  exact tested tarballs, fail-closed guards and partial-publication recovery.
 
 - `embedding-isolation.md`: scoped ThemeProvider and CSS, automatic portal ownership,
   migration, compatibility decision gate and remaining legacy configuration work.

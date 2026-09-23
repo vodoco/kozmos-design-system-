@@ -31,7 +31,34 @@ import {
   writeReactSnippetFixtures,
   writeSnippetNegativeControl,
 } from "./lib/doc-snippets.mjs";
+import { parseArgs } from "node:util";
+import { writeCandidate } from "./release/candidate.mjs";
+import { readPlan } from "./release/verify-request.mjs";
 
+const { values: releaseOptions } = parseArgs({
+  options: {
+    "release-output": { type: "string" },
+    "release-sha": { type: "string" },
+  },
+});
+if (
+  Boolean(releaseOptions["release-output"]) !==
+  Boolean(releaseOptions["release-sha"])
+) {
+  throw new Error(
+    "--release-output and --release-sha must be supplied together",
+  );
+}
+const releasePlan = releaseOptions["release-output"] ? readPlan() : null;
+if (releasePlan) {
+  const head = execFileSync("git", ["rev-parse", "HEAD"], {
+    encoding: "utf8",
+  }).trim();
+  if (releaseOptions["release-sha"] !== head)
+    throw new Error("Release SHA differs from checkout");
+  if (fs.existsSync(releaseOptions["release-output"]))
+    throw new Error("Release output already exists");
+}
 const ROOT = process.cwd();
 const docSnippets = collectSnippets(ROOT);
 const PACKAGES = path.join(ROOT, "packages");
@@ -607,6 +634,17 @@ declare module "*.css";
 }
 
 if (problems.length === 0) {
+  if (releasePlan) {
+    writeCandidate(
+      releaseOptions["release-output"],
+      releaseOptions["release-sha"],
+      releasePlan,
+      packed,
+    );
+    ok(
+      `tested release candidate retained at ${releaseOptions["release-output"]}`,
+    );
+  }
   fs.rmSync(work, { recursive: true, force: true });
 } else {
   console.log(`\n  The install is kept for inspection at ${work}`);
