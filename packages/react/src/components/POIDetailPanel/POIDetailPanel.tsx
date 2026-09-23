@@ -5,7 +5,7 @@ import type {
   POIPresentation,
   POISupplementaryAction,
 } from "@kozmos-ds/product-contracts";
-import { Navigation, X } from "lucide-react";
+import { NavigationPointer01 as Navigation, X } from "@kozmos-ds/icons";
 import {
   Bookmark,
   CalendarCheck01,

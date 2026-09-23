@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Plane, UtensilsCrossed, Bookmark } from "lucide-react";
+import { Plane, Bookmark } from "@kozmos-ds/icons";
+import { UtensilsCrossed } from "lucide-react";
 import { CategoryField } from "./CategoryField";
 import { AISearchButton } from "../AISearchButton";
 import { IconButton } from "../IconButton";
-import { SlidersHorizontal } from "lucide-react";
+import { Sliders01 as SlidersHorizontal } from "@kozmos-ds/icons";
 
 const meta = {
   title: "Product SDK/CategoryField",

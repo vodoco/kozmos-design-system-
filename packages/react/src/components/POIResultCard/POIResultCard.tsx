@@ -3,7 +3,7 @@ import type {
   POIPresentation,
   POIResultPresentation,
 } from "@kozmos-ds/product-contracts";
-import { Star } from "lucide-react";
+import { Star01 as Star } from "@kozmos-ds/icons";
 import { cn } from "../../utils";
 import { useKozmosAnalytics } from "../../utils/analytics";
 

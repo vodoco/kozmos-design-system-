@@ -11,6 +11,7 @@
  * lucide at all, not even for types. A consumer that wants an icon outside the
  * set installs whatever it likes and uses it directly.
  */
+export type { KozmosIconProps } from "./iconProps.js";
 export * from "./registry.js";
 export * from "./pointr/icons.generated.js";
 export * from "./taxonomy/icons.generated.js";

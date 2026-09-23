@@ -1,7 +1,7 @@
 import React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../utils";
-import { X } from "lucide-react";
+import { X } from "@kozmos-ds/icons";
 import {
   EMOTION_FILLED_CLASSES,
   EMOTION_OUTLINE_CLASSES,

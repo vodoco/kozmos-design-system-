@@ -1,5 +1,5 @@
 import React, { forwardRef } from "react";
-import { Search, X } from "lucide-react";
+import { SearchLg as Search, X } from "@kozmos-ds/icons";
 import { cva } from "class-variance-authority";
 import { cn } from "../../utils";
 import { useKozmosAnalytics } from "../../utils/analytics";

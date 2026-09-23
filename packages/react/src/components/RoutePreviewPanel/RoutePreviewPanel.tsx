@@ -3,7 +3,7 @@ import type {
   RouteOptionPresentation,
   RouteReadiness,
 } from "@kozmos-ds/product-contracts";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@kozmos-ds/icons";
 import { cn } from "../../utils";
 import {
   EMOTION_FILLED_CLASSES,

@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar, CalendarRange } from "lucide-react";
+import { Calendar, CalendarDate as CalendarRange } from "@kozmos-ds/icons";
 import { cn, mergeAriaIds } from "../../utils";
 import { useKozmosAnalytics } from "../../utils/analytics";
 import { FieldWrapper } from "../FieldWrapper";
