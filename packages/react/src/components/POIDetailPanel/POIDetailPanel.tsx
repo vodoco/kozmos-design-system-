@@ -4,7 +4,7 @@ import type {
   POIDetailsPresentation,
   POIPresentation,
   POISupplementaryAction,
-} from "@kozmos/product-contracts";
+} from "@kozmos-ds/product-contracts";
 import { Navigation, X } from "lucide-react";
 import {
   Bookmark,
@@ -13,7 +13,7 @@ import {
   Phone,
   Share01,
   ShoppingBag02,
-} from "@kozmos/icons";
+} from "@kozmos-ds/icons";
 import { cn } from "../../utils";
 import { scrollHorizontalWithKeyboard } from "../../utils/keyboard-scroll";
 import { Button } from "../Button";

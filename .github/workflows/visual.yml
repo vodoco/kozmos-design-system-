@@ -36,15 +36,15 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter '@kozmos/react...' build
-      - run: pnpm --filter @kozmos/docs build-storybook
+      - run: pnpm --filter '@kozmos-ds/react...' build
+      - run: pnpm --filter @kozmos-ds/docs build-storybook
       - name: Install the browsers Playwright drives
         run: pnpm exec playwright install --with-deps chromium firefox webkit
       - name: Compare every story against its baseline
         # The Storybook is served here and named explicitly: the suite must
         # measure this build and not whatever is listening on 6006.
         run: |
-          pnpm --filter @kozmos/docs exec concurrently -k -s first -n "SB,VISUAL" \
+          pnpm --filter @kozmos-ds/docs exec concurrently -k -s first -n "SB,VISUAL" \
             "python3 -m http.server 6010 --bind 127.0.0.1 --directory storybook-static" \
             "bash -lc 'until curl -sf http://127.0.0.1:6010/index.json >/dev/null; do sleep 2; done; \
               STORYBOOK_URL=http://127.0.0.1:6010 pnpm -w exec playwright test visual-regression.spec.ts ${{ inputs.record && '--update-snapshots' || '' }}'"

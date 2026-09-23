@@ -1,5 +1,5 @@
 import React from "react";
-import type { POIMediaPresentation } from "@kozmos/product-contracts";
+import type { POIMediaPresentation } from "@kozmos-ds/product-contracts";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../../utils";
 import { IconButton } from "../IconButton";

@@ -1,5 +1,5 @@
 ---
-"@kozmos/react": patch
+"@kozmos-ds/react": patch
 ---
 
 The map sheet's drag handle is a 16px row again, with a 40 × 4 grip (GAP-38).

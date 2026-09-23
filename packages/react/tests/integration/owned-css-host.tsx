@@ -27,7 +27,7 @@ import {
   Tag,
   ToggleButton,
   SegmentedControl,
-} from "@kozmos/react";
+} from "@kozmos-ds/react";
 
 function Controls({ id }: { id: string }) {
   return (

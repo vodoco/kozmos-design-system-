@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import type {
   POIPresentation,
   POIResultPresentation,
-} from "@kozmos/product-contracts";
+} from "@kozmos-ds/product-contracts";
 import { describe, expect, it, vi } from "vitest";
 import { POIResultCard, getPOIResultDomId } from "./POIResultCard";
 

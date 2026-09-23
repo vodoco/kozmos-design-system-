@@ -42,7 +42,7 @@ jobs:
 
       - name: Build dependencies
         if: ${{ env.CHROMATIC_PROJECT_TOKEN != '' }}
-        run: pnpm --filter '!@kozmos/docs' build # Build everything except docs/storybook to save time; Chromatic will build Storybook.
+        run: pnpm --filter '!@kozmos-ds/docs' build # Build everything except docs/storybook to save time; Chromatic will build Storybook.
 
       - name: Publish to Chromatic
         if: ${{ env.CHROMATIC_PROJECT_TOKEN != '' }}

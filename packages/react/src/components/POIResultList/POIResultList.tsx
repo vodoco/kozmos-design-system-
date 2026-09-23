@@ -2,7 +2,7 @@ import React from "react";
 import type {
   POIPresentation,
   POIResultPresentation,
-} from "@kozmos/product-contracts";
+} from "@kozmos-ds/product-contracts";
 import { cn } from "../../utils";
 import { POIResultCard } from "../POIResultCard";
 

@@ -1,5 +1,5 @@
 ---
-"@kozmos/react": patch
+"@kozmos-ds/react": patch
 ---
 
 Keep Navbar context, navigation and actions available in narrow containers using

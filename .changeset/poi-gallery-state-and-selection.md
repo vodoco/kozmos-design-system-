@@ -1,5 +1,5 @@
 ---
-"@kozmos/react": patch
+"@kozmos-ds/react": patch
 ---
 
 Synchronize the media gallery's controlled/default index, keyboard and native

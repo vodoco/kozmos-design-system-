@@ -1,5 +1,5 @@
 ---
-"@kozmos/react": patch
+"@kozmos-ds/react": patch
 ---
 
 Every animation that loops now rests when the visitor has asked for less

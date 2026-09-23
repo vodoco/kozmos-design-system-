@@ -1,5 +1,5 @@
 ---
-"@kozmos/react": patch
+"@kozmos-ds/react": patch
 ---
 
 Button keeps 8px between its icon and its label, as Figma's Button and iOS's

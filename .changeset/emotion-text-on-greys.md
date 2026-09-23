@@ -1,6 +1,6 @@
 ---
-"@kozmos/tokens": minor
-"@kozmos/react": patch
+"@kozmos-ds/tokens": minor
+"@kozmos-ds/react": patch
 ---
 
 Emotion text reads on every neutral surface. `Semantics.Emotion.*.Text` was
