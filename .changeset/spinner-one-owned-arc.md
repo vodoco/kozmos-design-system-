@@ -1,5 +1,5 @@
 ---
-"@kozmos/react": patch
+"@kozmos-ds/react": patch
 ---
 
 The spinner is one drawing on every platform. It was four: lucide's `Loader2`

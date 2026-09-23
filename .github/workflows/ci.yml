@@ -67,6 +67,14 @@ jobs:
       # the record and the code cannot drift apart unnoticed. Its own controls
       # run first: the enum reader lost a whole axis to a doc comment holding
       # commas, and said the platform was missing what it had just been given.
+      # The rename to @kozmos-ds was a search and replace recorded as a diff over
+      # 247 files, and a diff cannot know about a file written after it. Rebased
+      # onto #58 it missed thirteen, seven of them changesets whose frontmatter
+      # names the package `changeset version` looks up — a release that would
+      # have found nothing to publish. So the rename is verified, not trusted.
+      - name: Verify The Packages Are Named @kozmos-ds
+        run: node scripts/check-package-scope.mjs
+
       - name: Verify Component Variant Parity
         run: node --test scripts/skills/variant-parity.test.mjs && pnpm components:variant:check
 
@@ -263,7 +271,7 @@ jobs:
       # target around a 32 circle. A suite nobody runs is a suite nobody keeps.
       - name: Verify Map Sheet, Search Sheet and Navigation Screens
         run: |
-          pnpm --filter @kozmos/docs exec concurrently -k -s first -n "SB,TEST" \
+          pnpm --filter @kozmos-ds/docs exec concurrently -k -s first -n "SB,TEST" \
             "python3 -m http.server 6009 --bind 127.0.0.1 --directory storybook-static" \
             "bash -lc 'until curl -sf http://127.0.0.1:6009/index.json >/dev/null; do sleep 2; done; STORYBOOK_URL=http://127.0.0.1:6009 pnpm -w test:map-sheet && STORYBOOK_URL=http://127.0.0.1:6009 ADAPTIVE_BROWSER=firefox pnpm -w test:map-sheet && STORYBOOK_URL=http://127.0.0.1:6009 ADAPTIVE_BROWSER=webkit pnpm -w test:map-sheet && STORYBOOK_URL=http://127.0.0.1:6009 pnpm -w test:search-sheet && STORYBOOK_URL=http://127.0.0.1:6009 ADAPTIVE_BROWSER=firefox pnpm -w test:search-sheet && STORYBOOK_URL=http://127.0.0.1:6009 ADAPTIVE_BROWSER=webkit pnpm -w test:search-sheet && STORYBOOK_URL=http://127.0.0.1:6009 pnpm -w test:navigation && STORYBOOK_URL=http://127.0.0.1:6009 ADAPTIVE_BROWSER=firefox pnpm -w test:navigation && STORYBOOK_URL=http://127.0.0.1:6009 ADAPTIVE_BROWSER=webkit pnpm -w test:navigation'"
 

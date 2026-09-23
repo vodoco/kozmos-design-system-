@@ -98,6 +98,7 @@
     "tokens:unitless:check": "node scripts/check-unitless-tokens.mjs",
     "components:classes:check": "node scripts/check-compiled-classes.mjs",
     "packages:install:check": "node scripts/check-package-install.mjs",
+    "packages:scope:check": "node scripts/check-package-scope.mjs",
     "product:consumer:check": "node scripts/check-product-consumer.mjs",
     "native:check": "node scripts/check-native-builds.mjs",
     "native:check:ios": "node scripts/check-native-builds.mjs ios",

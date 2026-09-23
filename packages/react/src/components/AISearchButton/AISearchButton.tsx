@@ -1,6 +1,6 @@
 import React from "react";
 // The mark is `stars-01` in the Pointr Icon Library, which is what the Figma
-// painter draws and what `@kozmos/icons` names it. The registry maps that
+// painter draws and what `@kozmos-ds/icons` names it. The registry maps that
 // name to lucide's `Sparkles` today — 65 of its 66 entries do, and only 13
 // real Pointr vectors have been generated (GAP-79) — so this imports the
 // component directly rather than through `getIconComponent`, which would

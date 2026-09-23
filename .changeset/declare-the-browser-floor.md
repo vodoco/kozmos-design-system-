@@ -1,5 +1,5 @@
 ---
-"@kozmos/react": patch
+"@kozmos-ds/react": patch
 ---
 
 The package declares the browsers it actually works in: Chrome and Edge 118,

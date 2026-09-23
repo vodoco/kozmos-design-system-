@@ -1,5 +1,5 @@
 ---
-"@kozmos/react": patch
+"@kozmos-ds/react": patch
 ---
 
 `AISearchButton`'s gradient ring is a band two and a half wide all the way

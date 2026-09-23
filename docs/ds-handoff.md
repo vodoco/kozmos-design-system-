@@ -1785,7 +1785,7 @@ wrong path. The handoff of the 22nd, §0a, has each of these.
 
 ## The browser floor, and kiosks (2026-09-23)
 
-`@kozmos/react` declares its floor for the first time: Chrome and Edge 118,
+`@kozmos-ds/react` declares its floor for the first time: Chrome and Edge 118,
 Safari and iOS 17.4, Firefox 128, Android WebView 118. Those are the versions
 where `@scope` landed, and `@scope` is what fences the component styles off
 from a host page. A browser below one of them discards the whole block rather

@@ -1,5 +1,5 @@
 ---
-"@kozmos/react": patch
+"@kozmos-ds/react": patch
 ---
 
 `SearchBar` takes a `trailing` slot, and owns the row it makes. The field is as
