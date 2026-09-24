@@ -195,7 +195,7 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
             id={actionsId}
             role="group"
           >
-            {actions.map((entry) => (
+            {actions.map((entry, index) => (
               <button
                 className={cn(
                   "inline-flex h-10 min-w-0 items-center justify-center gap-2 rounded-control px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60",
@@ -204,7 +204,7 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
                     : "border border-border bg-card text-foreground hover:bg-muted",
                 )}
                 disabled={entry.disabled}
-                key={entry.action}
+                key={`${entry.action}-${index}`}
                 onClick={() => handleAction(entry.action)}
                 type="button"
               >

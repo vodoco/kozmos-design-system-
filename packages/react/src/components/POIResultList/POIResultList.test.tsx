@@ -42,6 +42,37 @@ describe("POIResultList", () => {
     expect(screen.getByText("2 results")).toHaveClass("sr-only");
   });
 
+  it("forwards a result's action to the caller", () => {
+    // Without this the action row draws in a list and does nothing when
+    // pressed: the card is never used on its own in a product.
+    const onAction = vi.fn();
+    const item = createItem("one", 0);
+    render(
+      <POIResultList
+        items={[
+          {
+            ...item,
+            result: {
+              ...item.result,
+              selected: true,
+              actions: [
+                { action: "navigate" as const, label: "Go", primary: true },
+                { action: "details" as const, label: "Details" },
+              ],
+            },
+          },
+        ]}
+        onAction={onAction}
+        onSelect={vi.fn()}
+        resultCountLabel="1 result"
+        selectedPoiId="one"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Go" }));
+    expect(onAction).toHaveBeenCalledWith("navigate", "one");
+  });
+
   it("renders a directed empty state", () => {
     render(
       <POIResultList

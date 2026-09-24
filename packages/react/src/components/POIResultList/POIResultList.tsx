@@ -1,6 +1,7 @@
 import React from "react";
 import type {
   POIPresentation,
+  POIResultAction,
   POIResultPresentation,
 } from "@kozmos-ds/product-contracts";
 import { cn } from "../../utils";
@@ -17,11 +18,15 @@ export interface POIResultListProps extends Omit<
 > {
   items: readonly POIResultListItem[];
   onSelect: (poiId: string) => void;
+  /** Run an action from the selected result's action row. */
+  onAction?: (action: POIResultAction, poiId: string) => void;
   selectedPoiId?: string;
   label?: string;
   resultCountLabel: string;
   emptyState?: React.ReactNode;
   featuredLabel?: string;
+  /** Names each result's action row for assistive technology. */
+  actionsLabel?: string;
   /** The floor the map shows: a result on it carries a dot before its floor. */
   currentFloorId?: string;
 }
@@ -32,11 +37,13 @@ const POIResultList = React.forwardRef<HTMLElement, POIResultListProps>(
       className,
       items,
       onSelect,
+      onAction,
       selectedPoiId,
       label = "Points of interest",
       resultCountLabel,
       emptyState,
       featuredLabel,
+      actionsLabel,
       currentFloorId,
       ...props
     },
@@ -61,8 +68,10 @@ const POIResultList = React.forwardRef<HTMLElement, POIResultListProps>(
             {items.map(({ poi, result }) => (
               <li key={poi.id}>
                 <POIResultCard
+                  actionsLabel={actionsLabel}
                   currentFloorId={currentFloorId}
                   featuredLabel={featuredLabel}
+                  onAction={onAction}
                   onSelect={onSelect}
                   poi={poi}
                   result={{
