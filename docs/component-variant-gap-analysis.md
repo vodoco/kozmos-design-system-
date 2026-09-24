@@ -23,17 +23,17 @@ cannot".
 
 | Measure                                   | Result |
 | ----------------------------------------- | ------ |
-| Components scanned                        | 104    |
+| Components scanned                        | 111    |
 | Declaring at least one React variant axis | 29     |
-| Variations that are compositional only    | 75     |
+| Variations that are compositional only    | 82     |
 | Components with variant gaps — iOS        | 3/29   |
 | Components with variant gaps — Android    | 3/29   |
 | Components with variant gaps — Figma      | 4/29   |
 | Components with variant gaps — Vue        | 0/29   |
-| Components absent entirely — iOS          | 1/104  |
-| Components absent entirely — Android      | 0/104  |
-| Components absent entirely — Figma        | 8/104  |
-| Components absent entirely — Vue          | 7/104  |
+| Components absent entirely — iOS          | 8/111  |
+| Components absent entirely — Android      | 7/111  |
+| Components absent entirely — Figma        | 15/111 |
+| Components absent entirely — Vue          | 14/111 |
 
 <!-- /generated:headline -->
 
@@ -136,21 +136,21 @@ The design-system contract here is the **spacing token**, not the container.
 
 <!-- generated:absent -->
 
-### iOS — 1 of 104
+### iOS — 8 of 111
 
-Surface.
+AICompanionPanel, AIInputBar, AIMessage, AIMessageList, ActionCard, Notice, Surface, UserMessage.
 
-### Android — 0 of 104
+### Android — 7 of 111
 
-None.
+AICompanionPanel, AIInputBar, AIMessage, AIMessageList, ActionCard, Notice, UserMessage.
 
-### Figma — 8 of 104
+### Figma — 15 of 111
 
-FieldWrapper, Icon, Itinerary, ManoeuvreCard, NavigationAnnouncer, RouteProgressRail, Surface, ThemeProvider.
+AICompanionPanel, AIInputBar, AIMessage, AIMessageList, ActionCard, FieldWrapper, Icon, Itinerary, ManoeuvreCard, NavigationAnnouncer, Notice, RouteProgressRail, Surface, ThemeProvider, UserMessage.
 
-### Vue — 7 of 104
+### Vue — 14 of 111
 
-AISearchButton, CategoryField, Itinerary, ManoeuvreCard, MetaStrip, RouteProgressRail, Surface.
+AICompanionPanel, AIInputBar, AIMessage, AIMessageList, AISearchButton, ActionCard, CategoryField, Itinerary, ManoeuvreCard, MetaStrip, Notice, RouteProgressRail, Surface, UserMessage.
 
 <!-- /generated:absent -->
 
