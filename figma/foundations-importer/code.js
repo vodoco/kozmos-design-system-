@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "59dea2a7b956";
+const PLUGIN_BUILD = "6816c54a82cb";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -46984,60 +46984,25 @@ async function updateBrowseCategoriesPanelVariant(
 }
 
 /**
- * The aviation quick access at 10.12.0, in the sprite's colours, each with the
- * symbol the taxonomy publishes for it (its iconUrl).
+ * The panel's example, drawn with the design system's own curated icons.
+ *
+ * It deliberately does NOT show the taxonomy's aviation categories any more.
+ * Category artwork belongs to the venue's taxonomy, which Pointr publishes and
+ * versions; the host app passes it to renderIcon at runtime. Drawing it here
+ * meant the design system carried eight symbols it did not own and could not
+ * keep current. The eight tints are still Semantics.Category, because those
+ * ARE the design system's.
  */
 const BROWSE_CATEGORIES_PANEL_TILES = [
-  {
-    label: "Entrances & Exits",
-    tint: "Green",
-    count: "6",
-    icon: "taxonomy-entrance-exit",
-  },
-  {
-    label: "Check-in & Baggage",
-    tint: "Turquoise",
-    count: "14",
-    icon: "taxonomy-service-space-office",
-  },
-  {
-    label: "Security & Immigration",
-    tint: "Red",
-    count: "5",
-    icon: "taxonomy-security-space",
-  },
-  {
-    label: "Gates",
-    tint: "Yellow",
-    count: "88",
-    icon: "taxonomy-transportation-space-boarding-gate",
-  },
-  {
-    label: "Customer Service",
-    tint: "Blue",
-    count: "9",
-    icon: "taxonomy-amenity-space-desk",
-  },
-  {
-    label: "Parking & Ground Transport",
-    tint: "Navy",
-    count: "22",
-    icon: "taxonomy-parking-space",
-  },
-  {
-    label: "Dining",
-    tint: "Orange",
-    count: "37",
-    icon: "taxonomy-food-beverage-space",
-  },
-  {
-    label: "Shopping",
-    tint: "Pink",
-    count: "41",
-    icon: "taxonomy-retail-space",
-  },
+  { label: "Wayfinding", tint: "Green", count: "6", icon: "route" },
+  { label: "Check-in", tint: "Turquoise", count: "14", icon: "qr-code-01" },
+  { label: "Secure Areas", tint: "Red", count: "5", icon: "lock-01" },
+  { label: "Nearby", tint: "Yellow", count: "88", icon: "navigation-pointer-01" },
+  { label: "Information", tint: "Blue", count: "9", icon: "info-circle" },
+  { label: "Parking & Ground Transport", tint: "Navy", count: "22", icon: "bus" },
+  { label: "Favourites", tint: "Orange", count: "37", icon: "heart" },
+  { label: "Shopping", tint: "Pink", count: "41", icon: "shopping-bag-02" },
 ];
-
 /**
  * One tile of the browse grid: a live CategoryTile instance in its category's
  * tint, its label and count set, exposed so the panel's designer reaches the
