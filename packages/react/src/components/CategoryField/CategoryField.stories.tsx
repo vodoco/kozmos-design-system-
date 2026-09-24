@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Plane, Bookmark } from "@kozmos-ds/icons";
-import { UtensilsCrossed } from "lucide-react";
+import { Utensils as UtensilsCrossed } from "@kozmos-ds/icons";
 import { CategoryField } from "./CategoryField";
 import { AISearchButton } from "../AISearchButton";
 import { IconButton } from "../IconButton";

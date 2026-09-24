@@ -4,7 +4,7 @@ import {
   MarkerPin01 as MapPin,
   ShoppingBag01 as ShoppingBag,
 } from "@kozmos-ds/icons";
-import { Coffee, Utensils } from "lucide-react";
+import { Utensils as Coffee, Utensils } from "@kozmos-ds/icons";
 import { useState } from "react";
 
 const meta = {

@@ -5,7 +5,7 @@ import {
   NavigationPointer01 as Focus,
   InfoCircle as Info,
 } from "@kozmos-ds/icons";
-import { Accessibility } from "lucide-react";
+import { Accessibility } from "@kozmos-ds/icons";
 import { MapControlButton } from "./MapControlButton";
 
 const meta = {

@@ -419,10 +419,10 @@ results.push([html.includes("<button") && html.includes("Save") && html.includes
 process.stdout.write(JSON.stringify(results));
 `;
 
-const react = JSON.parse(
-  fs.readFileSync(path.join(PACKAGES, "react", "package.json"), "utf8"),
-);
-const lucide = react.dependencies["lucide-react"];
+// Until 2026-09-24 this installed lucide-react alongside the tarballs, at the
+// version @kozmos-ds/react asked for. It asks for nothing now: the last icon
+// that needed it, the wheelchair, is drawn by this estate. A consumer installs
+// the four packages and React, and that is all.
 
 // ---- install, use and type-check, once per React major ----
 
@@ -454,7 +454,6 @@ for (const major of REACT_MAJORS) {
         ...packed.map(({ tarball }) => tarball),
         `react@${major}`,
         `react-dom@${major}`,
-        `lucide-react@${lucide}`,
         "typescript@5",
         `@types/react@${major}`,
         `@types/react-dom@${major}`,

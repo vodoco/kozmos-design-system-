@@ -16,7 +16,7 @@ import {
   SearchMd as Search,
   ShoppingBag01 as ShoppingBag,
 } from "@kozmos-ds/icons";
-import { Accessibility, Utensils } from "lucide-react";
+import { Accessibility, Utensils } from "@kozmos-ds/icons";
 import { BrowseCategoriesPanel } from "./BrowseCategoriesPanel";
 import { SearchBar } from "../SearchBar";
 

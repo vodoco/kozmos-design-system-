@@ -11,7 +11,11 @@ import {
   Button,
   KozmosTheme,
 } from "@kozmos-ds/react";
-import { Navigation, ArrowRight, CornerRightUp } from "lucide-react";
+import {
+  NavigationPointer01 as Navigation,
+  ArrowRight,
+  CornerRightUp,
+} from "@kozmos-ds/icons";
 
 function App() {
   const [points, setPoints] = useState([
