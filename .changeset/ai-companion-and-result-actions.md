@@ -32,6 +32,23 @@ on Escape and works with no close button at all, which Story 18 allows.
 
 No new icon was needed: `Stars01` and `Send01` were already in the package.
 
+**A notice that is one line until asked.** `Notice` carries the Story 14
+dietary warning above AI-assisted results, where the full legal wording ran to
+four lines — 114px above the results that are the answer.
+
+```tsx
+<Notice summary="AI results may be incomplete. Check allergens with the venue.">
+  These results are AI-assisted and may be incomplete or out of date…
+</Notice>
+```
+
+It is not `Alert` with a flag: an Accordion inside an Alert drew its own
+divider through the middle and barely shrank. Collapsed detail is hidden by the
+`hidden` attribute rather than a class, so it stays hidden when the stylesheet
+does not load and stays out of the accessibility tree either way. A `critical`
+tone with `collapsible={false}` and an `action` slot carries the emergency
+notice — help first, not a result list, so nothing is behind a "More" link.
+
 **A selected result offers what the product gave it.** `POIResultPresentation`
 gains `actions` and `badge`; `POIResultCard` gains `onAction`, and
 `POIResultList` forwards it.

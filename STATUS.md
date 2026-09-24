@@ -22,7 +22,7 @@ This report does **not** prove visual fidelity, accessibility conformance, behav
 
 | Lane                   | Components | Web   | Web Tests | Web CCL | iOS   | iOS CCL | Android | Android CCL |
 | ---------------------- | ---------- | ----- | --------- | ------- | ----- | ------- | ------- | ----------- |
-| Core                   | 81         | 81/81 | 81/81     | 71/81   | 74/81 | 71/81   | 75/81   | 71/81       |
+| Core                   | 82         | 82/82 | 82/82     | 71/82   | 74/82 | 71/82   | 75/82   | 71/82       |
 | Code-Only / Utility    | 5          | 5/5   | 5/5       | —       | 5/5   | —       | 5/5     | —           |
 | Product / SDK          | 22         | 22/22 | 22/22     | 22/22   | 22/22 | 22/22   | 22/22   | 22/22       |
 | Platform / Form-Factor | 2          | 2/2   | 2/2       | 2/2     | 2/2   | 2/2     | 2/2     | 2/2         |
@@ -79,6 +79,7 @@ Domain-neutral design-system components expected to reach Figma, Code Connect, a
 | MultiSelect          | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
 | Navbar               | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
 | NavigationItem       | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
+| Notice               | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ❌         | ❌                      | ❌                        | ❌             | ❌                          | ❌                            |
 | NumberInput          | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
 | OTPInput             | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
 | Pagination           | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
@@ -175,18 +176,18 @@ Dynamic Island, watch, kiosk, spatial, landscape, and other device-specific surf
 
 ## Summary
 
-- Web components: 110/110
-- Web stories: 110/110
-- Web tests: 110/110
-- Web Code Connect files: 95/105
-- Web Code Connect scaffolds: 0/105
-- Web Code Connect linked: 95/105
-- iOS components: 103/110
-- iOS Code Connect files: 95/105
-- iOS Code Connect scaffolds: 0/105
-- iOS Code Connect linked: 95/105
-- Android components: 104/110
-- Android Code Connect files: 95/105
-- Android Code Connect scaffolds: 0/105
-- Android Code Connect linked: 95/105
-- Code Connect not applicable: 5/110
+- Web components: 111/111
+- Web stories: 111/111
+- Web tests: 111/111
+- Web Code Connect files: 95/106
+- Web Code Connect scaffolds: 0/106
+- Web Code Connect linked: 95/106
+- iOS components: 103/111
+- iOS Code Connect files: 95/106
+- iOS Code Connect scaffolds: 0/106
+- iOS Code Connect linked: 95/106
+- Android components: 104/111
+- Android Code Connect files: 95/106
+- Android Code Connect scaffolds: 0/106
+- Android Code Connect linked: 95/106
+- Code Connect not applicable: 5/111

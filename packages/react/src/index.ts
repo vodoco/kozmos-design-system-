@@ -38,6 +38,7 @@ export * from "./components/Breadcrumb/Breadcrumb";
 export * from "./components/Pagination/Pagination";
 export * from "./components/Stepper/Stepper";
 export * from "./components/ActionCard";
+export * from "./components/Notice";
 export * from "./components/AICompanionPanel";
 export * from "./components/AIInputBar";
 export * from "./components/AIMessage";
