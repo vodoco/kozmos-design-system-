@@ -4,7 +4,7 @@ import {
   Home01 as Home,
   DotsHorizontal as MoreHorizontal,
   Route,
-  SearchLg as Search,
+  SearchMd as Search,
 } from "@kozmos-ds/icons";
 import { BottomNavigation } from "./BottomNavigation";
 

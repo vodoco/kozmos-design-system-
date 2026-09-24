@@ -1,5 +1,5 @@
 import React from "react";
-import { SearchLg as SearchIcon } from "@kozmos-ds/icons";
+import { SearchMd as SearchIcon } from "@kozmos-ds/icons";
 import { inputVariants } from "../Input/Input";
 import { cn } from "../../utils";
 import { FieldWrapper } from "../FieldWrapper";

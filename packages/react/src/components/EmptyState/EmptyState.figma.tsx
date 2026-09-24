@@ -1,5 +1,5 @@
 import figma from "@figma/code-connect";
-import { SearchLg as Search } from "@kozmos-ds/icons";
+import { SearchMd as Search } from "@kozmos-ds/icons";
 import { EmptyState } from "./EmptyState";
 
 const emptyStateUrl =

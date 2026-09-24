@@ -1,7 +1,10 @@
 import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { fn } from "@storybook/test";
-import { Target01 as Focus, InfoCircle as Info } from "@kozmos-ds/icons";
+import {
+  NavigationPointer01 as Focus,
+  InfoCircle as Info,
+} from "@kozmos-ds/icons";
 import { Accessibility } from "lucide-react";
 import { MapControlButton } from "./MapControlButton";
 

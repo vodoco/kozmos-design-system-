@@ -8613,8 +8613,8 @@ assertContains(
 assertContains(
   files.reactEmptyStateFigma,
   source.reactEmptyStateFigma,
-  'import { Search } from "lucide-react"',
-  "React EmptyState Code Connect uses the Figma search icon",
+  'import { SearchMd as Search } from "@kozmos-ds/icons"',
+  "React EmptyState Code Connect draws Figma's search-md, not another size",
 );
 assertContains(
   files.reactEmptyStateFigma,

@@ -3,7 +3,7 @@ import {
   Bell01 as Bell,
   ChevronRight,
   Home01 as Home,
-  SearchLg as Search,
+  SearchMd as Search,
   Settings01 as Settings,
 } from "@kozmos-ds/icons";
 import { NavigationItem } from "./NavigationItem";

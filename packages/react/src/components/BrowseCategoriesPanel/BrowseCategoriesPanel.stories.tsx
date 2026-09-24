@@ -13,7 +13,7 @@ import {
 import {
   Heart,
   InfoCircle as Info,
-  SearchLg as Search,
+  SearchMd as Search,
   ShoppingBag01 as ShoppingBag,
 } from "@kozmos-ds/icons";
 import { Accessibility, Utensils } from "lucide-react";

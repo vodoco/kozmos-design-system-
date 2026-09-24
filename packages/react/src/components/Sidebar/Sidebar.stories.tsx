@@ -4,7 +4,7 @@ import { NavigationItem } from "../NavigationItem/NavigationItem";
 import {
   Bell01 as Bell,
   Home01 as Home,
-  SearchLg as Search,
+  SearchMd as Search,
   Settings01 as Settings,
   User01 as User,
 } from "@kozmos-ds/icons";

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { BottomNavigation } from "./BottomNavigation";
 import {
   Home01 as Home,
-  SearchLg as Search,
+  SearchMd as Search,
   Settings01 as Settings,
 } from "@kozmos-ds/icons";
 
