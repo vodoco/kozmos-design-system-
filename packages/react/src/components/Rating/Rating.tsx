@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Star } from "lucide-react";
+import { Star01 as Star } from "@kozmos-ds/icons";
 import { cn } from "../../utils";
 import { useKozmosAnalytics } from "../../utils/analytics";
 

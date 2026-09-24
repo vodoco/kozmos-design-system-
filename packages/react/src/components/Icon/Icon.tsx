@@ -2,7 +2,10 @@ import React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../utils";
 import { getIconComponent, type KozmosIconKey } from "@kozmos-ds/icons";
-import type { LucideIcon, LucideProps } from "lucide-react";
+import type {
+  KozmosIconComponent as LucideIcon,
+  KozmosIconProps as LucideProps,
+} from "@kozmos-ds/icons";
 
 const iconVariants = cva("", {
   variants: {

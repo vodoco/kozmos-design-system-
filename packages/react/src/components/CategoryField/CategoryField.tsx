@@ -1,6 +1,6 @@
 import type { CategoryTint } from "../CategoryTile/CategoryTint";
 import React from "react";
-import { X } from "lucide-react";
+import { X } from "@kozmos-ds/icons";
 import { cn } from "../../utils";
 
 export interface CategoryFieldProps extends Omit<

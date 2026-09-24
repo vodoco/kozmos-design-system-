@@ -11,13 +11,12 @@ import {
   TaxonomyTransportationSpaceBoardingGate,
 } from "@kozmos-ds/icons";
 import {
-  Accessibility,
   Heart,
-  Info,
-  Search,
-  ShoppingBag,
-  Utensils,
-} from "lucide-react";
+  InfoCircle as Info,
+  SearchMd as Search,
+  ShoppingBag01 as ShoppingBag,
+} from "@kozmos-ds/icons";
+import { Accessibility, Utensils } from "lucide-react";
 import { BrowseCategoriesPanel } from "./BrowseCategoriesPanel";
 import { SearchBar } from "../SearchBar";
 

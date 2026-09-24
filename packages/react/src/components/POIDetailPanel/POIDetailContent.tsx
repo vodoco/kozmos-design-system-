@@ -9,7 +9,8 @@ import {
   getIconDefinition,
   isKozmosIconKey,
 } from "@kozmos-ds/icons";
-import { Accessibility, Star } from "lucide-react";
+import { Star01 as Star } from "@kozmos-ds/icons";
+import { Accessibility } from "lucide-react";
 import { Button } from "../Button";
 import { MetaStrip, MetaStripItem } from "../MetaStrip";
 

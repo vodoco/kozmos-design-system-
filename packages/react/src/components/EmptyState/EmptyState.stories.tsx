@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { EmptyState } from "./EmptyState";
 import { Button } from "../Button";
-import { Search } from "lucide-react";
+import { SearchMd as Search } from "@kozmos-ds/icons";
 
 const meta = {
   title: "Components/EmptyState",
