@@ -37,6 +37,7 @@ export * from "./components/Toast/Toast";
 export * from "./components/Breadcrumb/Breadcrumb";
 export * from "./components/Pagination/Pagination";
 export * from "./components/Stepper/Stepper";
+export * from "./components/AICompanion";
 export * from "./components/Alert/Alert";
 export * from "./components/Progress/Progress";
 export * from "./components/Spinner/Spinner";

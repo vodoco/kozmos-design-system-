@@ -94,7 +94,7 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
             : "border-border",
           result.featured
             ? "mt-3 border-warning"
-            : result.badge && "mt-3 border-border",
+            : result.badge && "mt-3 border-warning",
           className,
         )}
         data-current-floor={onCurrentFloor || undefined}
@@ -104,11 +104,13 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
         id={id}
         {...props}
       >
-        {/* One tab, two tones. Featured is the CMS's word and keeps the star
-            and the warning fill; a badge — "Alternative", "Similar", "Close
-            by" — says why the result is in this list and stays quiet. A result
-            that is both shows featured, because that is the one the map marker
-            also acts on. */}
+        {/* One tab, one treatment. The prototypes draw "★ Popular Choice" in
+            the same amber as "★ Featured", so the LABEL distinguishes them and
+            the styling does not — which is also why the plugin notes a
+            sponsored result is never identified by colour alone. What differs
+            is meaning, not paint: featured is set in the CMS and read beyond
+            this card (the map marker draws a featured POI with its logo), so a
+            result that is both shows featured. */}
         {result.featured ? (
           <span className="absolute bottom-full left-4 inline-flex h-6 items-center gap-1 rounded-t-control bg-warning px-2 text-xs font-semibold text-warning-foreground">
             <Star aria-hidden="true" className="h-3.5 w-3.5 fill-current" />
@@ -116,7 +118,8 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
           </span>
         ) : (
           result.badge && (
-            <span className="absolute bottom-full left-4 inline-flex h-6 items-center rounded-t-control bg-muted px-2 text-xs font-semibold text-muted-foreground">
+            <span className="absolute bottom-full left-4 inline-flex h-6 items-center gap-1 rounded-t-control bg-warning px-2 text-xs font-semibold text-warning-foreground">
+              <Star aria-hidden="true" className="h-3.5 w-3.5 fill-current" />
               {result.badge.label}
             </span>
           )
