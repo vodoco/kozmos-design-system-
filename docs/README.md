@@ -160,6 +160,7 @@ The Storybook and POI thread, 2026-09-18:
 | `figma-change-workflow.md`           | Who owns what between code, the token JSON and Figma, and how a change travels between them.                                                                                                                                       |
 | `product-sdk-react-handoff.md`       | The React Product / SDK reference implementation and the `@kozmos-ds/product-contracts` models behind it.                                                                                                                          |
 | `component-variant-gap-analysis.md`  | Which variant axes and values each platform can express. Its data blocks are written by `pnpm components:variant:write`; `components:variant:check` fails when they are stale. The commentary around them is edited by hand.       |
+| `user-stories-to-design-prompt.md`   | The brief to paste when an AI-written user-stories document arrives: where the system is (checkout, clone or npm), the preconditions, the six phases to a Figma file, flows, prototype and handoff, the rules, done. 2026-09-21.   |
 | `session-handoff.md`                 | The long record, 2026-08-24 to 2026-09-10. Read its §3 for the reasoning behind a specific decision.                                                                                                                               |
 
 ## Generated data
