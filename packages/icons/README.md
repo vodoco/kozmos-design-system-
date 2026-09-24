@@ -5,11 +5,12 @@ Icon components and the name registry for the Kozmos design system.
 ## Install
 
 ```sh
-npm install @kozmos-ds/icons react lucide-react
+npm install @kozmos-ds/icons react
 ```
 
-`lucide-react` is a peer dependency: some Kozmos icons are drawn from it, and
-the rest carry their own outlines.
+`react` is the only peer dependency. Every glyph is drawn here - the set was
+re-drawn from Pointr's own outlines and `lucide-react` was removed in 0.2.0,
+so nothing is pulled in behind it.
 
 ## Use
 
