@@ -61,11 +61,19 @@ const CategoryTile = React.forwardRef<HTMLButtonElement, CategoryTileProps>(
         {...props}
       >
         {/* The icon's square: 64, radius Control, the container edge; the
-            selection shows on it. The label sits under it, two lines at most. */}
+            selection shows on it. The label sits under it, two lines at most.
+
+            An img is sized like an svg, as CategoryField already does: a
+            category symbol is the venue taxonomy's published artwork, which
+            arrives as a URL rather than a component, and the PNG behind it is a
+            2x asset — unsized it draws at its natural size and breaks the
+            square. The comment stays out here on purpose: check-component-
+            contracts matches `className={cn(` against the string that follows
+            it, so a comment between them reads as a missing contract. */}
         <span
           aria-hidden="true"
           className={cn(
-            "relative flex h-16 w-16 shrink-0 items-center justify-center rounded-control border bg-background text-primary transition-colors [&>svg]:h-6 [&>svg]:w-6",
+            "relative flex h-16 w-16 shrink-0 items-center justify-center rounded-control border bg-background text-primary transition-colors [&>svg]:h-6 [&>svg]:w-6 [&>img]:h-6 [&>img]:w-6",
             category.selected
               ? "border-primary bg-primary/5 ring-1 ring-primary/20"
               : "border-border",

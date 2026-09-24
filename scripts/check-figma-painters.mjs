@@ -127,6 +127,13 @@ function pages() {
     "compass-01",
     "loading-01",
     "switch-vertical-01",
+    "route",
+    "qr-code-01",
+    "lock-01",
+    "info-circle",
+    "bus",
+    "heart",
+    "shopping-bag-02",
   ]) {
     icons.appendChild(mockIconComponent(name));
   }
@@ -850,14 +857,14 @@ section("CategoryField");
 
 section("BrowseCategoriesPanel");
 {
-  const taxonomy = [
-    ["Entrances & Exits", "Green", "6"],
-    ["Check-in & Baggage", "Turquoise", "14"],
-    ["Security & Immigration", "Red", "5"],
-    ["Gates", "Yellow", "88"],
-    ["Customer Service", "Blue", "9"],
+  const categories = [
+    ["Wayfinding", "Green", "6"],
+    ["Check-in", "Turquoise", "14"],
+    ["Secure Areas", "Red", "5"],
+    ["Nearby", "Yellow", "88"],
+    ["Information", "Blue", "9"],
     ["Parking & Ground Transport", "Navy", "22"],
-    ["Dining", "Orange", "37"],
+    ["Favourites", "Orange", "37"],
     ["Shopping", "Pink", "41"],
   ];
   // A CategoryTile set for the panel to instance, painted by the plugin itself.
@@ -889,27 +896,6 @@ section("BrowseCategoriesPanel");
     await plugin.configureCategoryTileProperties(tileSet, freshStats());
   }
 
-  // The taxonomy's symbols on the Icons page, drawn by the plugin's own sync.
-  const iconsPage = figma.root.children.find((page) => page.name === "Icons");
-  const symbols = (plugin.KOSMOS_ICON_DEFINITIONS || []).filter(
-    (definition) => definition.source === "taxonomy",
-  );
-  ok(
-    symbols.length === 8 &&
-      typeof plugin.syncTaxonomyIconSourceComponent === "function",
-    `eight taxonomy symbols to draw (${symbols.length})`,
-  );
-  for (const [index, definition] of symbols.entries()) {
-    const symbol = new MockNode("COMPONENT", `Icon / ${definition.name}`);
-    iconsPage.appendChild(symbol);
-    figma.currentPage = iconsPage;
-    await plugin.syncTaxonomyIconSourceComponent(
-      symbol,
-      definition,
-      index,
-      freshStats(),
-    );
-  }
   figma.currentPage = figma.root.children[0];
 
   const component = figma.createComponent();
@@ -943,7 +929,7 @@ section("BrowseCategoriesPanel");
       instances.every((tile) => tile.type === "INSTANCE"),
     "eight live CategoryTile instances",
   );
-  taxonomy.forEach(([label, tint, count], index) => {
+  categories.forEach(([label, tint, count], index) => {
     const tile = instances[index];
     const labelNode =
       tile && tile.findOne((node) => node.name === "Label Text");
@@ -959,35 +945,39 @@ section("BrowseCategoriesPanel");
       `tile ${index + 1} is ${label} in ${tint} with its count ${count} (got ${digits && digits.characters})`,
     );
   });
-  // renderIcon's symbol: the taxonomy's own, in the category's accent.
+  // renderIcon's symbol: a curated Pointr icon, in the category's accent.
   const symbolNames = [
-    "taxonomy-entrance-exit",
-    "taxonomy-service-space-office",
-    "taxonomy-security-space",
-    "taxonomy-transportation-space-boarding-gate",
-    "taxonomy-amenity-space-desk",
-    "taxonomy-parking-space",
-    "taxonomy-food-beverage-space",
-    "taxonomy-retail-space",
+    "route",
+    "qr-code-01",
+    "lock-01",
+    "navigation-pointer-01",
+    "info-circle",
+    "bus",
+    "heart",
+    "shopping-bag-02",
   ];
-  taxonomy.forEach(([label, tint], index) => {
+  categories.forEach(([label, tint], index) => {
     const icon =
       instances[index] &&
       instances[index].findOne(
         (node) => node.type === "INSTANCE" && node.name === "Icon",
       );
     const shapes = icon ? icon.findAll((node) => node.type === "VECTOR") : [];
+    const tintOf = (shape) => {
+      const paints = [];
+      if (Array.isArray(shape.fills)) paints.push(...shape.fills);
+      if (Array.isArray(shape.strokes)) paints.push(...shape.strokes);
+      return paints.map(boundVariableName).filter(Boolean);
+    };
     ok(
       icon &&
         icon.mainComponent &&
         icon.mainComponent.name === `Icon / ${symbolNames[index]}` &&
         shapes.length > 0 &&
-        shapes.every(
-          (shape) =>
-            shape.fills.length === 1 &&
-            boundVariableName(shape.fills[0]) === `Category/Accent/${tint}`,
+        shapes.every((shape) =>
+          tintOf(shape).includes(`Category/Accent/${tint}`),
         ),
-      `${label}: the ${symbolNames[index]} symbol, filled in Category/Accent/${tint} (${icon && icon.mainComponent && icon.mainComponent.name}; ${shapes.map((shape) => boundVariableName(shape.fills[0])).join(", ")})`,
+      `${label}: the ${symbolNames[index]} symbol in Category/Accent/${tint} (${icon && icon.mainComponent && icon.mainComponent.name}; ${shapes.length} shape(s); ${shapes.map((shape) => tintOf(shape).join("+") || "untinted").join(", ")})`,
     );
   });
   const parking =
@@ -1691,9 +1681,6 @@ section("Curated Icons");
     figma: createFigmaMock({ pages: [iconsPage], library }),
   });
   const definitions = icons.KOSMOS_ICON_DEFINITIONS;
-  const taxonomy = definitions.filter(
-    (definition) => definition.source === "taxonomy",
-  );
   for (const definition of definitions) {
     if (!definition.componentKey) continue;
     const source = mockIconComponent(definition.name);
@@ -1713,10 +1700,9 @@ section("Curated Icons");
   const first = await icons.syncIconSourceLibrary();
   ok(
     first.created === definitions.length &&
-      first.drawn === taxonomy.length &&
-      taxonomy.length === 8 &&
+      first.drawn === 0 &&
       first.failed === 0,
-    `a first run makes all ${definitions.length}, drawing the ${taxonomy.length} taxonomy symbols (${JSON.stringify({ created: first.created, drawn: first.drawn, failed: first.failed })}; ${first.warnings.slice(0, 2).join(" | ")})`,
+    `a first run makes all ${definitions.length}, importing every one and drawing none (${JSON.stringify({ created: first.created, drawn: first.drawn, failed: first.failed })}; ${first.warnings.slice(0, 2).join(" | ")})`,
   );
   const before = sourceIds();
   const second = await icons.syncIconSourceLibrary();
@@ -1749,43 +1735,7 @@ section("Curated Icons");
     `a source that is not the icon's is drawn again, and named (${third.warnings.join(" | ")})`,
   );
 
-  for (const definition of taxonomy) {
-    const component = components().find(
-      (node) => node.name === `Icon / ${definition.name}`,
-    );
-    const source = component && component.children[0];
-    const shapes = source
-      ? source.findAll((node) => node.type === "VECTOR")
-      : [];
-    const audit =
-      component && icons.auditIconSourceComponent(component, definition.name);
-    ok(
-      Boolean(
-        source &&
-        component.children.length === 1 &&
-        source.type === "FRAME" &&
-        source.name === "Taxonomy Source" &&
-        source.width === 24 &&
-        source.height === 24 &&
-        source.constraints.horizontal === "STRETCH" &&
-        source.constraints.vertical === "STRETCH" &&
-        shapes.length > 0 &&
-        shapes.every(
-          (shape) =>
-            shape.fills.length === 1 &&
-            hexOf(shape.fills[0]) === "#000000" &&
-            shape.strokes.length === 0 &&
-            shape.constraints.horizontal === "SCALE",
-        ) &&
-        audit &&
-        audit.issues.length === 0,
-      ),
-      `${definition.name}: a 24 Taxonomy Source of ${shapes.length} black filled shape(s) that scale, and the audit finds nothing (${audit && audit.issues.map((issue) => issue.message || issue.kind).join(", ")})`,
-    );
-  }
-  const pointr = components().filter(
-    (component) => !/taxonomy-/.test(component.name),
-  );
+  const pointr = components();
   ok(
     pointr.every(
       (component) =>
@@ -1797,16 +1747,14 @@ section("Curated Icons");
     `the ${pointr.length} Pointr icons audit clean`,
   );
 
-  // Offered where a painter tints fills — a category's icon — and nowhere else.
+  // Every source is a Pointr outline now, so every slot is offered all of them:
+  // the taxonomy's filled symbols, which a stroke tint could not reach, are
+  // gone from the package and from here.
   const general = await icons.findKozmosIconSourceComponents();
-  const categories = await icons.findKozmosIconSourceComponents({
-    withTaxonomy: true,
-  });
   ok(
-    general.length === definitions.length - taxonomy.length &&
-      !general.some((component) => /taxonomy-/.test(component.name)) &&
-      categories.length === definitions.length,
-    `a general icon slot is offered the ${general.length} Pointr icons, a category's all ${categories.length}`,
+    general.length === definitions.length &&
+      !general.some((component) => /taxonomy-/.test(component.name)),
+    `every slot is offered all ${general.length} Pointr icons`,
   );
 }
 

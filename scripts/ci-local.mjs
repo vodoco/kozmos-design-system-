@@ -115,14 +115,54 @@ function releasePorts(ports) {
   }
 }
 
-const steps = (job.steps ?? []).map((step, index) => ({
-  number: index + 1,
-  name: step.name ?? `step ${index + 1}`,
-  run: step.run,
-  env: step,
-  ports: portsOf(step.run),
-  skip: skipReason(step),
-}));
+// A matrix job is one job to GitHub and many runs. Locally there is one
+// machine, so its shards are laid end to end: `--shard` picks one, and
+// without it every shard runs in turn. Expanding here rather than in the
+// runner keeps `--only`, `--from` and `--list` working on the real step
+// list, which is what makes the local run comparable to the remote one.
+const shards = job.strategy?.matrix?.shard ?? null;
+const wantedShard = flag("shard");
+
+function expand(text, shard) {
+  if (typeof text !== "string" || !shard) return text;
+  return text.replace(
+    /\$\{\{\s*matrix\.shard\.([A-Za-z0-9_]+)\s*\}\}/g,
+    (whole, key) => (key in shard ? String(shard[key]) : whole),
+  );
+}
+
+function stepsFor(shard) {
+  return (job.steps ?? []).map((step, index) => {
+    const run = expand(step.run, shard);
+    return {
+      number: index + 1,
+      name: expand(step.name, shard) ?? `step ${index + 1}`,
+      run,
+      env: step,
+      ports: portsOf(run),
+      skip: skipReason(step),
+      shard: shard ? expand(shard.name, shard) : null,
+    };
+  });
+}
+
+if (shards && wantedShard) {
+  const picked = shards.filter((shard) =>
+    String(shard.name).toLowerCase().includes(String(wantedShard).toLowerCase()),
+  );
+  if (picked.length === 0) {
+    console.error(
+      `no shard matching "${wantedShard}". Shards: ${shards.map((shard) => shard.name).join(" | ")}`,
+    );
+    process.exit(2);
+  }
+  shards.length = 0;
+  shards.push(...picked);
+}
+
+const steps = shards
+  ? shards.flatMap((shard) => stepsFor(shard))
+  : stepsFor(null);
 
 const only = flag("only");
 const from = Number(flag("from", 0));
@@ -133,7 +173,9 @@ const chosen = steps.filter(
 );
 
 if (has("list")) {
-  console.log(`${job.name ?? jobKey}: ${steps.length} step(s)\n`);
+  console.log(
+    `${shards ? `${jobKey} — ${shards.length} shard(s)` : (job.name ?? jobKey)}: ${steps.length} step(s)\n`,
+  );
   for (const s of chosen)
     console.log(
       `${String(s.number).padStart(2)}. ${s.skip ? "SKIP" : "RUN "}  ${s.name}${s.skip ? `  — ${s.skip}` : ""}`,
