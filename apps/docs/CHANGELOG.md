@@ -1,5 +1,15 @@
 # @kozmos-ds/docs
 
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependencies [cc3dc32]
+- Updated dependencies [558344b]
+  - @kozmos-ds/react@0.3.0
+  - @kozmos-ds/icons@0.3.0
+  - @kozmos-ds/vue@0.0.4
+
 ## 0.0.3
 
 ### Patch Changes

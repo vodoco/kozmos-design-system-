@@ -1,5 +1,14 @@
 # mapscale-review
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies [cc3dc32]
+- Updated dependencies [558344b]
+  - @kozmos-ds/react@0.3.0
+  - @kozmos-ds/icons@0.3.0
+
 ## 0.1.2
 
 ### Patch Changes
