@@ -31,6 +31,15 @@ export interface POIResultCardProps extends Omit<
   actionsLabel?: string;
   /** The floor the map shows: a result on it carries a dot before its floor. */
   currentFloorId?: string;
+  /**
+   * How the row draws its own edges.
+   *
+   * `card` is a standalone result with its own border and radius. `row` is a
+   * result inside a container that already has them — a POIResultGroup, where
+   * nine bordered cards inside one bordered box reads as a mistake, and the
+   * design separates them with dividers instead.
+   */
+  appearance?: "card" | "row";
 }
 
 const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
@@ -45,6 +54,7 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
       selectionLabel,
       actionsLabel = "Actions for this result",
       currentFloorId,
+      appearance = "card",
       id = getPOIResultDomId(poi.id),
       ...props
     },
@@ -88,15 +98,23 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
       <article
         ref={ref}
         className={cn(
-          "relative rounded-control border bg-card text-card-foreground transition-shadow",
-          result.selected
-            ? "border-primary ring-2 ring-primary/20"
-            : "border-border",
-          result.featured
-            ? "mt-3 border-warning"
-            : result.badge && "mt-3 border-warning",
+          "relative bg-card text-card-foreground transition-shadow",
+          appearance === "card" && "rounded-control border",
+          appearance === "card" &&
+            (result.selected
+              ? "border-primary ring-2 ring-primary/20"
+              : "border-border"),
+          // A row states its selection with a fill, since it has no border of
+          // its own to thicken.
+          appearance === "row" && result.selected && "bg-primary/5",
+          // The tab hangs above the card, so it needs the space a card has.
+          appearance === "card" &&
+            (result.featured
+              ? "mt-3 border-warning"
+              : result.badge && "mt-3 border-warning"),
           className,
         )}
+        data-appearance={appearance}
         data-current-floor={onCurrentFloor || undefined}
         data-featured={result.featured || undefined}
         data-poi-id={poi.id}
@@ -111,12 +129,13 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
             is meaning, not paint: featured is set in the CMS and read beyond
             this card (the map marker draws a featured POI with its logo), so a
             result that is both shows featured. */}
-        {result.featured ? (
+        {appearance === "card" && result.featured ? (
           <span className="absolute bottom-full left-4 inline-flex h-6 items-center gap-1 rounded-t-control bg-warning px-2 text-xs font-semibold text-warning-foreground">
             <Star aria-hidden="true" className="h-3.5 w-3.5 fill-current" />
             {featuredLabel}
           </span>
         ) : (
+          appearance === "card" &&
           result.badge && (
             <span className="absolute bottom-full left-4 inline-flex h-6 items-center gap-1 rounded-t-control bg-warning px-2 text-xs font-semibold text-warning-foreground">
               <Star aria-hidden="true" className="h-3.5 w-3.5 fill-current" />

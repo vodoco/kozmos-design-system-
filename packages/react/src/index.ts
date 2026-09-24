@@ -70,6 +70,7 @@ export * from "./components/Itinerary";
 export * from "./components/ManoeuvreCard";
 export * from "./components/POICard/POICard";
 export * from "./components/POIResultCard";
+export * from "./components/POIResultGroup";
 export * from "./components/POIResultList";
 export * from "./components/POIMediaGallery";
 export * from "./components/POIDetailPanel";

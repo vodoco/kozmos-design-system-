@@ -72,3 +72,23 @@ the same amber tab, since the label distinguishes them rather than the colour.
 
 `POIResultAction` is `POIAction | "details"`, kept separate so a detail panel's
 exhaustive maps never have to handle opening themselves.
+
+
+**One venue, many branches.** `POIResultGroup` shows one representative and
+folds the rest behind a count of what is HIDDEN — an airport has five Starbucks
+and a visitor asking for coffee wants one row, not five.
+
+```tsx
+<POIResultGroup items={branches} onSelect={select} label="Starbucks, 9 results" />
+// collapsed: one row + "Show 8 more"   expanded: nine rows + "Hide"
+```
+
+Which branch represents the group is the product's choice — nearest by walking
+distance when there is a blue dot, otherwise the current level — so the group
+takes them in the order it should show them and never reorders.
+
+`POIResultCard` gains `appearance="card" | "row"` for this: a member draws no
+border of its own, because nine bordered cards inside one bordered box reads as
+a mistake, and the container separates them with dividers instead. Nothing in
+the group is specific to a brand; a group is a representative and a remainder,
+as true of "other floors" as of Starbucks.

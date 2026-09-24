@@ -22,7 +22,7 @@ This report does **not** prove visual fidelity, accessibility conformance, behav
 
 | Lane                   | Components | Web   | Web Tests | Web CCL | iOS   | iOS CCL | Android | Android CCL |
 | ---------------------- | ---------- | ----- | --------- | ------- | ----- | ------- | ------- | ----------- |
-| Core                   | 82         | 82/82 | 82/82     | 71/82   | 74/82 | 71/82   | 75/82   | 71/82       |
+| Core                   | 83         | 83/83 | 83/83     | 71/83   | 74/83 | 71/83   | 75/83   | 71/83       |
 | Code-Only / Utility    | 5          | 5/5   | 5/5       | —       | 5/5   | —       | 5/5     | —           |
 | Product / SDK          | 22         | 22/22 | 22/22     | 22/22   | 22/22 | 22/22   | 22/22   | 22/22       |
 | Platform / Form-Factor | 2          | 2/2   | 2/2       | 2/2     | 2/2   | 2/2     | 2/2     | 2/2         |
@@ -84,6 +84,7 @@ Domain-neutral design-system components expected to reach Figma, Code Connect, a
 | OTPInput             | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
 | Pagination           | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
 | PasswordInput        | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
+| POIResultGroup       | ✅         | ✅          | ✅         | ❌                      | ❌                        | ✅           | ✅           | ❌         | ❌                      | ❌                        | ❌             | ❌                          | ❌                            |
 | Popover              | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
 | Progress             | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
 | Radio                | ✅         | ✅          | ✅         | ✅                      | ✅                        | ✅           | ✅           | ✅         | ✅                      | ✅                        | ✅             | ✅                          | ✅                            |
@@ -176,18 +177,18 @@ Dynamic Island, watch, kiosk, spatial, landscape, and other device-specific surf
 
 ## Summary
 
-- Web components: 111/111
-- Web stories: 111/111
-- Web tests: 111/111
-- Web Code Connect files: 95/106
-- Web Code Connect scaffolds: 0/106
-- Web Code Connect linked: 95/106
-- iOS components: 103/111
-- iOS Code Connect files: 95/106
-- iOS Code Connect scaffolds: 0/106
-- iOS Code Connect linked: 95/106
-- Android components: 104/111
-- Android Code Connect files: 95/106
-- Android Code Connect scaffolds: 0/106
-- Android Code Connect linked: 95/106
-- Code Connect not applicable: 5/111
+- Web components: 112/112
+- Web stories: 112/112
+- Web tests: 112/112
+- Web Code Connect files: 95/107
+- Web Code Connect scaffolds: 0/107
+- Web Code Connect linked: 95/107
+- iOS components: 103/112
+- iOS Code Connect files: 95/107
+- iOS Code Connect scaffolds: 0/107
+- iOS Code Connect linked: 95/107
+- Android components: 104/112
+- Android Code Connect files: 95/107
+- Android Code Connect scaffolds: 0/107
+- Android Code Connect linked: 95/107
+- Code Connect not applicable: 5/112
