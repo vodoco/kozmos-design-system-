@@ -23,17 +23,17 @@ cannot".
 
 | Measure                                   | Result |
 | ----------------------------------------- | ------ |
-| Components scanned                        | 104    |
-| Declaring at least one React variant axis | 29     |
-| Variations that are compositional only    | 75     |
-| Components with variant gaps — iOS        | 3/29   |
-| Components with variant gaps — Android    | 3/29   |
-| Components with variant gaps — Figma      | 4/29   |
-| Components with variant gaps — Vue        | 0/29   |
-| Components absent entirely — iOS          | 1/104  |
-| Components absent entirely — Android      | 0/104  |
-| Components absent entirely — Figma        | 8/104  |
-| Components absent entirely — Vue          | 7/104  |
+| Components scanned                        | 112    |
+| Declaring at least one React variant axis | 30     |
+| Variations that are compositional only    | 82     |
+| Components with variant gaps — iOS        | 4/30   |
+| Components with variant gaps — Android    | 4/30   |
+| Components with variant gaps — Figma      | 5/30   |
+| Components with variant gaps — Vue        | 0/30   |
+| Components absent entirely — iOS          | 9/112  |
+| Components absent entirely — Android      | 8/112  |
+| Components absent entirely — Figma        | 16/112 |
+| Components absent entirely — Vue          | 15/112 |
 
 <!-- /generated:headline -->
 
@@ -63,6 +63,10 @@ Link
   - android missing axes -> variant (default, subtle)
 MapControlButton
   - figma missing axes -> emphasis (tinted, filled); labelPlacement (inline, stacked)
+POIResultCard
+  - ios missing axes -> appearance (card, row)
+  - android missing axes -> appearance (card, row)
+  - figma missing axes -> appearance (card, row)
 ThemeProvider
   - ios missing axes -> dir (ltr, rtl)
   - android missing axes -> dir (ltr, rtl)
@@ -136,21 +140,21 @@ The design-system contract here is the **spacing token**, not the container.
 
 <!-- generated:absent -->
 
-### iOS — 1 of 104
+### iOS — 9 of 112
 
-Surface.
+AICompanionPanel, AIInputBar, AIMessage, AIMessageList, ActionCard, Notice, POIResultGroup, Surface, UserMessage.
 
-### Android — 0 of 104
+### Android — 8 of 112
 
-None.
+AICompanionPanel, AIInputBar, AIMessage, AIMessageList, ActionCard, Notice, POIResultGroup, UserMessage.
 
-### Figma — 8 of 104
+### Figma — 16 of 112
 
-FieldWrapper, Icon, Itinerary, ManoeuvreCard, NavigationAnnouncer, RouteProgressRail, Surface, ThemeProvider.
+AICompanionPanel, AIInputBar, AIMessage, AIMessageList, ActionCard, FieldWrapper, Icon, Itinerary, ManoeuvreCard, NavigationAnnouncer, Notice, POIResultGroup, RouteProgressRail, Surface, ThemeProvider, UserMessage.
 
-### Vue — 7 of 104
+### Vue — 15 of 112
 
-AISearchButton, CategoryField, Itinerary, ManoeuvreCard, MetaStrip, RouteProgressRail, Surface.
+AICompanionPanel, AIInputBar, AIMessage, AIMessageList, AISearchButton, ActionCard, CategoryField, Itinerary, ManoeuvreCard, MetaStrip, Notice, POIResultGroup, RouteProgressRail, Surface, UserMessage.
 
 <!-- /generated:absent -->
 
