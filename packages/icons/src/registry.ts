@@ -1,16 +1,6 @@
 import type { createPointrIcon } from "./pointr/createPointrIcon";
 import type { createTaxonomyIcon } from "./taxonomy/createTaxonomyIcon";
 import {
-  TaxonomyAmenitySpaceDesk,
-  TaxonomyEntranceExit,
-  TaxonomyFoodBeverageSpace,
-  TaxonomyParkingSpace,
-  TaxonomyRetailSpace,
-  TaxonomySecuritySpace,
-  TaxonomyServiceSpaceOffice,
-  TaxonomyTransportationSpaceBoardingGate,
-} from "./taxonomy/icons.generated";
-import {
   Activity,
   AlertCircle,
   AlertTriangle,
@@ -133,18 +123,6 @@ export const kozmosIconNames = [
   "share-01",
   "shopping-bag-02",
 
-  // The taxonomy's quick-access symbols, as it publishes them: solid
-  // pictograms rather than outlines, which the Pointr Icon Library does not
-  // carry. The browse panel's tiles draw them — see
-  // scripts/build-taxonomy-icons.mjs.
-  "taxonomy-amenity-space-desk",
-  "taxonomy-entrance-exit",
-  "taxonomy-food-beverage-space",
-  "taxonomy-parking-space",
-  "taxonomy-retail-space",
-  "taxonomy-security-space",
-  "taxonomy-service-space-office",
-  "taxonomy-transportation-space-boarding-gate",
 ] as const;
 
 export type KozmosIconName = (typeof kozmosIconNames)[number];
@@ -639,84 +617,6 @@ export const kozmosIconDefinitions: readonly KozmosIconDefinition[] = [
     category: "Finance & eCommerce",
     description: "Order or shop.",
     component: ShoppingBag02,
-  },
-  {
-    name: "taxonomy-amenity-space-desk",
-    figmaName: "amenity-space_desk",
-    source: "taxonomy",
-    taxonomyVersion: "10.12.0",
-    category: "Taxonomy",
-    description:
-      "Customer Service: the quick-access symbol for amenity-space / desk.",
-    component: TaxonomyAmenitySpaceDesk,
-  },
-  {
-    name: "taxonomy-entrance-exit",
-    figmaName: "entrance-exit",
-    source: "taxonomy",
-    taxonomyVersion: "10.12.0",
-    category: "Taxonomy",
-    description:
-      "Entrances & Exits: the quick-access symbol for entrance-exit.",
-    component: TaxonomyEntranceExit,
-  },
-  {
-    name: "taxonomy-food-beverage-space",
-    figmaName: "food-beverage-space",
-    source: "taxonomy",
-    taxonomyVersion: "10.12.0",
-    category: "Taxonomy",
-    description: "Dining: the quick-access symbol for food-beverage-space.",
-    component: TaxonomyFoodBeverageSpace,
-  },
-  {
-    name: "taxonomy-parking-space",
-    figmaName: "parking-space",
-    source: "taxonomy",
-    taxonomyVersion: "10.12.0",
-    category: "Taxonomy",
-    description:
-      "Parking & Ground Transport: the quick-access symbol for parking-space.",
-    component: TaxonomyParkingSpace,
-  },
-  {
-    name: "taxonomy-retail-space",
-    figmaName: "retail-space",
-    source: "taxonomy",
-    taxonomyVersion: "10.12.0",
-    category: "Taxonomy",
-    description: "Shopping: the quick-access symbol for retail-space.",
-    component: TaxonomyRetailSpace,
-  },
-  {
-    name: "taxonomy-security-space",
-    figmaName: "security-space",
-    source: "taxonomy",
-    taxonomyVersion: "10.12.0",
-    category: "Taxonomy",
-    description:
-      "Security & Immigration: the quick-access symbol for security-space.",
-    component: TaxonomySecuritySpace,
-  },
-  {
-    name: "taxonomy-service-space-office",
-    figmaName: "service-space_office",
-    source: "taxonomy",
-    taxonomyVersion: "10.12.0",
-    category: "Taxonomy",
-    description:
-      "Check-in & Baggage: the quick-access symbol for service-space / office.",
-    component: TaxonomyServiceSpaceOffice,
-  },
-  {
-    name: "taxonomy-transportation-space-boarding-gate",
-    figmaName: "transportation-space_boarding-gate",
-    source: "taxonomy",
-    taxonomyVersion: "10.12.0",
-    category: "Taxonomy",
-    description:
-      "Gates: the quick-access symbol for transportation-space / boarding-gate.",
-    component: TaxonomyTransportationSpaceBoardingGate,
   },
 ];
 
