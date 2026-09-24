@@ -15,7 +15,6 @@
     "@kozmos-ds/icons": "workspace:*",
     "@kozmos-ds/react": "workspace:*",
     "framer-motion": "^11.0.0",
-    "lucide-react": "0.563.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },

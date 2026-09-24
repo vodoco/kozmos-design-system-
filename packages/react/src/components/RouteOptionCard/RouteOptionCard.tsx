@@ -4,7 +4,7 @@ import {
   Clock as Clock3,
   Sliders01 as SlidersHorizontal,
 } from "@kozmos-ds/icons";
-import { Accessibility } from "lucide-react";
+import { Accessibility } from "@kozmos-ds/icons";
 import { cn } from "../../utils";
 
 export interface RouteOptionCardProps extends Omit<

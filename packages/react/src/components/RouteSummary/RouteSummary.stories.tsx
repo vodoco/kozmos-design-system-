@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { NavigationPointer01 as Navigation } from "@kozmos-ds/icons";
-import { Bike } from "lucide-react";
+import { Bus as Bike } from "@kozmos-ds/icons";
 import { RouteSummary } from "./RouteSummary";
 import { RouteProgressRail } from "../RouteProgressRail";
 
