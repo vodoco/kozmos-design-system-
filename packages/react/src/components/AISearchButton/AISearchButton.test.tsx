@@ -1,7 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { kozmosIconDefinitions } from "@kozmos-ds/icons";
-import { Sparkles } from "lucide-react";
+import { kozmosIconDefinitions, Stars01 } from "@kozmos-ds/icons";
 import { AISearchButton } from "./AISearchButton";
 
 describe("AISearchButton", () => {
@@ -26,9 +25,10 @@ describe("AISearchButton", () => {
   it("draws whatever the icon registry calls stars-01", () => {
     // The Figma painter draws `stars-01` from the Pointr Icon Library; the
     // registry names the same icon. The button imports the component directly,
-    // because reaching it through `getIconComponent` would pull all 66 icons
-    // into every consumer — so this is what keeps the two from drifting. When
-    // `stars-01` gains its real Pointr vector, this fails and names the button.
+    // because reaching it through `getIconComponent` would pull the whole
+    // registry into every consumer — so this is what keeps the two from
+    // drifting. It earned its keep on 2026-09-23: `stars-01` gained its real
+    // Pointr outline, this failed, and it named the button that had to move.
     const definition = kozmosIconDefinitions.find(
       (entry) => entry.name === "stars-01",
     );
@@ -36,7 +36,7 @@ describe("AISearchButton", () => {
     expect(
       definition?.component,
       "stars-01 now draws something other than the button's icon: point AISearchButton at it",
-    ).toBe(Sparkles);
+    ).toBe(Stars01);
   });
 
   it("takes its own label", () => {

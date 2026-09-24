@@ -1,13 +1,12 @@
 import React from "react";
 // The mark is `stars-01` in the Pointr Icon Library, which is what the Figma
-// painter draws and what `@kozmos-ds/icons` names it. The registry maps that
-// name to lucide's `Sparkles` today — 65 of its 66 entries do, and only 13
-// real Pointr vectors have been generated (GAP-79) — so this imports the
-// component directly rather than through `getIconComponent`, which would
-// pull all 66 icons into every consumer that touches this button. The tie
-// is held by a test instead: when `stars-01` gains its real vector, that
-// test fails here rather than the button quietly drifting from the design.
-import { Sparkles } from "lucide-react";
+// painter draws and what `@kozmos-ds/icons` names it. It drew lucide's
+// `Sparkles` until 2026-09-23, when every registry name gained its real Pointr
+// outline; the test beside this file failed the moment it did, which is what it
+// was written to do. This imports the component directly rather than through
+// `getIconComponent`, which would pull the whole registry into every consumer
+// that touches this button — measured at 20 kB gzip against one icon's 19.
+import { Stars01 } from "@kozmos-ds/icons";
 import { cn } from "../../utils";
 
 export interface AISearchButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -51,7 +50,7 @@ const AISearchButton = React.forwardRef<HTMLButtonElement, AISearchButtonProps>(
         aria-hidden="true"
         className="kozmos-ai-search-ring absolute inset-0 rounded-pill"
       />
-      <Sparkles aria-hidden="true" className="relative h-4 w-4 text-primary" />
+      <Stars01 aria-hidden="true" className="relative h-4 w-4 text-primary" />
     </button>
   ),
 );
