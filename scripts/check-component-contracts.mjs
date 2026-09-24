@@ -2363,19 +2363,6 @@ if (categoryTile.content.iconDecorative) {
       );
     }
   }
-  // And the art itself: React's symbols and the importer's, both generated
-  // from the SVGs the taxonomy published, which the package keeps.
-  try {
-    execFileSync(
-      process.execPath,
-      [path.join(root, "scripts/build-taxonomy-icons.mjs"), "--check"],
-      { cwd: root, stdio: "pipe" },
-    );
-  } catch (error) {
-    fail(
-      String((error.stderr && error.stderr.toString()) || error.message).trim(),
-    );
-  }
   for (const name of definitions.keys()) {
     if (!names.includes(name)) {
       fail(

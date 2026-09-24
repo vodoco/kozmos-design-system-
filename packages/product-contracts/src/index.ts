@@ -179,7 +179,20 @@ export interface FloorPresentation {
 export interface CategoryPresentation {
   id: string;
   label: string;
+  /** A design system icon, by its registry name. */
   iconName?: string;
+  /**
+   * The venue's own category artwork, as the taxonomy publishes it.
+   *
+   * A quick-access category carries an `iconUrl` in the taxonomy's published
+   * JSON. That artwork belongs to the venue and is versioned on Pointr's
+   * cadence, not this package's, so it arrives as a URL rather than a bundled
+   * component - the eight that were bundled went stale the moment a taxonomy
+   * release landed, and were removed.
+   *
+   * Where both are given, the consumer decides; `renderIcon` overrides either.
+   */
+  iconUrl?: string;
   selected: boolean;
   disabled?: boolean;
   resultCount?: number;

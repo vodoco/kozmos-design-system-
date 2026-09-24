@@ -36,22 +36,36 @@ Names are stable keys such as `arrow-left`, `bell-01` and `calendar`.
 `back`, `close`, `delete` — into its key. Icons with their own outlines are also
 named exports, for example `import { Heart } from "@kozmos-ds/icons"`.
 
-## Taxonomy symbols
+## Category symbols are not here
 
-The taxonomy's quick-access symbols are here too, as the taxonomy publishes
-them: solid pictograms rather than outlines, named `taxonomy-` and their type —
-`taxonomy-entrance-exit`, `taxonomy-food-beverage-space` — and exported as
-components. A symbol fills with its colour, so a category's accent tints it:
+A venue's quick-access category artwork is the taxonomy's, not the design
+system's. Pointr publishes and versions it, and every quick-access category
+carries its own `iconUrl`; read it from there rather than importing a
+component that would go stale between releases.
 
 ```tsx
-import { TaxonomyEntranceExit } from "@kozmos-ds/icons";
+import { BrowseCategoriesPanel } from "@kozmos-ds/react";
+import type { CategoryPresentation } from "@kozmos-ds/product-contracts";
 
-<TaxonomyEntranceExit color="var(--semantics-category-accent-green)" />;
+const categories: CategoryPresentation[] = [
+  {
+    id: "dining",
+    label: "Dining",
+    selected: false,
+    iconUrl: "https://example.com/taxonomy/food-beverage-space-orange.png",
+  },
+];
+
+<BrowseCategoriesPanel
+  categories={categories}
+  onSelect={() => {}}
+  renderIcon={(category) => <img src={category.iconUrl} alt="" aria-hidden />}
+/>;
 ```
 
-Their definitions say `source: "taxonomy"` and the release they come from. To
-add one, name its published SVG in `scripts/build-taxonomy-icons.mjs` and run
-`node scripts/build-taxonomy-icons.mjs --fetch` from the repository root.
+The eight `Taxonomy*` components that shipped in 0.2.0 were removed for this
+reason. `Accessibility` and `Utensils` are drawn here and stay: those are
+the design system's own.
 
 ## Licence
 
