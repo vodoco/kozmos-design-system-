@@ -17,6 +17,17 @@ export type POIAction =
   | "share"
   | "order";
 
+/**
+ * What a RESULT may offer, which is everything a POI offers plus opening its
+ * own details.
+ *
+ * Kept apart from POIAction rather than folded into it. A detail panel cannot
+ * offer itself, and POIDetailPanel maps POIAction exhaustively — widening the
+ * shared union made it carry a case that can never reach it, which the
+ * compiler was right to object to.
+ */
+export type POIResultAction = POIAction | "details";
+
 export interface POIMediaPresentation {
   id: string;
   src: string;
@@ -113,15 +124,49 @@ export interface TravelEstimatePresentation {
   modeLabel?: string;
 }
 
+/**
+ * A short, already-localized tab above a result: "Alternative", "Similar",
+ * "Close by".
+ *
+ * Deliberately NOT how `featured` is expressed. Featured is a property of the
+ * POI in the CMS and is read by more than this card — the map marker draws a
+ * featured POI with its logo — so it stays a boolean with meaning, and this
+ * stays a label with none. A result that is both draws the featured tab: it is
+ * the one with consequences elsewhere.
+ */
+export interface POIResultBadgePresentation {
+  /** Already localized. Keep it to a word or two; it sits in a 24px tab. */
+  label: string;
+}
+
+/** What a result card offers on the selected result, in the order given. */
+export interface POIResultActionPresentation {
+  action: POIResultAction;
+  /** Already localized. */
+  label: string;
+  /** Drawn first and filled. Exactly one action should carry it. */
+  primary?: boolean;
+  disabled?: boolean;
+}
+
 export interface POIResultPresentation {
   poiId: string;
   resultIndex: number;
   selected: boolean;
+  /** Set in the CMS. Draws the starred tab here, and the logo on the marker. */
   featured: boolean;
   floorId: string;
   travelEstimate?: TravelEstimatePresentation;
   available?: boolean;
   unavailableReason?: string;
+  /** A quiet tab: why this result is in this list. Ignored when featured. */
+  badge?: POIResultBadgePresentation;
+  /**
+   * Revealed when the result is selected. The product decides what a POI
+   * offers — a restaurant may book where a shop does not — so the card renders
+   * what it is given and never assumes a fixed pair.
+   */
+  actions?: readonly POIResultActionPresentation[];
 }
 
 export interface FloorPresentation {
