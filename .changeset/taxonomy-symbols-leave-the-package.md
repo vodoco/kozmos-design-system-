@@ -1,6 +1,7 @@
 ---
 "@kozmos-ds/icons": minor
 "@kozmos-ds/react": minor
+"@kozmos-ds/product-contracts": minor
 ---
 
 Take the taxonomy's eight quick-access symbols out of the icon set.
@@ -25,8 +26,10 @@ its own `iconUrl`, and the panel's `renderIcon` takes whatever you give it:
 />
 ```
 
-`BrowseCategoriesPanel`'s `AviationQuickAccess` story now does exactly this,
-against `quick-access/aviation_customer.json` at 10.12.0.
+`CategoryPresentation` now carries `iconUrl` for exactly this - the venue's own
+artwork, beside `iconName` for a design system glyph. `BrowseCategoriesPanel`'s
+`AviationQuickAccess` story reads `quick-access/aviation_customer.json` at
+10.12.0.
 
 The `Accessibility` and `Utensils` glyphs added in 0.2.0 are unaffected: they
 are drawn here and stay.
