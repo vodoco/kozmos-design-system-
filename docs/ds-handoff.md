@@ -134,9 +134,9 @@ settings were enabled. The browser/WebView policy remains unresolved; native ada
 parity and a real Pointr consumer remain next. Earlier “nothing pushed” entries below
 describe their implementation batches, not the subsequent authorized merges.
 
-**Agent switch, 2026-09-17.** Development moved from Claude Code to ChatGPT Astra at `a02a008`.
+**Agent switch, 2026-09-17.** Development moved from the coding agent to ChatGPT Astra at `a02a008`.
 Whoever picks the work up next reads `docs/agent-switch-2026-09-17.md` first: its §1 to §5 hand the
-work to Astra, §6 is the handback Astra leaves before switching back, and §7 is what Claude checks on
+work to Astra, §6 is the handback Astra leaves before switching back, and §7 is what the coding agent checks on
 return.
 
 **Astra continuation, 2026-09-17:** Olcay approved the pre-publication architecture recommendations
@@ -168,7 +168,7 @@ Paste this as the first message of the new chat:
 > done; read §11 first, then §4.3.
 
 Read order: this file → `docs/ds-scope-2026-09-12.md` → `docs/style-playbook.md` →
-`docs/gap-audit-2026-09-05.md` → the memory files named in §8, which are Claude's and live outside
+`docs/gap-audit-2026-09-05.md` → the memory files named in §8, which are the agent's and live outside
 the repository (`docs/agent-switch-2026-09-17.md` §4). `docs/session-handoff.md` is the long
 record (1,640 lines, to 2026-09-10); read its §3 only for the reasoning behind a specific decision.
 
@@ -212,7 +212,7 @@ PR #17's iOS map-panel sheet and `apps/Playground.swiftpm`, and any product scre
 
 ## 3 · The system today — measured 2026-09-17
 
-The table below is the **Claude handover baseline**, not the state of Astra's local feature branch.
+The table below is the **the coding agent handover baseline**, not the state of Astra's local feature branch.
 For the latter, React now has 360 passing tests in 104 files, and fourteen adaptive checks pass
 in each of Chromium and WebKit (`pnpm --filter @kozmos-ds/react test`, `pnpm test:adaptive`,
 `ADAPTIVE_BROWSER=webkit pnpm test:adaptive`). Fourteen overlay checks (seven components, default
@@ -741,7 +741,7 @@ typecheck then reports errors in files nobody touched, suspect the install befor
 - **Agent fan-out:** cap the candidate list before multiplying it — a scope audit once burned 5.16M
   tokens on ~330 candidates × 3.
 
-Memory files — Claude's, kept outside the repository (`docs/agent-switch-2026-09-17.md` §4):
+Memory files — the agent's, kept outside the repository (`docs/agent-switch-2026-09-17.md` §4):
 `kozmos-session-handoff-pointer` · `kozmos-verify-before-asserting` ·
 `kozmos-audit-then-proceed` · `kozmos-shared-checkout-stage-by-file` · `shell-is-zsh-three-traps` ·
 `bash-tool-set-e-does-not-gate` · `kozmos-never-rebuild-in-plugin` · `kozmos-plugin-may-run-stale-code`
@@ -964,7 +964,7 @@ the first time painter changes have reached the file since early September.
 
 ### 2026-09-17 · Pre-publication foundations (Astra)
 
-Olcay asked for the Claude work to be audited for deployment/npm readiness, landscape/foldables
+Olcay asked for the the coding agent work to be audited for deployment/npm readiness, landscape/foldables
 and foundational changes before rebuilding Pointr modules. `prepublish-architecture-review-2026-09-17.md`
 records the audit. A previous Astra statement that a missing changeset prevented first publication
 was wrong and corrected: with a valid token, the current release path can publish all four
@@ -972,7 +972,7 @@ unpublished 0.0.1 packages without a version PR. No token or release setting was
 
 After “let's proceed with your recommendation”, the isolated review worktree was fast-forwarded
 to the documentation-only `c274b06` handoff and renamed to `astra/prepublish-foundations`.
-Shared `main`, Claude's worktrees, MAP-595 and Figma were not changed.
+Shared `main`, the agent's worktrees, MAP-595 and Figma were not changed.
 
 The first batch replaces React AdaptiveMapShell's viewport breakpoints and 448px minimum with
 measured local geometry; adds typed usable-region, safe-area, panel-presentation and layout-output
@@ -1023,7 +1023,7 @@ React and new harness lint; component/snippet/variant/completion checks; unchang
 compiled-class ratchets; tarball install/readme checks with React 18 and 19. The shared browser
 fixture helper bundles built public exports, not source aliases; it is not itself an installed
 React-peer browser matrix. Remote CI, full Storybook/a11y, native and live Figma checks were not run.
-Shared main and Claude's worktrees remain untouched; no push/publication is authorized or performed.
+Shared main and the agent's worktrees remain untouched; no push/publication is authorized or performed.
 
 Full provider/CSS isolation is **not done**: global theme mutation, storage/system-theme handling,
 nested light/dark token/utility behavior, global reset/selectors and automatic portal propagation
@@ -1166,11 +1166,11 @@ unpushed: one public catalogue with platform reference tabs, the web POI referen
 and their taxonomy-driven display, the native POI card brought up to them, and finally
 `apps/PointrPlayground` — a real PointrKit 10.3.0 host on Design-QA with Kozmos-owned UI,
 a browse-only milestone. Each batch has a dated report; `docs/README.md` lists them. The
-handback to Claude Code is `claude-code-handoff-2026-09-19.md`, whose §8 names seven native
+handback to the coding agent is `handoff-2026-09-19.md`, whose §8 names seven native
 findings and whose §10 orders four passes. On `main`, Astra merged #53 and opened #54, which
 is for review only. Nothing reached npm.
 
-### 2026-09-19 · Pointr iOS Pass 1 (Claude Code)
+### 2026-09-19 · Pointr iOS Pass 1 (the coding agent)
 
 Branch `claude/pointr-browse-repairs`, cut from Astra's at `663cde1` in the same worktree,
 unpushed. Findings A–D measured and fixed; the measurements are in
@@ -1182,7 +1182,7 @@ against the code it was written for and failed there first; every "fixed" was re
 3× simulator screenshot, not from a passing test. E, F, G and Passes 2–4 are not started.
 Five decisions wait on Olcay, listed in the report.
 
-### 2026-09-19 · Pointr iOS Pass 2 (Claude Code)
+### 2026-09-19 · Pointr iOS Pass 2 (the coding agent)
 
 Item E, `pointr-ios-pass2-2026-09-19.md`. Every one of Design-QA's 1,196 places was read
 through the SDK before a line of mapping was written: no ratings, prices on a sentinel, seven
@@ -1194,10 +1194,10 @@ cannot; hours are the venue's text and say so. Structured hours are not rendered
 documents no day order. 31 tests in the app; Dunkin', Boston AMERICA! and a Terminal E lounge
 checked live. Next: routing (Pass 3), and the six upstream findings for Pointr.
 
-### 2026-09-19 · Pointr iOS Pass 3 (Claude Code)
+### 2026-09-19 · Pointr iOS Pass 3 (the coding agent)
 
 Routing, `afa7bdf`, reported in `pointr-ios-pass3-2026-09-19.md`; the session handoff is
-`claude-code-handoff-2026-09-19-pass3.md`. Go on the card opens a starting-point picker over the building's
+`handoff-2026-09-19-pass3.md`. Go on the card opens a starting-point picker over the building's
 places; the SDK calculates a normal and an accessible route, synchronously, in 15–77 ms; the
 preview offers them as Quickest and Step-free with the routes' own time and distance; the
 directions are stepped by hand, the map following each step's level and position. Measured
@@ -1209,7 +1209,7 @@ four Kozmos direction arrows have no transition form, so an elevator
 or a walkway keeps the SDK's words under a straight arrow — a design-system gap, not a host
 patch. 41 tests in the app. Next: the pass's leftovers, then F, G and Pass 4.
 
-### 2026-09-20 · Pointr iOS: Pass 3's leftovers closed (Claude Code)
+### 2026-09-20 · Pointr iOS: Pass 3's leftovers closed (the coding agent)
 
 `pointr-ios-pass3-closure-2026-09-20.md`, commits `65ddd1c`, `25629b3`, `cf75072`. The marker on the current
 step is PointrKit's next-portal marker, read through MapLibre's public style API: one point
@@ -1226,7 +1226,7 @@ Arabic" — the iPhone simulator's first language is Arabic, the iPad asked for 
 Also found: the building at launch varies (item G), two "Airport Shuttles" on one floor. Next: F,
 G, Pass 4.
 
-### 2026-09-20 · Design system pass (Claude Code)
+### 2026-09-20 · Design system pass (the coding agent)
 
 Olcay redirected the work to the design system — "and if anything is missing, not to make the
 app most functional" — with three examples. `design-system-pass-2026-09-20.md`, commits
@@ -1256,7 +1256,7 @@ removed; the search bar's magnifier silenced and its clear button labelled on iO
 label aligned; the hidden pill taken out of VoiceOver's tree while the level list is open; the
 operator's guide written (`kozmos-pointr-operators-guide-2026-09-20.md`).
 
-### 2026-09-20 · The navigation parts (Claude Code)
+### 2026-09-20 · The navigation parts (the coding agent)
 
 On its own recommendation after the audit: the prototype's three navigation parts built on iOS,
 React and Android — `navigation-parts-2026-09-20.md`, commits `3f360e2`, `e3353b7`, `e43941b`,
@@ -1277,7 +1277,7 @@ three platforms and the card and the summary take it; a compact detent in the sh
 platform's own transition icons; the button-height finding withdrawn (44 everywhere by contract); the level list as built. The
 branch was pushed to origin. Next: the glass role, the transition arrows, the search sheet.
 
-### 2026-09-20 · The glass surface role (Claude Code)
+### 2026-09-20 · The glass surface role (the coding agent)
 
 §5.13 built — `glass-surface-2026-09-20.md`, commits `60cca79`, `cae0b91`, `c72a06d`, `bfb035c`
 and the docs commit. `Semantics.Effect.glass` reaches iOS and Android as `KozmosEffects`, emitted
@@ -1294,7 +1294,7 @@ Then, on Olcay's answers: solid is the default and glass an option — a surface
 platforms (`04bce5a`, `480471f`, `e6898e3`), the QA app and the examples asking for glass, the
 three web map cards solid by default; the shell's sheet and the Button's glass variant next.
 
-### 2026-09-20 · The map shell's sheet (Claude Code)
+### 2026-09-20 · The map shell's sheet (the coding agent)
 
 `map-shell-sheet-2026-09-20.md`, commits `20575a0`, `72009db`, `ccf33ed` and the docs commit. The
 sheet fits its content — a content detent on iOS through the capped layout, `panelSizing` on the
@@ -1304,7 +1304,7 @@ the prototype's. Measured on each platform; the capped layout was clamped to its
 render test showed a fixed-height child overrunning it. The Button's glass variant next, then the
 transition arrows and the search sheet.
 
-### 2026-09-20 · The Button's glass variant (Claude Code)
+### 2026-09-20 · The Button's glass variant (the coding agent)
 
 `glass-surface-2026-09-20.md` §7, commits `5d9c980`, `1f10259`, `45b35b5` and the docs commit.
 The Button's and IconButton's glass variant is the glass surface on all three platforms — the
@@ -1313,7 +1313,7 @@ with the other variants' pixels untouched (the 18.4 baselines still match) and t
 palette class gone from the owned CSS. Measured on each platform. Next: the transition arrows,
 then the search sheet.
 
-### 2026-09-20 · Directions for transitions (Claude Code)
+### 2026-09-20 · Directions for transitions (the coding agent)
 
 `transition-arrows-2026-09-20.md`, commits `7c9e9ea`, `1e9f856`, `6c69f60` and the docs commit.
 `DirectionType` gains ten cases — a level change by lift, escalator or stairs, up or down, or
@@ -1324,7 +1324,7 @@ direction. The QA app maps the SDK's message types and the taxonomy's transition
 them; "Take Elevator down" finally carries a down arrow. Measured on each platform. Next: the
 prototype's search sheet.
 
-### 2026-09-20 · The search sheet (Claude Code)
+### 2026-09-20 · The search sheet (the coding agent)
 
 `search-sheet-2026-09-20.md`, commits `757f1ce`, `486b216`, `0623479`, `bdf97e9`, `1b5090e` and
 the docs commit. On Olcay's four answers: the category tile, the result row and the search field
@@ -1337,7 +1337,7 @@ has the AI search beside the field and the dot on results. That closes the five 
 ordered on the 20th: the glass surface as a style, the sheet, the Button's glass, the transition
 arrows, the search sheet.
 
-### 2026-09-20 · The initial sheet, driven and built (Claude Code)
+### 2026-09-20 · The initial sheet, driven and built (the coding agent)
 
 `pointr-prototype-initial-sheet-2026-09-20.md` (commit `dcb9c9d`, with
 `scripts/measure-prototype-sheet.cjs`) and `initial-sheet-2026-09-20.md`. Olcay asked for the
@@ -1352,9 +1352,9 @@ QA app's sheet was recomposed on Kozmos parts with the taxonomy's aviation quick
 on each platform; the web sheet driven on three engines and by touch on chromium; the QA app's
 sheet driven by a UI test.
 
-### 2026-09-21 · The category state, the ring, the motion tokens (Claude Code)
+### 2026-09-21 · The category state, the ring, the motion tokens (the coding agent)
 
-**The handoff for the next chat is [claude-code-handoff-2026-09-21.md](claude-code-handoff-2026-09-21.md).**
+**The handoff for the next chat is [handoff-2026-09-21.md](handoff-2026-09-21.md).**
 
 `initial-sheet-2026-09-20.md`, its later sections. Olcay's screenshots of the QA app, one after
 another: the tiles' squares dropping beside a two-line label (the grid now aligns its cells at the
@@ -1392,10 +1392,11 @@ taxonomy's eight quick-access colours, measured from the published sprite atlas,
 `Semantics.Category.{Accent,Fill,OnFill}`, the eight pairs held to 4.5:1 by the contrast check);
 the web panel never had its tint callback; the SDK's markers were measured three ways and none is kept — the per-place style painted room fills black, so the map shows a category's places through `poisToShow` alone; a selected tinted tile's stroke, the POI panel's inset blocks on the
 sheet, stories, notes and the contract followed.
+
 ### 2026-09-17 · Release safeguards (Astra, local continuation)
 
 After Olcay authorized pushes and merges, #52 and #53 merged, leaving remote main
-at `040f53d`; its post-merge CI passed. Shared local main and Claude's worktrees
+at `040f53d`; its post-merge CI passed. Shared local main and the agent's worktrees
 remain untouched. Olcay then approved release safeguards as the next implementation
 batch (§5.25), before compatibility/native/product-consumer work.
 
@@ -1807,7 +1808,7 @@ its variable's, so a REST render cannot confirm a binding; and the branch's firs
 fail five checks `main` passes — handoff §8.
 
 On the afternoon of the 22nd the handoff for the next chat was written:
-[claude-code-handoff-2026-09-22.md](claude-code-handoff-2026-09-22.md). Writing it turned up two
+[handoff-2026-09-22.md](handoff-2026-09-22.md). Writing it turned up two
 things. The live Figma file had been written at 09:47:15Z by a Curated Icons → Update that drew
 all 56 icon sources anew, although its sync keeps a source whose main component carries the
 definition's key; the tints laid through the old sources are gone from 2,325 of the library's

@@ -1,11 +1,11 @@
-# Claude Code handoff — Pointr iOS after Pass 3, 19 September 2026
+# Session handoff — Pointr iOS after Pass 3, 19 September 2026
 
-Written by Claude Code at the end of the session that did Passes 1, 2 and 3 of
-[Astra's handoff](claude-code-handoff-2026-09-19.md), so that a new chat can continue without
+Written by the coding agent at the end of the session that did Passes 1, 2 and 3 of
+[Astra's handoff](handoff-2026-09-19.md), so that a new chat can continue without
 that session's context. Read this document first, then Astra's, then the pass reports it names.
 Nothing here was pushed, merged or published; no Cloud content was changed.
 
-> **Update, 20 September 2026, Claude Code:** §11 item 2 is done. The five leftovers of Pass 3
+> **Update, 20 September 2026, the coding agent:** §11 item 2 is done. The five leftovers of Pass 3
 > are closed or bounded in the [closure report](pointr-ios-pass3-closure-2026-09-20.md): the
 > SDK's marker identified, no live no-route candidate on Design-QA, the not-ready state given a
 > retry, the iPad's three panels driven by a new UI test, VoiceOver's tree read and repaired.
@@ -29,11 +29,11 @@ Nothing here was pushed, merged or published; no Cloud content was changed.
 | Branch                  | `claude/pointr-browse-repairs`, HEAD `cf75072` plus the docs commit that adds this update (20 September); `afa7bdf` plus `5a177df` and `77a78c0` was the state on the 19th                                                |
 | Cut from                | Astra's `astra/browser-compatibility` at `663cde1`, itself 33 commits past `origin/main` (`a02a008`)                                                                                                                      |
 | Pushed                  | **Nothing.** Neither branch exists on the remote. "ok proceed" authorised work, never a push.                                                                                                                             |
-| Main checkout           | `/Volumes/4TB Depo/development/K/kozmos-design-system-dev` at `a02a008` on `main`, clean but for one untracked pointer file, `docs/claude-code-handoff-2026-09-19.md`, which points into the worktree                     |
+| Main checkout           | `/Volumes/4TB Depo/development/K/kozmos-design-system-dev` at `a02a008` on `main`, clean but for one untracked pointer file, `docs/handoff-2026-09-19.md`, which points into the worktree                                 |
 | Ignored files           | PointrKit and MapLibre frameworks, `QAConfig.json` and the generated `KozmosPointrQA.xcodeproj` exist **only in the /private/tmp worktree**. macOS clears `/private/tmp`. Ask before any cleanup and preserve them first. |
 
 Other worktrees in `git worktree list` (`astra/prepublish-foundations`, `astra/release-safeguards`,
-several `codex/*`) were not touched. The Claude desktop session's own worktree
+several `codex/*`) were not touched. The the coding agent desktop session's own worktree
 (`…/scratchpad/mapmode`, `codex/map-mode-toggle`) carries none of this work.
 
 First action in a new chat:
@@ -98,7 +98,7 @@ From Astra's handoff, and from Olcay's rules. None has been relaxed.
   evaluation in native code. Never traverse the SDK's private UIKit subviews.
 - Preserve handoff docs before any `/tmp` cleanup; never delete project directories.
 - Git: stage by file, never `git add -A` or a directory; never bare `git stash`; commit messages
-  end with `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`.
+  end with `Co-Authored-By: the coding agent <noreply@anthropic.com>`.
 - Method: measure before asserting; run a new test against the unfixed code first; an
   adversarial self-audit before "done"; reuse Kozmos parts, report gaps, never work around them
   with host-drawn substitutes.
@@ -394,9 +394,9 @@ in Astra's §11. The Pass 1 report's "Change it yourself" has the rest.
 
 ## 12. Suggested opening prompt for the new chat
 
-> Continue the Pointr iOS work. Read `docs/claude-code-handoff-2026-09-19-pass3.md` in the
+> Continue the Pointr iOS work. Read `docs/handoff-2026-09-19-pass3.md` in the
 > worktree `/private/tmp/kozmos-browser-compat.uqPMBD` (branch `claude/pointr-browse-repairs`),
-> then Astra's `docs/claude-code-handoff-2026-09-19.md` and the Pass 1 and 2 reports. Confirm
+> then Astra's `docs/handoff-2026-09-19.md` and the Pass 1 and 2 reports. Confirm
 > the Git state first. Start with §11 item 3. Nothing is to be pushed.
 
 ## 13. Checklist

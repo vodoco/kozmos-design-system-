@@ -1,8 +1,8 @@
-# Claude Code handoff — the evening of 2026-09-22: npm as `@kozmos-ds`, one file per module, GAP-56, and the Figma pass under way
+# Session handoff — the evening of 2026-09-22: npm as `@kozmos-ds`, one file per module, GAP-56, and the Figma pass under way
 
-For the next Claude Code session. Written at 18:27 BST on the 22nd, when Olcay closed the session to
+For the next agent session. Written at 18:27 BST on the 22nd, when Olcay closed the session to
 continue in a new one. **This is the door in.** The day's first handoff,
-[claude-code-handoff-2026-09-22.md](claude-code-handoff-2026-09-22.md), keeps the detail of the
+[handoff-2026-09-22.md](handoff-2026-09-22.md), keeps the detail of the
 morning and afternoon (its §0a is the afternoon's log; its §1 rules and §6 decisions still stand);
 [ds-handoff.md](ds-handoff.md) remains the design system's long record. Times of commits are BST;
 times read from Figma are UTC (Z).
@@ -338,7 +338,7 @@ platform the part exists on (`pnpm components:contract:check`), a test that fail
     Itinerary and RouteProgressRail as Figma sets (also Code Connect gaps); the 15th–19th Figma
     drift (Tag's and Counter's `emotion`, MapControlButton's axes, the POI panel's anatomy); iOS
     Surface's path in `STATUS.md`; the prototype's rubber band on the sheet; Android on an emulator;
-    items F, G and Pass 4 (`docs/claude-code-handoff-2026-09-19.md`).
+    items F, G and Pass 4 (`docs/handoff-2026-09-19.md`).
 
 ## 8. Decisions still Olcay's
 
