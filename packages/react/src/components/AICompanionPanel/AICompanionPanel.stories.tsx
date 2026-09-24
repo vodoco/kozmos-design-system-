@@ -1,18 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { fn } from "@storybook/test";
 import { useState } from "react";
-import {
-  ActionCard,
-  AICompanionPanel,
-  AIInputBar,
-  AIMessage,
-  AIMessageList,
-  UserMessage,
-} from "./index";
+import { AICompanionPanel } from "./AICompanionPanel";
+import { ActionCard } from "../ActionCard";
+import { AIInputBar } from "../AIInputBar";
+import { AIMessage } from "../AIMessage";
+import { AIMessageList } from "../AIMessageList";
+import { UserMessage } from "../UserMessage";
 import { POIResultCard } from "../POIResultCard";
 
 const meta = {
-  title: "Product SDK/AICompanion",
+  title: "Product SDK/AICompanionPanel",
   component: AICompanionPanel,
   parameters: { layout: "centered" },
 } satisfies Meta<typeof AICompanionPanel>;

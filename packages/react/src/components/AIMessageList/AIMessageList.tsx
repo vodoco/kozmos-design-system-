@@ -26,16 +26,32 @@ const AIMessageList = React.forwardRef<HTMLDivElement, AIMessageListProps>(
     ref,
   ) => {
     const inner = React.useRef<HTMLDivElement | null>(null);
-    const count = React.Children.count(children);
 
     React.useEffect(() => {
       if (!followLatest) return;
       const node = inner.current;
       if (!node) return;
-      // Jump rather than smooth-scroll: prefers-reduced-motion aside, a thread
-      // that animates on every token is unreadable.
-      node.scrollTop = node.scrollHeight;
-    }, [count, followLatest]);
+
+      // Watch the subtree, not the child count.
+      //
+      // Counting children only fires when a turn is added, and a streaming
+      // turn grows its own text without adding one — so a reply long enough
+      // to pass the fold stopped following exactly when it mattered most. A
+      // reply the visitor cannot see has not been delivered.
+      const follow = () => {
+        node.scrollTop = node.scrollHeight;
+      };
+      follow();
+
+      if (typeof MutationObserver === "undefined") return;
+      const observer = new MutationObserver(follow);
+      observer.observe(node, {
+        characterData: true,
+        childList: true,
+        subtree: true,
+      });
+      return () => observer.disconnect();
+    }, [followLatest, children]);
 
     return (
       <div
