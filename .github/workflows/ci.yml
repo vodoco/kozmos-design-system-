@@ -335,11 +335,21 @@ jobs:
   ios:
     name: iOS Build
     # macos-latest bills at 10x minutes, and this is how the spending limit was
-    # reached on 2026-08-28 and again on 2026-09-23. Everything lands through a
-    # pull request, so the pull request is where it needs to run; a push to main
-    # is the same commit a moment later. `pnpm ci:local --job ios` runs 8 of
-    # these 12 steps on a Mac that is already paid for.
-    if: github.event_name == 'pull_request'
+    # reached on 2026-08-28 and again on 2026-09-23. So this runs once per merge
+    # rather than once per push: over the last 60 CI runs that is 13 rather than
+    # 47, and it used to be all 60.
+    #
+    # It runs on main and not on the pull request because release/policy.mjs
+    # requires a successful "iOS Build" job in the main-push CI run it publishes
+    # against, and a merge commit's SHA has never existed on a pull request - it
+    # has two parents. Gating this to pull requests left every main push short
+    # one job, which is why dispatch 36001027330 refused to publish 0.2.0 with
+    # "skipped jobs are not evidence". The guard was right; the gate was wrong.
+    #
+    # The cost is that a pull request gets no iOS signal from CI. Run
+    # `pnpm ci:local --job ios` before merging - it covers 8 of these 12 steps
+    # on a Mac that is already paid for.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: macos-latest
     steps:
       - name: Checkout Repo
