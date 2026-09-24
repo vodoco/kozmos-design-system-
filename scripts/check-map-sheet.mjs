@@ -67,7 +67,51 @@ try {
       const shell = node.parentElement.getBoundingClientRect();
       return { top: r.top, height: r.height, shellHeight: shell.height, shellTop: shell.top, x: r.left + r.width / 2 };
     });
-  const settle = (page) => page.waitForTimeout(400);
+  // Wait for the sheet to stop moving, not for a fixed 400ms.
+  //
+  // CI run 36030288431 read 462.875 where it wanted 362.88 on webkit — a
+  // difference of 100, which is exactly the drag that had just been made. The
+  // sheet had not snapped back to its detent yet: the spring simply outlived
+  // the timeout on a cold runner that had just downloaded the browser. The
+  // same suite passed on chromium, on firefox, and on this machine, because a
+  // fixed wait is a bet on how fast the animation finishes rather than a
+  // measurement of whether it has.
+  //
+  // So measure. Poll the height across animation frames and return once two
+  // consecutive readings agree, which is the definition of "stopped". Reads
+  // are a frame apart on purpose: WebKit reports a running animation's values
+  // as they move, so two reads inside one task can differ for a sheet that is
+  // not moving at all.
+  const settle = async (page, timeout = 4000) => {
+    const stopped = await page
+      .locator("aside")
+      .first()
+      .evaluate(
+        (node, limit) =>
+          new Promise((resolve) => {
+            const started = performance.now();
+            let last = null;
+            const tick = () => {
+              const height = node.getBoundingClientRect().height;
+              if (last !== null && Math.abs(height - last) < 0.05) {
+                resolve(true);
+                return;
+              }
+              if (performance.now() - started > limit) {
+                resolve(false);
+                return;
+              }
+              last = height;
+              requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+          }),
+        timeout,
+      );
+    // A sheet still moving after four seconds is a defect worth failing on,
+    // not a slow machine worth waiting longer for.
+    assert.ok(stopped, `the sheet was still moving after ${timeout}ms`);
+  };
   // A drag that starts with two small moves, so the sheet decides and takes
   // the pointer before it leaves the sheet — a finger's first move is small.
   const drag = async (page, x, y, dy) => {
