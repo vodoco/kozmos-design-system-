@@ -73,6 +73,33 @@ describe("POIResultList", () => {
     expect(onAction).toHaveBeenCalledWith("navigate", "one");
   });
 
+  it("draws a group inline, and still decides which member is selected", () => {
+    // Olcay: the group is a container INSIDE the results list, holding the
+    // same items. A grouped result must highlight the way an ungrouped one
+    // does, or the list and the map disagree.
+    const a = createItem("one", 0);
+    const b = createItem("two", 1);
+    render(
+      <POIResultList
+        items={[
+          { id: "starbucks", label: "Starbucks, 2 results", items: [a, b] },
+          createItem("three", 2),
+        ]}
+        onSelect={vi.fn()}
+        resultCountLabel="3 results"
+        selectedPoiId="two"
+      />,
+    );
+
+    // Collapsed: the representative plus the ungrouped row.
+    expect(screen.getAllByRole("article")).toHaveLength(2);
+    expect(screen.getByRole("button", { name: /Show 1 more/ })).toBeVisible();
+
+    fireEvent.click(screen.getByRole("button", { name: /Show 1 more/ }));
+    // The selected member is the one the list was told about, inside the group.
+    expect(screen.getAllByRole("button", { pressed: true })).toHaveLength(1);
+  });
+
   it("renders a directed empty state", () => {
     render(
       <POIResultList

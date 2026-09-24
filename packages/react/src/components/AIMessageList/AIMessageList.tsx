@@ -51,7 +51,11 @@ const AIMessageList = React.forwardRef<HTMLDivElement, AIMessageListProps>(
         subtree: true,
       });
       return () => observer.disconnect();
-    }, [followLatest, children]);
+      // Deliberately NOT keyed on children. The observer already sees every
+      // change, and children is a fresh value on every render — keeping it
+      // here tore down and rebuilt a MutationObserver once per streamed
+      // token, in the one component guaranteed to re-render on each of them.
+    }, [followLatest]);
 
     return (
       <div
