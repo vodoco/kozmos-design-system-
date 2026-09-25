@@ -201,7 +201,7 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
           }
           aria-label={selectionLabel}
           aria-pressed={result.selected}
-          className="grid min-h-20 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-[inherit] px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          className="grid min-h-20 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-[inherit] px-4 py-3 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           disabled={!available}
           onClick={handleSelect}
           type="button"
