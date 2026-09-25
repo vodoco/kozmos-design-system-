@@ -5,6 +5,7 @@ import type {
   POIResultPresentation,
 } from "@kozmos-ds/product-contracts";
 import { cn } from "../../utils";
+import { EmptyStateDensity } from "../EmptyState/EmptyState";
 import { POIResultCard } from "../POIResultCard";
 import { POIResultGroup } from "../POIResultGroup";
 
@@ -105,7 +106,11 @@ const POIResultList = React.forwardRef<HTMLElement, POIResultListProps>(
               typeof emptyState === "string" && "p-6",
             )}
           >
-            {emptyState}
+            {/* The slot draws the box, so a component inside it should not
+                draw another. A product passing an EmptyState here has no
+                reason to know that; the slot does, so the slot says so, and
+                an explicit size on the EmptyState still wins. */}
+            <EmptyStateDensity value="compact">{emptyState}</EmptyStateDensity>
           </div>
         ) : (
           <ul className="m-0 flex list-none flex-col gap-3 p-0">

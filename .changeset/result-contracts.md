@@ -27,5 +27,10 @@ leaves the visitor to guess what to undo.
 `POIPresentation` and `POIResultPresentation`. A single-storey venue where
 every result reads "Ground Floor" is noise; the card now draws what is left.
 
-Android and iOS carry the availability change too, and the three enumerations
-are compared directly rather than assumed to match.
+Android and iOS carry all four. They did not at first: when this was written
+only the availability change had crossed over, and `POIResultMatch`,
+`SearchResponsePresentation`, `SearchEmptyKind`, `unitLabel`, `nameLanguage`
+and the optional `floorId`/`floorLabel` existed on the web alone — so a
+single-storey venue still had to invent a floor on iOS and Android, which is
+the exact noise this was meant to remove. `pnpm contracts:parity:check` now
+compares the three files field by field, and it is what found this.
