@@ -32,6 +32,48 @@ enum class KozmosPOIAction(val value: String) {
     Order("order")
 }
 
+/**
+ * What a RESULT may offer: everything a POI offers, plus opening its own
+ * details.
+ *
+ * Kept apart from [KozmosPOIAction] rather than folded into it, mirroring the
+ * web contract. A detail panel cannot offer to open itself, and widening the
+ * shared list would make every consumer of it handle a case that never
+ * arrives.
+ */
+enum class KozmosPOIResultAction(val value: String) {
+    Navigate("navigate"),
+    Favourite("favourite"),
+    Bookmark("bookmark"),
+    Share("share"),
+    Order("order"),
+    Details("details")
+}
+
+/**
+ * A short, already-localized tab above a result: "Alternative", "Similar",
+ * "Close by".
+ *
+ * Deliberately not how [KozmosPOIResultPresentation.featured] is expressed.
+ * Featured is a property of the POI in the CMS and is read by more than this
+ * card - the map marker draws a featured POI with its logo - so it stays a
+ * boolean with meaning, and this stays a label with none.
+ */
+data class KozmosPOIResultBadgePresentation(
+    /** Already localized. Keep it to a word or two; it sits in a 24dp tab. */
+    val label: String
+)
+
+/** What a result card offers on the selected result, in the order given. */
+data class KozmosPOIResultActionPresentation(
+    val action: KozmosPOIResultAction,
+    /** Already localized. */
+    val label: String,
+    /** Drawn first and filled. Exactly one action should carry it. */
+    val primary: Boolean = false,
+    val disabled: Boolean = false
+)
+
 data class KozmosPOIMediaPresentation(
     val id: String,
     val src: String,
@@ -96,7 +138,15 @@ data class KozmosPOIResultPresentation(
     val featured: Boolean = false,
     val travelEstimate: KozmosTravelEstimatePresentation? = null,
     val available: Boolean? = null,
-    val unavailableReason: String? = null
+    val unavailableReason: String? = null,
+    /** A quiet tab: why this result is in this list. Ignored when [featured]. */
+    val badge: KozmosPOIResultBadgePresentation? = null,
+    /**
+     * Revealed when the result is selected. The product decides what a POI
+     * offers - a restaurant may book where a shop does not - so the card draws
+     * what it is given and never assumes a fixed pair.
+     */
+    val actions: List<KozmosPOIResultActionPresentation> = emptyList()
 ) {
     /** Mirrors the web rule: only an explicit `false` marks a result unavailable. */
     val isAvailable: Boolean
