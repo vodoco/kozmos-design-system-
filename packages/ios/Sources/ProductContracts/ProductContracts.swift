@@ -9,8 +9,16 @@ import Foundation
 /// components. Human-readable labels are included alongside machine values so
 /// each platform renders the same meaning without embedding English formatters.
 
+/// Whether a place is open, and how close that is to changing.
+///
+/// openingSoon and closingSoon are their own states rather than a flag on the
+/// other two: a visitor reads "closing soon" as a reason to hurry, and drawing
+/// it as plain "open" is the difference between arriving and arriving too late.
+/// Where the boundary sits is the product's, not this contract's.
 public enum KozmosPOIAvailability: String, Sendable, Hashable, CaseIterable, Codable {
     case open
+    case openingSoon
+    case closingSoon
     case closed
     case unknown
 }

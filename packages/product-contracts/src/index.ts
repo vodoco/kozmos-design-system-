@@ -6,7 +6,21 @@
  * each platform renders the same meaning without embedding English formatters.
  */
 
-export type POIAvailability = "open" | "closed" | "unknown";
+/**
+ * Whether a place is open, and how close that is to changing.
+ *
+ * `openingSoon` and `closingSoon` are their own states rather than a flag on
+ * open or closed, because a visitor reads them differently: "closing soon" is
+ * a reason to hurry or pick something else, and drawing it as plain "open" is
+ * the difference between arriving and arriving too late. Where the boundary
+ * sits - thirty minutes, an hour - is the product's, not this contract's.
+ */
+export type POIAvailability =
+  | "open"
+  | "openingSoon"
+  | "closingSoon"
+  | "closed"
+  | "unknown";
 
 export type POIAccessRestrictions = "none" | "present" | "unknown";
 
@@ -49,8 +63,16 @@ export interface POIPresentation {
   name: string;
   categoryId?: string;
   categoryLabel?: string;
-  floorId: string;
-  floorLabel: string;
+  /**
+   * Optional: a venue need not have levels.
+   *
+   * Story 15's edge case is a single-storey venue, where every result sitting
+   * on "Ground Floor" is noise rather than information. A product with levels
+   * supplies these exactly as before; one without omits them, and the card
+   * draws what is left rather than a floor nobody has.
+   */
+  floorId?: string;
+  floorLabel?: string;
   buildingId?: string;
   buildingLabel?: string;
   logo?: {
@@ -139,6 +161,17 @@ export interface POIResultBadgePresentation {
   label: string;
 }
 
+/**
+ * Why a result is in the list.
+ *
+ * MAP-474 shows alternatives and unconfirmed results as further lists under
+ * their own headings, and change #5 settled that they use the same cards. That
+ * only works if the grouping comes from the data: a product cannot sort results
+ * into "Alternatives" and "Gluten-free not confirmed" from a card that does not
+ * say which it is.
+ */
+export type POIResultMatch = "exact" | "alternative" | "unconfirmed";
+
 /** What a result card offers on the selected result, in the order given. */
 export interface POIResultActionPresentation {
   action: POIResultAction;
@@ -155,18 +188,71 @@ export interface POIResultPresentation {
   selected: boolean;
   /** Set in the CMS. Draws the starred tab here, and the logo on the marker. */
   featured: boolean;
-  floorId: string;
+  /** Optional for the same reason as POIPresentation.floorId: no levels, no floor. */
+  floorId?: string;
   travelEstimate?: TravelEstimatePresentation;
   available?: boolean;
   unavailableReason?: string;
   /** A quiet tab: why this result is in this list. Ignored when featured. */
   badge?: POIResultBadgePresentation;
   /**
+   * Whether this result answers the query exactly, stands in for one that
+   * would, or has not been confirmed. Absent means exact.
+   */
+  match?: POIResultMatch;
+  /**
+   * The unit or suite, where a venue has them: "Unit 214", "Suite 3B".
+   * Separate from floorLabel because a visitor is told both.
+   */
+  unitLabel?: string;
+  /**
+   * BCP 47 tag for the language poi.name is authored in, when it differs from
+   * the interface language. MAP-474 Story 2 requires an authored name to be
+   * shown exactly as authored, and a screen reader needs the tag to say it
+   * correctly.
+   */
+  nameLanguage?: string;
+  /**
    * Revealed when the result is selected. The product decides what a POI
    * offers — a restaurant may book where a shop does not — so the card renders
    * what it is given and never assumes a fixed pair.
    */
   actions?: readonly POIResultActionPresentation[];
+}
+
+/**
+ * Why a search returned nothing.
+ *
+ * An empty list is not one situation. "No results" after a typo wants a
+ * different screen from "no results because you filtered to a building with
+ * none", and Story 15 AC6 asks for the constraint that emptied the list to be
+ * named. Without this a product can only say "nothing found" and leave the
+ * visitor to guess what to undo.
+ */
+export type SearchEmptyKind =
+  /** The query matched nothing anywhere in the venue. */
+  | "noMatch"
+  /** Matches exist, but every one was excluded by a filter. */
+  | "filteredOut"
+  /** The venue has no data for this at all — a category nobody has mapped. */
+  | "unavailable";
+
+export interface SearchResponsePresentation {
+  results: readonly POIResultPresentation[];
+  /** Present only when `results` is empty. */
+  emptyKind?: SearchEmptyKind;
+  /**
+   * The filter that emptied the list, already localized — "HQ Building",
+   * "Gluten-free". Story 15 AC6: name what to undo.
+   */
+  emptiedBy?: string;
+  /**
+   * Set when results were found in a language other than the one asked for,
+   * carrying the BCP 47 tag actually used. Story 2's unhappy path: a visitor
+   * reading Japanese who gets English names should be told, not left to
+   * wonder.
+   */
+  languageFallback?: string;
 }
 
 export interface FloorPresentation {

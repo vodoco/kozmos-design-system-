@@ -171,6 +171,45 @@ describe("POIResultCard", () => {
     expect(screen.queryByRole("group")).not.toBeInTheDocument();
   });
 
+  it("draws closing soon apart from open and from closed", () => {
+    // Three tones, not two: "closing soon" is a reason to hurry, and drawing
+    // it as plain open is the difference between arriving and arriving late.
+    const tone = (availability: "open" | "closingSoon" | "closed") => {
+      const { container, unmount } = render(
+        <POIResultCard
+          poi={{ ...poi, availability, availabilityLabel: "label" }}
+          result={{ ...result, selected: false }}
+          onSelect={vi.fn()}
+        />,
+      );
+      const node = screen.getByText("label");
+      const className = node.className;
+      unmount();
+      return className;
+    };
+    const open = tone("open");
+    const soon = tone("closingSoon");
+    const closed = tone("closed");
+    expect(open).not.toEqual(soon);
+    expect(soon).not.toEqual(closed);
+    expect(soon).toMatch(/warning/);
+  });
+
+  it("draws a venue with no levels without inventing one", () => {
+    // Story 15 edge case: a single-storey venue, where every result reading
+    // "Ground Floor" is noise.
+    const { poi: _drop, ...rest } = { poi };
+    render(
+      <POIResultCard
+        poi={{ ...poi, floorId: undefined, floorLabel: undefined }}
+        result={{ ...result, selected: false, floorId: undefined }}
+        onSelect={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("Building A")).toBeVisible();
+    expect(screen.queryByText(/·/)).not.toBeInTheDocument();
+  });
+
   it("is the prototype's row: 80 tall, no number, a dot before the floor when it is the current one", () => {
     const { container, rerender } = render(
       <POIResultCard
