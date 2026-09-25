@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "613ce3fc8656";
+const PLUGIN_BUILD = "8d5cfc7c84e2";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -72250,10 +72250,15 @@ function configureNamedBooleanProperty(
   function walk(node) {
     if (node.name === nodeName && node.componentPropertyReferences !== undefined) {
       try {
-        node.componentPropertyReferences = {
-          ...(node.componentPropertyReferences || {}),
-          visible: resolved,
-        };
+        // Object.assign, not object spread: the plugin sandbox parses an
+        // older dialect and figma:plugin:check refuses spread outright. The
+        // rest of this 70k-line file has none, which is why the rule held
+        // until this helper arrived.
+        node.componentPropertyReferences = Object.assign(
+          {},
+          node.componentPropertyReferences || {},
+          { visible: resolved },
+        );
         bound += 1;
       } catch (error) {
         stats.warnings.push(
