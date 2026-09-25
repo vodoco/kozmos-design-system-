@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "2362207aa74a";
+const PLUGIN_BUILD = "509a0e2043af";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -298,6 +298,15 @@ const AVATAR_CONTENT = ["Fallback", "Image"];
 const ALERT_VARIANTS = ["Default", "Destructive", "Success", "Warning", "Info"];
 const EMPTY_STATE_CONTENT = ["Basic", "Icon", "Action"];
 const CARD_CONTENT = ["Basic", "Header", "Full"];
+// How much room a card gives its content. Default is 24 on every side, the
+// card as the system has always drawn it; Compact is 16, for a card that is
+// one setting in a column of settings rather than a thing on its own
+// (GAP-034). It is one axis for the whole card because a card padded 16 at the
+// top and 24 at the bottom is the bug, not the fix.
+const CARD_PADDINGS = ["Default", "Compact"];
+function cardPaddingLength(padding) {
+  return padding === "Compact" ? 16 : 24;
+}
 const LIST_DENSITIES = ["Default", "Compact"];
 const TABLE_DENSITIES = ["Default", "Compact"];
 // Product / SDK lane. These compose Core primitives and stay domain-specific;
@@ -17151,6 +17160,7 @@ function expectedVariantAxesForComponentSetName(name) {
   if (canonicalName === "Card") {
     return {
       Content: CARD_CONTENT,
+      Padding: CARD_PADDINGS,
     };
   }
 
@@ -32420,9 +32430,12 @@ async function buildCardComponent() {
     componentSetName: "Card",
     axisName: "Content",
     values: CARD_CONTENT,
+    axis2Name: "Padding",
+    axis2Values: CARD_PADDINGS,
     x: 80,
     y: 4300,
     xStep: 420,
+    yStep: 220,
     createVariant: createCardVariant,
     configureProperties: configureCardProperties,
     description: [
@@ -32441,7 +32454,10 @@ async function updateCardComponent() {
     componentSetName: "Card",
     axisName: "Content",
     values: CARD_CONTENT,
+    axis2Name: "Padding",
+    axis2Values: CARD_PADDINGS,
     xStep: 420,
+    yStep: 220,
     createVariant: createCardVariant,
     updateVariant: updateCardVariant,
     parseVariantName: parseCardVariantName,
@@ -50296,6 +50312,32 @@ async function rebuildFeedbackCardComponent() {
   });
 }
 
+/**
+ * Every combination a generated set draws.
+ *
+ * Forty-five sets are built through these two helpers, and all of them had
+ * exactly one axis. A component that grows a second — Card's padding,
+ * EmptyState's size, POIResultCard's appearance — would otherwise need its own
+ * hand-rolled Build and Update, which is how Rating ended up with a copy of
+ * this logic that then had to be changed twice.
+ *
+ * `axis2Name` and `axis2Values` are optional: without them the behaviour is
+ * exactly what it was, one axis and one loop.
+ */
+function generatedVariantCombinations(config) {
+  const seconds = config.axis2Values || [null];
+  const out = [];
+  for (let i = 0; i < config.values.length; i += 1)
+    for (let j = 0; j < seconds.length; j += 1)
+      out.push({ value: config.values[i], second: seconds[j], i, j });
+  return out;
+}
+
+/** The key a combination is remembered by while Update walks the set. */
+function generatedVariantKey(value, second) {
+  return second === null || second === undefined ? value : `${value}/${second}`;
+}
+
 async function buildSingleAxisComponent(config) {
   const stats = {
     created: false,
@@ -50334,16 +50376,17 @@ async function buildSingleAxisComponent(config) {
   const variableByName = await ensureComponentRuntimeVariables(stats);
   const components = [];
 
-  for (let valueIndex = 0; valueIndex < config.values.length; valueIndex += 1) {
-    const value = config.values[valueIndex];
+  for (const combination of generatedVariantCombinations(config)) {
     const component = await config.createVariant({
-      value,
+      value: combination.value,
+      second: combination.second,
       variableByName,
       fonts,
       stats,
     });
-    component.x = valueIndex * config.xStep;
-    component.y = 0;
+    component.x = combination.i * config.xStep;
+    // A second axis takes its own row, so the two never overlap.
+    component.y = combination.j * (config.yStep || 0);
     page.appendChild(component);
     components.push(component);
   }
@@ -50452,7 +50495,11 @@ async function updateSingleAxisComponent(config) {
       continue;
     }
 
-    seenValues[props.value] = true;
+    // A variant drawn before a second axis existed parses with `second`
+    // undefined, and the component's own parser decides what that means --
+    // normally its default. Update then RENAMES it rather than replacing it,
+    // so the node ids Code Connect pins survive.
+    seenValues[generatedVariantKey(props.value, props.second)] = true;
     await reportSetProgress(
       config.componentSetName,
       `variant ${stats.variantsUpdated + 1} of ${existing.children.length}`,
@@ -50460,6 +50507,7 @@ async function updateSingleAxisComponent(config) {
     );
     await config.updateVariant(child, {
       value: props.value,
+      second: props.second,
       variableByName,
       fonts,
       stats,
@@ -50467,17 +50515,19 @@ async function updateSingleAxisComponent(config) {
     stats.variantsUpdated += 1;
   }
 
-  for (const value of config.values) {
-    if (seenValues[value]) continue;
+  for (const combination of generatedVariantCombinations(config)) {
+    const key = generatedVariantKey(combination.value, combination.second);
+    if (seenValues[key]) continue;
 
     const component = await config.createVariant({
-      value,
+      value: combination.value,
+      second: combination.second,
       variableByName,
       fonts,
       stats,
     });
     existing.appendChild(component);
-    seenValues[value] = true;
+    seenValues[key] = true;
     stats.variantsCreated += 1;
   }
 
@@ -50529,8 +50579,11 @@ function layoutSingleAxisVariants(componentSet, config) {
     if (!props) continue;
 
     const valueIndex = config.values.indexOf(props.value);
+    const secondIndex = config.axis2Values
+      ? config.axis2Values.indexOf(props.second)
+      : 0;
     child.x = valueIndex * config.xStep;
-    child.y = 0;
+    child.y = (secondIndex < 0 ? 0 : secondIndex) * (config.yStep || 0);
   }
 
   // A component set is a frame, and a frame keeps its size when its children
@@ -55217,10 +55270,17 @@ async function updateBadgeVariant(
   });
 }
 
-async function createCardVariant({ value, variableByName, fonts, stats }) {
+async function createCardVariant({
+  value,
+  second,
+  variableByName,
+  fonts,
+  stats,
+}) {
   const component = figma.createComponent();
   await updateCardVariant(component, {
     value,
+    second,
     variableByName,
     fonts,
     stats,
@@ -55244,16 +55304,26 @@ function parseCardVariantName(name) {
     return null;
   }
 
+  // A variant drawn before the Padding axis carries no Padding, and is the
+  // card as it was: 24. Reading it as Default is what lets Update rename it
+  // instead of replacing it, so its node id survives.
+  const second = values.Padding || "Default";
+  if (CARD_PADDINGS.indexOf(second) === -1) {
+    return null;
+  }
+
   return {
     value: values.Content,
+    second,
   };
 }
 
 async function updateCardVariant(
   component,
-  { value, variableByName, fonts, stats },
+  { value, second, variableByName, fonts, stats },
 ) {
-  component.name = `Content=${value}`;
+  const padding = CARD_PADDINGS.indexOf(second) === -1 ? "Default" : second;
+  component.name = `Content=${value}, Padding=${padding}`;
   component.layoutMode = "VERTICAL";
   component.primaryAxisSizingMode = "AUTO";
   component.counterAxisSizingMode = "FIXED";
@@ -55281,6 +55351,7 @@ async function updateCardVariant(
   await syncCardVariantChildren({
     component,
     value,
+    padding,
     variableByName,
     fonts,
     stats,
@@ -59248,10 +59319,12 @@ async function syncSegmentedControlVariantChildren({
 async function syncCardVariantChildren({
   component,
   value,
+  padding,
   variableByName,
   fonts,
   stats,
 }) {
+  const pad = cardPaddingLength(padding);
   const hasHeader = value === "Header" || value === "Full";
   const hasFooter = value === "Full";
 
@@ -59273,10 +59346,10 @@ async function syncCardVariantChildren({
     header.primaryAxisAlignItems = "MIN";
     header.counterAxisAlignItems = "MIN";
     header.itemSpacing = 6;
-    header.paddingLeft = 24;
-    header.paddingRight = 24;
-    header.paddingTop = 24;
-    header.paddingBottom = 24;
+    header.paddingLeft = pad;
+    header.paddingRight = pad;
+    header.paddingTop = pad;
+    header.paddingBottom = pad;
     header.resizeWithoutConstraints(360, 80);
     header.fills = [];
     header.strokes = [];
@@ -59358,10 +59431,10 @@ async function syncCardVariantChildren({
   body.primaryAxisAlignItems = "MIN";
   body.counterAxisAlignItems = "MIN";
   body.itemSpacing = 12;
-  body.paddingLeft = 24;
-  body.paddingRight = 24;
+  body.paddingLeft = pad;
+  body.paddingRight = pad;
   body.paddingTop = hasHeader ? 0 : 24;
-  body.paddingBottom = 24;
+  body.paddingBottom = pad;
   body.resizeWithoutConstraints(360, 92);
   body.fills = [];
   body.strokes = [];
@@ -59406,10 +59479,10 @@ async function syncCardVariantChildren({
     footer.primaryAxisAlignItems = "MAX";
     footer.counterAxisAlignItems = "CENTER";
     footer.itemSpacing = 12;
-    footer.paddingLeft = 24;
-    footer.paddingRight = 24;
+    footer.paddingLeft = pad;
+    footer.paddingRight = pad;
     footer.paddingTop = 0;
-    footer.paddingBottom = 24;
+    footer.paddingBottom = pad;
     footer.resizeWithoutConstraints(360, 68);
     footer.fills = [];
     footer.strokes = [];

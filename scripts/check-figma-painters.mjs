@@ -3731,6 +3731,87 @@ section("Rating");
   );
 }
 
+// --- Card's padding, and the second axis the helper now takes ------------------------
+
+section("Card");
+{
+  const cardAxes = plugin.expectedVariantAxesForComponentSetName("Card");
+  ok(
+    JSON.stringify(cardAxes && cardAxes.Padding) ===
+      JSON.stringify(["Default", "Compact"]),
+    `the set expects a Padding of Default and Compact (got ${JSON.stringify(cardAxes && cardAxes.Padding)})`,
+  );
+
+  const cardTokens = payloadVariables([...variableByName.keys()]);
+  async function card(value, second) {
+    const component = figma.createComponent();
+    await plugin.updateCardVariant(component, {
+      value,
+      second,
+      variableByName: cardTokens.variableByName,
+      fonts: FONTS,
+      stats: freshStats(),
+    });
+    return component;
+  }
+
+  const full = await card("Full", "Default");
+  ok(
+    full.name === "Content=Full, Padding=Default",
+    `a variant carries both axes (got "${full.name}")`,
+  );
+
+  const compact = await card("Full", "Compact");
+  const padsOf = (component) =>
+    ["Card Header", "Card Body", "Card Footer"]
+      .map((name) => named(component, name))
+      .filter(Boolean)
+      .map((node) => node.paddingLeft);
+
+  ok(
+    padsOf(full).length >= 2 && padsOf(full).every((v) => v === 24),
+    `default pads 24 throughout (got ${JSON.stringify(padsOf(full))})`,
+  );
+  // The whole card, not just the header: 16 at the top and 24 at the bottom
+  // is the bug, not the fix.
+  ok(
+    padsOf(compact).length === padsOf(full).length &&
+      padsOf(compact).every((v) => v === 16),
+    `compact pads 16 throughout (got ${JSON.stringify(padsOf(compact))})`,
+  );
+
+  ok(
+    JSON.stringify(plugin.parseCardVariantName("Content=Full")) ===
+      JSON.stringify({ value: "Full", second: "Default" }),
+    "a variant with no Padding reads as Default, so Update renames rather than replaces",
+  );
+  ok(
+    plugin.parseCardVariantName("Content=Full, Padding=Roomy") === null,
+    "and an unknown padding is refused",
+  );
+
+  // The generic helper grew the second axis; these are the two facts every
+  // set built through it now depends on.
+  ok(
+    typeof plugin.generatedVariantCombinations === "function" &&
+      plugin.generatedVariantCombinations({
+        values: ["a", "b"],
+        axis2Values: ["x", "y"],
+      }).length === 4,
+    "the helper crosses both axes",
+  );
+  // Guarded, like the assertion above it. Calling a helper that a previous
+  // build did not have throws a TypeError, which aborts the whole run — so a
+  // negative control against the old painter would stop here and every
+  // section after it would silently never execute.
+  ok(
+    typeof plugin.generatedVariantCombinations === "function" &&
+      plugin.generatedVariantCombinations({ values: ["a", "b"] }).length === 2 &&
+      plugin.generatedVariantCombinations({ values: ["a"] })[0].second === null,
+    "and a set with one axis is untouched",
+  );
+}
+
 // --- Summary ---------------------------------------------------------------------
 
 console.log(
