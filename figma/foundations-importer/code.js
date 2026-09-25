@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "8d5cfc7c84e2";
+const PLUGIN_BUILD = "2362207aa74a";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -280,6 +280,16 @@ const SLIDER_TYPES = ["Single", "Range"];
 const SLIDER_THUMB_SIZE = 20;
 const RATING_VALUES = ["0", "1", "2", "3", "4", "5"];
 const RATING_STATES = ["Default", "Readonly"];
+// The scale a rating is measured on. Stars are ordinal, so choosing four
+// fills four; thumbs are a choice between two, so exactly the one chosen
+// fills. Thumbs therefore only has values 0, 1 and 2 — the set skips the rest
+// rather than drawing three nonsense variants, the way Stepper already skips
+// a Current past its Count.
+const RATING_SCALES = ["Stars", "Thumbs"];
+const RATING_THUMB_VALUES = ["0", "1", "2"];
+function ratingValuesForScale(scale) {
+  return scale === "Thumbs" ? RATING_THUMB_VALUES : RATING_VALUES;
+}
 const STEPPER_COUNTS = ["2", "3", "4"];
 const STEPPER_CURRENT = ["1", "2", "3", "4"];
 const PROGRESS_VALUES = ["0", "25", "50", "75", "100"];
@@ -17445,6 +17455,7 @@ function expectedVariantAxesForComponentSetName(name) {
 
   if (canonicalName === "Rating") {
     return {
+      Scale: RATING_SCALES,
       Value: RATING_VALUES,
       State: RATING_STATES,
     };
@@ -43275,17 +43286,23 @@ async function buildRatingComponent() {
   const variableByName = await ensureComponentRuntimeVariables(stats);
   const components = [];
 
-  for (const state of RATING_STATES) {
-    for (const value of RATING_VALUES) {
-      const component = await createRatingVariant({
-        value,
-        state,
-        variableByName,
-        fonts,
-        stats,
-      });
-      page.appendChild(component);
-      components.push(component);
+  for (const scale of RATING_SCALES) {
+    for (const state of RATING_STATES) {
+      // Thumbs has no third, fourth or fifth value: the set skips them rather
+      // than drawing variants that mean nothing, as Stepper skips a Current
+      // past its Count.
+      for (const value of ratingValuesForScale(scale)) {
+        const component = await createRatingVariant({
+          scale,
+          value,
+          state,
+          variableByName,
+          fonts,
+          stats,
+        });
+        page.appendChild(component);
+        components.push(component);
+      }
     }
   }
 
@@ -43298,9 +43315,10 @@ async function buildRatingComponent() {
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Rating");
   applyComponentSetDescription(componentSet, "Rating", false, [
     "Kozmos Rating component set generated from React Rating API.",
-    "Value maps to Rating.value in Code Connect.",
+    "Scale maps to Rating.variant: Stars is the ordinal scale, Thumbs is a choice of two.",
+    "Value maps to Rating.value in Code Connect. 0 is unanswered; on Thumbs 1 is down and 2 is up.",
     "State maps to Rating.readOnly.",
-    "Max is fixed to five for the Core component.",
+    "Max is fixed to five on the Stars scale.",
   ]);
   clearComponentSetContainerFill(componentSet);
   layoutRatingVariants(componentSet);
@@ -43368,9 +43386,14 @@ async function updateRatingComponent() {
       continue;
     }
 
-    const key = `${props.value}/${props.state}`;
+    // A variant built before the Scale axis existed is named
+    // "Value=3, State=Default" and parses as Stars, so Update RENAMES it
+    // rather than replacing it — which is the whole point of Update: the node
+    // ids Code Connect pins survive.
+    const key = `${props.scale}/${props.value}/${props.state}`;
     seenKeys[key] = true;
     await updateRatingVariant(child, {
+      scale: props.scale,
       value: props.value,
       state: props.state,
       variableByName,
@@ -43380,21 +43403,24 @@ async function updateRatingComponent() {
     stats.variantsUpdated += 1;
   }
 
-  for (const state of RATING_STATES) {
-    for (const value of RATING_VALUES) {
-      const key = `${value}/${state}`;
-      if (seenKeys[key]) continue;
+  for (const scale of RATING_SCALES) {
+    for (const state of RATING_STATES) {
+      for (const value of ratingValuesForScale(scale)) {
+        const key = `${scale}/${value}/${state}`;
+        if (seenKeys[key]) continue;
 
-      const component = await createRatingVariant({
-        value,
-        state,
-        variableByName,
-        fonts,
-        stats,
-      });
-      existing.appendChild(component);
-      seenKeys[key] = true;
-      stats.variantsCreated += 1;
+        const component = await createRatingVariant({
+          scale,
+          value,
+          state,
+          variableByName,
+          fonts,
+          stats,
+        });
+        existing.appendChild(component);
+        seenKeys[key] = true;
+        stats.variantsCreated += 1;
+      }
     }
   }
 
@@ -46997,9 +47023,19 @@ const BROWSE_CATEGORIES_PANEL_TILES = [
   { label: "Wayfinding", tint: "Green", count: "6", icon: "route" },
   { label: "Check-in", tint: "Turquoise", count: "14", icon: "qr-code-01" },
   { label: "Secure Areas", tint: "Red", count: "5", icon: "lock-01" },
-  { label: "Nearby", tint: "Yellow", count: "88", icon: "navigation-pointer-01" },
+  {
+    label: "Nearby",
+    tint: "Yellow",
+    count: "88",
+    icon: "navigation-pointer-01",
+  },
   { label: "Information", tint: "Blue", count: "9", icon: "info-circle" },
-  { label: "Parking & Ground Transport", tint: "Navy", count: "22", icon: "bus" },
+  {
+    label: "Parking & Ground Transport",
+    tint: "Navy",
+    count: "22",
+    icon: "bus",
+  },
   { label: "Favourites", tint: "Orange", count: "37", icon: "heart" },
   { label: "Shopping", tint: "Pink", count: "41", icon: "shopping-bag-02" },
 ];
@@ -57731,6 +57767,7 @@ async function updateSliderVariant(
 }
 
 async function createRatingVariant({
+  scale,
   value,
   state,
   variableByName,
@@ -57739,6 +57776,7 @@ async function createRatingVariant({
 }) {
   const component = figma.createComponent();
   await updateRatingVariant(component, {
+    scale,
     value,
     state,
     variableByName,
@@ -57762,22 +57800,28 @@ function parseRatingVariantName(name) {
 
   const value = values.Value;
   const state = values.State || "Default";
+  // Older variants carry no Scale: they are the stars, which is what the set
+  // held before thumbs existed. Reading them as Stars is what lets Update
+  // keep their node ids instead of replacing them.
+  const scale = values.Scale || "Stars";
 
   if (
-    RATING_VALUES.indexOf(value) === -1 ||
+    RATING_SCALES.indexOf(scale) === -1 ||
+    ratingValuesForScale(scale).indexOf(value) === -1 ||
     RATING_STATES.indexOf(state) === -1
   ) {
     return null;
   }
 
-  return { value, state };
+  return { scale, value, state };
 }
 
 async function updateRatingVariant(
   component,
-  { value, state, variableByName, fonts, stats },
+  { scale, value, state, variableByName, fonts, stats },
 ) {
-  component.name = `Value=${value}, State=${state}`;
+  const resolvedScale = RATING_SCALES.indexOf(scale) === -1 ? "Stars" : scale;
+  component.name = `Scale=${resolvedScale}, Value=${value}, State=${state}`;
   component.layoutMode = "HORIZONTAL";
   component.primaryAxisSizingMode = "FIXED";
   component.counterAxisSizingMode = "FIXED";
@@ -57788,7 +57832,10 @@ async function updateRatingVariant(
   component.paddingRight = 0;
   component.paddingTop = 0;
   component.paddingBottom = 0;
-  component.resizeWithoutConstraints(220, 44);
+  // Two 44 cells for thumbs, five for stars, plus the 8 between the thumbs.
+  // 8 between the two thumbs; the stars space themselves inside their cells.
+  component.itemSpacing = resolvedScale === "Thumbs" ? 8 : 0;
+  component.resizeWithoutConstraints(resolvedScale === "Thumbs" ? 96 : 220, 44);
   component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
@@ -57798,6 +57845,7 @@ async function updateRatingVariant(
 
   await syncRatingVariantChildren({
     component,
+    scale: resolvedScale,
     value,
     state,
     variableByName,
@@ -57817,8 +57865,10 @@ function layoutRatingVariants(componentSet) {
 
     const valueIndex = RATING_VALUES.indexOf(props.value);
     const stateIndex = RATING_STATES.indexOf(props.state);
+    const scaleIndex = RATING_SCALES.indexOf(props.scale);
     child.x = valueIndex * 260;
-    child.y = stateIndex * 80;
+    // Each scale takes its own band of rows, so the two never overlap.
+    child.y = (scaleIndex * RATING_STATES.length + stateIndex) * 80;
   }
 
   resizeComponentSetToContainChildren(componentSet);
@@ -57915,6 +57965,7 @@ function layoutStepperVariants(componentSet) {
 
 async function syncRatingVariantChildren({
   component,
+  scale,
   value,
   state,
   variableByName,
@@ -57928,6 +57979,23 @@ async function syncRatingVariantChildren({
   const valueNumber = Number(value);
   const readonly = state === "Readonly";
 
+  if (scale === "Thumbs") {
+    // A choice between two, so exactly the one chosen fills. Down is 1 and up
+    // is 2, the same "1 is the lowest" rule the stars follow, so a product
+    // stores one shape whichever scale it asks on.
+    for (let index = 1; index <= 2; index += 1) {
+      const thumb = await createRatingThumb({
+        index,
+        chosen: index === valueNumber,
+        readonly,
+        variableByName,
+        stats,
+      });
+      component.appendChild(thumb);
+    }
+    return;
+  }
+
   for (let index = 1; index <= 5; index += 1) {
     const star = await createRatingStar({
       index,
@@ -57939,6 +58007,77 @@ async function syncRatingVariantChildren({
     });
     component.appendChild(star);
   }
+}
+
+/**
+ * One thumb: a 40 disc in a 44 target, as every other control's hit area is.
+ * Chosen is the theme's colour on its own wash with a 2 ring; unchosen is the
+ * muted background with the foreground's quiet grey and no ring.
+ */
+async function createRatingThumb({
+  index,
+  chosen,
+  readonly,
+  variableByName,
+  stats,
+}) {
+  const cell = figma.createFrame();
+  cell.name = index === 1 ? "Rating Thumb Down" : "Rating Thumb Up";
+  cell.layoutMode = "HORIZONTAL";
+  cell.primaryAxisSizingMode = "FIXED";
+  cell.counterAxisSizingMode = "FIXED";
+  cell.primaryAxisAlignItems = "CENTER";
+  cell.counterAxisAlignItems = "CENTER";
+  cell.resizeWithoutConstraints(44, 44);
+  cell.cornerRadius = KOZMOS_RADIUS.pill;
+  cell.clipsContent = false;
+  cell.fills = [];
+  cell.strokes = [];
+  cell.opacity = readonly ? 0.72 : 1;
+  cell.setSharedPluginData(RUN_NAMESPACE, "kind", "rating-thumb-hit-area");
+  setFixedChildSizing(cell);
+
+  const disc = figma.createFrame();
+  disc.name = "Thumb Disc";
+  disc.layoutMode = "HORIZONTAL";
+  disc.primaryAxisSizingMode = "FIXED";
+  disc.counterAxisSizingMode = "FIXED";
+  disc.primaryAxisAlignItems = "CENTER";
+  disc.counterAxisAlignItems = "CENTER";
+  disc.resizeWithoutConstraints(40, 40);
+  disc.cornerRadius = KOZMOS_RADIUS.pill;
+  disc.clipsContent = false;
+  disc.fills = [
+    chosen
+      ? paintFromVariable("Colors/theme/0", "#F1F5FE", variableByName, stats)
+      : paintFromVariable(
+          "Colors/background/100",
+          "#F2F4F7",
+          variableByName,
+          stats,
+        ),
+  ];
+  disc.strokes = chosen
+    ? [paintFromVariable("Colors/theme/600", "#1051E8", variableByName, stats)]
+    : [];
+  disc.strokeWeight = chosen ? 2 : 0;
+  disc.setSharedPluginData(RUN_NAMESPACE, "kind", "rating-thumb-disc");
+  setFixedChildSizing(disc);
+
+  const icon = await createFixedIconInstance(
+    index === 1 ? "thumbs-down" : "thumbs-up",
+    chosen ? "Colors/theme/600" : "Colors/foreground/400",
+    chosen ? "#1051E8" : "#5D626F",
+    variableByName,
+    stats,
+    20,
+    "Rating/thumb/icon/size",
+  );
+  disc.appendChild(icon);
+  setHugChildSizing(icon);
+
+  cell.appendChild(disc);
+  return cell;
 }
 
 async function createRatingStar({
@@ -72198,38 +72337,13 @@ function configureFocusVisibleProperty(componentSet, stats) {
  * is the same shape the MAP-474 prototypes use, where Tags, buttonContainer
  * and logo are layers toggled on one component rather than variants of it.
  */
-function ensureBooleanProperty(componentSet, name, defaultValue, stats) {
-  const read = safeComponentPropertyDefinitions(
-    componentSet,
-    stats,
-    `ensure ${name} boolean property`,
-  );
-  const definitions = read.definitions;
-  if (read.error) return null;
-
-  for (const propertyName of Object.keys(definitions)) {
-    const definition = definitions[propertyName];
-    const baseName = propertyName.split("#")[0];
-    if (baseName === name && definition.type === "BOOLEAN") return propertyName;
-  }
-
-  if (!componentSet.addComponentProperty) {
-    stats.warnings.push(
-      `This Figma runtime does not expose addComponentProperty for ${name}.`,
-    );
-    return null;
-  }
-
-  try {
-    return componentSet.addComponentProperty(name, "BOOLEAN", defaultValue);
-  } catch (error) {
-    stats.warnings.push(
-      `Could not create ${name} boolean property (${messageFor(error)}).`,
-    );
-    return null;
-  }
-}
-
+// `ensureBooleanProperty` was declared twice here. JavaScript hoists both and
+// the later one wins, so this first copy had never run: it lacked the
+// `updateBooleanPropertyDefault` call that refreshes an existing property's
+// default, and anyone editing it would have seen no effect at all. Removed
+// 2026-09-25, when staging the file for a commit made eslint say so — no
+// gate covers figma/, because `pnpm lint` is turbo per package and the
+// importer is not one.
 function configureNamedBooleanProperty(
   componentSet,
   nodeName,
@@ -72248,7 +72362,10 @@ function configureNamedBooleanProperty(
   let bound = 0;
 
   function walk(node) {
-    if (node.name === nodeName && node.componentPropertyReferences !== undefined) {
+    if (
+      node.name === nodeName &&
+      node.componentPropertyReferences !== undefined
+    ) {
       try {
         // Object.assign, not object spread: the plugin sandbox parses an
         // older dialect and figma:plugin:check refuses spread outright. The

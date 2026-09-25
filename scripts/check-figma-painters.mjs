@@ -3598,6 +3598,139 @@ section("Icon slots repaired from what they record");
   );
 }
 
+// --- Rating's two scales -------------------------------------------------------------
+
+section("Rating");
+{
+  ok(
+    typeof plugin.updateRatingVariant === "function" &&
+      typeof plugin.buildRatingComponent === "function" &&
+      typeof plugin.updateRatingComponent === "function",
+    "Rating has a painter, a Build and an Update",
+  );
+  // Named explicitly rather than compared as JSON against a plugin constant:
+  // `JSON.stringify` drops an undefined key, so `{ Scale: undefined, ... }`
+  // matched the old two-axis shape exactly and the assertion passed on a
+  // painter that had no Scale at all.
+  const ratingAxes = plugin.expectedVariantAxesForComponentSetName("Rating");
+  ok(
+    JSON.stringify(ratingAxes && ratingAxes.Scale) ===
+      JSON.stringify(["Stars", "Thumbs"]),
+    `the set expects a Scale of Stars and Thumbs (got ${JSON.stringify(ratingAxes && ratingAxes.Scale)})`,
+  );
+  ok(
+    Array.isArray(ratingAxes && ratingAxes.Value) &&
+      Array.isArray(ratingAxes && ratingAxes.State),
+    "beside Value and State",
+  );
+
+  // The theme steps this painter binds — Colors/theme/0 and /600 — are in the
+  // payload rather than in the bare mock list, so the map is built the way the
+  // Stepper and card checks build theirs. Without it the paint falls back to
+  // its hex and the binding assertions below would be measuring the harness.
+  const ratingTokens = payloadVariables([...variableByName.keys()]);
+
+  async function paint(scale, value, state = "Default") {
+    const component = figma.createComponent();
+    const stats = freshStats();
+    await plugin.updateRatingVariant(component, {
+      scale,
+      value,
+      state,
+      variableByName: ratingTokens.variableByName,
+      fonts: FONTS,
+      stats,
+    });
+    return { component, stats };
+  }
+
+  if (typeof plugin.updateRatingVariant === "function") {
+    const stars = (await paint("Stars", "3")).component;
+    ok(
+      stars.name === "Scale=Stars, Value=3, State=Default",
+      `a star variant carries all three axes (got "${stars.name}")`,
+    );
+    ok(stars.children.length === 5, "the stars scale draws five cells");
+
+    const thumbs = (await paint("Thumbs", "2")).component;
+    ok(
+      thumbs.name === "Scale=Thumbs, Value=2, State=Default",
+      `a thumbs variant is named for its scale (got "${thumbs.name}")`,
+    );
+    ok(thumbs.children.length === 2, "the thumbs scale draws two cells");
+    ok(
+      thumbs.children[0].name === "Rating Thumb Down" &&
+        thumbs.children[1].name === "Rating Thumb Up",
+      "down first, then up — 1 is the lowest on both scales",
+    );
+    ok(
+      thumbs.children.every((cell) => cell.width === 44 && cell.height === 44),
+      "each thumb keeps a 44 target",
+    );
+
+    const discOf = (cell) => cell.children[0];
+    ok(
+      thumbs.children.every(
+        (cell) => discOf(cell).width === 40 && discOf(cell).height === 40,
+      ),
+      "with a 40 disc inside it",
+    );
+
+    // Exactly the one chosen fills. A thumbs-up is not "two thumbs", so the
+    // cumulative rule the stars follow must NOT apply here.
+    ok(
+      discOf(thumbs.children[1]).strokeWeight === 2 &&
+        boundVariableName(discOf(thumbs.children[1]).strokes[0]) ===
+          "Colors/theme/600",
+      "the chosen thumb takes a 2 ring in the theme",
+    );
+    ok(
+      discOf(thumbs.children[0]).strokes.length === 0,
+      "and the other takes none — thumbs do not fill cumulatively",
+    );
+
+    const down = (await paint("Thumbs", "1")).component;
+    ok(
+      discOf(down.children[0]).strokeWeight === 2 &&
+        discOf(down.children[1]).strokes.length === 0,
+      "choosing down rings down and not up",
+    );
+
+    const none = (await paint("Thumbs", "0")).component;
+    ok(
+      none.children.every((cell) => discOf(cell).strokes.length === 0),
+      "0 is unanswered: neither is ringed",
+    );
+
+    const readonly = (await paint("Thumbs", "2", "Readonly")).component;
+    ok(
+      readonly.children.every((cell) => cell.opacity === 0.72),
+      "a read-only rating is drawn quieter, as the stars are",
+    );
+  }
+
+  // The name a variant built before the Scale axis carries. Update has to read
+  // it as Stars and RENAME it, because replacing it would change the node id
+  // Code Connect pins.
+  ok(
+    typeof plugin.parseRatingVariantName === "function" &&
+      JSON.stringify(plugin.parseRatingVariantName("Value=3, State=Default")) ===
+        JSON.stringify({ scale: "Stars", value: "3", state: "Default" }),
+    "a variant with no Scale reads as Stars, so Update renames rather than replaces",
+  );
+  ok(
+    plugin.parseRatingVariantName("Scale=Thumbs, Value=4, State=Default") ===
+      null,
+    "thumbs has no fourth value, and the set refuses to draw one",
+  );
+  ok(
+    JSON.stringify(
+      plugin.parseRatingVariantName("Scale=Thumbs, Value=2, State=Readonly"),
+    ) === JSON.stringify({ scale: "Thumbs", value: "2", state: "Readonly" }),
+    "and accepts the three values it does have",
+  );
+}
+
 // --- Summary ---------------------------------------------------------------------
 
 console.log(
