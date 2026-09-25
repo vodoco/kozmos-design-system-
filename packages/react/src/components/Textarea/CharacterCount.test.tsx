@@ -78,6 +78,21 @@ describe("a counted field", () => {
     expect(screen.getByText("2/10")).toBeVisible();
   });
 
+  it("counts a value that is not a string", () => {
+    // A field's value is string | number | readonly string[]. Counting only
+    // strings made a numeric input read 0/30 whatever was in it — a silently
+    // wrong number, which is worse than no number at all.
+    render(
+      <Input
+        count={{ limit: 30 }}
+        label="Capacity"
+        onChange={vi.fn()}
+        value={12345}
+      />,
+    );
+    expect(screen.getByText("5/30")).toBeVisible();
+  });
+
   it("lets the caller's own error win", () => {
     render(
       <Textarea

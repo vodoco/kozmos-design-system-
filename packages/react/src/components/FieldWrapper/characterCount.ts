@@ -34,7 +34,17 @@ export function resolveCharacterCount(
   value: unknown,
 ): ResolvedCharacterCount | undefined {
   if (!count) return undefined;
-  const length = typeof value === "string" ? [...value].length : 0;
+  // A field's value is `string | number | readonly string[]`. Counting only
+  // strings made a numeric input read 0/512 whatever was typed in it — a
+  // silently wrong number, which is worse than no number.
+  const text =
+    value === undefined || value === null
+      ? ""
+      : Array.isArray(value)
+        ? value.join("")
+        : String(value);
+  // Spread, not `.length`: `.length` counts UTF-16 units, so 👍 would be two.
+  const length = [...text].length;
   const {
     limit,
     minimum,
@@ -65,7 +75,9 @@ export function useUncontrolledValue(
   defaultValue: unknown,
 ) {
   const [mirrored, setMirrored] = React.useState<string>(
-    typeof defaultValue === "string" ? defaultValue : "",
+    defaultValue === undefined || defaultValue === null
+      ? ""
+      : String(defaultValue),
   );
   const isControlled = controlled !== undefined;
   return {
