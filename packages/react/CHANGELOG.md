@@ -1,5 +1,237 @@
 # @kozmos-ds/react
 
+## 0.4.0
+
+### Minor Changes
+
+- 3e3a6d3: Four things a product could only work around, and the gate that should have
+  caught the first of them.
+
+  **The three product-contract files are one contract, and now something checks
+  that.** `pnpm contracts:parity:check` compares
+  `@kozmos-ds/product-contracts`, `ProductContracts.swift` and
+  `ProductContracts.kt` — the set of types, the fields of every shared struct,
+  whether a field may be omitted, and the wire values of every enumeration.
+  Nothing compared them before. What it found on its first run was ten drifts:
+  `POIResultMatch`, `SearchEmptyKind`, `SearchResponsePresentation`,
+  `unitLabel`, `nameLanguage` and optional `floorId`/`floorLabel` existed on the
+  web alone, so a single-storey venue still had to invent a floor on iOS and
+  Android — and `CategoryPresentation.iconUrl`, the taxonomy's own category
+  artwork, was web-only too, leaving a native SDK no way to show a category's
+  image at all. All ten are fixed here.
+
+  **`Card` takes a `padding`.** It was 24 on every side with no option, so the
+  only route to 16 was a caller passing `className="p-4"` — restyling the
+  component from outside, and on the web alone, since both native cards
+  hard-coded 24 as well (GAP-034). It is set on the card and reaches the header,
+  content and footer through context, because a card padded 16 at the top and 24
+  at the bottom is the bug, not the fix. On all three platforms.
+
+  **`Alert` no longer interrupts by default.** `role="alert"` was hard-coded
+  with no way out. That is an assertive live region, so a static page notice —
+  "View only. Only Dashboard admins can change these settings." — was read out
+  over whatever the visitor was doing, every time the page opened (GAP-006).
+  `live` is `off` by default, which is what SwiftUI and Compose already do:
+  neither native Alert announces anything. `live="polite"` is `role="status"`
+  and `live="assertive"` is the old behaviour, for a notice that really has just
+  appeared.
+
+  **`AlertTitle` has a size, and stops being an `h5`.** It carried no size class
+  at all, and the reset makes every heading `font-size: inherit`, so the title
+  rendered at the same size as the `text-sm` description below it, separated
+  only by weight (GAP-007). It is `text-base` now, which is what Compose already
+  uses. It is also a `<p>` by default, as it is on both native platforms — an
+  alert's title labels a notice, it does not open a section of the document, and
+  a hard-coded `h5` after a page's `h2` sections is a skipped level. Pass
+  `level={3}` where the alert really is a region of the page.
+
+  **`EmptyState` takes a `size`, and a slot can ask for it.** Measured inside
+  `POIResultList`: the same no-result content came to 258px, of which 48 was the
+  slot's own padding and 64 this component's. The slot stopped padding a
+  component last release; `size="compact"` takes the rest, bringing it to about
+  128 (GAP-009). A product does not have to know — the empty slot draws the box,
+  so it asks for compact itself, and an explicit `size` still wins. On all three
+  platforms.
+
+- c7d802f: Six places that read wrongly in another language.
+
+  `Text` aligns from the **start**, not the left, and `align` gains `start` and
+  `end` beside the physical `left`. The default is what matters: almost nothing
+  passes `align`, so whatever it defaults to is what an Arabic interface gets.
+  `left` stays for the rare thing that means LEFT in any direction.
+
+  `POIResultCard`'s row aligns from the start too.
+
+  `SearchBar` takes `clearLabel` — its clear button said "Clear search" in
+  English whatever the interface language — and uses logical margins, so the
+  search icon sits before the field rather than always to its left.
+
+  `AdaptiveMapShell` takes `panelHandleLabel`. The sheet handle is a slider, and
+  "Panel height" was all a screen reader had to go on.
+
+  `NavigationItem` wraps a rail label over two lines instead of truncating it:
+  "Overvi…" loses the word where two lines shorten nothing. A side row stays
+  truncated, because it is wide enough that one line is the right compromise.
+
+  `CategoryTile` no longer breaks a CJK name mid-word. `line-clamp` alone splits
+  レストラン across two lines as two words that do not exist.
+
+- 4773abd: A thumbs scale, a character count, and the state `Rating` was actually in.
+
+  **`Rating` takes a `variant`.** `thumbs` is the two-option form the Express
+  Maps prompt asks on — "Are you enjoying this?" is a yes or a no, not a mark
+  out of five. Stars are an ordinal scale, so choosing four fills four; thumbs
+  are a choice between two, so exactly the one chosen fills. The value stays a
+  number either way — **0 unanswered, 1 down, 2 up** — so a product stores one
+  shape whichever scale it asks on, and choosing what is already chosen clears
+  it. On all three platforms.
+
+  **And four things that were wrong with it underneath.** Measured in a browser
+  rather than read off the source:
+  - `aria-checked` was taken from the _hover_ value, so a pointer passing over
+    the fifth star made a screen reader announce five when the answer was three.
+  - There were **five tab stops**. A radiogroup is one, with the arrows moving
+    inside it. There were no arrow keys at all, so a keyboard visitor could
+    reach the scale and not use it. Left and right now follow the writing
+    direction, so the first option is still first in Arabic.
+  - `readOnly` set `disabled` on every option, which drops the whole rating out
+    of the tab order: a rating meant only to be read could not be reached. It is
+    one `role="img"` with the rating as its label.
+  - `"Rating"` and `"Rate 3 out of 5 stars"` were fixed English — and the second
+    says "stars" whatever the scale is. `label`, `itemLabel` and `valueLabel`
+    are the caller's now.
+
+  On iOS every option was an `Image` with `.onTapGesture`: VoiceOver could not
+  activate it and announced nothing, so the rating existed only for people using
+  their eyes and a finger. On Compose every star carried
+  `contentDescription = null` and a bare `clickable`, with the same result for
+  TalkBack. Both are real controls now, with `Role.RadioButton` on Compose.
+
+  **Android's star was a different colour.** `primitivesColorsEmotionalAlert600`
+  — #f9a707 against iOS's and the web's #d97706, and #fbc459 against #fbbf24 in
+  dark mode. It reads `semanticsDataYellow` now, like the other two.
+
+  **`Input` and `Textarea` take a `count`.** `limit` is a **soft** maximum,
+  deliberately not `maxLength`: a browser refuses the keystroke past
+  `maxLength`, so someone pasting a long answer loses the end of it in silence
+  instead of being told it is too long. `minimum` only applies once something
+  has been typed — an empty field is unanswered, not wrong. The count is never
+  in the `role="alert"` element while it is only a count, because it changes on
+  every keystroke and a screen reader would read the number back after each
+  letter; it joins the message there only when there is a reason to speak. It
+  counts what a person sees rather than UTF-16 units, so an emoji is one
+  character.
+
+  **`FeedbackCard` passes both through**, and loses three things of its own: the
+  success mark was `bg-green-100` / `dark:bg-green-900/30`, which compile to a
+  fixed `rgb(220 252 231)` — a product that re-themed Kozmos got Tailwind green
+  there and nowhere else — and the mark itself was the emoji 🎉, which a screen
+  reader reads as "party popper". It takes the success role and a real icon.
+  `submitLabel`, `submittingLabel` and `commentPlaceholder` were fixed English
+  inside the component; the card's heading level is the caller's.
+
+- f4dc59a: Show a result's attributes: access restrictions, dietary, accessibility and
+  services.
+
+  Four meanings and one shape — a short localized label with an optional icon —
+  so they share `poi.services` rather than gaining three more lists.
+  `POIAttributeKind` says which a chip is, so a card can order, tone or filter
+  them:
+
+  ```tsx
+  services: [
+    { id: "1", label: "Vegan", kind: "dietary" },
+    { id: "2", label: "Step-free", kind: "accessibility" },
+    { id: "3", label: "Takeaway" },
+  ];
+  ```
+
+  A restriction is drawn apart from the rest. "Staff only" is not a feature like
+  "Vegan": it is the reason a visitor cannot go, and a row of identical grey
+  chips would bury it among the things they can have. It comes first, in the
+  warning tone, and is folded in from `accessRestrictionsLabel` — which is its
+  own field rather than a service.
+
+  Android and iOS gain the same `kind`, and also `iconUrl` and
+  `iconMonochrome`, which the web contract had and they did not.
+
+- 942d7cd: Four result contracts MAP-474 needs, on all three platforms.
+
+  **Opening and closing soon.** `POIAvailability` gains `openingSoon` and
+  `closingSoon`, drawn in a third tone rather than folded into open or closed:
+  "closing soon" is a reason to hurry or pick somewhere else, and drawing it as
+  plain open is the difference between arriving and arriving too late. Where the
+  boundary sits is the product's call.
+
+  **Why a result is in the list.** `POIResultMatch` is `exact`, `alternative` or
+  `unconfirmed`, so the further lists MAP-474 shows under their own headings come
+  from data rather than from the order a product happened to build. A result also
+  carries `unitLabel` for venues with units, and `nameLanguage` so an authored
+  name can be announced in the language it was written in.
+
+  **What an empty search means.** `SearchResponsePresentation` carries an
+  `emptyKind` — no match, filtered out, or nothing mapped — plus `emptiedBy`,
+  the filter that emptied the list, and `languageFallback` when results came back
+  in another language. An empty list is not one situation, and "nothing found"
+  leaves the visitor to guess what to undo.
+
+  **Venues without levels.** `floorId` and `floorLabel` are optional on both
+  `POIPresentation` and `POIResultPresentation`. A single-storey venue where
+  every result reads "Ground Floor" is noise; the card now draws what is left.
+
+  Android and iOS carry all four. They did not at first: when this was written
+  only the availability change had crossed over, and `POIResultMatch`,
+  `SearchResponsePresentation`, `SearchEmptyKind`, `unitLabel`, `nameLanguage`
+  and the optional `floorId`/`floorLabel` existed on the web alone — so a
+  single-storey venue still had to invent a floor on iOS and Android, which is
+  the exact noise this was meant to remove. `pnpm contracts:parity:check` now
+  compares the three files field by field, and it is what found this.
+
+- b9467b1: Six pieces of search polish, four of them defects a product would have had to
+  work around.
+
+  **A search row is the component's, not the caller's.** `CategoryField` gains a
+  `trailing` slot, the one `SearchBar` already has, because the field takes the
+  search bar's place when a category is chosen and the row around it does not
+  change. Without it the field shrinks to its content in a caller's flex row and
+  will not grow: Storybook's own example knew to pass `flex-1` through
+  `className`, and an integrator composing the same pair had no way to know. The
+  slot draws a gapped row, so the assistant button beside Filters keeps the row's
+  spacing rather than touching it — which is what both components did before.
+
+  **One separator for a place.** `poiLocationLabel` joins floor and building the
+  way Kotlin and Swift already join them on the model, with `·`. The web had no
+  shared derivation, so `POIResultCard` and `POIDetailPanel` each built it by
+  hand and the panel had drifted to `/`: the same place, described two ways, in
+  one product. It is exported, so a product composing its own row joins them
+  identically instead of inventing a third separator.
+
+  **The empty slot pads a string and never a component.** `POIResultList` added
+  `p-6` whatever it held. A string needs it. A component pads itself, and an
+  `EmptyState` adds `p-8` on top, which turned a one-line "no results" into a
+  222px box. The slot decides on what it is given rather than on a flag, because
+  nothing was passing a flag and nothing would have.
+
+  **`EmptyState` centres its own text.** `Text` aligns from the start now, so a
+  block that centres itself does not centre the text inside it; a description
+  that wrapped to two lines had its second line against the leading edge.
+
+  **`Container` takes an `inset`.** `lg:px-8` reads the window, so a 390px side
+  panel in a 1280px window took the widest step — the same content with 32px of
+  padding each side on a desktop and 16px on a phone. `inset="panel"` holds 16
+  whatever the window is doing. `window` stays the default.
+
+  **A side panel gets the space the sheet's grip makes.** A sheet's content
+  starts below its grip; a side panel has no grip and nothing stood in for one,
+  so the search field sat a pixel under the panel's top edge.
+
+### Patch Changes
+
+- Updated dependencies [3e3a6d3]
+- Updated dependencies [f4dc59a]
+- Updated dependencies [942d7cd]
+  - @kozmos-ds/product-contracts@0.3.0
+
 ## 0.3.0
 
 ### Minor Changes
