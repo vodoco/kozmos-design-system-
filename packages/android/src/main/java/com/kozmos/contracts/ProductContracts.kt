@@ -90,10 +90,31 @@ data class KozmosPOIMediaPresentation(
     val alt: String
 )
 
+/**
+ * What sort of attribute a chip is.
+ *
+ * Access restrictions, dietary, accessibility and services are four meanings
+ * and one shape - a short localized label with an optional icon - so they share
+ * one list rather than gaining three more. The kind is what lets a card order
+ * them, tone them, or show only some.
+ */
+enum class KozmosPOIAttributeKind(val value: String) {
+    Service("service"),
+    Dietary("dietary"),
+    Accessibility("accessibility"),
+    Restriction("restriction")
+}
+
 data class KozmosPOIServicePresentation(
     val id: String,
     val label: String,
-    val iconName: String? = null
+    val iconName: String? = null,
+    /** Optional decorative asset; the label stays visible. */
+    val iconUrl: String? = null,
+    /** Use the asset alpha as a current-colour mask (monochrome assets only). */
+    val iconMonochrome: Boolean = false,
+    /** Defaults to a plain service when absent. */
+    val kind: KozmosPOIAttributeKind? = null
 )
 
 data class KozmosPOILogoPresentation(

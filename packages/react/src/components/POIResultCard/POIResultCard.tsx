@@ -1,5 +1,6 @@
 import React from "react";
 import type {
+  POIAttributeKind,
   POIAvailability,
   POIPresentation,
   POIResultAction,
@@ -60,6 +61,21 @@ const availabilityTone: Record<POIAvailability, string> = {
   unknown: "text-muted-foreground",
 };
 
+/**
+ * A restriction is the one attribute drawn apart.
+ *
+ * "Staff only" is not a feature like "Vegan" or "Step-free": it is the reason
+ * a visitor cannot go, and a row of identical grey chips would bury it among
+ * the things they can have. The rest read as one set because to a visitor they
+ * are one - what this place offers.
+ */
+const attributeTone: Record<POIAttributeKind, string> = {
+  service: "border-border bg-muted text-muted-foreground",
+  dietary: "border-border bg-muted text-muted-foreground",
+  accessibility: "border-border bg-muted text-muted-foreground",
+  restriction: "border-warning/50 bg-warning/10 text-warning-text",
+};
+
 const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
   (
     {
@@ -92,6 +108,21 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
     const actions = result.selected ? (result.actions ?? []) : [];
     const showActions = available && actions.length > 0;
     const actionsId = `${id}-actions`;
+
+    // The access restriction arrives as its own labelled field rather than in
+    // services, so it is folded in here and marked as what it is.
+    const attributes = [
+      ...(poi.accessRestrictions === "present" && poi.accessRestrictionsLabel
+        ? [
+            {
+              id: `${poi.id}-restriction`,
+              label: poi.accessRestrictionsLabel,
+              kind: "restriction" as const,
+            },
+          ]
+        : []),
+      ...(poi.services ?? []),
+    ];
 
     const handleAction = (action: POIResultAction) => {
       trackEvent("POIResultCard", "poi_result_action", {
@@ -193,6 +224,29 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
               )}
               <span className="truncate">{locationLabel}</span>
             </span>
+            {attributes.length > 0 && (
+              <ul className="mt-1.5 flex list-none flex-wrap gap-1 p-0">
+                {attributes.map((attribute) => (
+                  <li
+                    className={cn(
+                      "inline-flex max-w-full items-center gap-1 rounded-pill border px-2 py-0.5 text-xs font-medium",
+                      attributeTone[attribute.kind ?? "service"],
+                    )}
+                    key={attribute.id}
+                  >
+                    {attribute.iconUrl && (
+                      <img
+                        alt=""
+                        aria-hidden="true"
+                        className="h-3 w-3 shrink-0"
+                        src={attribute.iconUrl}
+                      />
+                    )}
+                    <span className="truncate">{attribute.label}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
             {poi.availabilityLabel && (
               <span
                 className={cn(

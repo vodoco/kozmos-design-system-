@@ -105,15 +105,44 @@ public struct KozmosPOIMediaPresentation: Sendable, Hashable, Identifiable, Coda
     }
 }
 
+/// What sort of attribute a chip is.
+///
+/// Access restrictions, dietary, accessibility and services are four meanings
+/// and one shape - a short localized label with an optional icon - so they
+/// share one list rather than gaining three more. The kind is what lets a card
+/// order them, tone them, or show only some.
+public enum KozmosPOIAttributeKind: String, Sendable, Hashable, CaseIterable, Codable {
+    case service
+    case dietary
+    case accessibility
+    case restriction
+}
+
 public struct KozmosPOIServicePresentation: Sendable, Hashable, Identifiable, Codable {
     public let id: String
     public let label: String
     public let iconName: String?
+    /// Optional decorative asset; the label stays visible.
+    public let iconUrl: String?
+    /// Use the asset alpha as a current-colour mask (monochrome assets only).
+    public let iconMonochrome: Bool
+    /// Defaults to a plain service when absent.
+    public let kind: KozmosPOIAttributeKind?
 
-    public init(id: String, label: String, iconName: String? = nil) {
+    public init(
+        id: String,
+        label: String,
+        iconName: String? = nil,
+        iconUrl: String? = nil,
+        iconMonochrome: Bool = false,
+        kind: KozmosPOIAttributeKind? = nil
+    ) {
         self.id = id
         self.label = label
         self.iconName = iconName
+        self.iconUrl = iconUrl
+        self.iconMonochrome = iconMonochrome
+        self.kind = kind
     }
 }
 
