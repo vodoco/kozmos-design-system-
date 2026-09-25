@@ -24,6 +24,21 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import prettier from "prettier";
+
+/**
+ * Written the way the repository writes markdown.
+ *
+ * lint-staged runs prettier over every committed .md, so a generator that
+ * emits anything prettier would reflow produces a file that is stale the
+ * instant it is committed — `skills:check` went red on its own output the
+ * first time. Formatting here makes generate, commit and check agree. Same
+ * trap the JSON generators closed.
+ */
+async function formatted(markdown, filepath) {
+  const config = (await prettier.resolveConfig(filepath)) ?? {};
+  return prettier.format(markdown, { ...config, filepath });
+}
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const REACT = path.join(root, "packages/react/src/components");
@@ -176,7 +191,7 @@ for (const category of [...byCategory.keys()].sort()) {
   lines.push("");
 }
 
-const next = lines.join("\n");
+const next = await formatted(lines.join("\n"), OUT);
 const current = read(OUT);
 
 // ---------------------------------------------------------------- changelog
@@ -229,7 +244,10 @@ for (const [name, version] of Object.entries(manifests).sort()) {
   );
   changelogLines.push("");
 }
-const changelogNext = changelogLines.join("\n").replace(/\n{3,}/g, "\n\n");
+const changelogNext = await formatted(
+  changelogLines.join("\n").replace(/\n{3,}/g, "\n\n"),
+  CHANGELOG_OUT,
+);
 const changelogCurrent = read(CHANGELOG_OUT);
 
 const stale = [];
