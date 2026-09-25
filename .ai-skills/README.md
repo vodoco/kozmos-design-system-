@@ -86,12 +86,16 @@ Kozmos is a multi-platform design system for **Pointr's indoor navigation SDK**.
 ### npm Packages
 
 ```
-@kozmos-ds/tokens     - Design tokens (CSS vars, Swift, Kotlin)
-@kozmos-ds/react      - React components
-@kozmos-ds/vue        - Vue 3 components (Web Components)
-@kozmos-ds/react-native - React Native components
-@kozmos-ds/icons      - Cross-platform icons
+@kozmos-ds/tokens            - Design tokens (CSS vars, Swift, Kotlin)
+@kozmos-ds/react             - React components
+@kozmos-ds/icons             - Cross-platform icons
+@kozmos-ds/product-contracts - The presentation contracts the SDK components take
 ```
+
+Four, and only four. `@kozmos-ds/vue` exists in the workspace but is
+**private** — an internal harness for checking the components render outside
+React, not something to install. There is no React Native package. SwiftUI and
+Compose ship as source in `packages/ios` and `packages/android`, not on npm.
 
 ### File Structure
 

@@ -75,6 +75,12 @@ jobs:
       - name: Verify Product Contract Parity
         run: pnpm contracts:parity:check
 
+      # .ai-skills/ is what an assistant is handed as fact about Kozmos, and
+      # nothing verified it: it documented a v3.x with a Modal component and a
+      # variant="primary" to "solid" migration, none of which ever existed here.
+      - name: Verify The AI-Facing Docs Match The Code
+        run: pnpm skills:check
+
       # Also never run by any workflow until 2026-09-22. It reports the axes a
       # platform is missing, and fails when the analysis it writes is stale, so
       # the record and the code cannot drift apart unnoticed. Its own controls
