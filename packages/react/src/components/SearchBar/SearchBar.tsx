@@ -142,7 +142,10 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
         )}
       >
         {field}
-        <div className="shrink-0">{trailing}</div>
+        {/* A row, not a box: the slot takes more than one control in the
+            prototype — the assistant beside Filters — and two inline-flex
+            buttons in a plain div touch, with none of the row's gap. */}
+        <div className="flex shrink-0 items-center gap-2">{trailing}</div>
       </div>
     );
   },

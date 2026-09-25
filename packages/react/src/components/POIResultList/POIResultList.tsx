@@ -87,7 +87,24 @@ const POIResultList = React.forwardRef<HTMLElement, POIResultListProps>(
           {resultCountLabel}
         </p>
         {items.length === 0 ? (
-          <div className="rounded-container border border-dashed border-border bg-muted/40 p-6 text-center text-sm text-muted-foreground">
+          // Pad a string; never pad a component.
+          //
+          // The slot used to add p-6 whatever it held. A string needs that -
+          // "Try removing a filter." against a dashed border with no room is
+          // not a message, it is a mistake. A component pads itself, and
+          // EmptyState adds p-8, so the two together made a one-line
+          // no-result into a 222px box.
+          //
+          // Deciding on the CHILD rather than on a prop means a product gets
+          // the right answer without knowing this rule exists, which is the
+          // only version of this fix that actually fixes anything: nothing in
+          // this repository was passing a flag, and nothing would have.
+          <div
+            className={cn(
+              "rounded-container border border-dashed border-border bg-muted/40 text-center text-sm text-muted-foreground",
+              typeof emptyState === "string" && "p-6",
+            )}
+          >
             {emptyState}
           </div>
         ) : (

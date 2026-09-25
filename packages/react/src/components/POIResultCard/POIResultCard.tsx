@@ -7,7 +7,7 @@ import type {
   POIResultPresentation,
 } from "@kozmos-ds/product-contracts";
 import { Star01 as Star } from "@kozmos-ds/icons";
-import { cn } from "../../utils";
+import { cn, poiLocationLabel } from "../../utils";
 import { useKozmosAnalytics } from "../../utils/analytics";
 
 export function getPOIResultDomId(poiId: string) {
@@ -97,9 +97,7 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
     const { trackEvent } = useKozmosAnalytics();
     const available = result.available !== false;
     const unavailableId = `${id}-unavailable`;
-    const locationLabel = [poi.floorLabel, poi.buildingLabel]
-      .filter(Boolean)
-      .join(" · ");
+    const locationLabel = poiLocationLabel(poi);
     const onCurrentFloor =
       currentFloorId !== undefined && result.floorId === currentFloorId;
 
