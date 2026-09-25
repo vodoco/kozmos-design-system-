@@ -1,5 +1,18 @@
 # playground-vue
 
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependencies [3e3a6d3]
+- Updated dependencies [c7d802f]
+- Updated dependencies [4773abd]
+- Updated dependencies [f4dc59a]
+- Updated dependencies [942d7cd]
+- Updated dependencies [b9467b1]
+  - @kozmos-ds/react@0.4.0
+  - @kozmos-ds/vue@0.0.5
+
 ## 0.0.3
 
 ### Patch Changes

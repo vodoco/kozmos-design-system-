@@ -1,5 +1,115 @@
 # @kozmos-ds/product-contracts
 
+## 0.3.0
+
+### Minor Changes
+
+- 3e3a6d3: Four things a product could only work around, and the gate that should have
+  caught the first of them.
+
+  **The three product-contract files are one contract, and now something checks
+  that.** `pnpm contracts:parity:check` compares
+  `@kozmos-ds/product-contracts`, `ProductContracts.swift` and
+  `ProductContracts.kt` — the set of types, the fields of every shared struct,
+  whether a field may be omitted, and the wire values of every enumeration.
+  Nothing compared them before. What it found on its first run was ten drifts:
+  `POIResultMatch`, `SearchEmptyKind`, `SearchResponsePresentation`,
+  `unitLabel`, `nameLanguage` and optional `floorId`/`floorLabel` existed on the
+  web alone, so a single-storey venue still had to invent a floor on iOS and
+  Android — and `CategoryPresentation.iconUrl`, the taxonomy's own category
+  artwork, was web-only too, leaving a native SDK no way to show a category's
+  image at all. All ten are fixed here.
+
+  **`Card` takes a `padding`.** It was 24 on every side with no option, so the
+  only route to 16 was a caller passing `className="p-4"` — restyling the
+  component from outside, and on the web alone, since both native cards
+  hard-coded 24 as well (GAP-034). It is set on the card and reaches the header,
+  content and footer through context, because a card padded 16 at the top and 24
+  at the bottom is the bug, not the fix. On all three platforms.
+
+  **`Alert` no longer interrupts by default.** `role="alert"` was hard-coded
+  with no way out. That is an assertive live region, so a static page notice —
+  "View only. Only Dashboard admins can change these settings." — was read out
+  over whatever the visitor was doing, every time the page opened (GAP-006).
+  `live` is `off` by default, which is what SwiftUI and Compose already do:
+  neither native Alert announces anything. `live="polite"` is `role="status"`
+  and `live="assertive"` is the old behaviour, for a notice that really has just
+  appeared.
+
+  **`AlertTitle` has a size, and stops being an `h5`.** It carried no size class
+  at all, and the reset makes every heading `font-size: inherit`, so the title
+  rendered at the same size as the `text-sm` description below it, separated
+  only by weight (GAP-007). It is `text-base` now, which is what Compose already
+  uses. It is also a `<p>` by default, as it is on both native platforms — an
+  alert's title labels a notice, it does not open a section of the document, and
+  a hard-coded `h5` after a page's `h2` sections is a skipped level. Pass
+  `level={3}` where the alert really is a region of the page.
+
+  **`EmptyState` takes a `size`, and a slot can ask for it.** Measured inside
+  `POIResultList`: the same no-result content came to 258px, of which 48 was the
+  slot's own padding and 64 this component's. The slot stopped padding a
+  component last release; `size="compact"` takes the rest, bringing it to about
+  128 (GAP-009). A product does not have to know — the empty slot draws the box,
+  so it asks for compact itself, and an explicit `size` still wins. On all three
+  platforms.
+
+- f4dc59a: Show a result's attributes: access restrictions, dietary, accessibility and
+  services.
+
+  Four meanings and one shape — a short localized label with an optional icon —
+  so they share `poi.services` rather than gaining three more lists.
+  `POIAttributeKind` says which a chip is, so a card can order, tone or filter
+  them:
+
+  ```tsx
+  services: [
+    { id: "1", label: "Vegan", kind: "dietary" },
+    { id: "2", label: "Step-free", kind: "accessibility" },
+    { id: "3", label: "Takeaway" },
+  ];
+  ```
+
+  A restriction is drawn apart from the rest. "Staff only" is not a feature like
+  "Vegan": it is the reason a visitor cannot go, and a row of identical grey
+  chips would bury it among the things they can have. It comes first, in the
+  warning tone, and is folded in from `accessRestrictionsLabel` — which is its
+  own field rather than a service.
+
+  Android and iOS gain the same `kind`, and also `iconUrl` and
+  `iconMonochrome`, which the web contract had and they did not.
+
+- 942d7cd: Four result contracts MAP-474 needs, on all three platforms.
+
+  **Opening and closing soon.** `POIAvailability` gains `openingSoon` and
+  `closingSoon`, drawn in a third tone rather than folded into open or closed:
+  "closing soon" is a reason to hurry or pick somewhere else, and drawing it as
+  plain open is the difference between arriving and arriving too late. Where the
+  boundary sits is the product's call.
+
+  **Why a result is in the list.** `POIResultMatch` is `exact`, `alternative` or
+  `unconfirmed`, so the further lists MAP-474 shows under their own headings come
+  from data rather than from the order a product happened to build. A result also
+  carries `unitLabel` for venues with units, and `nameLanguage` so an authored
+  name can be announced in the language it was written in.
+
+  **What an empty search means.** `SearchResponsePresentation` carries an
+  `emptyKind` — no match, filtered out, or nothing mapped — plus `emptiedBy`,
+  the filter that emptied the list, and `languageFallback` when results came back
+  in another language. An empty list is not one situation, and "nothing found"
+  leaves the visitor to guess what to undo.
+
+  **Venues without levels.** `floorId` and `floorLabel` are optional on both
+  `POIPresentation` and `POIResultPresentation`. A single-storey venue where
+  every result reads "Ground Floor" is noise; the card now draws what is left.
+
+  Android and iOS carry all four. They did not at first: when this was written
+  only the availability change had crossed over, and `POIResultMatch`,
+  `SearchResponsePresentation`, `SearchEmptyKind`, `unitLabel`, `nameLanguage`
+  and the optional `floorId`/`floorLabel` existed on the web alone — so a
+  single-storey venue still had to invent a floor on iOS and Android, which is
+  the exact noise this was meant to remove. `pnpm contracts:parity:check` now
+  compares the three files field by field, and it is what found this.
+
 ## 0.2.0
 
 ### Minor Changes
