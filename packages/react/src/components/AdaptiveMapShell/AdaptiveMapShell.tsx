@@ -49,6 +49,12 @@ export interface AdaptiveMapShellProps extends React.HTMLAttributes<HTMLDivEleme
   topBar?: React.ReactNode;
   panel?: React.ReactNode;
   panelLabel?: string;
+  /**
+   * The sheet handle's accessible name. It is a slider, and "Panel height" is
+   * the only thing a screen reader has to go on — in English, whatever
+   * language the interface is in.
+   */
+  panelHandleLabel?: string;
   panelPlacement?: "start" | "end";
   panelPresentation?: MapPanelPresentation;
   /**
@@ -142,6 +148,7 @@ const AdaptiveMapShell = React.forwardRef<
       panelFraction,
       panelSizing = "fraction",
       panelSurface = "solid",
+      panelHandleLabel = "Panel height",
       collisionInsets,
       safeAreaInsets,
       usableRegions,
@@ -719,7 +726,7 @@ const AdaptiveMapShell = React.forwardRef<
                 className="kozmos-map-sheet-handle"
                 role="slider"
                 tabIndex={0}
-                aria-label="Panel height"
+                aria-label={panelHandleLabel}
                 aria-orientation="vertical"
                 aria-valuemin={0}
                 aria-valuemax={ordered.length - 1}

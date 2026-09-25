@@ -99,7 +99,12 @@ const CategoryTile = React.forwardRef<HTMLButtonElement, CategoryTileProps>(
             </Counter>
           )}
         </span>
-        <span className="line-clamp-2 max-w-full text-balance">
+        {/* break-words lets a long Latin word wrap rather than overflow;
+            break-keep stops CJK breaking mid-word, which is what line-clamp
+            alone does to Japanese - "レストラン" split across two lines reads as
+            two words that do not exist. Both, because a venue has categories
+            in more than one script. */}
+        <span className="line-clamp-2 max-w-full break-words [word-break:keep-all] text-balance">
           {category.label}
         </span>
         {category.resultCountLabel && (

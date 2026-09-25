@@ -26,6 +26,8 @@ export interface SearchBarProps extends Omit<
   value?: string;
   onChange?: (value: string) => void;
   onClear?: () => void;
+  /** The clear button's accessible name. Defaults to "Clear search". */
+  clearLabel?: string;
   containerClassName?: string;
   variant?: "floating" | "inline";
   /**
@@ -57,6 +59,12 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
       onChange,
       onClear,
       placeholder = "Search...",
+      /**
+       * The clear button's accessible name. Story 2 reads this interface in
+       * other languages, and a fixed English string is a control a visitor
+       * cannot hear in theirs.
+       */
+      clearLabel = "Clear search",
       type = "search",
       "aria-label": ariaLabel,
       ...props
@@ -80,7 +88,7 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
       >
         <Search
           aria-hidden="true"
-          className="h-[18px] w-[18px] text-muted-foreground mr-2 shrink-0"
+          className="h-[18px] w-[18px] text-muted-foreground me-2 shrink-0"
         />
         <input
           ref={ref}
@@ -108,8 +116,8 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
               onChange?.("");
               onClear?.();
             }}
-            className="kozmos-search-clear ml-1 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-pill transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label="Clear search"
+            className="kozmos-search-clear ms-1 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-pill transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={clearLabel}
             type="button"
           >
             {/* A 24 grey circle to see; the 44 button around it to hit. */}
