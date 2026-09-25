@@ -28,18 +28,29 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** In the search row, as the prototype places it: the field's place, Filters and the AI search beside. */
+/**
+ * In the search row, as the prototype places it: the field's place, Filters
+ * and the AI search beside. The row is the component's — before `trailing`
+ * this example passed `flex-1` through `className`, which an integrator
+ * composing the same pair had no way to know.
+ */
 export const InTheSearchRow: Story = {
   render: (args) => (
-    <div className="flex max-w-[402px] items-center gap-2">
-      <CategoryField {...args} className="flex-1" />
-      <IconButton
-        variant="outline"
-        size="lg"
-        aria-label="Filters"
-        icon={<SlidersHorizontal />}
+    <div className="max-w-[402px]">
+      <CategoryField
+        {...args}
+        trailing={
+          <>
+            <IconButton
+              variant="outline"
+              size="lg"
+              aria-label="Filters"
+              icon={<SlidersHorizontal />}
+            />
+            <AISearchButton />
+          </>
+        }
       />
-      <AISearchButton />
     </div>
   ),
 };

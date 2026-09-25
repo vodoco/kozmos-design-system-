@@ -740,7 +740,14 @@ const AdaptiveMapShell = React.forwardRef<
             )}
             <div
               ref={panelContent}
-              className="min-h-0 flex-1 overscroll-contain"
+              className={cn(
+                "min-h-0 flex-1 overscroll-contain",
+                // A side panel has no grip, so nothing was making the space
+                // the sheet's grip makes: the search field sat 1px under the
+                // panel's top edge. 16 matches where the field starts below
+                // the sheet's grip.
+                !isSheet && "pt-4",
+              )}
               // A finger scrolls the list natively at the largest detent;
               // at the list's top only downward panning (into the list) is
               // native, so a finger pulling the other way reaches the sheet

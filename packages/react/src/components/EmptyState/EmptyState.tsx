@@ -24,11 +24,24 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
           {icon}
         </div>
       )}
-      <Text size="base" weight="medium" className="mb-1 text-foreground">
+      {/* align="center" on both, explicitly: Text aligns from the start, and
+          a block that centres itself does not centre the text inside it. The
+          description wrapped to two lines and the second sat against the
+          leading edge. */}
+      <Text
+        align="center"
+        size="base"
+        weight="medium"
+        className="mb-1 text-foreground"
+      >
         {title}
       </Text>
       {description && (
-        <Text size="sm" className="mb-4 text-muted-foreground max-w-[280px]">
+        <Text
+          align="center"
+          size="sm"
+          className="mb-4 text-muted-foreground max-w-[280px]"
+        >
           {description}
         </Text>
       )}

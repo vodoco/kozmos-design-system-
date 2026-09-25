@@ -24,12 +24,12 @@ cannot".
 | Measure                                   | Result |
 | ----------------------------------------- | ------ |
 | Components scanned                        | 112    |
-| Declaring at least one React variant axis | 30     |
-| Variations that are compositional only    | 82     |
-| Components with variant gaps — iOS        | 4/30   |
-| Components with variant gaps — Android    | 4/30   |
-| Components with variant gaps — Figma      | 5/30   |
-| Components with variant gaps — Vue        | 0/30   |
+| Declaring at least one React variant axis | 31     |
+| Variations that are compositional only    | 81     |
+| Components with variant gaps — iOS        | 5/31   |
+| Components with variant gaps — Android    | 5/31   |
+| Components with variant gaps — Figma      | 6/31   |
+| Components with variant gaps — Vue        | 0/31   |
 | Components absent entirely — iOS          | 9/112  |
 | Components absent entirely — Android      | 8/112  |
 | Components absent entirely — Figma        | 16/112 |
@@ -56,6 +56,10 @@ AdaptiveMapShell
   - ios missing axes -> panelSizing (fraction, content)
   - android missing axes -> panelSizing (fraction, content)
   - figma missing axes -> panelSizing (fraction, content)
+Container
+  - ios missing axes -> inset (window, panel)
+  - android missing axes -> inset (window, panel)
+  - figma missing axes -> inset (window, panel)
 Icon
   - figma: component/set absent
 Link
