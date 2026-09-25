@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "509a0e2043af";
+const PLUGIN_BUILD = "5a392fe1c512";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -70,6 +70,16 @@ const STACK_GAPS = ["2", "4", "6"];
 const GRID_COLUMNS = ["1", "2", "3", "4"];
 const GRID_GAPS = ["2", "4", "6"];
 const GRID_PREVIEW_ROWS = 2;
+// What the padding responds to. Window steps with the viewport, which is
+// right for a page; Panel holds 16 whatever the window is doing, which is
+// right for a fixed-width region — a 390 side panel in a 1280 window was
+// taking the widest step, so the same content had 32 a side on a desktop and
+// 16 on a phone. Figma has no viewport, so the axis draws the two ends: the
+// window's widest step and the panel's fixed 16.
+const CONTAINER_INSETS = ["Window", "Panel"];
+function containerInsetPadding(inset) {
+  return inset === "Panel" ? 16 : 24;
+}
 const CONTAINER_CENTERED = ["True", "False"];
 const SCROLL_AREA_ORIENTATIONS = ["Vertical", "Horizontal", "Both"];
 const SCROLL_AREA_SCROLLBARS = ["Hidden", "Visible"];
@@ -296,6 +306,17 @@ const PROGRESS_VALUES = ["0", "25", "50", "75", "100"];
 const SPINNER_SIZES = ["Small", "Medium", "Large", "XLarge"];
 const AVATAR_CONTENT = ["Fallback", "Image"];
 const ALERT_VARIANTS = ["Default", "Destructive", "Success", "Warning", "Info"];
+// How much room an empty state takes. Default pads 32 and fills its region,
+// which is right when the empty state IS the screen; Compact is for a slot
+// that already draws a box round it. Measured on the web, the same content
+// came to 258px inside a result list and about 128 compact (GAP-009).
+const EMPTY_STATE_SIZES = ["Default", "Compact"];
+function emptyStatePadding(size) {
+  return size === "Compact" ? 16 : 32;
+}
+function emptyStateIconSize(size) {
+  return size === "Compact" ? 40 : 64;
+}
 const EMPTY_STATE_CONTENT = ["Basic", "Icon", "Action"];
 const CARD_CONTENT = ["Basic", "Header", "Full"];
 // How much room a card gives its content. Default is 24 on every side, the
@@ -474,6 +495,12 @@ const AI_SEARCH_BUTTON_ICON_SIZE = 16;
 /** The sparkles, from the Pointr Icon Library. */
 const AI_SEARCH_BUTTON_ICON = "stars-01";
 const POI_MEDIA_GALLERY_CONTENT = ["Single", "Multiple", "Empty"];
+// How a result is drawn. Card is the standalone one: a control radius, a
+// border, and the featured tab hanging above it. Row is the one that sits in
+// a list that already draws the edges — no radius, no border of its own, and
+// it states its selection with a fill instead of thickening a border it does
+// not have. A row has no tab either: there is no card edge for it to hang from.
+const POI_RESULT_CARD_APPEARANCES = ["Card", "Row"];
 const POI_RESULT_CARD_STATES = [
   "Default",
   "Selected",
@@ -16913,6 +16940,7 @@ function expectedVariantAxesForComponentSetName(name) {
   if (canonicalName === "POIResultCard") {
     return {
       State: POI_RESULT_CARD_STATES,
+      Appearance: POI_RESULT_CARD_APPEARANCES,
     };
   }
 
@@ -17050,6 +17078,7 @@ function expectedVariantAxesForComponentSetName(name) {
   if (canonicalName === "Container") {
     return {
       Centered: CONTAINER_CENTERED,
+      Inset: CONTAINER_INSETS,
     };
   }
 
@@ -17505,6 +17534,7 @@ function expectedVariantAxesForComponentSetName(name) {
   if (canonicalName === "EmptyState") {
     return {
       Content: EMPTY_STATE_CONTENT,
+      Size: EMPTY_STATE_SIZES,
     };
   }
 
@@ -31368,6 +31398,9 @@ async function buildContainerComponent() {
     componentSetName: "Container",
     axisName: "Centered",
     values: CONTAINER_CENTERED,
+    axis2Name: "Inset",
+    axis2Values: CONTAINER_INSETS,
+    yStep: 180,
     x: 80,
     y: 11380,
     xStep: 560,
@@ -31388,6 +31421,9 @@ async function updateContainerComponent() {
     componentSetName: "Container",
     axisName: "Centered",
     values: CONTAINER_CENTERED,
+    axis2Name: "Inset",
+    axis2Values: CONTAINER_INSETS,
+    yStep: 180,
     xStep: 560,
     createVariant: createContainerVariant,
     updateVariant: updateContainerVariant,
@@ -43811,6 +43847,9 @@ async function buildEmptyStateComponent() {
     componentSetName: "EmptyState",
     axisName: "Content",
     values: EMPTY_STATE_CONTENT,
+    axis2Name: "Size",
+    axis2Values: EMPTY_STATE_SIZES,
+    yStep: 260,
     x: 80,
     y: 6740,
     xStep: 420,
@@ -43832,6 +43871,9 @@ async function updateEmptyStateComponent() {
     componentSetName: "EmptyState",
     axisName: "Content",
     values: EMPTY_STATE_CONTENT,
+    axis2Name: "Size",
+    axis2Values: EMPTY_STATE_SIZES,
+    yStep: 260,
     xStep: 420,
     createVariant: createEmptyStateVariant,
     updateVariant: updateEmptyStateVariant,
@@ -48421,15 +48463,24 @@ async function createPOIResultCardVariant(args) {
 }
 
 function parsePOIResultCardVariantName(name) {
-  return productSdkVariantValues(name, "State", POI_RESULT_CARD_STATES);
+  const base = productSdkVariantValues(name, "State", POI_RESULT_CARD_STATES);
+  if (!base) return null;
+  // A variant drawn before the Appearance axis carries none and is the card,
+  // so Update renames it rather than replacing it and its node id survives.
+  const second = variantAxisValue(name, "Appearance") || "Card";
+  if (POI_RESULT_CARD_APPEARANCES.indexOf(second) === -1) return null;
+  return { value: base.value, second };
 }
 
 async function updatePOIResultCardVariant(
   component,
-  { value, variableByName, fonts, stats },
+  { value, second, variableByName, fonts, stats },
 ) {
+  const appearance =
+    POI_RESULT_CARD_APPEARANCES.indexOf(second) === -1 ? "Card" : second;
+  const isRow = appearance === "Row";
   const selected = value === "Selected";
-  const featured = value === "Featured";
+  const featured = value === "Featured" && !isRow;
   const unavailable = value === "Unavailable";
   const width = 360;
   // The root stacks: the result row, then an action row when a product
@@ -48437,16 +48488,22 @@ async function updatePOIResultCardVariant(
   // nowhere for an action to go that was not inside the row itself - the same
   // corner the web, SwiftUI and Compose cards each had to be restructured out
   // of.
-  productSdkVariantRoot(component, "POIResultCard", "State=" + value, {
-    direction: "vertical",
-    primarySizing: "AUTO",
-    counterSizing: "FIXED",
-    spacing: 0,
-    padding: 0,
-    width,
-    height: 92,
-  });
-  component.cornerRadius = KOZMOS_RADIUS.container;
+  productSdkVariantRoot(
+    component,
+    "POIResultCard",
+    "State=" + value + ", Appearance=" + appearance,
+    {
+      direction: "vertical",
+      primarySizing: "AUTO",
+      counterSizing: "FIXED",
+      spacing: 0,
+      padding: 0,
+      width,
+      height: 92,
+    },
+  );
+  // A row sits in a list that already draws the edges.
+  component.cornerRadius = isRow ? KOZMOS_RADIUS.none : KOZMOS_RADIUS.container;
   component.fills = [
     paintFromVariable(
       selected ? "Colors/theme/100" : "Surface/0",
@@ -48455,15 +48512,17 @@ async function updatePOIResultCardVariant(
       stats,
     ),
   ];
-  component.strokes = [
-    paintFromVariable(
-      selected ? "Colors/theme/500" : "Border/Subtle",
-      selected ? "#135BEC" : "#C7CAD1",
-      variableByName,
-      stats,
-    ),
-  ];
-  component.strokeWeight = selected ? 2 : 1;
+  component.strokes = isRow
+    ? []
+    : [
+        paintFromVariable(
+          selected ? "Colors/theme/500" : "Border/Subtle",
+          selected ? "#135BEC" : "#C7CAD1",
+          variableByName,
+          stats,
+        ),
+      ];
+  component.strokeWeight = isRow ? 0 : selected ? 2 : 1;
   component.opacity = unavailable ? 0.55 : 1;
 
   // Everything the card drew before now lives in this row.
@@ -48702,6 +48761,9 @@ async function buildPOIResultCardComponent() {
     componentSetName: "POIResultCard",
     axisName: "State",
     values: POI_RESULT_CARD_STATES,
+    axis2Name: "Appearance",
+    axis2Values: POI_RESULT_CARD_APPEARANCES,
+    yStep: 200,
     x: 80,
     y: 15000,
     xStep: 420,
@@ -48718,6 +48780,9 @@ async function updatePOIResultCardComponent() {
     componentSetName: "POIResultCard",
     axisName: "State",
     values: POI_RESULT_CARD_STATES,
+    axis2Name: "Appearance",
+    axis2Values: POI_RESULT_CARD_APPEARANCES,
+    yStep: 200,
     xStep: 420,
     createVariant: createPOIResultCardVariant,
     updateVariant: updatePOIResultCardVariant,
@@ -53793,10 +53858,17 @@ function bindGridCellSlotVariables(slot, variableByName, stats) {
   );
 }
 
-async function createContainerVariant({ value, variableByName, fonts, stats }) {
+async function createContainerVariant({
+  value,
+  second,
+  variableByName,
+  fonts,
+  stats,
+}) {
   const component = figma.createComponent();
   await updateContainerVariant(component, {
     value,
+    second,
     variableByName,
     fonts,
     stats,
@@ -53818,26 +53890,33 @@ function parseContainerVariantName(name) {
 
   if (CONTAINER_CENTERED.indexOf(values.Centered) === -1) return null;
 
+  // A variant drawn before the Inset axis carries none and is the page's,
+  // so Update renames it rather than replacing it.
+  const second = values.Inset || "Window";
+  if (CONTAINER_INSETS.indexOf(second) === -1) return null;
+
   return {
     value: values.Centered,
+    second,
     centered: values.Centered,
   };
 }
 
 async function updateContainerVariant(
   component,
-  { value, variableByName, stats },
+  { value, second, variableByName, stats },
 ) {
   const centered = value === "True";
-  component.name = `Centered=${value}`;
+  const inset = CONTAINER_INSETS.indexOf(second) === -1 ? "Window" : second;
+  component.name = `Centered=${value}, Inset=${inset}`;
   component.layoutMode = "VERTICAL";
   component.primaryAxisSizingMode = "FIXED";
   component.counterAxisSizingMode = "FIXED";
   component.primaryAxisAlignItems = "CENTER";
   component.counterAxisAlignItems = centered ? "CENTER" : "MIN";
   component.itemSpacing = 0;
-  component.paddingLeft = 24;
-  component.paddingRight = 24;
+  component.paddingLeft = containerInsetPadding(inset);
+  component.paddingRight = containerInsetPadding(inset);
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(480, 120);
@@ -58623,6 +58702,7 @@ async function updateAlertVariant(
 
 async function createEmptyStateVariant({
   value,
+  second,
   variableByName,
   fonts,
   stats,
@@ -58630,6 +58710,7 @@ async function createEmptyStateVariant({
   const component = figma.createComponent();
   await updateEmptyStateVariant(component, {
     value,
+    second,
     variableByName,
     fonts,
     stats,
@@ -58638,25 +58719,33 @@ async function createEmptyStateVariant({
 }
 
 function parseEmptyStateVariantName(name) {
-  return parseSingleAxisVariantName(name, "Content", EMPTY_STATE_CONTENT);
+  const base = parseSingleAxisVariantName(name, "Content", EMPTY_STATE_CONTENT);
+  if (!base) return null;
+  // A variant drawn before the Size axis carries no Size and is the full one,
+  // so Update renames it rather than replacing it and its node id survives.
+  const second = variantAxisValue(name, "Size") || "Default";
+  if (EMPTY_STATE_SIZES.indexOf(second) === -1) return null;
+  return { value: base.value, second };
 }
 
 async function updateEmptyStateVariant(
   component,
-  { value, variableByName, fonts, stats },
+  { value, second, variableByName, fonts, stats },
 ) {
-  component.name = `Content=${value}`;
+  const size = EMPTY_STATE_SIZES.indexOf(second) === -1 ? "Default" : second;
+  const pad = emptyStatePadding(size);
+  component.name = `Content=${value}, Size=${size}`;
   component.layoutMode = "VERTICAL";
   component.primaryAxisSizingMode = "AUTO";
   component.counterAxisSizingMode = "FIXED";
   component.primaryAxisAlignItems = "CENTER";
   component.counterAxisAlignItems = "CENTER";
-  component.itemSpacing = 16;
-  component.paddingLeft = 32;
-  component.paddingRight = 32;
-  component.paddingTop = 32;
-  component.paddingBottom = 32;
-  component.resizeWithoutConstraints(360, 196);
+  component.itemSpacing = size === "Compact" ? 8 : 16;
+  component.paddingLeft = pad;
+  component.paddingRight = pad;
+  component.paddingTop = pad;
+  component.paddingBottom = pad;
+  component.resizeWithoutConstraints(360, size === "Compact" ? 128 : 196);
   component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
@@ -58667,6 +58756,7 @@ async function updateEmptyStateVariant(
   await syncEmptyStateVariantChildren({
     component,
     value,
+    size,
     variableByName,
     fonts,
     stats,
@@ -58724,6 +58814,24 @@ async function updateToastVariant(
     fonts,
     stats,
   });
+}
+
+/**
+ * One axis's value out of a variant name, or null when it carries none.
+ *
+ * A set that grows a second axis has to read variants drawn before it: those
+ * names have no such key, and the component's parser then supplies its own
+ * default so Update RENAMES the variant rather than replacing it. Replacing
+ * would change the node id every Code Connect pin on the set depends on.
+ */
+function variantAxisValue(name, axisName) {
+  for (const part of name.split(",")) {
+    const index = part.indexOf("=");
+    if (index === -1) continue;
+    if (part.slice(0, index).trim() !== axisName) continue;
+    return part.slice(index + 1).trim();
+  }
+  return null;
 }
 
 function parseSingleAxisVariantName(name, axisName, values) {
@@ -70149,10 +70257,12 @@ async function syncAlertVariantChildren({
 async function syncEmptyStateVariantChildren({
   component,
   value,
+  size,
   variableByName,
   fonts,
   stats,
 }) {
+  const iconBox = emptyStateIconSize(size);
   removeDirectChildren(component);
 
   const hasIcon = value !== "Basic";
@@ -70172,7 +70282,7 @@ async function syncEmptyStateVariantChildren({
     iconContainer.paddingRight = 0;
     iconContainer.paddingTop = 0;
     iconContainer.paddingBottom = 0;
-    iconContainer.resizeWithoutConstraints(64, 64);
+    iconContainer.resizeWithoutConstraints(iconBox, iconBox);
     iconContainer.cornerRadius = KOZMOS_RADIUS.pill;
     iconContainer.clipsContent = false;
     iconContainer.fills = [

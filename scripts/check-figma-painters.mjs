@@ -3812,6 +3812,113 @@ section("Card");
   );
 }
 
+// --- EmptyState's size, Container's inset, POIResultCard's appearance ----------------
+
+section("The rest of the batch");
+{
+  const tokens = payloadVariables([...variableByName.keys()]);
+  const paint = async (painter, value, second) => {
+    const component = figma.createComponent();
+    await plugin[painter](component, {
+      value,
+      second,
+      variableByName: tokens.variableByName,
+      fonts: FONTS,
+      stats: freshStats(),
+    });
+    return component;
+  };
+  const axis = (set, name) => {
+    const axes = plugin.expectedVariantAxesForComponentSetName(set);
+    return axes && axes[name];
+  };
+
+  // EmptyState
+  ok(
+    JSON.stringify(axis("EmptyState", "Size")) ===
+      JSON.stringify(["Default", "Compact"]),
+    `EmptyState expects a Size (got ${JSON.stringify(axis("EmptyState", "Size"))})`,
+  );
+  const esFull = await paint("updateEmptyStateVariant", "Icon", "Default");
+  const esCompact = await paint("updateEmptyStateVariant", "Icon", "Compact");
+  ok(
+    esFull.name === "Content=Icon, Size=Default",
+    `EmptyState carries both axes (got "${esFull.name}")`,
+  );
+  ok(
+    esFull.paddingTop === 32 && esCompact.paddingTop === 16,
+    `32 by default, 16 compact (got ${esFull.paddingTop} and ${esCompact.paddingTop})`,
+  );
+  ok(
+    named(esFull, "Icon Container").width === 64 &&
+      named(esCompact, "Icon Container").width === 40,
+    "and the icon box shrinks with it",
+  );
+  ok(
+    JSON.stringify(plugin.parseEmptyStateVariantName("Content=Icon")) ===
+      JSON.stringify({ value: "Icon", second: "Default" }),
+    "EmptyState: no Size reads as Default, so Update renames rather than replaces",
+  );
+
+  // Container
+  ok(
+    JSON.stringify(axis("Container", "Inset")) ===
+      JSON.stringify(["Window", "Panel"]),
+    `Container expects an Inset (got ${JSON.stringify(axis("Container", "Inset"))})`,
+  );
+  const ctWindow = await paint("updateContainerVariant", "True", "Window");
+  const ctPanel = await paint("updateContainerVariant", "True", "Panel");
+  ok(
+    ctWindow.name === "Centered=True, Inset=Window",
+    `Container carries both axes (got "${ctWindow.name}")`,
+  );
+  ok(
+    ctWindow.paddingLeft === 24 && ctPanel.paddingLeft === 16,
+    `the window's widest step against the panel's fixed 16 (got ${ctWindow.paddingLeft} and ${ctPanel.paddingLeft})`,
+  );
+  ok(
+    JSON.stringify(plugin.parseContainerVariantName("Centered=True")) ===
+      JSON.stringify({ value: "True", second: "Window", centered: "True" }),
+    "Container: no Inset reads as Window",
+  );
+
+  // POIResultCard
+  ok(
+    JSON.stringify(axis("POIResultCard", "Appearance")) ===
+      JSON.stringify(["Card", "Row"]),
+    `POIResultCard expects an Appearance (got ${JSON.stringify(axis("POIResultCard", "Appearance"))})`,
+  );
+  const asCard = await paint("updatePOIResultCardVariant", "Selected", "Card");
+  const asRow = await paint("updatePOIResultCardVariant", "Selected", "Row");
+  ok(
+    asCard.name === "State=Selected, Appearance=Card",
+    `POIResultCard carries both axes (got "${asCard.name}")`,
+  );
+  // A row sits in a list that already draws the edges, so it has none of its
+  // own and states its selection with the fill instead.
+  ok(
+    asCard.strokes.length === 1 && asRow.strokes.length === 0,
+    "a card has a border and a row has none",
+  );
+  ok(
+    asCard.cornerRadius === plugin.KOZMOS_RADIUS.container &&
+      asRow.cornerRadius === plugin.KOZMOS_RADIUS.none,
+    "a card is rounded and a row is not",
+  );
+  const featuredRow = await paint("updatePOIResultCardVariant", "Featured", "Row");
+  const featuredCard = await paint("updatePOIResultCardVariant", "Featured", "Card");
+  ok(
+    featuredCard.findOne((n) => /Featured|Tab/.test(n.name || "")) !== null &&
+      featuredRow.findOne((n) => /Featured|Tab/.test(n.name || "")) === null,
+    "the tab hangs from a card's edge, and a row has no edge to hang it from",
+  );
+  ok(
+    JSON.stringify(plugin.parsePOIResultCardVariantName("State=Selected")) ===
+      JSON.stringify({ value: "Selected", second: "Card" }),
+    "POIResultCard: no Appearance reads as Card",
+  );
+}
+
 // --- Summary ---------------------------------------------------------------------
 
 console.log(
