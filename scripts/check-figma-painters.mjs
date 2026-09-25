@@ -1664,6 +1664,66 @@ section("Every frame keeps the size it was drawn at");
   );
 }
 
+// --- POIResultCard's action row ------------------------------------------------------
+
+// A selected result offers what the product gave it, and the card has to have
+// somewhere to put that. The row is drawn on EVERY variant and hidden, because
+// an Actions boolean toggles a layer: one that existed only on Selected could
+// not be turned on anywhere else.
+section("POIResultCard actions");
+{
+  const component = figma.createComponent();
+  const stats = freshStats();
+  await plugin.updatePOIResultCardVariant(component, {
+    value: "Selected",
+    variableByName,
+    fonts: FONTS,
+    stats,
+  });
+
+  const resultRow = named(component, "Result Row");
+  const actionsRow = named(component, "Actions Row");
+  ok(
+    resultRow && actionsRow,
+    `a Result Row and an Actions Row (${component.children.map((child) => child.name).join(", ")})`,
+  );
+  ok(
+    component.layoutMode === "VERTICAL",
+    `the card stacks them (${component.layoutMode})`,
+  );
+  ok(
+    actionsRow && actionsRow.visible === false,
+    "the action row is hidden until the Actions property asks for it",
+  );
+  const buttons = actionsRow
+    ? actionsRow.children.filter((child) => child.name.endsWith("Action"))
+    : [];
+  ok(
+    buttons.length === 2 &&
+      buttons[0].name === "Primary Action" &&
+      buttons[1].name === "Secondary Action",
+    `two actions, primary first (${buttons.map((b) => b.name).join(", ")})`,
+  );
+  ok(
+    buttons.length === 2 &&
+      boundVariableName(buttons[0].fills[0]) === "Colors/theme/500" &&
+      boundVariableName(buttons[1].fills[0]) === "Surface/0" &&
+      buttons[1].strokeWeight === 1,
+    `the primary is filled and the secondary is outlined (${buttons.map((b) => boundVariableName(b.fills[0])).join(", ")})`,
+  );
+  // The logo and copy must have moved WITH the row, not been left on the card.
+  ok(
+    resultRow && named(resultRow, "Logo Slot") && named(resultRow, "Result Copy"),
+    "the logo and copy live in the result row",
+  );
+  // named() is findOne, so it reaches descendants: the card must not hold the
+  // logo as its OWN child, which is what moving it into the row means.
+  ok(
+    !component.children.some((child) => child.name === "Logo Slot"),
+    `and the card holds only the two rows (${component.children.map((c) => c.name).join(", ")})`,
+  );
+}
+
 // --- Curated Icons ------------------------------------------------------------------
 
 // Every tint an icon slot carries is an override keyed through its icon
