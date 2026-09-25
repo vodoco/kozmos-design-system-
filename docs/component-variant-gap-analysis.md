@@ -24,12 +24,12 @@ cannot".
 | Measure                                   | Result |
 | ----------------------------------------- | ------ |
 | Components scanned                        | 112    |
-| Declaring at least one React variant axis | 32     |
-| Variations that are compositional only    | 80     |
-| Components with variant gaps — iOS        | 5/32   |
-| Components with variant gaps — Android    | 5/32   |
-| Components with variant gaps — Figma      | 7/32   |
-| Components with variant gaps — Vue        | 0/32   |
+| Declaring at least one React variant axis | 45     |
+| Variations that are compositional only    | 67     |
+| Components with variant gaps — iOS        | 11/45  |
+| Components with variant gaps — Android    | 11/45  |
+| Components with variant gaps — Figma      | 14/45  |
+| Components with variant gaps — Vue        | 3/45   |
 | Components absent entirely — iOS          | 9/112  |
 | Components absent entirely — Android      | 8/112  |
 | Components absent entirely — Figma        | 16/112 |
@@ -52,31 +52,63 @@ component gains an axis on one platform before another.
 <!-- generated:gaps -->
 
 ```
+AIMessage
+  - ios: component/set absent
+  - android: component/set absent
+  - figma: component/set absent
+  - vue: component absent
 AdaptiveMapShell
   - ios missing axes -> panelSizing (fraction, content)
   - android missing axes -> panelSizing (fraction, content)
   - figma missing axes -> panelSizing (fraction, content)
+Alert
+  - ios missing axes -> live (off, polite, assertive)
+  - android missing axes -> live (off, polite, assertive)
+Card
+  - figma missing axes -> padding (default, compact)
 Container
   - ios missing axes -> inset (window, panel)
   - android missing axes -> inset (window, panel)
   - figma missing axes -> inset (window, panel)
+DynamicIsland
+  - android missing axes -> islandState (compact, expanded, minimal)
+  - figma missing axes -> islandState (compact, expanded, minimal)
 EmptyState
   - figma missing axes -> size (default, compact)
+FieldWrapper
+  - figma: component/set absent
 Icon
   - figma: component/set absent
 Link
   - ios missing axes -> variant (default, subtle)
   - android missing axes -> variant (default, subtle)
+List
+  - ios missing axes -> density (default, compact)
+  - android missing axes -> density (default, compact)
 MapControlButton
   - figma missing axes -> emphasis (tinted, filled); labelPlacement (inline, stacked)
+Notice
+  - ios: component/set absent
+  - android: component/set absent
+  - figma: component/set absent
+  - vue: component absent
 POIResultCard
   - ios missing axes -> appearance (card, row)
   - android missing axes -> appearance (card, row)
   - figma missing axes -> appearance (card, row)
+Rating
+  - figma missing axes -> variant (stars, thumbs)
+Surface
+  - ios: component/set absent
+  - figma: component/set absent
+  - vue: component absent
 ThemeProvider
   - ios missing axes -> dir (ltr, rtl)
   - android missing axes -> dir (ltr, rtl)
   - figma: component/set absent
+Tree
+  - ios missing axes -> activationMode (select, toggle, select-toggle)
+  - android missing axes -> activationMode (select, toggle, select-toggle)
 ```
 
 <!-- /generated:gaps -->
