@@ -48,6 +48,24 @@ export interface POIMediaPresentation {
   alt: string;
 }
 
+/**
+ * What sort of attribute a chip is.
+ *
+ * Change #4 asks a result to show access restrictions, dietary, accessibility
+ * and services. Those are four meanings and one shape - a short localized
+ * label with an optional icon - so they share this list rather than gaining
+ * three more of their own. The kind is what lets a card order them, tone them,
+ * or show only some.
+ *
+ * Optional, because every existing caller predates it and a service with no
+ * kind is still a service.
+ */
+export type POIAttributeKind =
+  | "service"
+  | "dietary"
+  | "accessibility"
+  | "restriction";
+
 export interface POIServicePresentation {
   id: string;
   label: string;
@@ -56,6 +74,8 @@ export interface POIServicePresentation {
   iconUrl?: string;
   /** Use the asset alpha as a current-color mask (monochrome assets only). */
   iconMonochrome?: boolean;
+  /** Defaults to a plain service when absent. */
+  kind?: POIAttributeKind;
 }
 
 export interface POIPresentation {

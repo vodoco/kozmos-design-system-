@@ -171,6 +171,44 @@ describe("POIResultCard", () => {
     expect(screen.queryByRole("group")).not.toBeInTheDocument();
   });
 
+  it("shows a result's attributes, and draws a restriction apart from them", () => {
+    // Change #4: access restrictions, dietary, accessibility and services.
+    // Four meanings, one shape -- but a restriction is the reason a visitor
+    // cannot go, so it must not read as another thing on offer.
+    render(
+      <POIResultCard
+        poi={{
+          ...poi,
+          accessRestrictions: "present",
+          accessRestrictionsLabel: "Staff only",
+          services: [
+            { id: "s1", label: "Vegan", kind: "dietary" },
+            { id: "s2", label: "Step-free", kind: "accessibility" },
+            { id: "s3", label: "Takeaway" },
+          ],
+        }}
+        result={{ ...result, selected: false }}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    for (const label of ["Staff only", "Vegan", "Step-free", "Takeaway"]) {
+      expect(screen.getByText(label)).toBeVisible();
+    }
+    // The restriction comes first and carries the warning tone; the rest are quiet.
+    const chips = screen.getAllByRole("listitem");
+    expect(chips[0]).toHaveTextContent("Staff only");
+    expect(chips[0].className).toMatch(/warning/);
+    expect(chips[1].className).not.toMatch(/warning/);
+  });
+
+  it("shows no attribute row when a result has none", () => {
+    render(
+      <POIResultCard poi={poi} result={{ ...result, selected: false }} onSelect={vi.fn()} />,
+    );
+    expect(screen.queryByRole("listitem")).not.toBeInTheDocument();
+  });
+
   it("draws closing soon apart from open and from closed", () => {
     // Three tones, not two: "closing soon" is a reason to hurry, and drawing
     // it as plain open is the difference between arriving and arriving late.
