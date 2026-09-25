@@ -33,6 +33,58 @@ public enum KozmosPOIAction: String, Sendable, Hashable, CaseIterable, Codable {
     case order
 }
 
+/// What a RESULT may offer: everything a POI offers, plus opening its own details.
+///
+/// Kept apart from ``KozmosPOIAction`` rather than folded into it, mirroring
+/// the web contract. A detail panel cannot offer to open itself, and widening
+/// the shared list would make every consumer handle a case that never arrives.
+public enum KozmosPOIResultAction: String, Sendable, Hashable, CaseIterable, Codable {
+    case navigate
+    case favourite
+    case bookmark
+    case share
+    case order
+    case details
+}
+
+/// A short, already-localized tab above a result: "Alternative", "Similar", "Close by".
+///
+/// Deliberately not how ``KozmosPOIResultPresentation/featured`` is expressed.
+/// Featured is a property of the POI in the CMS and is read by more than this
+/// card - the map marker draws a featured POI with its logo - so it stays a
+/// boolean with meaning, and this stays a label with none.
+public struct KozmosPOIResultBadgePresentation: Sendable, Hashable, Codable {
+    /// Already localized. Keep it to a word or two; it sits in a 24pt tab.
+    public let label: String
+
+    public init(label: String) {
+        self.label = label
+    }
+}
+
+/// What a result card offers on the selected result, in the order given.
+public struct KozmosPOIResultActionPresentation: Sendable, Hashable, Identifiable, Codable {
+    public var id: String { action.rawValue + "-" + label }
+    public let action: KozmosPOIResultAction
+    /// Already localized.
+    public let label: String
+    /// Drawn first and filled. Exactly one action should carry it.
+    public let primary: Bool
+    public let disabled: Bool
+
+    public init(
+        action: KozmosPOIResultAction,
+        label: String,
+        primary: Bool = false,
+        disabled: Bool = false
+    ) {
+        self.action = action
+        self.label = label
+        self.primary = primary
+        self.disabled = disabled
+    }
+}
+
 public struct KozmosPOIMediaPresentation: Sendable, Hashable, Identifiable, Codable {
     public let id: String
     public let src: String
@@ -172,6 +224,12 @@ public struct KozmosPOIResultPresentation: Sendable, Hashable {
     public let travelEstimate: KozmosTravelEstimatePresentation?
     public let available: Bool?
     public let unavailableReason: String?
+    /// A quiet tab: why this result is in this list. Ignored when `featured`.
+    public let badge: KozmosPOIResultBadgePresentation?
+    /// Revealed when the result is selected. The product decides what a POI
+    /// offers - a restaurant may book where a shop does not - so the card draws
+    /// what it is given and never assumes a fixed pair.
+    public let actions: [KozmosPOIResultActionPresentation]
 
     public init(
         poiId: String,
@@ -181,7 +239,9 @@ public struct KozmosPOIResultPresentation: Sendable, Hashable {
         floorId: String,
         travelEstimate: KozmosTravelEstimatePresentation? = nil,
         available: Bool? = nil,
-        unavailableReason: String? = nil
+        unavailableReason: String? = nil,
+        badge: KozmosPOIResultBadgePresentation? = nil,
+        actions: [KozmosPOIResultActionPresentation] = []
     ) {
         self.poiId = poiId
         self.resultIndex = resultIndex
@@ -191,6 +251,8 @@ public struct KozmosPOIResultPresentation: Sendable, Hashable {
         self.travelEstimate = travelEstimate
         self.available = available
         self.unavailableReason = unavailableReason
+        self.badge = badge
+        self.actions = actions
     }
 
     /// Mirrors the web rule: only an explicit `false` marks a result unavailable.
@@ -209,7 +271,13 @@ public struct KozmosPOIResultPresentation: Sendable, Hashable {
             floorId: floorId,
             travelEstimate: travelEstimate,
             available: available,
-            unavailableReason: unavailableReason
+            unavailableReason: unavailableReason,
+            // Every stored property must be carried. Swift rebuilds the struct
+            // by hand here rather than copying it, so a new field that is not
+            // listed is silently dropped on every selection change -- which is
+            // exactly what badge and actions did until a test asked.
+            badge: badge,
+            actions: actions
         )
     }
 }

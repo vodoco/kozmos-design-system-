@@ -139,6 +139,13 @@ function stepsFor(shard) {
       name: expand(step.name, shard) ?? `step ${index + 1}`,
       run,
       env: step,
+      // GitHub runs a step from its working-directory; ci-local ran every one
+      // from the repository root. Four steps declare one - both iOS steps and
+      // both Android ones - and all four failed here with "Could not find
+      // Package.swift", which reads as a broken build rather than a broken
+      // runner. A local gate that cannot run the steps it lists is worse than
+      // no local gate.
+      cwd: step["working-directory"] ?? null,
       ports: portsOf(run),
       skip: skipReason(step),
       shard: shard ? expand(shard.name, shard) : null,
@@ -233,7 +240,7 @@ for (const step of chosen) {
   }
   const started = Date.now();
   const result = spawnSync("bash", ["-lc", step.run], {
-    cwd: root,
+    cwd: step.cwd ? path.join(root, step.cwd) : root,
     env: { ...process.env, ...resolveEnv(step.env), CI: "1" },
     stdio: has("verbose") ? "inherit" : "pipe",
     encoding: "utf8",
