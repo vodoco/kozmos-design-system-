@@ -269,10 +269,16 @@ fun KozmosPOIResultCard(
                             text = availabilityLabel,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
-                            color = if (poi.availability == KozmosPOIAvailability.Open) {
-                                KozmosThemeTokens.componentsPrimaryButtonsSuccessButtonBackgroundIdle
-                            } else {
-                                KozmosThemeTokens.primitivesColorsForeground500
+                            // Three tones, not two. "Closing soon" is a reason
+                            // to hurry, so it cannot look like open; the place
+                            // is still open, so it is not closed either.
+                            color = when (poi.availability) {
+                                KozmosPOIAvailability.Open ->
+                                    KozmosThemeTokens.componentsPrimaryButtonsSuccessButtonBackgroundIdle
+                                KozmosPOIAvailability.OpeningSoon,
+                                KozmosPOIAvailability.ClosingSoon ->
+                                    KozmosThemeTokens.componentsPrimaryButtonsAlertButtonBackgroundIdle
+                                else -> KozmosThemeTokens.primitivesColorsForeground500
                             }
                         )
                     }

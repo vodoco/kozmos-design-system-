@@ -79,6 +79,19 @@ public struct KozmosPOIResultCard: View {
 
     private var available: Bool { result.isAvailable }
 
+    /// Three tones, not two. "Closing soon" is a reason to hurry, so it cannot
+    /// look like open; the place is still open, so it is not closed either.
+    private var availabilityTone: Color {
+        switch poi.availability {
+        case .open:
+            return KozmosColors.componentsPrimaryButtonsSuccessButtonBackgroundIdle
+        case .openingSoon, .closingSoon:
+            return KozmosColors.componentsPrimaryButtonsAlertButtonBackgroundIdle
+        default:
+            return KozmosColors.primitivesColorsForeground500
+        }
+    }
+
     private var accessibilityDescription: String {
         if let selectionLabel { return selectionLabel }
         return [
@@ -195,11 +208,7 @@ public struct KozmosPOIResultCard: View {
                         if let availabilityLabel = poi.availabilityLabel {
                             Text(availabilityLabel)
                                 .font(.caption.weight(.semibold))
-                                .foregroundColor(
-                                    poi.availability == .open
-                                        ? KozmosColors.componentsPrimaryButtonsSuccessButtonBackgroundIdle
-                                        : KozmosColors.primitivesColorsForeground500
-                                )
+                                .foregroundColor(availabilityTone)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)

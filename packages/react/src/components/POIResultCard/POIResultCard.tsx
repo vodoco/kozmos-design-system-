@@ -1,5 +1,6 @@
 import React from "react";
 import type {
+  POIAvailability,
   POIPresentation,
   POIResultAction,
   POIResultPresentation,
@@ -41,6 +42,23 @@ export interface POIResultCardProps extends Omit<
    */
   appearance?: "card" | "row";
 }
+
+/**
+ * Availability is drawn in three tones, not two.
+ *
+ * "Closing soon" is a reason to hurry or choose something else, so it cannot
+ * look like "open"; and it is not "closed" either, because the place is still
+ * open. The warning tone is the one a visitor already reads as "act on this".
+ * Where the boundary sits - thirty minutes, an hour - is the product's call;
+ * this only draws what it is told.
+ */
+const availabilityTone: Record<POIAvailability, string> = {
+  open: "text-success-text",
+  openingSoon: "text-warning-text",
+  closingSoon: "text-warning-text",
+  closed: "text-muted-foreground",
+  unknown: "text-muted-foreground",
+};
 
 const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
   (
@@ -179,8 +197,8 @@ const POIResultCard = React.forwardRef<HTMLElement, POIResultCardProps>(
               <span
                 className={cn(
                   "mt-1 block text-xs font-semibold",
-                  poi.availability === "open"
-                    ? "text-success-text"
+                  poi.availability
+                    ? availabilityTone[poi.availability]
                     : "text-muted-foreground",
                 )}
               >

@@ -11,8 +11,18 @@ package com.kozmos.contracts
  * each platform renders the same meaning without embedding English formatters.
  */
 
+/**
+ * Whether a place is open, and how close that is to changing.
+ *
+ * OpeningSoon and ClosingSoon are their own states rather than a flag on the
+ * other two: a visitor reads "closing soon" as a reason to hurry, and drawing
+ * it as plain "open" is the difference between arriving and arriving too late.
+ * Where the boundary sits is the product's, not this contract's.
+ */
 enum class KozmosPOIAvailability(val value: String) {
     Open("open"),
+    OpeningSoon("openingSoon"),
+    ClosingSoon("closingSoon"),
     Closed("closed"),
     Unknown("unknown")
 }
