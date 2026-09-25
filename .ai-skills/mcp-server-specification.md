@@ -1,4 +1,11 @@
+<!-- kozmos-skills: specification -->
+
 # Kozmos MCP Server Specification
+
+> **Not built.** This specifies a server that does not exist yet, so the
+> package name and install commands below are proposals rather than something
+> you can run today. `pnpm skills:check` allows them because of the marker on
+> the first line of this file.
 
 > **Purpose:** This document specifies the Model Context Protocol (MCP) server for Kozmos Design System, enabling AI agents (Claude, Cursor, Anti Gravity, Copilot, and others) to interact with components, tokens, and patterns programmatically.
 

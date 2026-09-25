@@ -497,15 +497,7 @@ module.exports = {
   "changelog": "@changesets/cli/changelog",
   "commit": false,
   "fixed": [],
-  "linked": [
-    [
-      "@kozmos-ds/tokens",
-      "@kozmos-ds/react",
-      "@kozmos-ds/vue",
-      "@kozmos-ds/react-native",
-      "@kozmos-ds/icons"
-    ]
-  ],
+  "linked": [],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
