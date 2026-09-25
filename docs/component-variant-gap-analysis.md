@@ -24,12 +24,12 @@ cannot".
 | Measure                                   | Result |
 | ----------------------------------------- | ------ |
 | Components scanned                        | 112    |
-| Declaring at least one React variant axis | 31     |
-| Variations that are compositional only    | 81     |
-| Components with variant gaps — iOS        | 5/31   |
-| Components with variant gaps — Android    | 5/31   |
-| Components with variant gaps — Figma      | 6/31   |
-| Components with variant gaps — Vue        | 0/31   |
+| Declaring at least one React variant axis | 32     |
+| Variations that are compositional only    | 80     |
+| Components with variant gaps — iOS        | 5/32   |
+| Components with variant gaps — Android    | 5/32   |
+| Components with variant gaps — Figma      | 7/32   |
+| Components with variant gaps — Vue        | 0/32   |
 | Components absent entirely — iOS          | 9/112  |
 | Components absent entirely — Android      | 8/112  |
 | Components absent entirely — Figma        | 16/112 |
@@ -60,6 +60,8 @@ Container
   - ios missing axes -> inset (window, panel)
   - android missing axes -> inset (window, panel)
   - figma missing axes -> inset (window, panel)
+EmptyState
+  - figma missing axes -> size (default, compact)
 Icon
   - figma: component/set absent
 Link

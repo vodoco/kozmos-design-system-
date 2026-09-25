@@ -69,6 +69,12 @@ jobs:
       - name: Verify Component Contracts
         run: pnpm components:contract:check
 
+      # The three product-contract files are one contract. Nothing compared
+      # them until 2026-09-25, and the drift that found was ten fields and
+      # types the web had and neither native platform did.
+      - name: Verify Product Contract Parity
+        run: pnpm contracts:parity:check
+
       # Also never run by any workflow until 2026-09-22. It reports the axes a
       # platform is missing, and fails when the analysis it writes is stale, so
       # the record and the code cannot drift apart unnoticed. Its own controls
@@ -432,7 +438,6 @@ jobs:
           path: test-results/poi-gallery
           if-no-files-found: ignore
           retention-days: 7
-
 
   ios:
     name: iOS Build

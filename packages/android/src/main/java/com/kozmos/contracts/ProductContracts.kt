@@ -125,8 +125,16 @@ data class KozmosPOILogoPresentation(
 data class KozmosPOIPresentation(
     val id: String,
     val name: String,
-    val floorId: String,
-    val floorLabel: String,
+    /**
+     * Optional: a venue need not have levels.
+     *
+     * Story 15's edge case is a single-storey venue, where every result
+     * sitting on "Ground Floor" is noise rather than information. A product
+     * with levels supplies these exactly as before; one without omits them,
+     * and the card draws what is left rather than a floor nobody has.
+     */
+    val floorId: String? = null,
+    val floorLabel: String? = null,
     val categoryId: String? = null,
     val categoryLabel: String? = null,
     val buildingId: String? = null,
@@ -161,10 +169,41 @@ data class KozmosTravelEstimatePresentation(
     val modeLabel: String? = null
 )
 
+/**
+ * Why a result is in the list.
+ *
+ * So the further lists MAP-474 shows under their own headings come from data
+ * rather than from the order a product happened to build. Absent means exact.
+ */
+enum class KozmosPOIResultMatch(val value: String) {
+    Exact("exact"),
+    Alternative("alternative"),
+    Unconfirmed("unconfirmed")
+}
+
+/**
+ * Why a search came back empty.
+ *
+ * An empty list is not one situation, and "nothing found" leaves the visitor
+ * to guess what to undo.
+ */
+enum class KozmosSearchEmptyKind(val value: String) {
+    /** The query matched nothing anywhere in the venue. */
+    NoMatch("noMatch"),
+    /** Matches exist, but every one was excluded by a filter. */
+    FilteredOut("filteredOut"),
+    /** The venue has no data for this at all - a category nobody has mapped. */
+    Unavailable("unavailable")
+}
+
 data class KozmosPOIResultPresentation(
     val poiId: String,
     val resultIndex: Int,
-    val floorId: String,
+    /**
+     * Optional for the same reason as [KozmosPOIPresentation.floorId]: no
+     * levels, no floor.
+     */
+    val floorId: String? = null,
     val selected: Boolean = false,
     val featured: Boolean = false,
     val travelEstimate: KozmosTravelEstimatePresentation? = null,
@@ -172,6 +211,24 @@ data class KozmosPOIResultPresentation(
     val unavailableReason: String? = null,
     /** A quiet tab: why this result is in this list. Ignored when [featured]. */
     val badge: KozmosPOIResultBadgePresentation? = null,
+    /**
+     * Whether this result answers the query exactly, stands in for one that
+     * would, or has not been confirmed. Absent means exact.
+     */
+    val match: KozmosPOIResultMatch? = null,
+    /**
+     * The unit or suite, where a venue has them: "Unit 214", "Suite 3B".
+     * Separate from [KozmosPOIPresentation.floorLabel] because a visitor is
+     * told both.
+     */
+    val unitLabel: String? = null,
+    /**
+     * BCP 47 tag for the language [KozmosPOIPresentation.name] is authored in,
+     * when it differs from the interface language. MAP-474 Story 2 requires an
+     * authored name to be shown exactly as authored, and TalkBack needs the tag
+     * to say it correctly.
+     */
+    val nameLanguage: String? = null,
     /**
      * Revealed when the result is selected. The product decides what a POI
      * offers - a restaurant may book where a shop does not - so the card draws
@@ -199,6 +256,16 @@ data class KozmosCategoryPresentation(
     val id: String,
     val label: String,
     val iconName: String? = null,
+    /**
+     * The venue's own category artwork, as the taxonomy publishes it.
+     *
+     * A quick-access category carries an `iconUrl` in the taxonomy's
+     * published JSON. That artwork belongs to the venue and is versioned on
+     * Pointr's cadence, not this package's, so it arrives as a URL rather
+     * than a bundled asset - the eight that were bundled went stale the
+     * moment a taxonomy release landed, and were removed.
+     */
+    val iconUrl: String? = null,
     val selected: Boolean = false,
     val disabled: Boolean = false,
     val resultCount: Int? = null,
@@ -260,3 +327,27 @@ data class KozmosMapCollisionInsets(
         val Zero = KozmosMapCollisionInsets()
     }
 }
+
+/**
+ * A search's results and what to say when there are none.
+ *
+ * Mirrors `SearchResponsePresentation` on the web and
+ * `KozmosSearchResponsePresentation` on SwiftUI.
+ */
+data class KozmosSearchResponsePresentation(
+    val results: List<KozmosPOIResultPresentation> = emptyList(),
+    /** Present only when [results] is empty. */
+    val emptyKind: KozmosSearchEmptyKind? = null,
+    /**
+     * The filter that emptied the list, already localized - "HQ Building",
+     * "Gluten-free". Story 15 AC6: name what to undo.
+     */
+    val emptiedBy: String? = null,
+    /**
+     * Set when results were found in a language other than the one asked for,
+     * carrying the BCP 47 tag actually used. Story 2's unhappy path: a visitor
+     * reading Japanese who gets English names should be told, not left to
+     * wonder.
+     */
+    val languageFallback: String? = null
+)
