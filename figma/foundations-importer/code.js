@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "6816c54a82cb";
+const PLUGIN_BUILD = "8d5cfc7c84e2";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -48380,13 +48380,17 @@ async function updatePOIResultCardVariant(
   const featured = value === "Featured";
   const unavailable = value === "Unavailable";
   const width = 360;
+  // The root stacks: the result row, then an action row when a product
+  // offers one. It used to BE the row, laid out horizontally, which left
+  // nowhere for an action to go that was not inside the row itself - the same
+  // corner the web, SwiftUI and Compose cards each had to be restructured out
+  // of.
   productSdkVariantRoot(component, "POIResultCard", "State=" + value, {
-    direction: "horizontal",
-    primarySizing: "FIXED",
-    counterSizing: "AUTO",
-    counterAlign: "CENTER",
-    spacing: 12,
-    padding: 12,
+    direction: "vertical",
+    primarySizing: "AUTO",
+    counterSizing: "FIXED",
+    spacing: 0,
+    padding: 0,
     width,
     height: 92,
   });
@@ -48410,6 +48414,18 @@ async function updatePOIResultCardVariant(
   component.strokeWeight = selected ? 2 : 1;
   component.opacity = unavailable ? 0.55 : 1;
 
+  // Everything the card drew before now lives in this row.
+  const resultRow = productSdkFrame("Result Row", {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "AUTO",
+    counterAlign: "CENTER",
+    spacing: 12,
+    padding: 12,
+    width,
+    height: 92,
+  });
+
   const logo = await productSdkSlot({
     name: "Logo Slot",
     label: "Logo",
@@ -48420,7 +48436,7 @@ async function updatePOIResultCardVariant(
     stats,
     muted: true,
   });
-  appendWithSizing(component, logo, "FIXED", "FIXED");
+  appendWithSizing(resultRow, logo, "FIXED", "FIXED");
 
   const copy = productSdkFrame("Result Copy", {
     primarySizing: "AUTO",
@@ -48516,10 +48532,94 @@ async function updatePOIResultCardVariant(
   });
   appendWithSizing(copy, meta, "FILL", null);
 
-  appendWithSizing(component, copy, "FILL", "HUG");
+  appendWithSizing(resultRow, copy, "FILL", "HUG");
+  appendWithSizing(component, resultRow, "FILL", "HUG");
+
+  // The action row is drawn on every variant and hidden, because the Actions
+  // boolean toggles a layer: one that existed only on Selected could not be
+  // turned on anywhere else, and a product offers actions on a selected result
+  // whatever its State.
+  const actionsRow = productSdkFrame("Actions Row", {
+    direction: "horizontal",
+    primarySizing: "FIXED",
+    counterSizing: "AUTO",
+    counterAlign: "CENTER",
+    spacing: 8,
+    paddingLeft: 12,
+    paddingRight: 12,
+    paddingTop: 0,
+    paddingBottom: 12,
+    width,
+    height: 40,
+  });
+
+  for (const action of [
+    { name: "Primary Action", label: "Go", primary: true },
+    { name: "Secondary Action", label: "Details", primary: false },
+  ]) {
+    const button = productSdkFrame(action.name, {
+      direction: "horizontal",
+      primarySizing: "AUTO",
+      counterSizing: "FIXED",
+      primaryAlign: "CENTER",
+      counterAlign: "CENTER",
+      paddingLeft: 16,
+      paddingRight: 16,
+      width: 80,
+      height: 40,
+    });
+    button.cornerRadius = KOZMOS_RADIUS.control;
+    button.fills = [
+      paintFromVariable(
+        action.primary ? "Colors/theme/500" : "Surface/0",
+        action.primary ? "#135BEC" : "#FFFFFF",
+        variableByName,
+        stats,
+      ),
+    ];
+    if (!action.primary) {
+      button.strokes = [
+        paintFromVariable("Border/Subtle", "#C7CAD1", variableByName, stats),
+      ];
+      button.strokeWeight = 1;
+    }
+
+    const label = await productSdkText({
+      name: action.name + " Text",
+      characters: action.label,
+      styleKey: "badgeLabel",
+      fonts,
+      bold: true,
+      fontSize: 14,
+      lineHeight: 20,
+      colorToken: action.primary ? "Surface/0" : "Colors/foreground/0",
+      colorFallback: action.primary ? "#FFFFFF" : "#000000",
+      variableByName,
+      stats,
+      width: 48,
+    });
+    label.textAutoResize = "WIDTH_AND_HEIGHT";
+    button.appendChild(label);
+    appendWithSizing(actionsRow, button, "HUG", "FIXED");
+  }
+
+  appendWithSizing(component, actionsRow, "FILL", "FIXED");
+  actionsRow.visible = false;
 }
 
 function configurePOIResultCardProperties(componentSet, stats) {
+  // Actions combine with every State rather than replacing one, so they are a
+  // boolean property and not a fifth variant: on the axis they would have
+  // doubled the variants instead of describing the card. This is the shape the
+  // MAP-474 prototypes already use, where Tags, buttonContainer and logo are
+  // layers toggled on one component.
+  configureNamedBooleanProperty(
+    componentSet,
+    "Actions Row",
+    "Actions",
+    false,
+    stats,
+  );
   configureNamedTextProperty(
     componentSet,
     "Title Text",
@@ -72086,6 +72186,96 @@ function configureFocusVisibleProperty(componentSet, stats) {
 
   walk(componentSet);
   stats.focusVisibleBindings = boundCount;
+}
+
+/**
+ * A BOOLEAN component property, and the layer whose visibility it drives.
+ *
+ * The importer had TEXT and SLOT properties and no boolean. A slot that a
+ * product may or may not fill — a result's action row — is not a variant: it
+ * combines with every State rather than replacing one, and putting it on the
+ * State axis would multiply the variants instead of describing the card. This
+ * is the same shape the MAP-474 prototypes use, where Tags, buttonContainer
+ * and logo are layers toggled on one component rather than variants of it.
+ */
+function ensureBooleanProperty(componentSet, name, defaultValue, stats) {
+  const read = safeComponentPropertyDefinitions(
+    componentSet,
+    stats,
+    `ensure ${name} boolean property`,
+  );
+  const definitions = read.definitions;
+  if (read.error) return null;
+
+  for (const propertyName of Object.keys(definitions)) {
+    const definition = definitions[propertyName];
+    const baseName = propertyName.split("#")[0];
+    if (baseName === name && definition.type === "BOOLEAN") return propertyName;
+  }
+
+  if (!componentSet.addComponentProperty) {
+    stats.warnings.push(
+      `This Figma runtime does not expose addComponentProperty for ${name}.`,
+    );
+    return null;
+  }
+
+  try {
+    return componentSet.addComponentProperty(name, "BOOLEAN", defaultValue);
+  } catch (error) {
+    stats.warnings.push(
+      `Could not create ${name} boolean property (${messageFor(error)}).`,
+    );
+    return null;
+  }
+}
+
+function configureNamedBooleanProperty(
+  componentSet,
+  nodeName,
+  propertyName,
+  defaultValue,
+  stats,
+) {
+  const resolved = ensureBooleanProperty(
+    componentSet,
+    propertyName,
+    defaultValue,
+    stats,
+  );
+  if (!resolved) return;
+
+  let bound = 0;
+
+  function walk(node) {
+    if (node.name === nodeName && node.componentPropertyReferences !== undefined) {
+      try {
+        // Object.assign, not object spread: the plugin sandbox parses an
+        // older dialect and figma:plugin:check refuses spread outright. The
+        // rest of this 70k-line file has none, which is why the rule held
+        // until this helper arrived.
+        node.componentPropertyReferences = Object.assign(
+          {},
+          node.componentPropertyReferences || {},
+          { visible: resolved },
+        );
+        bound += 1;
+      } catch (error) {
+        stats.warnings.push(
+          `Could not bind ${nodeName} to ${propertyName} (${messageFor(error)}).`,
+        );
+      }
+    }
+    if (node.children) for (const child of node.children) walk(child);
+  }
+
+  for (const variant of componentSet.children) walk(variant);
+
+  if (bound === 0) {
+    stats.warnings.push(
+      `No "${nodeName}" layer to bind to the ${propertyName} property.`,
+    );
+  }
 }
 
 function ensureTextProperty(componentSet, name, defaultValue, stats) {
