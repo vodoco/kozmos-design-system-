@@ -67,7 +67,12 @@ const VALUE_ALIASES = new Map(
  * component with both `variant` and `status` is still compared strictly.
  */
 const AXIS_ALIASES = {
-  variant: ["status", "tone", "style"],
+  // `scale`: Rating's React prop is `variant`, and its Figma axis is `Scale`
+  // — because the set already has an axis called `Value`, and
+  // "Variant=Stars, Value=3" reads as two generic words where
+  // "Scale=Stars, Value=3" says what it is. This map is what lets the two
+  // sides name the same axis for their own audience.
+  variant: ["status", "tone", "style", "scale"],
   tone: ["variant", "status"],
   direction: ["orientation"],
   orientation: ["direction"],

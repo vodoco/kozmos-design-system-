@@ -3598,6 +3598,327 @@ section("Icon slots repaired from what they record");
   );
 }
 
+// --- Rating's two scales -------------------------------------------------------------
+
+section("Rating");
+{
+  ok(
+    typeof plugin.updateRatingVariant === "function" &&
+      typeof plugin.buildRatingComponent === "function" &&
+      typeof plugin.updateRatingComponent === "function",
+    "Rating has a painter, a Build and an Update",
+  );
+  // Named explicitly rather than compared as JSON against a plugin constant:
+  // `JSON.stringify` drops an undefined key, so `{ Scale: undefined, ... }`
+  // matched the old two-axis shape exactly and the assertion passed on a
+  // painter that had no Scale at all.
+  const ratingAxes = plugin.expectedVariantAxesForComponentSetName("Rating");
+  ok(
+    JSON.stringify(ratingAxes && ratingAxes.Scale) ===
+      JSON.stringify(["Stars", "Thumbs"]),
+    `the set expects a Scale of Stars and Thumbs (got ${JSON.stringify(ratingAxes && ratingAxes.Scale)})`,
+  );
+  ok(
+    Array.isArray(ratingAxes && ratingAxes.Value) &&
+      Array.isArray(ratingAxes && ratingAxes.State),
+    "beside Value and State",
+  );
+
+  // The theme steps this painter binds — Colors/theme/0 and /600 — are in the
+  // payload rather than in the bare mock list, so the map is built the way the
+  // Stepper and card checks build theirs. Without it the paint falls back to
+  // its hex and the binding assertions below would be measuring the harness.
+  const ratingTokens = payloadVariables([...variableByName.keys()]);
+
+  async function paint(scale, value, state = "Default") {
+    const component = figma.createComponent();
+    const stats = freshStats();
+    await plugin.updateRatingVariant(component, {
+      scale,
+      value,
+      state,
+      variableByName: ratingTokens.variableByName,
+      fonts: FONTS,
+      stats,
+    });
+    return { component, stats };
+  }
+
+  if (typeof plugin.updateRatingVariant === "function") {
+    const stars = (await paint("Stars", "3")).component;
+    ok(
+      stars.name === "Scale=Stars, Value=3, State=Default",
+      `a star variant carries all three axes (got "${stars.name}")`,
+    );
+    ok(stars.children.length === 5, "the stars scale draws five cells");
+
+    const thumbs = (await paint("Thumbs", "2")).component;
+    ok(
+      thumbs.name === "Scale=Thumbs, Value=2, State=Default",
+      `a thumbs variant is named for its scale (got "${thumbs.name}")`,
+    );
+    ok(thumbs.children.length === 2, "the thumbs scale draws two cells");
+    ok(
+      thumbs.children[0].name === "Rating Thumb Down" &&
+        thumbs.children[1].name === "Rating Thumb Up",
+      "down first, then up — 1 is the lowest on both scales",
+    );
+    ok(
+      thumbs.children.every((cell) => cell.width === 44 && cell.height === 44),
+      "each thumb keeps a 44 target",
+    );
+
+    const discOf = (cell) => cell.children[0];
+    ok(
+      thumbs.children.every(
+        (cell) => discOf(cell).width === 40 && discOf(cell).height === 40,
+      ),
+      "with a 40 disc inside it",
+    );
+
+    // Exactly the one chosen fills. A thumbs-up is not "two thumbs", so the
+    // cumulative rule the stars follow must NOT apply here.
+    ok(
+      discOf(thumbs.children[1]).strokeWeight === 2 &&
+        boundVariableName(discOf(thumbs.children[1]).strokes[0]) ===
+          "Colors/theme/600",
+      "the chosen thumb takes a 2 ring in the theme",
+    );
+    ok(
+      discOf(thumbs.children[0]).strokes.length === 0,
+      "and the other takes none — thumbs do not fill cumulatively",
+    );
+
+    const down = (await paint("Thumbs", "1")).component;
+    ok(
+      discOf(down.children[0]).strokeWeight === 2 &&
+        discOf(down.children[1]).strokes.length === 0,
+      "choosing down rings down and not up",
+    );
+
+    const none = (await paint("Thumbs", "0")).component;
+    ok(
+      none.children.every((cell) => discOf(cell).strokes.length === 0),
+      "0 is unanswered: neither is ringed",
+    );
+
+    const readonly = (await paint("Thumbs", "2", "Readonly")).component;
+    ok(
+      readonly.children.every((cell) => cell.opacity === 0.72),
+      "a read-only rating is drawn quieter, as the stars are",
+    );
+  }
+
+  // The name a variant built before the Scale axis carries. Update has to read
+  // it as Stars and RENAME it, because replacing it would change the node id
+  // Code Connect pins.
+  ok(
+    typeof plugin.parseRatingVariantName === "function" &&
+      JSON.stringify(plugin.parseRatingVariantName("Value=3, State=Default")) ===
+        JSON.stringify({ scale: "Stars", value: "3", state: "Default" }),
+    "a variant with no Scale reads as Stars, so Update renames rather than replaces",
+  );
+  ok(
+    plugin.parseRatingVariantName("Scale=Thumbs, Value=4, State=Default") ===
+      null,
+    "thumbs has no fourth value, and the set refuses to draw one",
+  );
+  ok(
+    JSON.stringify(
+      plugin.parseRatingVariantName("Scale=Thumbs, Value=2, State=Readonly"),
+    ) === JSON.stringify({ scale: "Thumbs", value: "2", state: "Readonly" }),
+    "and accepts the three values it does have",
+  );
+}
+
+// --- Card's padding, and the second axis the helper now takes ------------------------
+
+section("Card");
+{
+  const cardAxes = plugin.expectedVariantAxesForComponentSetName("Card");
+  ok(
+    JSON.stringify(cardAxes && cardAxes.Padding) ===
+      JSON.stringify(["Default", "Compact"]),
+    `the set expects a Padding of Default and Compact (got ${JSON.stringify(cardAxes && cardAxes.Padding)})`,
+  );
+
+  const cardTokens = payloadVariables([...variableByName.keys()]);
+  async function card(value, second) {
+    const component = figma.createComponent();
+    await plugin.updateCardVariant(component, {
+      value,
+      second,
+      variableByName: cardTokens.variableByName,
+      fonts: FONTS,
+      stats: freshStats(),
+    });
+    return component;
+  }
+
+  const full = await card("Full", "Default");
+  ok(
+    full.name === "Content=Full, Padding=Default",
+    `a variant carries both axes (got "${full.name}")`,
+  );
+
+  const compact = await card("Full", "Compact");
+  const padsOf = (component) =>
+    ["Card Header", "Card Body", "Card Footer"]
+      .map((name) => named(component, name))
+      .filter(Boolean)
+      .map((node) => node.paddingLeft);
+
+  ok(
+    padsOf(full).length >= 2 && padsOf(full).every((v) => v === 24),
+    `default pads 24 throughout (got ${JSON.stringify(padsOf(full))})`,
+  );
+  // The whole card, not just the header: 16 at the top and 24 at the bottom
+  // is the bug, not the fix.
+  ok(
+    padsOf(compact).length === padsOf(full).length &&
+      padsOf(compact).every((v) => v === 16),
+    `compact pads 16 throughout (got ${JSON.stringify(padsOf(compact))})`,
+  );
+
+  ok(
+    JSON.stringify(plugin.parseCardVariantName("Content=Full")) ===
+      JSON.stringify({ value: "Full", second: "Default" }),
+    "a variant with no Padding reads as Default, so Update renames rather than replaces",
+  );
+  ok(
+    plugin.parseCardVariantName("Content=Full, Padding=Roomy") === null,
+    "and an unknown padding is refused",
+  );
+
+  // The generic helper grew the second axis; these are the two facts every
+  // set built through it now depends on.
+  ok(
+    typeof plugin.generatedVariantCombinations === "function" &&
+      plugin.generatedVariantCombinations({
+        values: ["a", "b"],
+        axis2Values: ["x", "y"],
+      }).length === 4,
+    "the helper crosses both axes",
+  );
+  // Guarded, like the assertion above it. Calling a helper that a previous
+  // build did not have throws a TypeError, which aborts the whole run — so a
+  // negative control against the old painter would stop here and every
+  // section after it would silently never execute.
+  ok(
+    typeof plugin.generatedVariantCombinations === "function" &&
+      plugin.generatedVariantCombinations({ values: ["a", "b"] }).length === 2 &&
+      plugin.generatedVariantCombinations({ values: ["a"] })[0].second === null,
+    "and a set with one axis is untouched",
+  );
+}
+
+// --- EmptyState's size, Container's inset, POIResultCard's appearance ----------------
+
+section("The rest of the batch");
+{
+  const tokens = payloadVariables([...variableByName.keys()]);
+  const paint = async (painter, value, second) => {
+    const component = figma.createComponent();
+    await plugin[painter](component, {
+      value,
+      second,
+      variableByName: tokens.variableByName,
+      fonts: FONTS,
+      stats: freshStats(),
+    });
+    return component;
+  };
+  const axis = (set, name) => {
+    const axes = plugin.expectedVariantAxesForComponentSetName(set);
+    return axes && axes[name];
+  };
+
+  // EmptyState
+  ok(
+    JSON.stringify(axis("EmptyState", "Size")) ===
+      JSON.stringify(["Default", "Compact"]),
+    `EmptyState expects a Size (got ${JSON.stringify(axis("EmptyState", "Size"))})`,
+  );
+  const esFull = await paint("updateEmptyStateVariant", "Icon", "Default");
+  const esCompact = await paint("updateEmptyStateVariant", "Icon", "Compact");
+  ok(
+    esFull.name === "Content=Icon, Size=Default",
+    `EmptyState carries both axes (got "${esFull.name}")`,
+  );
+  ok(
+    esFull.paddingTop === 32 && esCompact.paddingTop === 16,
+    `32 by default, 16 compact (got ${esFull.paddingTop} and ${esCompact.paddingTop})`,
+  );
+  ok(
+    named(esFull, "Icon Container").width === 64 &&
+      named(esCompact, "Icon Container").width === 40,
+    "and the icon box shrinks with it",
+  );
+  ok(
+    JSON.stringify(plugin.parseEmptyStateVariantName("Content=Icon")) ===
+      JSON.stringify({ value: "Icon", second: "Default" }),
+    "EmptyState: no Size reads as Default, so Update renames rather than replaces",
+  );
+
+  // Container
+  ok(
+    JSON.stringify(axis("Container", "Inset")) ===
+      JSON.stringify(["Window", "Panel"]),
+    `Container expects an Inset (got ${JSON.stringify(axis("Container", "Inset"))})`,
+  );
+  const ctWindow = await paint("updateContainerVariant", "True", "Window");
+  const ctPanel = await paint("updateContainerVariant", "True", "Panel");
+  ok(
+    ctWindow.name === "Centered=True, Inset=Window",
+    `Container carries both axes (got "${ctWindow.name}")`,
+  );
+  ok(
+    ctWindow.paddingLeft === 24 && ctPanel.paddingLeft === 16,
+    `the window's widest step against the panel's fixed 16 (got ${ctWindow.paddingLeft} and ${ctPanel.paddingLeft})`,
+  );
+  ok(
+    JSON.stringify(plugin.parseContainerVariantName("Centered=True")) ===
+      JSON.stringify({ value: "True", second: "Window", centered: "True" }),
+    "Container: no Inset reads as Window",
+  );
+
+  // POIResultCard
+  ok(
+    JSON.stringify(axis("POIResultCard", "Appearance")) ===
+      JSON.stringify(["Card", "Row"]),
+    `POIResultCard expects an Appearance (got ${JSON.stringify(axis("POIResultCard", "Appearance"))})`,
+  );
+  const asCard = await paint("updatePOIResultCardVariant", "Selected", "Card");
+  const asRow = await paint("updatePOIResultCardVariant", "Selected", "Row");
+  ok(
+    asCard.name === "State=Selected, Appearance=Card",
+    `POIResultCard carries both axes (got "${asCard.name}")`,
+  );
+  // A row sits in a list that already draws the edges, so it has none of its
+  // own and states its selection with the fill instead.
+  ok(
+    asCard.strokes.length === 1 && asRow.strokes.length === 0,
+    "a card has a border and a row has none",
+  );
+  ok(
+    asCard.cornerRadius === plugin.KOZMOS_RADIUS.container &&
+      asRow.cornerRadius === plugin.KOZMOS_RADIUS.none,
+    "a card is rounded and a row is not",
+  );
+  const featuredRow = await paint("updatePOIResultCardVariant", "Featured", "Row");
+  const featuredCard = await paint("updatePOIResultCardVariant", "Featured", "Card");
+  ok(
+    featuredCard.findOne((n) => /Featured|Tab/.test(n.name || "")) !== null &&
+      featuredRow.findOne((n) => /Featured|Tab/.test(n.name || "")) === null,
+    "the tab hangs from a card's edge, and a row has no edge to hang it from",
+  );
+  ok(
+    JSON.stringify(plugin.parsePOIResultCardVariantName("State=Selected")) ===
+      JSON.stringify({ value: "Selected", second: "Card" }),
+    "POIResultCard: no Appearance reads as Card",
+  );
+}
+
 // --- Summary ---------------------------------------------------------------------
 
 console.log(

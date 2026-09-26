@@ -19,7 +19,7 @@ const RUN_NAMESPACE = "kozmos_ds_importer";
  * Derived from a hash of this file by `pnpm figma:stamp`, and held current by
  * `pnpm figma:stamp --check`. Never edit it by hand.
  */
-const PLUGIN_BUILD = "8d5cfc7c84e2";
+const PLUGIN_BUILD = "5a392fe1c512";
 const EXAMPLE_CHILD_SIZING_DATA_KEY = "exampleChildSizing";
 // Inter, because Figma takes one real family and the System role is a stack.
 // `ui-sans-serif, system-ui, -apple-system, ... Roboto ...` resolves to SF Pro
@@ -70,6 +70,16 @@ const STACK_GAPS = ["2", "4", "6"];
 const GRID_COLUMNS = ["1", "2", "3", "4"];
 const GRID_GAPS = ["2", "4", "6"];
 const GRID_PREVIEW_ROWS = 2;
+// What the padding responds to. Window steps with the viewport, which is
+// right for a page; Panel holds 16 whatever the window is doing, which is
+// right for a fixed-width region — a 390 side panel in a 1280 window was
+// taking the widest step, so the same content had 32 a side on a desktop and
+// 16 on a phone. Figma has no viewport, so the axis draws the two ends: the
+// window's widest step and the panel's fixed 16.
+const CONTAINER_INSETS = ["Window", "Panel"];
+function containerInsetPadding(inset) {
+  return inset === "Panel" ? 16 : 24;
+}
 const CONTAINER_CENTERED = ["True", "False"];
 const SCROLL_AREA_ORIENTATIONS = ["Vertical", "Horizontal", "Both"];
 const SCROLL_AREA_SCROLLBARS = ["Hidden", "Visible"];
@@ -280,14 +290,44 @@ const SLIDER_TYPES = ["Single", "Range"];
 const SLIDER_THUMB_SIZE = 20;
 const RATING_VALUES = ["0", "1", "2", "3", "4", "5"];
 const RATING_STATES = ["Default", "Readonly"];
+// The scale a rating is measured on. Stars are ordinal, so choosing four
+// fills four; thumbs are a choice between two, so exactly the one chosen
+// fills. Thumbs therefore only has values 0, 1 and 2 — the set skips the rest
+// rather than drawing three nonsense variants, the way Stepper already skips
+// a Current past its Count.
+const RATING_SCALES = ["Stars", "Thumbs"];
+const RATING_THUMB_VALUES = ["0", "1", "2"];
+function ratingValuesForScale(scale) {
+  return scale === "Thumbs" ? RATING_THUMB_VALUES : RATING_VALUES;
+}
 const STEPPER_COUNTS = ["2", "3", "4"];
 const STEPPER_CURRENT = ["1", "2", "3", "4"];
 const PROGRESS_VALUES = ["0", "25", "50", "75", "100"];
 const SPINNER_SIZES = ["Small", "Medium", "Large", "XLarge"];
 const AVATAR_CONTENT = ["Fallback", "Image"];
 const ALERT_VARIANTS = ["Default", "Destructive", "Success", "Warning", "Info"];
+// How much room an empty state takes. Default pads 32 and fills its region,
+// which is right when the empty state IS the screen; Compact is for a slot
+// that already draws a box round it. Measured on the web, the same content
+// came to 258px inside a result list and about 128 compact (GAP-009).
+const EMPTY_STATE_SIZES = ["Default", "Compact"];
+function emptyStatePadding(size) {
+  return size === "Compact" ? 16 : 32;
+}
+function emptyStateIconSize(size) {
+  return size === "Compact" ? 40 : 64;
+}
 const EMPTY_STATE_CONTENT = ["Basic", "Icon", "Action"];
 const CARD_CONTENT = ["Basic", "Header", "Full"];
+// How much room a card gives its content. Default is 24 on every side, the
+// card as the system has always drawn it; Compact is 16, for a card that is
+// one setting in a column of settings rather than a thing on its own
+// (GAP-034). It is one axis for the whole card because a card padded 16 at the
+// top and 24 at the bottom is the bug, not the fix.
+const CARD_PADDINGS = ["Default", "Compact"];
+function cardPaddingLength(padding) {
+  return padding === "Compact" ? 16 : 24;
+}
 const LIST_DENSITIES = ["Default", "Compact"];
 const TABLE_DENSITIES = ["Default", "Compact"];
 // Product / SDK lane. These compose Core primitives and stay domain-specific;
@@ -455,6 +495,12 @@ const AI_SEARCH_BUTTON_ICON_SIZE = 16;
 /** The sparkles, from the Pointr Icon Library. */
 const AI_SEARCH_BUTTON_ICON = "stars-01";
 const POI_MEDIA_GALLERY_CONTENT = ["Single", "Multiple", "Empty"];
+// How a result is drawn. Card is the standalone one: a control radius, a
+// border, and the featured tab hanging above it. Row is the one that sits in
+// a list that already draws the edges — no radius, no border of its own, and
+// it states its selection with a fill instead of thickening a border it does
+// not have. A row has no tab either: there is no card edge for it to hang from.
+const POI_RESULT_CARD_APPEARANCES = ["Card", "Row"];
 const POI_RESULT_CARD_STATES = [
   "Default",
   "Selected",
@@ -16894,6 +16940,7 @@ function expectedVariantAxesForComponentSetName(name) {
   if (canonicalName === "POIResultCard") {
     return {
       State: POI_RESULT_CARD_STATES,
+      Appearance: POI_RESULT_CARD_APPEARANCES,
     };
   }
 
@@ -17031,6 +17078,7 @@ function expectedVariantAxesForComponentSetName(name) {
   if (canonicalName === "Container") {
     return {
       Centered: CONTAINER_CENTERED,
+      Inset: CONTAINER_INSETS,
     };
   }
 
@@ -17141,6 +17189,7 @@ function expectedVariantAxesForComponentSetName(name) {
   if (canonicalName === "Card") {
     return {
       Content: CARD_CONTENT,
+      Padding: CARD_PADDINGS,
     };
   }
 
@@ -17445,6 +17494,7 @@ function expectedVariantAxesForComponentSetName(name) {
 
   if (canonicalName === "Rating") {
     return {
+      Scale: RATING_SCALES,
       Value: RATING_VALUES,
       State: RATING_STATES,
     };
@@ -17484,6 +17534,7 @@ function expectedVariantAxesForComponentSetName(name) {
   if (canonicalName === "EmptyState") {
     return {
       Content: EMPTY_STATE_CONTENT,
+      Size: EMPTY_STATE_SIZES,
     };
   }
 
@@ -31347,6 +31398,9 @@ async function buildContainerComponent() {
     componentSetName: "Container",
     axisName: "Centered",
     values: CONTAINER_CENTERED,
+    axis2Name: "Inset",
+    axis2Values: CONTAINER_INSETS,
+    yStep: 180,
     x: 80,
     y: 11380,
     xStep: 560,
@@ -31367,6 +31421,9 @@ async function updateContainerComponent() {
     componentSetName: "Container",
     axisName: "Centered",
     values: CONTAINER_CENTERED,
+    axis2Name: "Inset",
+    axis2Values: CONTAINER_INSETS,
+    yStep: 180,
     xStep: 560,
     createVariant: createContainerVariant,
     updateVariant: updateContainerVariant,
@@ -32409,9 +32466,12 @@ async function buildCardComponent() {
     componentSetName: "Card",
     axisName: "Content",
     values: CARD_CONTENT,
+    axis2Name: "Padding",
+    axis2Values: CARD_PADDINGS,
     x: 80,
     y: 4300,
     xStep: 420,
+    yStep: 220,
     createVariant: createCardVariant,
     configureProperties: configureCardProperties,
     description: [
@@ -32430,7 +32490,10 @@ async function updateCardComponent() {
     componentSetName: "Card",
     axisName: "Content",
     values: CARD_CONTENT,
+    axis2Name: "Padding",
+    axis2Values: CARD_PADDINGS,
     xStep: 420,
+    yStep: 220,
     createVariant: createCardVariant,
     updateVariant: updateCardVariant,
     parseVariantName: parseCardVariantName,
@@ -43275,17 +43338,23 @@ async function buildRatingComponent() {
   const variableByName = await ensureComponentRuntimeVariables(stats);
   const components = [];
 
-  for (const state of RATING_STATES) {
-    for (const value of RATING_VALUES) {
-      const component = await createRatingVariant({
-        value,
-        state,
-        variableByName,
-        fonts,
-        stats,
-      });
-      page.appendChild(component);
-      components.push(component);
+  for (const scale of RATING_SCALES) {
+    for (const state of RATING_STATES) {
+      // Thumbs has no third, fourth or fifth value: the set skips them rather
+      // than drawing variants that mean nothing, as Stepper skips a Current
+      // past its Count.
+      for (const value of ratingValuesForScale(scale)) {
+        const component = await createRatingVariant({
+          scale,
+          value,
+          state,
+          variableByName,
+          fonts,
+          stats,
+        });
+        page.appendChild(component);
+        components.push(component);
+      }
     }
   }
 
@@ -43298,9 +43367,10 @@ async function buildRatingComponent() {
   componentSet.setSharedPluginData(RUN_NAMESPACE, "component", "Rating");
   applyComponentSetDescription(componentSet, "Rating", false, [
     "Kozmos Rating component set generated from React Rating API.",
-    "Value maps to Rating.value in Code Connect.",
+    "Scale maps to Rating.variant: Stars is the ordinal scale, Thumbs is a choice of two.",
+    "Value maps to Rating.value in Code Connect. 0 is unanswered; on Thumbs 1 is down and 2 is up.",
     "State maps to Rating.readOnly.",
-    "Max is fixed to five for the Core component.",
+    "Max is fixed to five on the Stars scale.",
   ]);
   clearComponentSetContainerFill(componentSet);
   layoutRatingVariants(componentSet);
@@ -43368,9 +43438,14 @@ async function updateRatingComponent() {
       continue;
     }
 
-    const key = `${props.value}/${props.state}`;
+    // A variant built before the Scale axis existed is named
+    // "Value=3, State=Default" and parses as Stars, so Update RENAMES it
+    // rather than replacing it — which is the whole point of Update: the node
+    // ids Code Connect pins survive.
+    const key = `${props.scale}/${props.value}/${props.state}`;
     seenKeys[key] = true;
     await updateRatingVariant(child, {
+      scale: props.scale,
       value: props.value,
       state: props.state,
       variableByName,
@@ -43380,21 +43455,24 @@ async function updateRatingComponent() {
     stats.variantsUpdated += 1;
   }
 
-  for (const state of RATING_STATES) {
-    for (const value of RATING_VALUES) {
-      const key = `${value}/${state}`;
-      if (seenKeys[key]) continue;
+  for (const scale of RATING_SCALES) {
+    for (const state of RATING_STATES) {
+      for (const value of ratingValuesForScale(scale)) {
+        const key = `${scale}/${value}/${state}`;
+        if (seenKeys[key]) continue;
 
-      const component = await createRatingVariant({
-        value,
-        state,
-        variableByName,
-        fonts,
-        stats,
-      });
-      existing.appendChild(component);
-      seenKeys[key] = true;
-      stats.variantsCreated += 1;
+        const component = await createRatingVariant({
+          scale,
+          value,
+          state,
+          variableByName,
+          fonts,
+          stats,
+        });
+        existing.appendChild(component);
+        seenKeys[key] = true;
+        stats.variantsCreated += 1;
+      }
     }
   }
 
@@ -43769,6 +43847,9 @@ async function buildEmptyStateComponent() {
     componentSetName: "EmptyState",
     axisName: "Content",
     values: EMPTY_STATE_CONTENT,
+    axis2Name: "Size",
+    axis2Values: EMPTY_STATE_SIZES,
+    yStep: 260,
     x: 80,
     y: 6740,
     xStep: 420,
@@ -43790,6 +43871,9 @@ async function updateEmptyStateComponent() {
     componentSetName: "EmptyState",
     axisName: "Content",
     values: EMPTY_STATE_CONTENT,
+    axis2Name: "Size",
+    axis2Values: EMPTY_STATE_SIZES,
+    yStep: 260,
     xStep: 420,
     createVariant: createEmptyStateVariant,
     updateVariant: updateEmptyStateVariant,
@@ -46997,9 +47081,19 @@ const BROWSE_CATEGORIES_PANEL_TILES = [
   { label: "Wayfinding", tint: "Green", count: "6", icon: "route" },
   { label: "Check-in", tint: "Turquoise", count: "14", icon: "qr-code-01" },
   { label: "Secure Areas", tint: "Red", count: "5", icon: "lock-01" },
-  { label: "Nearby", tint: "Yellow", count: "88", icon: "navigation-pointer-01" },
+  {
+    label: "Nearby",
+    tint: "Yellow",
+    count: "88",
+    icon: "navigation-pointer-01",
+  },
   { label: "Information", tint: "Blue", count: "9", icon: "info-circle" },
-  { label: "Parking & Ground Transport", tint: "Navy", count: "22", icon: "bus" },
+  {
+    label: "Parking & Ground Transport",
+    tint: "Navy",
+    count: "22",
+    icon: "bus",
+  },
   { label: "Favourites", tint: "Orange", count: "37", icon: "heart" },
   { label: "Shopping", tint: "Pink", count: "41", icon: "shopping-bag-02" },
 ];
@@ -48369,15 +48463,24 @@ async function createPOIResultCardVariant(args) {
 }
 
 function parsePOIResultCardVariantName(name) {
-  return productSdkVariantValues(name, "State", POI_RESULT_CARD_STATES);
+  const base = productSdkVariantValues(name, "State", POI_RESULT_CARD_STATES);
+  if (!base) return null;
+  // A variant drawn before the Appearance axis carries none and is the card,
+  // so Update renames it rather than replacing it and its node id survives.
+  const second = variantAxisValue(name, "Appearance") || "Card";
+  if (POI_RESULT_CARD_APPEARANCES.indexOf(second) === -1) return null;
+  return { value: base.value, second };
 }
 
 async function updatePOIResultCardVariant(
   component,
-  { value, variableByName, fonts, stats },
+  { value, second, variableByName, fonts, stats },
 ) {
+  const appearance =
+    POI_RESULT_CARD_APPEARANCES.indexOf(second) === -1 ? "Card" : second;
+  const isRow = appearance === "Row";
   const selected = value === "Selected";
-  const featured = value === "Featured";
+  const featured = value === "Featured" && !isRow;
   const unavailable = value === "Unavailable";
   const width = 360;
   // The root stacks: the result row, then an action row when a product
@@ -48385,16 +48488,22 @@ async function updatePOIResultCardVariant(
   // nowhere for an action to go that was not inside the row itself - the same
   // corner the web, SwiftUI and Compose cards each had to be restructured out
   // of.
-  productSdkVariantRoot(component, "POIResultCard", "State=" + value, {
-    direction: "vertical",
-    primarySizing: "AUTO",
-    counterSizing: "FIXED",
-    spacing: 0,
-    padding: 0,
-    width,
-    height: 92,
-  });
-  component.cornerRadius = KOZMOS_RADIUS.container;
+  productSdkVariantRoot(
+    component,
+    "POIResultCard",
+    "State=" + value + ", Appearance=" + appearance,
+    {
+      direction: "vertical",
+      primarySizing: "AUTO",
+      counterSizing: "FIXED",
+      spacing: 0,
+      padding: 0,
+      width,
+      height: 92,
+    },
+  );
+  // A row sits in a list that already draws the edges.
+  component.cornerRadius = isRow ? KOZMOS_RADIUS.none : KOZMOS_RADIUS.container;
   component.fills = [
     paintFromVariable(
       selected ? "Colors/theme/100" : "Surface/0",
@@ -48403,15 +48512,17 @@ async function updatePOIResultCardVariant(
       stats,
     ),
   ];
-  component.strokes = [
-    paintFromVariable(
-      selected ? "Colors/theme/500" : "Border/Subtle",
-      selected ? "#135BEC" : "#C7CAD1",
-      variableByName,
-      stats,
-    ),
-  ];
-  component.strokeWeight = selected ? 2 : 1;
+  component.strokes = isRow
+    ? []
+    : [
+        paintFromVariable(
+          selected ? "Colors/theme/500" : "Border/Subtle",
+          selected ? "#135BEC" : "#C7CAD1",
+          variableByName,
+          stats,
+        ),
+      ];
+  component.strokeWeight = isRow ? 0 : selected ? 2 : 1;
   component.opacity = unavailable ? 0.55 : 1;
 
   // Everything the card drew before now lives in this row.
@@ -48650,6 +48761,9 @@ async function buildPOIResultCardComponent() {
     componentSetName: "POIResultCard",
     axisName: "State",
     values: POI_RESULT_CARD_STATES,
+    axis2Name: "Appearance",
+    axis2Values: POI_RESULT_CARD_APPEARANCES,
+    yStep: 200,
     x: 80,
     y: 15000,
     xStep: 420,
@@ -48666,6 +48780,9 @@ async function updatePOIResultCardComponent() {
     componentSetName: "POIResultCard",
     axisName: "State",
     values: POI_RESULT_CARD_STATES,
+    axis2Name: "Appearance",
+    axis2Values: POI_RESULT_CARD_APPEARANCES,
+    yStep: 200,
     xStep: 420,
     createVariant: createPOIResultCardVariant,
     updateVariant: updatePOIResultCardVariant,
@@ -50260,6 +50377,32 @@ async function rebuildFeedbackCardComponent() {
   });
 }
 
+/**
+ * Every combination a generated set draws.
+ *
+ * Forty-five sets are built through these two helpers, and all of them had
+ * exactly one axis. A component that grows a second — Card's padding,
+ * EmptyState's size, POIResultCard's appearance — would otherwise need its own
+ * hand-rolled Build and Update, which is how Rating ended up with a copy of
+ * this logic that then had to be changed twice.
+ *
+ * `axis2Name` and `axis2Values` are optional: without them the behaviour is
+ * exactly what it was, one axis and one loop.
+ */
+function generatedVariantCombinations(config) {
+  const seconds = config.axis2Values || [null];
+  const out = [];
+  for (let i = 0; i < config.values.length; i += 1)
+    for (let j = 0; j < seconds.length; j += 1)
+      out.push({ value: config.values[i], second: seconds[j], i, j });
+  return out;
+}
+
+/** The key a combination is remembered by while Update walks the set. */
+function generatedVariantKey(value, second) {
+  return second === null || second === undefined ? value : `${value}/${second}`;
+}
+
 async function buildSingleAxisComponent(config) {
   const stats = {
     created: false,
@@ -50298,16 +50441,17 @@ async function buildSingleAxisComponent(config) {
   const variableByName = await ensureComponentRuntimeVariables(stats);
   const components = [];
 
-  for (let valueIndex = 0; valueIndex < config.values.length; valueIndex += 1) {
-    const value = config.values[valueIndex];
+  for (const combination of generatedVariantCombinations(config)) {
     const component = await config.createVariant({
-      value,
+      value: combination.value,
+      second: combination.second,
       variableByName,
       fonts,
       stats,
     });
-    component.x = valueIndex * config.xStep;
-    component.y = 0;
+    component.x = combination.i * config.xStep;
+    // A second axis takes its own row, so the two never overlap.
+    component.y = combination.j * (config.yStep || 0);
     page.appendChild(component);
     components.push(component);
   }
@@ -50416,7 +50560,11 @@ async function updateSingleAxisComponent(config) {
       continue;
     }
 
-    seenValues[props.value] = true;
+    // A variant drawn before a second axis existed parses with `second`
+    // undefined, and the component's own parser decides what that means --
+    // normally its default. Update then RENAMES it rather than replacing it,
+    // so the node ids Code Connect pins survive.
+    seenValues[generatedVariantKey(props.value, props.second)] = true;
     await reportSetProgress(
       config.componentSetName,
       `variant ${stats.variantsUpdated + 1} of ${existing.children.length}`,
@@ -50424,6 +50572,7 @@ async function updateSingleAxisComponent(config) {
     );
     await config.updateVariant(child, {
       value: props.value,
+      second: props.second,
       variableByName,
       fonts,
       stats,
@@ -50431,17 +50580,19 @@ async function updateSingleAxisComponent(config) {
     stats.variantsUpdated += 1;
   }
 
-  for (const value of config.values) {
-    if (seenValues[value]) continue;
+  for (const combination of generatedVariantCombinations(config)) {
+    const key = generatedVariantKey(combination.value, combination.second);
+    if (seenValues[key]) continue;
 
     const component = await config.createVariant({
-      value,
+      value: combination.value,
+      second: combination.second,
       variableByName,
       fonts,
       stats,
     });
     existing.appendChild(component);
-    seenValues[value] = true;
+    seenValues[key] = true;
     stats.variantsCreated += 1;
   }
 
@@ -50493,8 +50644,11 @@ function layoutSingleAxisVariants(componentSet, config) {
     if (!props) continue;
 
     const valueIndex = config.values.indexOf(props.value);
+    const secondIndex = config.axis2Values
+      ? config.axis2Values.indexOf(props.second)
+      : 0;
     child.x = valueIndex * config.xStep;
-    child.y = 0;
+    child.y = (secondIndex < 0 ? 0 : secondIndex) * (config.yStep || 0);
   }
 
   // A component set is a frame, and a frame keeps its size when its children
@@ -53704,10 +53858,17 @@ function bindGridCellSlotVariables(slot, variableByName, stats) {
   );
 }
 
-async function createContainerVariant({ value, variableByName, fonts, stats }) {
+async function createContainerVariant({
+  value,
+  second,
+  variableByName,
+  fonts,
+  stats,
+}) {
   const component = figma.createComponent();
   await updateContainerVariant(component, {
     value,
+    second,
     variableByName,
     fonts,
     stats,
@@ -53729,26 +53890,33 @@ function parseContainerVariantName(name) {
 
   if (CONTAINER_CENTERED.indexOf(values.Centered) === -1) return null;
 
+  // A variant drawn before the Inset axis carries none and is the page's,
+  // so Update renames it rather than replacing it.
+  const second = values.Inset || "Window";
+  if (CONTAINER_INSETS.indexOf(second) === -1) return null;
+
   return {
     value: values.Centered,
+    second,
     centered: values.Centered,
   };
 }
 
 async function updateContainerVariant(
   component,
-  { value, variableByName, stats },
+  { value, second, variableByName, stats },
 ) {
   const centered = value === "True";
-  component.name = `Centered=${value}`;
+  const inset = CONTAINER_INSETS.indexOf(second) === -1 ? "Window" : second;
+  component.name = `Centered=${value}, Inset=${inset}`;
   component.layoutMode = "VERTICAL";
   component.primaryAxisSizingMode = "FIXED";
   component.counterAxisSizingMode = "FIXED";
   component.primaryAxisAlignItems = "CENTER";
   component.counterAxisAlignItems = centered ? "CENTER" : "MIN";
   component.itemSpacing = 0;
-  component.paddingLeft = 24;
-  component.paddingRight = 24;
+  component.paddingLeft = containerInsetPadding(inset);
+  component.paddingRight = containerInsetPadding(inset);
   component.paddingTop = 0;
   component.paddingBottom = 0;
   component.resizeWithoutConstraints(480, 120);
@@ -55181,10 +55349,17 @@ async function updateBadgeVariant(
   });
 }
 
-async function createCardVariant({ value, variableByName, fonts, stats }) {
+async function createCardVariant({
+  value,
+  second,
+  variableByName,
+  fonts,
+  stats,
+}) {
   const component = figma.createComponent();
   await updateCardVariant(component, {
     value,
+    second,
     variableByName,
     fonts,
     stats,
@@ -55208,16 +55383,26 @@ function parseCardVariantName(name) {
     return null;
   }
 
+  // A variant drawn before the Padding axis carries no Padding, and is the
+  // card as it was: 24. Reading it as Default is what lets Update rename it
+  // instead of replacing it, so its node id survives.
+  const second = values.Padding || "Default";
+  if (CARD_PADDINGS.indexOf(second) === -1) {
+    return null;
+  }
+
   return {
     value: values.Content,
+    second,
   };
 }
 
 async function updateCardVariant(
   component,
-  { value, variableByName, fonts, stats },
+  { value, second, variableByName, fonts, stats },
 ) {
-  component.name = `Content=${value}`;
+  const padding = CARD_PADDINGS.indexOf(second) === -1 ? "Default" : second;
+  component.name = `Content=${value}, Padding=${padding}`;
   component.layoutMode = "VERTICAL";
   component.primaryAxisSizingMode = "AUTO";
   component.counterAxisSizingMode = "FIXED";
@@ -55245,6 +55430,7 @@ async function updateCardVariant(
   await syncCardVariantChildren({
     component,
     value,
+    padding,
     variableByName,
     fonts,
     stats,
@@ -57731,6 +57917,7 @@ async function updateSliderVariant(
 }
 
 async function createRatingVariant({
+  scale,
   value,
   state,
   variableByName,
@@ -57739,6 +57926,7 @@ async function createRatingVariant({
 }) {
   const component = figma.createComponent();
   await updateRatingVariant(component, {
+    scale,
     value,
     state,
     variableByName,
@@ -57762,22 +57950,28 @@ function parseRatingVariantName(name) {
 
   const value = values.Value;
   const state = values.State || "Default";
+  // Older variants carry no Scale: they are the stars, which is what the set
+  // held before thumbs existed. Reading them as Stars is what lets Update
+  // keep their node ids instead of replacing them.
+  const scale = values.Scale || "Stars";
 
   if (
-    RATING_VALUES.indexOf(value) === -1 ||
+    RATING_SCALES.indexOf(scale) === -1 ||
+    ratingValuesForScale(scale).indexOf(value) === -1 ||
     RATING_STATES.indexOf(state) === -1
   ) {
     return null;
   }
 
-  return { value, state };
+  return { scale, value, state };
 }
 
 async function updateRatingVariant(
   component,
-  { value, state, variableByName, fonts, stats },
+  { scale, value, state, variableByName, fonts, stats },
 ) {
-  component.name = `Value=${value}, State=${state}`;
+  const resolvedScale = RATING_SCALES.indexOf(scale) === -1 ? "Stars" : scale;
+  component.name = `Scale=${resolvedScale}, Value=${value}, State=${state}`;
   component.layoutMode = "HORIZONTAL";
   component.primaryAxisSizingMode = "FIXED";
   component.counterAxisSizingMode = "FIXED";
@@ -57788,7 +57982,10 @@ async function updateRatingVariant(
   component.paddingRight = 0;
   component.paddingTop = 0;
   component.paddingBottom = 0;
-  component.resizeWithoutConstraints(220, 44);
+  // Two 44 cells for thumbs, five for stars, plus the 8 between the thumbs.
+  // 8 between the two thumbs; the stars space themselves inside their cells.
+  component.itemSpacing = resolvedScale === "Thumbs" ? 8 : 0;
+  component.resizeWithoutConstraints(resolvedScale === "Thumbs" ? 96 : 220, 44);
   component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
@@ -57798,6 +57995,7 @@ async function updateRatingVariant(
 
   await syncRatingVariantChildren({
     component,
+    scale: resolvedScale,
     value,
     state,
     variableByName,
@@ -57817,8 +58015,10 @@ function layoutRatingVariants(componentSet) {
 
     const valueIndex = RATING_VALUES.indexOf(props.value);
     const stateIndex = RATING_STATES.indexOf(props.state);
+    const scaleIndex = RATING_SCALES.indexOf(props.scale);
     child.x = valueIndex * 260;
-    child.y = stateIndex * 80;
+    // Each scale takes its own band of rows, so the two never overlap.
+    child.y = (scaleIndex * RATING_STATES.length + stateIndex) * 80;
   }
 
   resizeComponentSetToContainChildren(componentSet);
@@ -57915,6 +58115,7 @@ function layoutStepperVariants(componentSet) {
 
 async function syncRatingVariantChildren({
   component,
+  scale,
   value,
   state,
   variableByName,
@@ -57928,6 +58129,23 @@ async function syncRatingVariantChildren({
   const valueNumber = Number(value);
   const readonly = state === "Readonly";
 
+  if (scale === "Thumbs") {
+    // A choice between two, so exactly the one chosen fills. Down is 1 and up
+    // is 2, the same "1 is the lowest" rule the stars follow, so a product
+    // stores one shape whichever scale it asks on.
+    for (let index = 1; index <= 2; index += 1) {
+      const thumb = await createRatingThumb({
+        index,
+        chosen: index === valueNumber,
+        readonly,
+        variableByName,
+        stats,
+      });
+      component.appendChild(thumb);
+    }
+    return;
+  }
+
   for (let index = 1; index <= 5; index += 1) {
     const star = await createRatingStar({
       index,
@@ -57939,6 +58157,77 @@ async function syncRatingVariantChildren({
     });
     component.appendChild(star);
   }
+}
+
+/**
+ * One thumb: a 40 disc in a 44 target, as every other control's hit area is.
+ * Chosen is the theme's colour on its own wash with a 2 ring; unchosen is the
+ * muted background with the foreground's quiet grey and no ring.
+ */
+async function createRatingThumb({
+  index,
+  chosen,
+  readonly,
+  variableByName,
+  stats,
+}) {
+  const cell = figma.createFrame();
+  cell.name = index === 1 ? "Rating Thumb Down" : "Rating Thumb Up";
+  cell.layoutMode = "HORIZONTAL";
+  cell.primaryAxisSizingMode = "FIXED";
+  cell.counterAxisSizingMode = "FIXED";
+  cell.primaryAxisAlignItems = "CENTER";
+  cell.counterAxisAlignItems = "CENTER";
+  cell.resizeWithoutConstraints(44, 44);
+  cell.cornerRadius = KOZMOS_RADIUS.pill;
+  cell.clipsContent = false;
+  cell.fills = [];
+  cell.strokes = [];
+  cell.opacity = readonly ? 0.72 : 1;
+  cell.setSharedPluginData(RUN_NAMESPACE, "kind", "rating-thumb-hit-area");
+  setFixedChildSizing(cell);
+
+  const disc = figma.createFrame();
+  disc.name = "Thumb Disc";
+  disc.layoutMode = "HORIZONTAL";
+  disc.primaryAxisSizingMode = "FIXED";
+  disc.counterAxisSizingMode = "FIXED";
+  disc.primaryAxisAlignItems = "CENTER";
+  disc.counterAxisAlignItems = "CENTER";
+  disc.resizeWithoutConstraints(40, 40);
+  disc.cornerRadius = KOZMOS_RADIUS.pill;
+  disc.clipsContent = false;
+  disc.fills = [
+    chosen
+      ? paintFromVariable("Colors/theme/0", "#F1F5FE", variableByName, stats)
+      : paintFromVariable(
+          "Colors/background/100",
+          "#F2F4F7",
+          variableByName,
+          stats,
+        ),
+  ];
+  disc.strokes = chosen
+    ? [paintFromVariable("Colors/theme/600", "#1051E8", variableByName, stats)]
+    : [];
+  disc.strokeWeight = chosen ? 2 : 0;
+  disc.setSharedPluginData(RUN_NAMESPACE, "kind", "rating-thumb-disc");
+  setFixedChildSizing(disc);
+
+  const icon = await createFixedIconInstance(
+    index === 1 ? "thumbs-down" : "thumbs-up",
+    chosen ? "Colors/theme/600" : "Colors/foreground/400",
+    chosen ? "#1051E8" : "#5D626F",
+    variableByName,
+    stats,
+    20,
+    "Rating/thumb/icon/size",
+  );
+  disc.appendChild(icon);
+  setHugChildSizing(icon);
+
+  cell.appendChild(disc);
+  return cell;
 }
 
 async function createRatingStar({
@@ -58413,6 +58702,7 @@ async function updateAlertVariant(
 
 async function createEmptyStateVariant({
   value,
+  second,
   variableByName,
   fonts,
   stats,
@@ -58420,6 +58710,7 @@ async function createEmptyStateVariant({
   const component = figma.createComponent();
   await updateEmptyStateVariant(component, {
     value,
+    second,
     variableByName,
     fonts,
     stats,
@@ -58428,25 +58719,33 @@ async function createEmptyStateVariant({
 }
 
 function parseEmptyStateVariantName(name) {
-  return parseSingleAxisVariantName(name, "Content", EMPTY_STATE_CONTENT);
+  const base = parseSingleAxisVariantName(name, "Content", EMPTY_STATE_CONTENT);
+  if (!base) return null;
+  // A variant drawn before the Size axis carries no Size and is the full one,
+  // so Update renames it rather than replacing it and its node id survives.
+  const second = variantAxisValue(name, "Size") || "Default";
+  if (EMPTY_STATE_SIZES.indexOf(second) === -1) return null;
+  return { value: base.value, second };
 }
 
 async function updateEmptyStateVariant(
   component,
-  { value, variableByName, fonts, stats },
+  { value, second, variableByName, fonts, stats },
 ) {
-  component.name = `Content=${value}`;
+  const size = EMPTY_STATE_SIZES.indexOf(second) === -1 ? "Default" : second;
+  const pad = emptyStatePadding(size);
+  component.name = `Content=${value}, Size=${size}`;
   component.layoutMode = "VERTICAL";
   component.primaryAxisSizingMode = "AUTO";
   component.counterAxisSizingMode = "FIXED";
   component.primaryAxisAlignItems = "CENTER";
   component.counterAxisAlignItems = "CENTER";
-  component.itemSpacing = 16;
-  component.paddingLeft = 32;
-  component.paddingRight = 32;
-  component.paddingTop = 32;
-  component.paddingBottom = 32;
-  component.resizeWithoutConstraints(360, 196);
+  component.itemSpacing = size === "Compact" ? 8 : 16;
+  component.paddingLeft = pad;
+  component.paddingRight = pad;
+  component.paddingTop = pad;
+  component.paddingBottom = pad;
+  component.resizeWithoutConstraints(360, size === "Compact" ? 128 : 196);
   component.cornerRadius = KOZMOS_RADIUS.none;
   component.clipsContent = false;
   component.fills = [];
@@ -58457,6 +58756,7 @@ async function updateEmptyStateVariant(
   await syncEmptyStateVariantChildren({
     component,
     value,
+    size,
     variableByName,
     fonts,
     stats,
@@ -58514,6 +58814,24 @@ async function updateToastVariant(
     fonts,
     stats,
   });
+}
+
+/**
+ * One axis's value out of a variant name, or null when it carries none.
+ *
+ * A set that grows a second axis has to read variants drawn before it: those
+ * names have no such key, and the component's parser then supplies its own
+ * default so Update RENAMES the variant rather than replacing it. Replacing
+ * would change the node id every Code Connect pin on the set depends on.
+ */
+function variantAxisValue(name, axisName) {
+  for (const part of name.split(",")) {
+    const index = part.indexOf("=");
+    if (index === -1) continue;
+    if (part.slice(0, index).trim() !== axisName) continue;
+    return part.slice(index + 1).trim();
+  }
+  return null;
 }
 
 function parseSingleAxisVariantName(name, axisName, values) {
@@ -59109,10 +59427,12 @@ async function syncSegmentedControlVariantChildren({
 async function syncCardVariantChildren({
   component,
   value,
+  padding,
   variableByName,
   fonts,
   stats,
 }) {
+  const pad = cardPaddingLength(padding);
   const hasHeader = value === "Header" || value === "Full";
   const hasFooter = value === "Full";
 
@@ -59134,10 +59454,10 @@ async function syncCardVariantChildren({
     header.primaryAxisAlignItems = "MIN";
     header.counterAxisAlignItems = "MIN";
     header.itemSpacing = 6;
-    header.paddingLeft = 24;
-    header.paddingRight = 24;
-    header.paddingTop = 24;
-    header.paddingBottom = 24;
+    header.paddingLeft = pad;
+    header.paddingRight = pad;
+    header.paddingTop = pad;
+    header.paddingBottom = pad;
     header.resizeWithoutConstraints(360, 80);
     header.fills = [];
     header.strokes = [];
@@ -59219,10 +59539,10 @@ async function syncCardVariantChildren({
   body.primaryAxisAlignItems = "MIN";
   body.counterAxisAlignItems = "MIN";
   body.itemSpacing = 12;
-  body.paddingLeft = 24;
-  body.paddingRight = 24;
+  body.paddingLeft = pad;
+  body.paddingRight = pad;
   body.paddingTop = hasHeader ? 0 : 24;
-  body.paddingBottom = 24;
+  body.paddingBottom = pad;
   body.resizeWithoutConstraints(360, 92);
   body.fills = [];
   body.strokes = [];
@@ -59267,10 +59587,10 @@ async function syncCardVariantChildren({
     footer.primaryAxisAlignItems = "MAX";
     footer.counterAxisAlignItems = "CENTER";
     footer.itemSpacing = 12;
-    footer.paddingLeft = 24;
-    footer.paddingRight = 24;
+    footer.paddingLeft = pad;
+    footer.paddingRight = pad;
     footer.paddingTop = 0;
-    footer.paddingBottom = 24;
+    footer.paddingBottom = pad;
     footer.resizeWithoutConstraints(360, 68);
     footer.fills = [];
     footer.strokes = [];
@@ -69937,10 +70257,12 @@ async function syncAlertVariantChildren({
 async function syncEmptyStateVariantChildren({
   component,
   value,
+  size,
   variableByName,
   fonts,
   stats,
 }) {
+  const iconBox = emptyStateIconSize(size);
   removeDirectChildren(component);
 
   const hasIcon = value !== "Basic";
@@ -69960,7 +70282,7 @@ async function syncEmptyStateVariantChildren({
     iconContainer.paddingRight = 0;
     iconContainer.paddingTop = 0;
     iconContainer.paddingBottom = 0;
-    iconContainer.resizeWithoutConstraints(64, 64);
+    iconContainer.resizeWithoutConstraints(iconBox, iconBox);
     iconContainer.cornerRadius = KOZMOS_RADIUS.pill;
     iconContainer.clipsContent = false;
     iconContainer.fills = [
@@ -72198,38 +72520,13 @@ function configureFocusVisibleProperty(componentSet, stats) {
  * is the same shape the MAP-474 prototypes use, where Tags, buttonContainer
  * and logo are layers toggled on one component rather than variants of it.
  */
-function ensureBooleanProperty(componentSet, name, defaultValue, stats) {
-  const read = safeComponentPropertyDefinitions(
-    componentSet,
-    stats,
-    `ensure ${name} boolean property`,
-  );
-  const definitions = read.definitions;
-  if (read.error) return null;
-
-  for (const propertyName of Object.keys(definitions)) {
-    const definition = definitions[propertyName];
-    const baseName = propertyName.split("#")[0];
-    if (baseName === name && definition.type === "BOOLEAN") return propertyName;
-  }
-
-  if (!componentSet.addComponentProperty) {
-    stats.warnings.push(
-      `This Figma runtime does not expose addComponentProperty for ${name}.`,
-    );
-    return null;
-  }
-
-  try {
-    return componentSet.addComponentProperty(name, "BOOLEAN", defaultValue);
-  } catch (error) {
-    stats.warnings.push(
-      `Could not create ${name} boolean property (${messageFor(error)}).`,
-    );
-    return null;
-  }
-}
-
+// `ensureBooleanProperty` was declared twice here. JavaScript hoists both and
+// the later one wins, so this first copy had never run: it lacked the
+// `updateBooleanPropertyDefault` call that refreshes an existing property's
+// default, and anyone editing it would have seen no effect at all. Removed
+// 2026-09-25, when staging the file for a commit made eslint say so — no
+// gate covers figma/, because `pnpm lint` is turbo per package and the
+// importer is not one.
 function configureNamedBooleanProperty(
   componentSet,
   nodeName,
@@ -72248,7 +72545,10 @@ function configureNamedBooleanProperty(
   let bound = 0;
 
   function walk(node) {
-    if (node.name === nodeName && node.componentPropertyReferences !== undefined) {
+    if (
+      node.name === nodeName &&
+      node.componentPropertyReferences !== undefined
+    ) {
       try {
         // Object.assign, not object spread: the plugin sandbox parses an
         // older dialect and figma:plugin:check refuses spread outright. The
