@@ -28,7 +28,7 @@ cannot".
 | Variations that are compositional only    | 67     |
 | Components with variant gaps — iOS        | 11/45  |
 | Components with variant gaps — Android    | 11/45  |
-| Components with variant gaps — Figma      | 14/45  |
+| Components with variant gaps — Figma      | 9/45   |
 | Components with variant gaps — Vue        | 3/45   |
 | Components absent entirely — iOS          | 9/112  |
 | Components absent entirely — Android      | 8/112  |
@@ -64,17 +64,12 @@ AdaptiveMapShell
 Alert
   - ios missing axes -> live (off, polite, assertive)
   - android missing axes -> live (off, polite, assertive)
-Card
-  - figma missing axes -> padding (default, compact)
 Container
   - ios missing axes -> inset (window, panel)
   - android missing axes -> inset (window, panel)
-  - figma missing axes -> inset (window, panel)
 DynamicIsland
   - android missing axes -> islandState (compact, expanded, minimal)
   - figma missing axes -> islandState (compact, expanded, minimal)
-EmptyState
-  - figma missing axes -> size (default, compact)
 FieldWrapper
   - figma: component/set absent
 Icon
@@ -95,9 +90,6 @@ Notice
 POIResultCard
   - ios missing axes -> appearance (card, row)
   - android missing axes -> appearance (card, row)
-  - figma missing axes -> appearance (card, row)
-Rating
-  - figma missing axes -> variant (stars, thumbs)
 Surface
   - ios: component/set absent
   - figma: component/set absent
